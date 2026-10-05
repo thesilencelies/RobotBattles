@@ -12,3 +12,7 @@ Agents are permitted to enforce consistency when applying rules updates, but aga
 ## Card designs
 Agents can present analysis and findings about the state of different cards, but may not make any changes
 to the card designs outside of explicit instruction to do so.
+
+
+# Repo
+This is a single developer repo, so unless otherwise requested to, commit and push to main
