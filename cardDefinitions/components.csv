@@ -1,0 +1,7 @@
+Name,Weight,Cost,Requirements,Outputs,Durability,Absorption,Keywords,Text
+Example ESC,0,2,EE,CC,5,2,fragile,
+Wires,0,0,XE,XE,7,0,fragile,
+Aluminum Plate,2,1,,,8,4,
+Galaxy 120,1,2,,EEE,6,0,
+Brushless Motor,1,2,CC,SSS,5,3,
+Forks,1,1,,,4,2,forks,

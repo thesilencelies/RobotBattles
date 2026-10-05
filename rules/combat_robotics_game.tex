@@ -1,0 +1,422 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage[margin=2.0cm, headheight=14pt]{geometry}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage[hidelinks,pdfusetitle]{hyperref}
+
+% Color definitions
+\definecolor{primaryDark}{HTML}{1A365D}   % Deep navy
+\definecolor{accentBlue}{HTML}{2B6CB0}    % Steel blue
+\definecolor{arenaRed}{HTML}{C53030}      % Crimson alert
+\definecolor{textDark}{HTML}{2D3748}      % Dark charcoal text
+\definecolor{boxBg}{HTML}{F8FAFC}        % Light background
+\definecolor{boxBorder}{HTML}{CBD5E1}    % Slate border
+\definecolor{noteBorder}{HTML}{DD6B20}   % Amber border
+\definecolor{noteBg}{HTML}{FFFAF0}       % Amber tint
+
+% Typography & Section formatting
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{primaryDark}}
+  {\thesection}{0.8em}{}[\color{primaryDark}\titlerule]
+\titlespacing*{\section}{0pt}{14pt plus 2pt minus 2pt}{6pt}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{accentBlue}}
+  {\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{10pt plus 2pt minus 2pt}{4pt}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\color{primaryDark}}
+  {\thesubsubsection}{0.5em}{}
+\titlespacing*{\subsubsection}{0pt}{8pt plus 1pt minus 1pt}{3pt}
+
+% Header and Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}\textsc{Robot Battles} --- Rules of Play}
+\fancyhead[R]{\small\color{gray}Draft Rules}
+\fancyfoot[C]{\small Page \thepage\ of 6}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Callout box styles
+\newtcolorbox{overviewbox}{
+  enhanced,
+  colback=boxBg,
+  colframe=primaryDark,
+  arc=2.5mm,
+  boxrule=1pt,
+  left=10pt,
+  right=10pt,
+  top=6pt,
+  bottom=6pt,
+  fontupper=\normalfont
+}
+
+\newtcolorbox{draftnotebox}{
+  enhanced,
+  colback=noteBg,
+  colframe=noteBorder,
+  arc=2mm,
+  boxrule=0.8pt,
+  left=10pt,
+  right=10pt,
+  top=5pt,
+  bottom=5pt,
+  fontupper=\small\itshape
+}
+
+\newtcolorbox{summarybox}[1]{
+  enhanced,
+  colback=boxBg,
+  colframe=accentBlue,
+  arc=2mm,
+  boxrule=0.8pt,
+  title={#1},
+  fonttitle=\bfseries\small,
+  coltitle=white,
+  left=10pt,
+  right=10pt,
+  top=6pt,
+  bottom=6pt
+}
+
+\setlist{itemsep=2.5pt, parsep=0pt, topsep=2pt}
+
+\begin{document}
+
+% ==============================================================================
+% PAGE 1: OVERVIEW & CARD ANATOMY
+% ==============================================================================
+
+\begin{center}
+  {\Huge\bfseries\color{primaryDark} Robot Battles}\\[0.3em]
+  {\Large\color{accentBlue} Combat Robotics Card \& Miniature Game}\\[0.2em]
+  {\normalsize\color{gray} Draft Rules Writeup}
+\end{center}
+\vspace{0.4em}
+
+\begin{overviewbox}
+\noindent\textbf{Theme:} Simple to pick up game to simulate preparing a robot for a competition and fighting it.\\[2pt]
+\textbf{Vibe:} Things don't quite work how you want, chaotic, scrambling for fixes and dramatic hits.\\[2pt]
+\emph{``You don't know what's going to happen when you enter the box.''}\\[2pt]
+\textbf{Design Emphasis:} Game's emphasis is more on making the bot than driving it.
+\end{overviewbox}
+
+\vspace{0.2em}
+
+\section{Introduction}
+
+\textbf{Robot Battles} is a game about combat robotics. Build a robot within your budget and weight limit, then defeat your opponents in a tournament of destruction.
+
+\section{Card Anatomy}
+
+Cards represent the physical components, electronics, mechanical assemblies, and weapons installed onto your robot chassis.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[height=5.4cm]{images/card_esc.png}
+    \caption{Component Card (Electronic Speed Controller)}
+    \label{fig:card_esc}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[height=5.4cm]{images/card_weapon.png}
+    \caption{Weapon Card (Double Vertical Spinner)}
+    \label{fig:card_weapon}
+  \end{subfigure}
+  \caption{Card Anatomy and Component Layout}
+  \label{fig:card_anatomy}
+\end{figure}
+
+The anatomy of each card consists of the following key attributes:
+
+\begin{description}[leftmargin=!, labelwidth=2.8cm, font=\bfseries\color{primaryDark}]
+  \item[Price (\$\$):] You cannot have more total price in your pool than your budget.
+  \item[Weight:] Your robot's total weight must be less than the weight limit.
+  \item[Requirements:] A component is only active if its requirements are supplied by connected components. (Power, control, spin, pressure are the resources that need supply.)
+  \item[Durability:] How much damage a component can take before destruction.
+  \item[Absorption:] How much damage a component stops from being passed on during an attack.
+  \item[Outputs:] What resources the component supplies. Also includes drive.
+  \item[Ability Text:] Any special rules or passive traits for the component.
+\end{description}
+
+\vspace{2pt}
+\noindent\textbf{Weapon Cards:} Weapon cards will have damage in their output zone, and a template marker indicating which template the component uses and where it attacks (Figure~\ref{fig:card_weapon}).
+
+\clearpage
+
+% ==============================================================================
+% PAGE 2: ROBOT CONSTRUCTION & THE ARENA
+% ==============================================================================
+
+\section{Robot Construction}
+
+Each robot is built onto a chassis. A chassis is a large mat that shows the robot's shape and has a weight, cost, and flip strength. It may have an ability. All cards on the robot must be on the chassis.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[height=5.2cm]{images/chassis_templates.png}
+    \caption{Chassis Templates}
+    \label{fig:chassis_templates}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[height=5.2cm]{images/weapon_templates.png}
+    \caption{Weapon \& Active Area Templates}
+    \label{fig:weapon_templates}
+  \end{subfigure}
+  \caption{Chassis Shape and Weapon Template Profiles}
+  \label{fig:construction_templates}
+\end{figure}
+
+\begin{itemize}
+  \item The chassis determines the model used for play.
+  \item A card is considered connected to any other card it is touching.
+  \item You may submit up to two robots, and the total weight across all the robots must be within the weight budget.
+  \item Each robot must have active drive to be submitted.
+\end{itemize}
+
+\vspace{0.8em}
+
+\section{The Arena}
+
+Combat takes place inside a hazard-filled enclosed arena.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[c]{0.44\textwidth}
+    \centering
+    \includegraphics[height=5.8cm]{images/arena_layout.png}
+    \caption{The Arena Layout}
+    \label{fig:arena}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[c]{0.52\textwidth}
+    \textbf{Arena Zones \& Features:}
+    \begin{itemize}[leftmargin=*]
+      \item \textbf{\color{arenaRed}Red Zone:} Starting area where robots deploy at the beginning of a battle.
+      \item \textbf{Black Lines:} Arena perimeter walls. Pushing robots into walls triggers throw feedback.
+      \item \textbf{Yellow Hatched:} Arena hazard/pit zones. If a robot is thrown there, they exit the arena and are eliminated.
+    \end{itemize}
+    \vspace{0.8em}
+    \textbf{Robot Markers:}\\
+    Each battle starts with both players placing their robot marker (chassis plus weapon --- made from fridge magnets or fancy 3D printed ones) to indicate the position and facing of their robot in the starting zone of the arena.
+  \end{minipage}
+\end{figure}
+
+\clearpage
+
+% ==============================================================================
+% PAGE 3: BATTLE SEQUENCE & MOVEMENT
+% ==============================================================================
+
+\section{Battle Rules}
+
+\subsection{Match Length \& Win Conditions}
+
+The battle is played for \textbf{10 rounds} or until a robot is unable to move --- they have no active drive, or all their drive does not work due to inversion and they cannot unflip.
+
+\subsection{Round Structure}
+
+Each round follows a strict sequence of four phases:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{l p{12.2cm}}
+  \toprule
+  \textbf{Phase} & \textbf{Summary} \\
+  \midrule
+  \textbf{1. Planning} & Players secretly select drive settings for each side (absolute value $\le$ active drive count). \\
+  \textbf{2. Movement} & Choices are simultaneously revealed; robots advance along the movement templates. \\
+  \textbf{3. Collision} & Collisions and contacts (active weapon hits or inert pushes) are resolved. \\
+  \textbf{4. Cleanup}  & Reset temporary states, verify active drive, and proceed to the next round. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Movement Execution}
+
+Movement units are found on the straight movement template. Where an effect says a robot moves that amount, move them along that template without changing facing.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[c]{0.36\textwidth}
+    \centering
+    \includegraphics[height=6.2cm]{images/movement_templates.png}
+    \caption{Movement Templates}
+    \label{fig:movement_templates}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[c]{0.60\textwidth}
+    \begin{enumerate}[label=\alph*., leftmargin=*]
+      \item In the planning step, each player chooses for each side a number with absolute value less than or equal to their active drive count for that side. \texttt{0/0} means no movement.
+      \item Then the choices are revealed and both robots are moved along the template corresponding to their chosen number pair.
+      \item The robot starts with its front at the black line on the template and ends with its front in line with the corresponding line.
+    \end{enumerate}
+    \vspace{0.6em}
+    \textbf{Path Overlap \& Collision Check:}\\
+    If the paths overlap then there is a collision at that point, and there is a collision if the robot would end up placed inside or in contact with something else.
+  \end{minipage}
+\end{figure}
+
+\begin{summarybox}{Movement Planning Summary}
+Drive values chosen in the Planning phase directly determine robot displacement and turning trajectory. A player with 3 active drive on the left and 2 on the right may choose any pair within $[-3, +3]$ and $[-2, +2]$.
+\end{summarybox}
+
+\clearpage
+
+% ==============================================================================
+% PAGE 4: COLLISIONS & CONTACT RESOLUTION
+% ==============================================================================
+
+\section{Collisions \& Contact Resolution}
+
+\subsection{Determining the Contact Point}
+
+For a collision, first determine which octant of each robot makes contact with the other: place both robots as far along their path as they can go without touching the other's path, then slowly move both forwards until they touch each other. Where the robots touch shows the contact point. Where ambiguous, both components make contact.
+
+\begin{itemize}
+  \item \textbf{Active Contact:} If the parts of either robot that is touching is the weapon's active area (the red zone on the template), then the contact is active.
+  \item \textbf{Inert Contact:} Otherwise, it is an inert contact.
+\end{itemize}
+
+\subsection{Inert Contact (Pushing Match)}
+
+Essentially a pushing match between colliding chassis surfaces:
+\begin{itemize}
+  \item The pair of robots move in the line drawn between their two centers through the point of contact.
+  \item The distance they move is the sum of their remaining motion in that direction: all other distance is lost.
+  \item If a robot is pushed into a wall, it is thrown with a throw strength equal to the amount it would have moved if the wall wasn't there.
+  \item Each robot takes feedback shared equally between its remaining active drive equal to the remaining distance the opponent had before the contact.
+\end{itemize}
+
+\begin{draftnotebox}
+  \textbf{Editor Note:} [Needs a diagram here]
+\end{draftnotebox}
+
+\subsection{Active Contact (Weapon Hits)}
+
+When weapons collide with an opponent's chassis or components:
+\begin{itemize}
+  \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the other robot to the components contacted.
+  \item Then both robots are thrown away from the contact. The base throw strength is equal to the attack strength received.
+  \item Weapons receive feedback equal to half the attack strength.
+\end{itemize}
+
+\begin{summarybox}{Contact Classification Quick Reference}
+\begin{tabularx}{\textwidth}{l X}
+  \textbf{Contact Type} & \textbf{Resolution Mechanism} \\
+  \midrule
+  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage level $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. \\
+  \addlinespace[3pt]
+  \textbf{Inert Contact} & Pushing match along line between centers $\rightarrow$ Move sum of remaining motion in that direction $\rightarrow$ Wall collision causes throw $\rightarrow$ Drive takes feedback equal to opponent's remaining distance. \\
+\end{tabularx}
+\end{summarybox}
+
+\clearpage
+
+% ==============================================================================
+% PAGE 5: COMBAT RESOLUTION, DAMAGE & STATUS EFFECTS
+% ==============================================================================
+
+\section{Combat Resolution, Damage \& Status Effects}
+
+\subsection{Throws \& Inversion}
+
+A robot that is thrown is moved a random amount up to the throw strength away in a random direction. If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted}.
+
+\subsection{Damage Progression}
+
+Damage progresses from the outermost component inwards, applying absorption at each step until all the damage is absorbed:
+
+\begin{itemize}
+  \item \textbf{Component Destroyed:} A component is destroyed if the remaining damage level that hits it exceeds its durability.
+  \item \textbf{Component Damaged:} A component is damaged if the remaining damage level minus that component's absorption is greater than half its durability.
+  \item \textbf{Repeated Damage:} If a damaged component would be damaged again, it is instead destroyed.
+  \item \textbf{Absorption on Destruction:} If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
+\end{itemize}
+
+\subsection{Feedback}
+
+Feedback represents components over-straining themselves under combat loads. It is damage that progresses back from the source component to each component that supplies it, shared equally if there are multiple components, down the tree until the damage is all absorbed.
+
+\subsection{Status Effects}
+
+\begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
+  \item[Inverted:] While a robot is inverted, weapons and drive without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
+  \item[Raised:] Some components (mostly forks) will make the opponent raised if they make contact. A robot that is raised has its drive strength halved for as long as it is in contact with the component that raised it, and its flip strength is two lower.
+\end{description}
+
+\begin{summarybox}{Damage \& Feedback Rules Summary}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Damage Inward Progression:} Attack Damage $\rightarrow$ Absorbed by outermost layer $\rightarrow$ Excess damage hits next connected internal component.
+  \item \textbf{Damage Conditions:} Exceeds durability $\implies$ \textbf{Destroyed}. Exceeds $\frac{1}{2}$ durability after absorption $\implies$ \textbf{Damaged}. Damaged again $\implies$ \textbf{Destroyed}.
+  \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/control/pressure suppliers, distributed equally.
+\end{itemize}
+\end{summarybox}
+
+\clearpage
+
+% ==============================================================================
+% PAGE 6: GAME FORMATS & TOURNAMENT PLAY
+% ==============================================================================
+
+\section{Game Formats}
+
+\subsection{Preconstructed}
+
+\begin{itemize}
+  \item Each player brings a build deck up to the budget chosen (we recommend \$25).
+  \item Then you each build a robot from that up to the weight limit and fight with those.
+\end{itemize}
+
+\subsection{Limited (Recommended)}
+
+\begin{itemize}
+  \item There is a pool in the middle of cards, split into basic and special.
+  \item You can grab anything from the basic pile.
+  \item For special cards, there is a market of 9 face-up cards you can take from, after which you must reveal the next card. You cannot return any card you have taken to the supply once you have taken it.
+  \item You cannot take more total cost than your budget (\$25 recommended).
+  \item From this pool, you build your robot to fight with. You are considered to have an infinite supply of all free components.
+\end{itemize}
+
+\subsection{Quickstart / Latecomer}
+
+If you just want to dive right into the action, you can grab one of the automaton robot sheets and play using that (in this case, ignore the automation lines).
+
+\subsection{Tournament Play}
+
+\begin{itemize}
+  \item \textbf{Format Structure:} Robot Battles is designed to be played across multiple battles (typically 3), where you repair your robot from the spares in your supply between rounds. Components damaged in one round cannot be used in future rounds.
+  \item \textbf{Victory Condition:} The winner of the tournament is the player with the most wins after all games are played.
+  \item \textbf{Pairings:} Battles are played with random pairings for round 1, then with a ``winners play winners'' pattern. If you have an odd number of players, include an automaton as one person in the tournament (feel free to include more if you like).
+\end{itemize}
+
+\subsection{Automaton Robots}
+
+There are some automaton robots which come with a pre-built setup printed on their A3 sheet. You can use dry-erase markers to write on this damage during a fight.
+
+They will take actions according to the table written on the right-hand side of their sheet --- each turn roll a d6 and look up the value from that table. They will always try to turn to face their opponent when turning.
+
+\end{document}
