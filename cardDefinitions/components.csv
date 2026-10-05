@@ -1,7 +1,8 @@
-Name,Weight,Cost,Requirements,Outputs,Durability,Absorption,Keywords,Text
-Example ESC,0,2,EE,CC,5,2,fragile,
-Wires,0,0,XE,XE,7,0,fragile,
-Aluminum Plate,2,1,,,8,4,
-Galaxy 120,1,2,,EEE,6,0,
-Brushless Motor,1,2,CC,SSS,5,3,
-Forks,1,1,,,4,2,forks,
+Name,Weight,Cost,Requirements,Outputs,Durability,Absorption,Keywords,Text,Picture
+Simple ESC,0,2,EE,CC,5,2,fragile,,components/electronics_and_escs/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg
+Wires,0,0,XE,XE,7,0,fragile,,components/connectors_and_wiring/saifu-3-antweight-combat-robot-wire-harness.jpg
+Aluminum Plate,2,1,,,8,4,,,components/mechanicals_and_armor/viper-horizontal-spinner-armor-panels.jpeg
+Galaxy 120,1,2,,EEE,6,0,,,components/batteries_and_power/galaxy-120mah-2s-lipoly-pack.jpeg
+Brushless Motor,1,2,CC,SSS,5,3,,,components/motors/repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg
+Forks,1,1,,,4,2,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg
+TPU Plate,1,1,,,6,5,,,components/mechanicals_and_armor/repeat-robotics-scalar-tpu-chassis.jpg

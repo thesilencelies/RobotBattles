@@ -1,16 +1,46 @@
-# Robot battles
-This project is a simple card game about combat robotics.
+# Robot Battles
 
-The core gameplay is split into two parts: 
-- Robot construction
-- Robot battling
+This project is a card and tabletop miniature game about combat robotics. Build a robot within your budget and weight limit, then defeat your opponents in a tournament of destruction.
 
-Construction is done using the cards
-Battling is done on the map with the "miniatures"
+> **Theme & Vibe:** A simple-to-pick-up game that simulates preparing a robot for a competition and fighting it in the arena. Chaotic, scrambling for fixes, and dramatic hits --- *"You don't know what's going to happen when you enter the box."* The game's emphasis is more on making the bot than driving it.
 
+---
 
-## Code elements
+## Core Gameplay
+
+The core gameplay is split into two main parts:
+
+### 1. Robot Construction (Cards & Chassis)
+- **Chassis:** Each robot is built onto a chassis mat that determines its shape, base weight, cost, flip strength, and any special abilities.
+- **Component Cards:** Represent modules such as motors, batteries, ESCs, armor, and weapons. Cards must physically sit on the chassis.
+- **Resource Connectivity:** A component is active only if its input requirements (Power, Control, Spin, Pressure) are supplied by connected (touching) components.
+- **Budgets:** Robots must be built within the chosen cost budget (typically \$25) and weight capacity. Players may enter up to two robots (e.g., clusterbots) within the total budget.
+
+### 2. Robot Battling (Arena & Miniatures)
+- **The Arena:** Matches take place on an arena map featuring starting zones, perimeter walls, and hazard/pit zones (where thrown robots exit the arena).
+- **Match Length:** Played for 10 rounds or until a robot is immobilized (has no active drive or cannot unflip).
+
+## Game Formats
+
+- **Limited (Recommended):** Players build robots from a central pool with an unlimited basic pile and a rotating 9-card face-up market of special cards within a \$25 budget.
+- **Preconstructed:** Players bring pre-built decks up to the agreed budget.
+
+- **Tournament:** Multi-round competition (typically 3 battles) where damaged components cannot be reused and players must repair robots from spare parts between rounds.
+- **Automaton (AI / Solo / Odd Players):** Pre-built robots controlled by rolling a d6 on an action table to balance tournament numbers or allow solo play.
+
+---
+
+## Rules Documentation
+
+Full rules writeup, diagrams, and quick-reference summaries are located in the [`rules/`](rules/) directory:
+- [PDF Rulebook](rules/combat_robotics_game.pdf) --- Formatted 6-page printable rulebook with diagrams and reference tables.
+- [LaTeX Source](rules/combat_robotics_game.tex) --- LaTeX source code for the rulebook.
+- [Draft Rules (.docx)](rules/Combat%20robotics%20game.docx) --- Original draft rules document.
+
+---
+
+## Code Elements
+
 This repository contains code used to:
-- scrape possible component ideas
-- generate the card layout from the datasheets
-
+- Scrape possible component ideas and datasheets (`scripts/fetch_components.py`)
+- Generate card layouts and definitions from component datasheets
