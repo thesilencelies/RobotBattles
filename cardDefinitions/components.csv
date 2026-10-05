@@ -1,8 +1,39 @@
 Name,Weight,Cost,Requirements,Outputs,Durability,Absorption,Keywords,Text,Picture
-Simple ESC,0,2,EE,CC,5,2,fragile,,components/electronics_and_escs/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg
-Wires,0,0,XE,XE,7,0,fragile,,components/connectors_and_wiring/saifu-3-antweight-combat-robot-wire-harness.jpg
-Aluminum Plate,2,1,,,8,4,,,components/mechanicals_and_armor/viper-horizontal-spinner-armor-panels.jpeg
 Galaxy 120,1,2,,EEE,6,0,,,components/batteries_and_power/galaxy-120mah-2s-lipoly-pack.jpeg
+Galaxy 300 3S,,,,,0,0,,,components/batteries_and_power/galaxy-300mah-3s-lipoly-pack-xt30.jpg
+Galaxy 1000 3S,,,,,0,0,,,components/batteries_and_power/galaxy-1000mah-3s-lipoly-pack.jpeg
+Tattu 450 4S,,,,,0,0,,,components/batteries_and_power/gens-ace-tattu-450mah-4s-lipoly-pack.jpeg
+Power Switch Protector,,,,,0,0,,,components/batteries_and_power/power-supply-protector-small.jpeg
+Wires,0,0,XE,XE,7,0,fragile,,components/connectors_and_wiring/saifu-3-antweight-combat-robot-wire-harness.jpg
+Heavy Gauge Wire,,,,,0,0,,,components/connectors_and_wiring/silicone-wire-14awg-red-and-black.jpeg
+Simple ESC,0,2,EE,CC,5,2,fragile,,components/electronics_and_escs/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg
+Aria 70A ESC,,,,,0,0,,,components/electronics_and_escs/aria-70a-blheli-brushless-speed-controller.png
+Reversing Brushless ESC,,,,,0,0,,,components/electronics_and_escs/fingertech-bl40a-am32-reversing-esc.jpg
+Scorpion Mini ESC,,,,,0,0,,,components/electronics_and_escs/scorpion-mini-esc.jpeg
+Malenki Nano ESC-Receiver,,,,,0,0,,,components/electronics_and_escs/malenki-nano-dual-esc-and-receiver.jpg
 Brushless Motor,1,2,CC,SSS,5,3,,,components/motors/repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg
-Forks,1,1,,,4,2,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg
+N20 Spark Gearmotor,,,,,0,0,,,components/motors/fingertech-n20-mini-spark-gearmotor.jpg
+22mm Beetle Gearmotor,,,,,0,0,,,components/motors/22mm-beetleweight-gearmotor.png
+D2830 Weapon Motor,,,,,0,0,,,components/motors/d2830evo-brushless-1300kv-motor.jpeg
+Repeat 2207 Hubmotor,,,,,0,0,,,components/motors/repeat-2207-hubmotor-1200kv.jpg
+Micro Servo,,,,,0,0,,,components/servos_and_actuators/turnabot-startabot-micro-servo.jpg
+15kg Analog Servo,,,,,0,0,,,components/servos_and_actuators/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg
+20kg Metal Gear Servo,,,,,0,0,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg
+25kg High Voltage Servo,,,,,0,0,,,components/servos_and_actuators/25kg-9v-digital-servo-ccw.png
+Snap Wheels,,,,,0,0,,,components/wheels_and_drive/snap-wheels.jpg
+Banebots Compliant Wheels,,,,,0,0,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg
+Banebots T81 Heavy Wheels,,,,,0,0,,,components/wheels_and_drive/banebots-t81-wheels.jpeg
+High Grip Tires,,,,,0,0,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg
+Aluminum Plate,2,1,,,8,4,,,components/mechanicals_and_armor/viper-horizontal-spinner-armor-panels.jpeg
 TPU Plate,1,1,,,6,5,,,components/mechanicals_and_armor/repeat-robotics-scalar-tpu-chassis.jpg
+Titanium Top Plate,,,,,0,0,,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-titanium-lid.jpg
+UHMW Wraparound Armor,,,,,0,0,,,components/mechanicals_and_armor/saifu-wraparound-armor.jpg
+Titanium Wedge,,,,,0,0,,,components/mechanicals_and_armor/baby-nautiloid-titanium-wedge.jpeg
+Steel Wedge,,,,,0,0,,,components/mechanicals_and_armor/vertical-spinner-bent-steel-wedge.jpeg
+AR500 Wedge,,,,,0,0,,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg
+Forks,1,1,,,4,2,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg
+Titanium Horns,,,,,0,0,,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg
+Timing Belt,,,,,0,0,,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg
+Timing Pulley,,,,,0,0,,,components/mechanicals_and_armor/fingertech-pulley.jpg
+Bearing Blocks,,,,,0,0,,,components/mechanicals_and_armor/fingertech-bearing-blocks.png
+Fastener Kit,,,,,0,0,,,components/mechanicals_and_armor/kerfuffle-screw-kit.jpg

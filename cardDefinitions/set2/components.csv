@@ -1,0 +1,43 @@
+Name,Weight,Cost,Requirements,Outputs,Durability,Absorption,Keywords,Text,Picture
+GNB 850 4S,,,,,0,0,,,components/batteries_and_power/gaoneng-gnb-850mah-4s-lipo-battery.jpg
+Turnigy 300 2S,,,,,0,0,,,components/batteries_and_power/turnigy-300mah-2s-lipoly-pack-copy.jpg
+AM32 Brushless ESC,,,,,0,0,,,components/electronics_and_escs/e-power-aria-35a-am32-esc.jpg
+Pariah 70A AM32 ESC,,,,,0,0,,,components/electronics_and_escs/just-cuz-robotics-pariah-70a-am32-esc.jpg
+WEKA Dual Brushed ESC,,,,,0,0,,,components/electronics_and_escs/just-cuz-robotics-weka-dual-2x20-esc.jpg
+Scorpion Nano ESC,,,,,0,0,,,components/electronics_and_escs/scorpion-nano-esc.jpeg
+Scorpion CL ESC,,,,,0,0,,,components/electronics_and_escs/scorpion-cl-esc.jpeg
+Malenki Scarab HV ESC,,,,,0,0,,,components/electronics_and_escs/malenki-nano-dual-esc-scarab.jpg
+ReadytoSky Weapon ESC,,,,,0,0,,,components/electronics_and_escs/readytosky-35a-esc.jpg
+Repeat Ant Dual ESC,,,,,0,0,,,components/electronics_and_escs/repeat-robotics-ant-dual-esc.jpg
+Tiny ESC,,,,,0,0,,,components/electronics_and_escs/tiny-esc-v3.jpg
+Wasp ESC,,,,,0,0,,,components/electronics_and_escs/wasp-esc.jpg
+N10 Micro Gearmotor,,,,,0,0,,,components/motors/fingertech-n10-gearmotor.png
+N30 High Power Gearmotor,,,,,0,0,,,components/motors/turnabot-high-power-n30-motors.jpeg
+Silver Spark Gearmotor,,,,,0,0,,,components/motors/silver-spark-motor-2221.jpg
+Dartbox V2 Viper Gearmotor,,,,,0,0,,,components/motors/just-cuz-robotics-dartbox-v2-viper-gearmotors-22mm.jpeg
+MegaSpark Brushless Gearmotor,,,,,0,0,,,components/motors/megaspark-brushless-drive-gearmotor.png
+Blitz Pro Brushless Gearmotor,,,,,0,0,,,components/motors/blitz-pro-2306-brushless-gearmotor-27-1.jpg
+Repeat Drive MAX MK2,,,,,0,0,,,components/motors/repeat-drive-max-mk2-brushless-gearmotor.jpg
+Repeat Brushed Drive Motor,,,,,0,0,,,components/motors/repeat-robotics-brushed-drive-gearmotor.jpeg
+D2822 Weapon Motor,,,,,0,0,,,components/motors/d2822-14-brushless-motor-outrunner.png
+D3536 Heavy Weapon Motor,,,,,0,0,,,components/motors/d3536evo-1450kv-motor.jpg
+BX1306 Micro Outrunner,,,,,0,0,,,components/motors/bx1306-brushless-motor-outrunner-2300kv.jpeg
+Repeat 2812 Hubmotor,,,,,0,0,,,components/motors/repeat-robotics-2812-battle-ready-hubmotor-1300kv.jpg
+RDY-5536 Hubmotor,,,,,0,0,,,components/motors/just-cuz-robotics-jrdy-5536-1200kv-hubmotor.jpeg
+Flat Motor Mounts,,,,,0,0,,,components/motors/flat-motor-mounts-pair.png
+High Torque Micro Servo,,,,,0,0,,,components/servos_and_actuators/kingmax-km1203md-high-torque-12mm-micro-servo.jpg
+Banebots T40 Wheels,,,,,0,0,,,components/wheels_and_drive/banebots-t40-wheels.jpg
+Micro Wheels,,,,,0,0,,,components/wheels_and_drive/pololu-small-wheels.jpeg
+SSP Billet Front Wheels,,,,,0,0,,,components/wheels_and_drive/just-cuz-robotics-ssp-2-0-front-wheel-set.png
+SSP Billet Rear Wheels,,,,,0,0,,,components/wheels_and_drive/just-cuz-robotics-ssp-2-0-rear-wheel-set.jpg
+UHMW Top Plate,,,,,0,0,,,components/mechanicals_and_armor/baby-nautiloid-uhmw-top-plates.jpeg
+UHMW Front Armor,,,,,0,0,,,components/mechanicals_and_armor/viper-uhmw-front-armor-v3.jpg
+G10 Composite Lid,,,,,0,0,,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-g10-lid.png
+Barbed Forks,,,,,0,0,,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-barbed-forks.jpg
+Needle Bearings,,,,,0,0,,,components/mechanicals_and_armor/fingertech-needle-bearings.jpeg
+Drive Axles,,,,,0,0,,,components/mechanicals_and_armor/repeat-robotics-drive-axle-antweight.jpeg
+Weapon Hub,,,,,0,0,,,components/mechanicals_and_armor/repeat-robotics-scalar-weapon-hub.jpg
+Weapon Shaft,,,,,0,0,,,components/mechanicals_and_armor/repeat-robotics-scalar-weapon-shaft.jpg
+Nut Strip,,,,,0,0,,,components/mechanicals_and_armor/nut-strip-std.png
+Threaded Inserts,,,,,0,0,,,components/mechanicals_and_armor/m3-brass-heat-set-threaded-inserts-20-pack.jpg
+Chassis Rails,,,,,0,0,,,components/mechanicals_and_armor/saifu-chassis-side-wall.jpg
