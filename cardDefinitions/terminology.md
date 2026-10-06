@@ -4,6 +4,7 @@
 | Energy | E |
 | Control | C |
 | Spin | S |
+| Pressure | P|
 | Drive | M |
 | Damage | W |
 

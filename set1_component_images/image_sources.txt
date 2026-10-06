@@ -1,0 +1,901 @@
+================================================================================
+SET 1 COMPONENT & CARD IMAGES - SOURCE LINKS & PERMISSION REFERENCE
+================================================================================
+
+Total Unique Images Gathered: 55
+  - Component Cards   : 36 images
+  - Weapon Cards      : 14 images
+  - Chassis Mats      : 5 images
+
+PRIMARY SOURCE STORE:
+All images were originally cataloged from ITGresa Robotics (https://itgresa.com/),
+the primary online distributor for US/North American combat robotics builders.
+Specific components are designed and manufactured by individual robot builders
+and combat robotics teams (e.g., FingerTech Robotics, Just Cuz Robotics, Repeat
+Robotics, Turnabot, RAD Robotics, Kitbots, BaneBots, etc.).
+
+FOLDER ORGANIZATION:
+  - components/ : 36 images for component cards (cardDefinitions/components.csv)
+  - weapons/    : 14 images for weapon cards (cardDefinitions/weapons.csv)
+  - chassis/    :  5 images for chassis mats (cardDefinitions/chassis.csv)
+  - all/        : All 55 images gathered into a single flat directory
+
+================================================================================
+
+--------------------------------------------------------------------------------
+COMPONENT CARDS (36 items)
+--------------------------------------------------------------------------------
+
+[1] Card Name:       Galaxy 120
+    Image Filename:  galaxy-120mah-2s-lipoly-pack.jpeg
+    Folder Location: components/galaxy-120mah-2s-lipoly-pack.jpeg
+    Store Product:   Galaxy 120mAh 2S Lipoly Pack
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $11.49
+    Product Page:    https://itgresa.com/product/galaxy-120mah-2s-lipoly-pack/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/02/120mAh-2S-Lipo-battery-sq-300-jpg.jpeg
+
+[2] Card Name:       Galaxy 300 3S
+    Image Filename:  galaxy-300mah-3s-lipoly-pack-xt30.jpg
+    Folder Location: components/galaxy-300mah-3s-lipoly-pack-xt30.jpg
+    Store Product:   Galaxy 300mAh 3S Lipoly Pack with XT30 Connector
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $14.50
+    Product Page:    https://itgresa.com/product/galaxy-300mah-3s-lipoly-pack-xt30/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/11/Fingertech-Galaxy-Lipoly-300mAh-3S-XT30-Connector-sq-jpg-500.jpg
+
+[3] Card Name:       Galaxy 1000 3S
+    Image Filename:  galaxy-1000mah-3s-lipoly-pack.jpeg
+    Folder Location: components/galaxy-1000mah-3s-lipoly-pack.jpeg
+    Store Product:   Galaxy 1000mAh 3S Lipoly Pack
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $19.99
+    Product Page:    https://itgresa.com/product/galaxy-1000mah-3s-lipoly-pack/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/01/1000mAh-3S-Lipo-battery-sq-300-jpg.jpeg
+
+[4] Card Name:       Tattu 450 4S
+    Image Filename:  gens-ace-tattu-450mah-4s-lipoly-pack.jpeg
+    Folder Location: components/gens-ace-tattu-450mah-4s-lipoly-pack.jpeg
+    Store Product:   Gens Ace Tattu 450mAh 4S Lipoly Pack
+    Manufacturer:    Gens Ace / Tattu
+    Store Price:     $20.49
+    Product Page:    https://itgresa.com/product/gens-ace-tattu-450mah-4s-lipoly-pack/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/06/450mAh-Gens-Ace-Tattu-4S-75C-lipo-sq-jpg-500.jpeg
+
+[5] Card Name:       Power Switch Protector
+    Image Filename:  power-supply-protector-small.jpeg
+    Folder Location: components/power-supply-protector-small.jpeg
+    Store Product:   Small Power Supply Protector
+    Manufacturer:    ITGresa / General
+    Store Price:     $19.99
+    Product Page:    https://itgresa.com/product/power-supply-protector-small/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/01/Power-Supply-Protector-Small-Sq-jpg-500.jpeg
+
+[6] Card Name:       Wires
+    Image Filename:  saifu-3-antweight-combat-robot-wire-harness.jpg
+    Folder Location: components/saifu-3-antweight-combat-robot-wire-harness.jpg
+    Store Product:   Saifu 3 Antweight Combat Robot Wire Harness
+    Manufacturer:    Kitbots
+    Store Price:     $42.80
+    Product Page:    https://itgresa.com/product/saifu-3-antweight-combat-robot-wire-harness/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/08/Kitbots-Saifu-3-plug-n-play-wire-harness-1-sq-jpg-500.jpg
+
+[7] Card Name:       Heavy Gauge Wire
+    Image Filename:  silicone-wire-14awg-red-and-black.jpeg
+    Folder Location: components/silicone-wire-14awg-red-and-black.jpeg
+    Store Product:   Silicone wire 14awg red and black (per ft)
+    Manufacturer:    ITGresa / General
+    Store Price:     $3.00
+    Product Page:    https://itgresa.com/product/silicone-wire-14awg-red-and-black/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/01/Red-Black-14awg-silicone-wire-small-lengths-sq-jpg-500.jpeg
+
+[8] Card Name:       Simple ESC
+    Image Filename:  flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg
+    Folder Location: components/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg
+    Store Product:   Flycolor Francy 2 30A BLHeli Brushless ESC with BEC
+    Manufacturer:    Flycolor
+    Store Price:     $28.99
+    Product Page:    https://itgresa.com/product/flycolor-francy2-30a-blheli-brushless-esc-w-bec/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/09/flycolor-francy2-esc-30a-sq-jpg-500.jpeg
+
+[9] Card Name:       Aria 70A ESC
+    Image Filename:  aria-70a-blheli-brushless-speed-controller.png
+    Folder Location: components/aria-70a-blheli-brushless-speed-controller.png
+    Store Product:   Aria 70A BLHeli Brushless ESC
+    Manufacturer:    ITGresa / General
+    Store Price:     $35.99
+    Product Page:    https://itgresa.com/product/aria-70a-blheli-brushless-speed-controller/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/02/Aria-70A-ESC-sq-front-500.png
+
+[10] Card Name:       Reversing Brushless ESC
+    Image Filename:  fingertech-bl40a-am32-reversing-esc.jpg
+    Folder Location: components/fingertech-bl40a-am32-reversing-esc.jpg
+    Store Product:   FingerTech BL40A AM32 Reversing ESC
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $36.50
+    Product Page:    https://itgresa.com/product/fingertech-bl40a-am32-reversing-esc/
+    Original Image:  https://itgresa.com/wp-content/uploads/2026/03/Fingertech-AM32-40A-ESC-2-sq-jpg-500.jpg
+
+[11] Card Name:       Scorpion Mini ESC
+    Image Filename:  scorpion-mini-esc.jpeg
+    Folder Location: components/scorpion-mini-esc.jpeg
+    Store Product:   Scorpion Mini ESC
+    Manufacturer:    Robot Power (Scorpion)
+    Store Price:     $44.99
+    Product Page:    https://itgresa.com/product/scorpion-mini-esc/
+    Original Image:  https://itgresa.com/wp-content/uploads/2021/06/Scorpion-Mini-sq-500.jpeg
+
+[12] Card Name:       Malenki Nano ESC-Receiver
+    Image Filename:  malenki-nano-dual-esc-and-receiver.jpg
+    Folder Location: components/malenki-nano-dual-esc-and-receiver.jpg
+    Store Product:   Malenki Nano Dual ESC and Receiver
+    Manufacturer:    Malenki (Martin)
+    Store Price:     $28.00
+    Product Page:    https://itgresa.com/product/malenki-nano-dual-esc-and-receiver/
+    Original Image:  https://itgresa.com/wp-content/uploads/2021/10/Malenki-Nano-Front-Sq-500-jpg.jpg
+
+[13] Card Name:       Brushless Motor
+    Image Filename:  repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg
+    Folder Location: components/repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg
+    Store Product:   Repeat Robotics Mini BRUSHLESS Drive Gearmotor Mk4.1
+    Manufacturer:    Repeat Robotics
+    Store Price:     $35.00
+    Product Page:    https://itgresa.com/product/repeat-robotics-mini-brushless-drive-gearmotor-mk4/
+    Original Image:  https://itgresa.com/wp-content/uploads/2024/12/Repeat-Robotics-Brushless-Mini-Mk4-2-sq-jpg-500.jpg
+
+[14] Card Name:       N20 Spark Gearmotor
+    Image Filename:  fingertech-n20-mini-spark-gearmotor.jpg
+    Folder Location: components/fingertech-n20-mini-spark-gearmotor.jpg
+    Store Product:   Fingertech N20 Mini Spark Gearmotor
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $11.50
+    Product Page:    https://itgresa.com/product/fingertech-n20-mini-spark-gearmotor/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/12/Fingertech-Microspark-N20-Gearmotor-sq-jpg-500.jpg
+
+[15] Card Name:       22mm Beetle Gearmotor
+    Image Filename:  22mm-beetleweight-gearmotor.png
+    Folder Location: components/22mm-beetleweight-gearmotor.png
+    Store Product:   22mm Gearmotor for Beetleweights
+    Manufacturer:    ITGresa / General
+    Store Price:     $29.99
+    Product Page:    https://itgresa.com/product/22mm-beetleweight-gearmotor/
+    Original Image:  https://itgresa.com/wp-content/uploads/2021/05/22mm-beetleweight-motor-500.png
+
+[16] Card Name:       D2830 Weapon Motor
+    Image Filename:  d2830evo-brushless-1300kv-motor.jpeg
+    Folder Location: components/d2830evo-brushless-1300kv-motor.jpeg
+    Store Product:   D2830EVO Brushless 1300KV motor
+    Manufacturer:    ITGresa / General
+    Store Price:     $17.49
+    Product Page:    https://itgresa.com/product/d2830evo-brushless-1300kv-motor/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/05/2830EVO-side-sq-jpg-500.jpeg
+
+[17] Card Name:       Repeat 2207 Hubmotor
+    Image Filename:  repeat-2207-hubmotor-1200kv.jpg
+    Folder Location: components/repeat-2207-hubmotor-1200kv.jpg
+    Store Product:   Repeat Robotics 2207 Battle Ready Hubmotor 1200kv
+    Manufacturer:    Repeat Robotics
+    Store Price:     $50.00
+    Product Page:    https://itgresa.com/product/repeat-2207-hubmotor-1200kv/
+    Original Image:  https://itgresa.com/wp-content/uploads/2024/10/Repeat-Robotics-2207-hubmotor-Front-view-2-sq-jpg-500.jpg
+
+[18] Card Name:       Micro Servo
+    Image Filename:  turnabot-startabot-micro-servo.jpg
+    Folder Location: components/turnabot-startabot-micro-servo.jpg
+    Store Product:   Turnabot Startabot micro servo
+    Manufacturer:    Turnabot
+    Store Price:     $28.00
+    Product Page:    https://itgresa.com/product/turnabot-startabot-micro-servo/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/10/Turnabot-Startabot-Servo-Side-View-sq-jpg-500.jpg
+
+[19] Card Name:       15kg Analog Servo
+    Image Filename:  gs-5515mg-analog-servo-15kg-cw-rotation.jpeg
+    Folder Location: components/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg
+    Store Product:   GS-5515MG Analog Servo CW 15kg (Clockwise rotation)
+    Manufacturer:    ITGresa / General
+    Store Price:     $13.99
+    Product Page:    https://itgresa.com/product/gs-5515mg-analog-servo-15kg-cw-rotation/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/02/FH-5515MG-Analog-Servo-CCW-jpg-500.jpeg
+
+[20] Card Name:       20kg Metal Gear Servo
+    Image Filename:  ds-servo-pro-20kg-combat-robot-servo.jpg
+    Folder Location: components/ds-servo-pro-20kg-combat-robot-servo.jpg
+    Store Product:   DS Servo 20KG 3218 Pro
+    Manufacturer:    ITGresa / General
+    Store Price:     $17.99
+    Product Page:    https://itgresa.com/product/ds-servo-pro-20kg-combat-robot-servo/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/10/DS-Servo-20kg-oblique-front-with-arm-sq-jpg-500.jpg
+
+[21] Card Name:       25kg High Voltage Servo
+    Image Filename:  25kg-9v-digital-servo-ccw.png
+    Folder Location: components/25kg-9v-digital-servo-ccw.png
+    Store Product:   Fingertech 25kg 9V Digital Servo CCW
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $24.99
+    Product Page:    https://itgresa.com/product/25kg-9v-digital-servo-ccw/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/01/Fingertech-25kg-9V-Digital-Servo-CCW-sq-jpg-500.png
+
+[22] Card Name:       Snap Wheels
+    Image Filename:  snap-wheels.jpg
+    Folder Location: components/snap-wheels.jpg
+    Store Product:   Snap Wheels
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $2.50
+    Product Page:    https://itgresa.com/product/snap-wheels/
+    Original Image:  https://itgresa.com/wp-content/uploads/2019/08/Multiple-wheels-image-sq-jpg-500.jpg
+
+[23] Card Name:       Banebots Compliant Wheels
+    Image Filename:  banebots-t61-compliant-wheels.jpg
+    Folder Location: components/banebots-t61-compliant-wheels.jpg
+    Store Product:   Banebots T61 Compliant Wheels
+    Manufacturer:    BaneBots
+    Store Price:     $4.00
+    Product Page:    https://itgresa.com/product/banebots-t61-compliant-wheels/
+    Original Image:  https://itgresa.com/wp-content/uploads/2024/11/Banebots-compliant-T61P-203BG__54075-sq-jpg-500.jpg
+
+[24] Card Name:       Banebots T81 Heavy Wheels
+    Image Filename:  banebots-t81-wheels.jpeg
+    Folder Location: components/banebots-t81-wheels.jpeg
+    Store Product:   Banebots T81 Wheels
+    Manufacturer:    BaneBots
+    Store Price:     $3.25
+    Product Page:    https://itgresa.com/product/banebots-t81-wheels/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/03/Banebots-2-x-0.8-Green-Sq-jpg-500.jpeg
+
+[25] Card Name:       High Grip Tires
+    Image Filename:  turnabot-30mm-high-grip-tires.jpg
+    Folder Location: components/turnabot-30mm-high-grip-tires.jpg
+    Store Product:   Turnabot 30.4mm High Grip Tires
+    Manufacturer:    Turnabot
+    Store Price:     $3.00
+    Product Page:    https://itgresa.com/product/turnabot-30mm-high-grip-tires/
+    Original Image:  https://itgresa.com/wp-content/uploads/2026/05/30mm-x-14mm-Rubber-Lego-style-High-Grip-tires-sq-jpg-500.jpg
+
+[26] Card Name:       Aluminum Plate
+    Image Filename:  viper-horizontal-spinner-armor-panels.jpeg
+    Folder Location: components/viper-horizontal-spinner-armor-panels.jpeg
+    Store Product:   Viper Horizontal Spinner Armor Panels
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $6.75
+    Product Page:    https://itgresa.com/product/viper-horizontal-spinner-armor-panels/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/01/Viper-Armor-H-Spinner-Sq-500-jpg.jpeg
+
+[27] Card Name:       TPU Plate
+    Image Filename:  repeat-robotics-scalar-tpu-chassis.jpg
+    Folder Location: components/repeat-robotics-scalar-tpu-chassis.jpg
+    Store Product:   Repeat Robotics Scalar TPU Chassis
+    Manufacturer:    Repeat Robotics
+    Store Price:     $25.00
+    Product Page:    https://itgresa.com/product/repeat-robotics-scalar-tpu-chassis/
+    Original Image:  https://itgresa.com/wp-content/uploads/2026/01/Repeat-Robotics-Scalar-Antweight-combat-robot-tpu-chassis-sq-jpg-500.jpg
+
+[28] Card Name:       Titanium Top Plate
+    Image Filename:  just-cuz-robotics-ssp-kit-titanium-lid.jpg
+    Folder Location: components/just-cuz-robotics-ssp-kit-titanium-lid.jpg
+    Store Product:   Just Cuz Robotics SSP 2.0 Kit Titanium Lid
+    Manufacturer:    Just Cuz Robotics
+    Store Price:     $80.00
+    Product Page:    https://itgresa.com/product/just-cuz-robotics-ssp-kit-titanium-lid/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-2-0-titanium-lid-sq-jpg-500-.jpg
+
+[29] Card Name:       UHMW Wraparound Armor
+    Image Filename:  saifu-wraparound-armor.jpg
+    Folder Location: components/saifu-wraparound-armor.jpg
+    Store Product:   Saifu Wraparound UHMW Armor
+    Manufacturer:    Kitbots
+    Store Price:     $25.00
+    Product Page:    https://itgresa.com/product/saifu-wraparound-armor/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/12/Saifu-Armor-sq-jpg-500.jpg
+
+[30] Card Name:       Titanium Wedge
+    Image Filename:  baby-nautiloid-titanium-wedge.jpeg
+    Folder Location: components/baby-nautiloid-titanium-wedge.jpeg
+    Store Product:   Baby Nautiloid Titanium Wedge
+    Manufacturer:    RAD Robotics
+    Store Price:     $30.00
+    Product Page:    https://itgresa.com/product/baby-nautiloid-titanium-wedge/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/01/Baby-Nautiloid-Titanium-Wedge-sq-jpg-500.jpeg
+
+[31] Card Name:       Steel Wedge
+    Image Filename:  vertical-spinner-bent-steel-wedge.jpeg
+    Folder Location: components/vertical-spinner-bent-steel-wedge.jpeg
+    Store Product:   Vertical Spinner Bent Steel Wedge
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $6.50
+    Product Page:    https://itgresa.com/product/vertical-spinner-bent-steel-wedge/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/08/Vertical-spinner-wedge-sq-jpg-500.jpeg
+
+[32] Card Name:       AR500 Wedge
+    Image Filename:  just-cuz-robotics-ssp-kit-ar500-wedge.jpg
+    Folder Location: components/just-cuz-robotics-ssp-kit-ar500-wedge.jpg
+    Store Product:   Just Cuz Robotics SSP Kit AR500 Wedge
+    Manufacturer:    Just Cuz Robotics
+    Store Price:     $30.00
+    Product Page:    https://itgresa.com/product/just-cuz-robotics-ssp-kit-ar500-wedge/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-Kit-AR500-Wedge-sq-jpg-500.jpg
+
+[33] Card Name:       Forks
+    Image Filename:  black-frost-front-forks.jpeg
+    Folder Location: components/black-frost-front-forks.jpeg
+    Store Product:   Black Frost Front Forks
+    Manufacturer:    Team Bad Idea (Black Frost)
+    Store Price:     $29.99
+    Product Page:    https://itgresa.com/product/black-frost-front-forks/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/04/Black-Frost-Forks-Arranged-sq-jpg-500.jpeg
+
+[34] Card Name:       Titanium Horns
+    Image Filename:  saifu-symmetrical-titanium-horns.jpeg
+    Folder Location: components/saifu-symmetrical-titanium-horns.jpeg
+    Store Product:   Saifu Symmetrical Titanium Horns (Pair)
+    Manufacturer:    Kitbots
+    Store Price:     $40.00
+    Product Page:    https://itgresa.com/product/saifu-symmetrical-titanium-horns/
+    Original Image:  https://itgresa.com/wp-content/uploads/2026/08/Saifu-3-symmetrical-titanium-horns-back-to-back-sq-jpg-500.jpeg
+
+[35] Card Name:       Timing Belt
+    Image Filename:  fingertech-s3m-timing-belt.jpg
+    Folder Location: components/fingertech-s3m-timing-belt.jpg
+    Store Product:   Fingertech S3M Timing Belt
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $2.50
+    Product Page:    https://itgresa.com/product/fingertech-s3m-timing-belt/
+    Original Image:  https://itgresa.com/wp-content/uploads/2021/07/Pulley-belt-sq-web.jpg
+
+[36] Card Name:       Timing Pulley
+    Image Filename:  fingertech-pulley.jpg
+    Folder Location: components/fingertech-pulley.jpg
+    Store Product:   Fingertech S3M Timing Pulley
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $4.75
+    Product Page:    https://itgresa.com/product/fingertech-pulley/
+    Original Image:  https://itgresa.com/wp-content/uploads/2021/07/Pulley-sq-web.jpg
+
+
+--------------------------------------------------------------------------------
+WEAPON CARDS (14 items)
+--------------------------------------------------------------------------------
+
+[1] Card Name:       Horizontal Spinner
+    Image Filename:  viper-horizontal-spinner.jpeg
+    Folder Location: weapons/viper-horizontal-spinner.jpeg
+    Store Product:   Viper Horizontal Spinner Kit
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $78.75
+    Product Page:    https://itgresa.com/product/viper-horizontal-spinner/
+    Original Image:  https://itgresa.com/wp-content/uploads/2019/09/Viper-Horizonta-Spinner-Kit-CAD-500.jpeg
+
+[2] Card Name:       Bloodsport Bar
+    Image Filename:  bloodsport-bar.png
+    Folder Location: weapons/bloodsport-bar.png
+    Store Product:   Bloodsport Bar
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $29.99
+    Product Page:    https://itgresa.com/product/bloodsport-bar/
+    Original Image:  https://itgresa.com/wp-content/uploads/2020/02/bloodsport-bar_gt-500.png
+
+[3] Card Name:       Titanium Spinner Blade
+    Image Filename:  viper-horizontal-spinner-titanium-blade.jpg
+    Folder Location: weapons/viper-horizontal-spinner-titanium-blade.jpg
+    Store Product:   Viper Horizontal Spinner Titanium Blade 6″
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $29.99
+    Product Page:    https://itgresa.com/product/viper-horizontal-spinner-titanium-blade/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/11/Fingertech-6mm-titanium-blade-sq-jpg-500.jpg
+
+[4] Card Name:       Vertical Spinner
+    Image Filename:  viper-vertical-spinner-clamping-drum.jpeg
+    Folder Location: weapons/viper-vertical-spinner-clamping-drum.jpeg
+    Store Product:   Viper Vertical Spinner Clamping Drum
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $22.99
+    Product Page:    https://itgresa.com/product/viper-vertical-spinner-clamping-drum/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/03/Clamping-Drum-sq-jpg-500.jpeg
+
+[5] Card Name:       Single Tooth Disc
+    Image Filename:  baby-nautiloid-weapon-disc-single-tooth-ar500.jpeg
+    Folder Location: weapons/baby-nautiloid-weapon-disc-single-tooth-ar500.jpeg
+    Store Product:   Baby Nautiloid Weapon Disc
+    Manufacturer:    RAD Robotics
+    Store Price:     $16.00
+    Product Page:    https://itgresa.com/product/baby-nautiloid-weapon-disc-single-tooth-ar500/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/01/Baby-Nautiloid-Weapon-Disc-with-bolts-sq-jpg-500.jpeg
+
+[6] Card Name:       NightWing AR500 Disc
+    Image Filename:  fingertech-nightwing-ar500-weapon-disc-10in.jpg
+    Folder Location: weapons/fingertech-nightwing-ar500-weapon-disc-10in.jpg
+    Store Product:   FingerTech NightWing AR500 Weapon Disc
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $56.99
+    Product Page:    https://itgresa.com/product/fingertech-nightwing-ar500-weapon-disc-10in/
+    Original Image:  https://itgresa.com/wp-content/uploads/2026/03/Fingertech-Nightwing-10in-AR500-blade-sq-jpg-500.jpg
+
+[7] Card Name:       Beater Bar
+    Image Filename:  1lb-beater-bar.png
+    Folder Location: weapons/1lb-beater-bar.png
+    Store Product:   1lb Beater Bar
+    Manufacturer:    ITGresa / General
+    Store Price:     $45.99
+    Product Page:    https://itgresa.com/product/1lb-beater-bar/
+    Original Image:  https://itgresa.com/wp-content/uploads/2021/08/1lb-beater-bar-new-version-500-sq.png
+
+[8] Card Name:       Tail Spinner Kit
+    Image Filename:  viper-tail-spinner-kit.jpg
+    Folder Location: weapons/viper-tail-spinner-kit.jpg
+    Store Product:   Fingertech Viper Tail Spinner Kit
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $79.99
+    Product Page:    https://itgresa.com/product/viper-tail-spinner-kit/
+    Original Image:  https://itgresa.com/wp-content/uploads/2024/11/Viper-Tail-Spinner-installed-on-Viper-sq-jpg-500.jpg
+
+[9] Card Name:       Cronos Scythe
+    Image Filename:  cronos-scythe.jpg
+    Folder Location: weapons/cronos-scythe.jpg
+    Store Product:   Cronos’ Scythe
+    Manufacturer:    Team Cronos
+    Store Price:     $69.99
+    Product Page:    https://itgresa.com/product/cronos-scythe/
+    Original Image:  https://itgresa.com/wp-content/uploads/2023/09/Cronos-Scythe-Oblique-sq-jpg-500-purple.jpg
+
+[10] Card Name:       Chonk Key Blade
+    Image Filename:  just-cuz-robotics-chonk-key-blade.jpg
+    Folder Location: weapons/just-cuz-robotics-chonk-key-blade.jpg
+    Store Product:   Just Cuz Robotics Chonk Key Blade
+    Manufacturer:    Just Cuz Robotics
+    Store Price:     $26.00
+    Product Page:    https://itgresa.com/product/just-cuz-robotics-chonk-key-blade/
+    Original Image:  https://itgresa.com/wp-content/uploads/2024/10/Chonk-Key-Subtraction-blade-sq-jpg-500.jpg
+
+[11] Card Name:       Asymmetrical AR500 Blade
+    Image Filename:  viper-asymmetrical-ar500-blade.jpg
+    Folder Location: weapons/viper-asymmetrical-ar500-blade.jpg
+    Store Product:   Viper Asymmetrical AR500 Blade
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $15.75
+    Product Page:    https://itgresa.com/product/viper-asymmetrical-ar500-blade/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/04/Fingertech-350-AR500-asymmetrical-blade-sq-jpg-500.jpg
+
+[12] Card Name:       Four-Bar Lifter
+    Image Filename:  viper-lifter-weapon.png
+    Folder Location: weapons/viper-lifter-weapon.png
+    Store Product:   Viper Lifter Weapon
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $48.50
+    Product Page:    https://itgresa.com/product/viper-lifter-weapon/
+    Original Image:  https://itgresa.com/wp-content/uploads/2020/09/lifter-add-on_gt-4x3-500.png
+
+[13] Card Name:       Claw Forks
+    Image Filename:  just-cuz-robotics-ssp-kit-claw-forks.jpg
+    Folder Location: weapons/just-cuz-robotics-ssp-kit-claw-forks.jpg
+    Store Product:   Just Cuz Robotics SSP Kit Claw Forks
+    Manufacturer:    Just Cuz Robotics
+    Store Price:     $15.00
+    Product Page:    https://itgresa.com/product/just-cuz-robotics-ssp-kit-claw-forks/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-Kit-AR500-Claw-forks-1-sq-jpg-500.jpg
+
+[14] Card Name:       Lifter Arms
+    Image Filename:  ft-viper-lifter-arms.png
+    Folder Location: weapons/ft-viper-lifter-arms.png
+    Store Product:   Replacement Lifter Arms
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $9.99
+    Product Page:    https://itgresa.com/product/ft-viper-lifter-arms/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/01/Lifter-arms-sq-500.png
+
+
+--------------------------------------------------------------------------------
+CHASSIS MATS (5 items)
+--------------------------------------------------------------------------------
+
+[1] Card Name:       Viper Wedge Chassis
+    Image Filename:  viper-combat-robot-kit-base.jpg
+    Folder Location: chassis/viper-combat-robot-kit-base.jpg
+    Store Product:   Fingertech Viper V3 Combat Robot Kit with Lipoly
+    Manufacturer:    FingerTech Robotics
+    Store Price:     $186.78
+    Product Page:    https://itgresa.com/product/viper-combat-robot-kit-base/
+    Original Image:  https://itgresa.com/wp-content/uploads/2020/01/Viper-V3-with-Galaxy-2S-battery-sq-jpg-500.jpg
+
+[2] Card Name:       SSP 2.0 Billet Chassis
+    Image Filename:  just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit.jpg
+    Folder Location: chassis/just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit.jpg
+    Store Product:   JCR SSP 2.0 Beetleweight Combat Robot Kit
+    Manufacturer:    Just Cuz Robotics
+    Store Price:     $450.00
+    Product Page:    https://itgresa.com/product/just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit/
+    Original Image:  https://itgresa.com/wp-content/uploads/2025/07/Just-Cuz-Robotics-SSP-2.0-Kit-front-oblique-view-forks-sq-jpg-500.jpg
+
+[3] Card Name:       Nautiloid Drum Chassis
+    Image Filename:  baby-nautiloid-combat-robot-radio-ready.png
+    Folder Location: chassis/baby-nautiloid-combat-robot-radio-ready.png
+    Store Product:   Baby Nautiloid Combat Robot – Radio Ready
+    Manufacturer:    RAD Robotics
+    Store Price:     $599.99
+    Product Page:    https://itgresa.com/product/baby-nautiloid-combat-robot-radio-ready/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/09/Baby-Nautiloid-2-500.png
+
+[4] Card Name:       Overthrow Flipper Chassis
+    Image Filename:  turnabot-overthrow-fairyweight-combat-robot-kit.jpg
+    Folder Location: chassis/turnabot-overthrow-fairyweight-combat-robot-kit.jpg
+    Store Product:   Turnabot OverThrow Fairyweight Combat Robot Kit
+    Manufacturer:    Turnabot
+    Store Price:     $174.00
+    Product Page:    https://itgresa.com/product/turnabot-overthrow-fairyweight-combat-robot-kit/
+    Original Image:  https://itgresa.com/wp-content/uploads/2026/06/Overthrow-oblique-side-right-black-sq-jpg-500.jpg
+
+[5] Card Name:       Tracked Sumo Chassis
+    Image Filename:  pololu-zumo-32u4-oled-arduino-sumo-robot.jpeg
+    Folder Location: chassis/pololu-zumo-32u4-oled-arduino-sumo-robot.jpeg
+    Store Product:   Pololu Zumo 32U4 OLED Arduino Sumo robot
+    Manufacturer:    Pololu
+    Store Price:     $194.95
+    Product Page:    https://itgresa.com/product/pololu-zumo-32u4-oled-arduino-sumo-robot/
+    Original Image:  https://itgresa.com/wp-content/uploads/2022/03/Zumo-sq-jpg-500.jpeg
+
+================================================================================
+BREAKDOWN BY MANUFACTURER / BRAND (FOR SEEKING PERMISSION)
+================================================================================
+
+=== BaneBots (2 items) ===
+  - [Banebots Compliant Wheels] (Banebots T61 Compliant Wheels)
+      Product: https://itgresa.com/product/banebots-t61-compliant-wheels/
+      Image:   https://itgresa.com/wp-content/uploads/2024/11/Banebots-compliant-T61P-203BG__54075-sq-jpg-500.jpg
+  - [Banebots T81 Heavy Wheels] (Banebots T81 Wheels)
+      Product: https://itgresa.com/product/banebots-t81-wheels/
+      Image:   https://itgresa.com/wp-content/uploads/2022/03/Banebots-2-x-0.8-Green-Sq-jpg-500.jpeg
+
+=== FingerTech Robotics (21 items) ===
+  - [Galaxy 120] (Galaxy 120mAh 2S Lipoly Pack)
+      Product: https://itgresa.com/product/galaxy-120mah-2s-lipoly-pack/
+      Image:   https://itgresa.com/wp-content/uploads/2022/02/120mAh-2S-Lipo-battery-sq-300-jpg.jpeg
+  - [Galaxy 300 3S] (Galaxy 300mAh 3S Lipoly Pack with XT30 Connector)
+      Product: https://itgresa.com/product/galaxy-300mah-3s-lipoly-pack-xt30/
+      Image:   https://itgresa.com/wp-content/uploads/2023/11/Fingertech-Galaxy-Lipoly-300mAh-3S-XT30-Connector-sq-jpg-500.jpg
+  - [Galaxy 1000 3S] (Galaxy 1000mAh 3S Lipoly Pack)
+      Product: https://itgresa.com/product/galaxy-1000mah-3s-lipoly-pack/
+      Image:   https://itgresa.com/wp-content/uploads/2022/01/1000mAh-3S-Lipo-battery-sq-300-jpg.jpeg
+  - [Reversing Brushless ESC] (FingerTech BL40A AM32 Reversing ESC)
+      Product: https://itgresa.com/product/fingertech-bl40a-am32-reversing-esc/
+      Image:   https://itgresa.com/wp-content/uploads/2026/03/Fingertech-AM32-40A-ESC-2-sq-jpg-500.jpg
+  - [N20 Spark Gearmotor] (Fingertech N20 Mini Spark Gearmotor)
+      Product: https://itgresa.com/product/fingertech-n20-mini-spark-gearmotor/
+      Image:   https://itgresa.com/wp-content/uploads/2025/12/Fingertech-Microspark-N20-Gearmotor-sq-jpg-500.jpg
+  - [25kg High Voltage Servo] (Fingertech 25kg 9V Digital Servo CCW)
+      Product: https://itgresa.com/product/25kg-9v-digital-servo-ccw/
+      Image:   https://itgresa.com/wp-content/uploads/2025/01/Fingertech-25kg-9V-Digital-Servo-CCW-sq-jpg-500.png
+  - [Snap Wheels] (Snap Wheels)
+      Product: https://itgresa.com/product/snap-wheels/
+      Image:   https://itgresa.com/wp-content/uploads/2019/08/Multiple-wheels-image-sq-jpg-500.jpg
+  - [Aluminum Plate] (Viper Horizontal Spinner Armor Panels)
+      Product: https://itgresa.com/product/viper-horizontal-spinner-armor-panels/
+      Image:   https://itgresa.com/wp-content/uploads/2022/01/Viper-Armor-H-Spinner-Sq-500-jpg.jpeg
+  - [Steel Wedge] (Vertical Spinner Bent Steel Wedge)
+      Product: https://itgresa.com/product/vertical-spinner-bent-steel-wedge/
+      Image:   https://itgresa.com/wp-content/uploads/2022/08/Vertical-spinner-wedge-sq-jpg-500.jpeg
+  - [Timing Belt] (Fingertech S3M Timing Belt)
+      Product: https://itgresa.com/product/fingertech-s3m-timing-belt/
+      Image:   https://itgresa.com/wp-content/uploads/2021/07/Pulley-belt-sq-web.jpg
+  - [Timing Pulley] (Fingertech S3M Timing Pulley)
+      Product: https://itgresa.com/product/fingertech-pulley/
+      Image:   https://itgresa.com/wp-content/uploads/2021/07/Pulley-sq-web.jpg
+  - [Horizontal Spinner] (Viper Horizontal Spinner Kit)
+      Product: https://itgresa.com/product/viper-horizontal-spinner/
+      Image:   https://itgresa.com/wp-content/uploads/2019/09/Viper-Horizonta-Spinner-Kit-CAD-500.jpeg
+  - [Bloodsport Bar] (Bloodsport Bar)
+      Product: https://itgresa.com/product/bloodsport-bar/
+      Image:   https://itgresa.com/wp-content/uploads/2020/02/bloodsport-bar_gt-500.png
+  - [Titanium Spinner Blade] (Viper Horizontal Spinner Titanium Blade 6″)
+      Product: https://itgresa.com/product/viper-horizontal-spinner-titanium-blade/
+      Image:   https://itgresa.com/wp-content/uploads/2023/11/Fingertech-6mm-titanium-blade-sq-jpg-500.jpg
+  - [Vertical Spinner] (Viper Vertical Spinner Clamping Drum)
+      Product: https://itgresa.com/product/viper-vertical-spinner-clamping-drum/
+      Image:   https://itgresa.com/wp-content/uploads/2022/03/Clamping-Drum-sq-jpg-500.jpeg
+  - [NightWing AR500 Disc] (FingerTech NightWing AR500 Weapon Disc)
+      Product: https://itgresa.com/product/fingertech-nightwing-ar500-weapon-disc-10in/
+      Image:   https://itgresa.com/wp-content/uploads/2026/03/Fingertech-Nightwing-10in-AR500-blade-sq-jpg-500.jpg
+  - [Tail Spinner Kit] (Fingertech Viper Tail Spinner Kit)
+      Product: https://itgresa.com/product/viper-tail-spinner-kit/
+      Image:   https://itgresa.com/wp-content/uploads/2024/11/Viper-Tail-Spinner-installed-on-Viper-sq-jpg-500.jpg
+  - [Asymmetrical AR500 Blade] (Viper Asymmetrical AR500 Blade)
+      Product: https://itgresa.com/product/viper-asymmetrical-ar500-blade/
+      Image:   https://itgresa.com/wp-content/uploads/2025/04/Fingertech-350-AR500-asymmetrical-blade-sq-jpg-500.jpg
+  - [Four-Bar Lifter] (Viper Lifter Weapon)
+      Product: https://itgresa.com/product/viper-lifter-weapon/
+      Image:   https://itgresa.com/wp-content/uploads/2020/09/lifter-add-on_gt-4x3-500.png
+  - [Lifter Arms] (Replacement Lifter Arms)
+      Product: https://itgresa.com/product/ft-viper-lifter-arms/
+      Image:   https://itgresa.com/wp-content/uploads/2022/01/Lifter-arms-sq-500.png
+  - [Viper Wedge Chassis] (Fingertech Viper V3 Combat Robot Kit with Lipoly)
+      Product: https://itgresa.com/product/viper-combat-robot-kit-base/
+      Image:   https://itgresa.com/wp-content/uploads/2020/01/Viper-V3-with-Galaxy-2S-battery-sq-jpg-500.jpg
+
+=== Flycolor (1 item) ===
+  - [Simple ESC] (Flycolor Francy 2 30A BLHeli Brushless ESC with BEC)
+      Product: https://itgresa.com/product/flycolor-francy2-30a-blheli-brushless-esc-w-bec/
+      Image:   https://itgresa.com/wp-content/uploads/2023/09/flycolor-francy2-esc-30a-sq-jpg-500.jpeg
+
+=== Gens Ace / Tattu (1 item) ===
+  - [Tattu 450 4S] (Gens Ace Tattu 450mAh 4S Lipoly Pack)
+      Product: https://itgresa.com/product/gens-ace-tattu-450mah-4s-lipoly-pack/
+      Image:   https://itgresa.com/wp-content/uploads/2023/06/450mAh-Gens-Ace-Tattu-4S-75C-lipo-sq-jpg-500.jpeg
+
+=== ITGresa / General (8 items) ===
+  - [Power Switch Protector] (Small Power Supply Protector)
+      Product: https://itgresa.com/product/power-supply-protector-small/
+      Image:   https://itgresa.com/wp-content/uploads/2022/01/Power-Supply-Protector-Small-Sq-jpg-500.jpeg
+  - [Heavy Gauge Wire] (Silicone wire 14awg red and black (per ft))
+      Product: https://itgresa.com/product/silicone-wire-14awg-red-and-black/
+      Image:   https://itgresa.com/wp-content/uploads/2023/01/Red-Black-14awg-silicone-wire-small-lengths-sq-jpg-500.jpeg
+  - [Aria 70A ESC] (Aria 70A BLHeli Brushless ESC)
+      Product: https://itgresa.com/product/aria-70a-blheli-brushless-speed-controller/
+      Image:   https://itgresa.com/wp-content/uploads/2022/02/Aria-70A-ESC-sq-front-500.png
+  - [22mm Beetle Gearmotor] (22mm Gearmotor for Beetleweights)
+      Product: https://itgresa.com/product/22mm-beetleweight-gearmotor/
+      Image:   https://itgresa.com/wp-content/uploads/2021/05/22mm-beetleweight-motor-500.png
+  - [D2830 Weapon Motor] (D2830EVO Brushless 1300KV motor)
+      Product: https://itgresa.com/product/d2830evo-brushless-1300kv-motor/
+      Image:   https://itgresa.com/wp-content/uploads/2023/05/2830EVO-side-sq-jpg-500.jpeg
+  - [15kg Analog Servo] (GS-5515MG Analog Servo CW 15kg (Clockwise rotation))
+      Product: https://itgresa.com/product/gs-5515mg-analog-servo-15kg-cw-rotation/
+      Image:   https://itgresa.com/wp-content/uploads/2022/02/FH-5515MG-Analog-Servo-CCW-jpg-500.jpeg
+  - [20kg Metal Gear Servo] (DS Servo 20KG 3218 Pro)
+      Product: https://itgresa.com/product/ds-servo-pro-20kg-combat-robot-servo/
+      Image:   https://itgresa.com/wp-content/uploads/2025/10/DS-Servo-20kg-oblique-front-with-arm-sq-jpg-500.jpg
+  - [Beater Bar] (1lb Beater Bar)
+      Product: https://itgresa.com/product/1lb-beater-bar/
+      Image:   https://itgresa.com/wp-content/uploads/2021/08/1lb-beater-bar-new-version-500-sq.png
+
+=== Just Cuz Robotics (5 items) ===
+  - [Titanium Top Plate] (Just Cuz Robotics SSP 2.0 Kit Titanium Lid)
+      Product: https://itgresa.com/product/just-cuz-robotics-ssp-kit-titanium-lid/
+      Image:   https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-2-0-titanium-lid-sq-jpg-500-.jpg
+  - [AR500 Wedge] (Just Cuz Robotics SSP Kit AR500 Wedge)
+      Product: https://itgresa.com/product/just-cuz-robotics-ssp-kit-ar500-wedge/
+      Image:   https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-Kit-AR500-Wedge-sq-jpg-500.jpg
+  - [Chonk Key Blade] (Just Cuz Robotics Chonk Key Blade)
+      Product: https://itgresa.com/product/just-cuz-robotics-chonk-key-blade/
+      Image:   https://itgresa.com/wp-content/uploads/2024/10/Chonk-Key-Subtraction-blade-sq-jpg-500.jpg
+  - [Claw Forks] (Just Cuz Robotics SSP Kit Claw Forks)
+      Product: https://itgresa.com/product/just-cuz-robotics-ssp-kit-claw-forks/
+      Image:   https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-Kit-AR500-Claw-forks-1-sq-jpg-500.jpg
+  - [SSP 2.0 Billet Chassis] (JCR SSP 2.0 Beetleweight Combat Robot Kit)
+      Product: https://itgresa.com/product/just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit/
+      Image:   https://itgresa.com/wp-content/uploads/2025/07/Just-Cuz-Robotics-SSP-2.0-Kit-front-oblique-view-forks-sq-jpg-500.jpg
+
+=== Kitbots (3 items) ===
+  - [Wires] (Saifu 3 Antweight Combat Robot Wire Harness)
+      Product: https://itgresa.com/product/saifu-3-antweight-combat-robot-wire-harness/
+      Image:   https://itgresa.com/wp-content/uploads/2025/08/Kitbots-Saifu-3-plug-n-play-wire-harness-1-sq-jpg-500.jpg
+  - [UHMW Wraparound Armor] (Saifu Wraparound UHMW Armor)
+      Product: https://itgresa.com/product/saifu-wraparound-armor/
+      Image:   https://itgresa.com/wp-content/uploads/2025/12/Saifu-Armor-sq-jpg-500.jpg
+  - [Titanium Horns] (Saifu Symmetrical Titanium Horns (Pair))
+      Product: https://itgresa.com/product/saifu-symmetrical-titanium-horns/
+      Image:   https://itgresa.com/wp-content/uploads/2026/08/Saifu-3-symmetrical-titanium-horns-back-to-back-sq-jpg-500.jpeg
+
+=== Malenki (Martin) (1 item) ===
+  - [Malenki Nano ESC-Receiver] (Malenki Nano Dual ESC and Receiver)
+      Product: https://itgresa.com/product/malenki-nano-dual-esc-and-receiver/
+      Image:   https://itgresa.com/wp-content/uploads/2021/10/Malenki-Nano-Front-Sq-500-jpg.jpg
+
+=== Pololu (1 item) ===
+  - [Tracked Sumo Chassis] (Pololu Zumo 32U4 OLED Arduino Sumo robot)
+      Product: https://itgresa.com/product/pololu-zumo-32u4-oled-arduino-sumo-robot/
+      Image:   https://itgresa.com/wp-content/uploads/2022/03/Zumo-sq-jpg-500.jpeg
+
+=== RAD Robotics (3 items) ===
+  - [Titanium Wedge] (Baby Nautiloid Titanium Wedge)
+      Product: https://itgresa.com/product/baby-nautiloid-titanium-wedge/
+      Image:   https://itgresa.com/wp-content/uploads/2023/01/Baby-Nautiloid-Titanium-Wedge-sq-jpg-500.jpeg
+  - [Single Tooth Disc] (Baby Nautiloid Weapon Disc)
+      Product: https://itgresa.com/product/baby-nautiloid-weapon-disc-single-tooth-ar500/
+      Image:   https://itgresa.com/wp-content/uploads/2023/01/Baby-Nautiloid-Weapon-Disc-with-bolts-sq-jpg-500.jpeg
+  - [Nautiloid Drum Chassis] (Baby Nautiloid Combat Robot – Radio Ready)
+      Product: https://itgresa.com/product/baby-nautiloid-combat-robot-radio-ready/
+      Image:   https://itgresa.com/wp-content/uploads/2022/09/Baby-Nautiloid-2-500.png
+
+=== Repeat Robotics (3 items) ===
+  - [Brushless Motor] (Repeat Robotics Mini BRUSHLESS Drive Gearmotor Mk4.1)
+      Product: https://itgresa.com/product/repeat-robotics-mini-brushless-drive-gearmotor-mk4/
+      Image:   https://itgresa.com/wp-content/uploads/2024/12/Repeat-Robotics-Brushless-Mini-Mk4-2-sq-jpg-500.jpg
+  - [Repeat 2207 Hubmotor] (Repeat Robotics 2207 Battle Ready Hubmotor 1200kv)
+      Product: https://itgresa.com/product/repeat-2207-hubmotor-1200kv/
+      Image:   https://itgresa.com/wp-content/uploads/2024/10/Repeat-Robotics-2207-hubmotor-Front-view-2-sq-jpg-500.jpg
+  - [TPU Plate] (Repeat Robotics Scalar TPU Chassis)
+      Product: https://itgresa.com/product/repeat-robotics-scalar-tpu-chassis/
+      Image:   https://itgresa.com/wp-content/uploads/2026/01/Repeat-Robotics-Scalar-Antweight-combat-robot-tpu-chassis-sq-jpg-500.jpg
+
+=== Robot Power (Scorpion) (1 item) ===
+  - [Scorpion Mini ESC] (Scorpion Mini ESC)
+      Product: https://itgresa.com/product/scorpion-mini-esc/
+      Image:   https://itgresa.com/wp-content/uploads/2021/06/Scorpion-Mini-sq-500.jpeg
+
+=== Team Bad Idea (Black Frost) (1 item) ===
+  - [Forks] (Black Frost Front Forks)
+      Product: https://itgresa.com/product/black-frost-front-forks/
+      Image:   https://itgresa.com/wp-content/uploads/2023/04/Black-Frost-Forks-Arranged-sq-jpg-500.jpeg
+
+=== Team Cronos (1 item) ===
+  - [Cronos Scythe] (Cronos’ Scythe)
+      Product: https://itgresa.com/product/cronos-scythe/
+      Image:   https://itgresa.com/wp-content/uploads/2023/09/Cronos-Scythe-Oblique-sq-jpg-500-purple.jpg
+
+=== Turnabot (3 items) ===
+  - [Micro Servo] (Turnabot Startabot micro servo)
+      Product: https://itgresa.com/product/turnabot-startabot-micro-servo/
+      Image:   https://itgresa.com/wp-content/uploads/2025/10/Turnabot-Startabot-Servo-Side-View-sq-jpg-500.jpg
+  - [High Grip Tires] (Turnabot 30.4mm High Grip Tires)
+      Product: https://itgresa.com/product/turnabot-30mm-high-grip-tires/
+      Image:   https://itgresa.com/wp-content/uploads/2026/05/30mm-x-14mm-Rubber-Lego-style-High-Grip-tires-sq-jpg-500.jpg
+  - [Overthrow Flipper Chassis] (Turnabot OverThrow Fairyweight Combat Robot Kit)
+      Product: https://itgresa.com/product/turnabot-overthrow-fairyweight-combat-robot-kit/
+      Image:   https://itgresa.com/wp-content/uploads/2026/06/Overthrow-oblique-side-right-black-sq-jpg-500.jpg
+
+================================================================================
+PLAIN LIST OF ALL PRODUCT & IMAGE URLS
+================================================================================
+
+Galaxy 120:
+  Page:  https://itgresa.com/product/galaxy-120mah-2s-lipoly-pack/
+  Image: https://itgresa.com/wp-content/uploads/2022/02/120mAh-2S-Lipo-battery-sq-300-jpg.jpeg
+Galaxy 300 3S:
+  Page:  https://itgresa.com/product/galaxy-300mah-3s-lipoly-pack-xt30/
+  Image: https://itgresa.com/wp-content/uploads/2023/11/Fingertech-Galaxy-Lipoly-300mAh-3S-XT30-Connector-sq-jpg-500.jpg
+Galaxy 1000 3S:
+  Page:  https://itgresa.com/product/galaxy-1000mah-3s-lipoly-pack/
+  Image: https://itgresa.com/wp-content/uploads/2022/01/1000mAh-3S-Lipo-battery-sq-300-jpg.jpeg
+Tattu 450 4S:
+  Page:  https://itgresa.com/product/gens-ace-tattu-450mah-4s-lipoly-pack/
+  Image: https://itgresa.com/wp-content/uploads/2023/06/450mAh-Gens-Ace-Tattu-4S-75C-lipo-sq-jpg-500.jpeg
+Power Switch Protector:
+  Page:  https://itgresa.com/product/power-supply-protector-small/
+  Image: https://itgresa.com/wp-content/uploads/2022/01/Power-Supply-Protector-Small-Sq-jpg-500.jpeg
+Wires:
+  Page:  https://itgresa.com/product/saifu-3-antweight-combat-robot-wire-harness/
+  Image: https://itgresa.com/wp-content/uploads/2025/08/Kitbots-Saifu-3-plug-n-play-wire-harness-1-sq-jpg-500.jpg
+Heavy Gauge Wire:
+  Page:  https://itgresa.com/product/silicone-wire-14awg-red-and-black/
+  Image: https://itgresa.com/wp-content/uploads/2023/01/Red-Black-14awg-silicone-wire-small-lengths-sq-jpg-500.jpeg
+Simple ESC:
+  Page:  https://itgresa.com/product/flycolor-francy2-30a-blheli-brushless-esc-w-bec/
+  Image: https://itgresa.com/wp-content/uploads/2023/09/flycolor-francy2-esc-30a-sq-jpg-500.jpeg
+Aria 70A ESC:
+  Page:  https://itgresa.com/product/aria-70a-blheli-brushless-speed-controller/
+  Image: https://itgresa.com/wp-content/uploads/2022/02/Aria-70A-ESC-sq-front-500.png
+Reversing Brushless ESC:
+  Page:  https://itgresa.com/product/fingertech-bl40a-am32-reversing-esc/
+  Image: https://itgresa.com/wp-content/uploads/2026/03/Fingertech-AM32-40A-ESC-2-sq-jpg-500.jpg
+Scorpion Mini ESC:
+  Page:  https://itgresa.com/product/scorpion-mini-esc/
+  Image: https://itgresa.com/wp-content/uploads/2021/06/Scorpion-Mini-sq-500.jpeg
+Malenki Nano ESC-Receiver:
+  Page:  https://itgresa.com/product/malenki-nano-dual-esc-and-receiver/
+  Image: https://itgresa.com/wp-content/uploads/2021/10/Malenki-Nano-Front-Sq-500-jpg.jpg
+Brushless Motor:
+  Page:  https://itgresa.com/product/repeat-robotics-mini-brushless-drive-gearmotor-mk4/
+  Image: https://itgresa.com/wp-content/uploads/2024/12/Repeat-Robotics-Brushless-Mini-Mk4-2-sq-jpg-500.jpg
+N20 Spark Gearmotor:
+  Page:  https://itgresa.com/product/fingertech-n20-mini-spark-gearmotor/
+  Image: https://itgresa.com/wp-content/uploads/2025/12/Fingertech-Microspark-N20-Gearmotor-sq-jpg-500.jpg
+22mm Beetle Gearmotor:
+  Page:  https://itgresa.com/product/22mm-beetleweight-gearmotor/
+  Image: https://itgresa.com/wp-content/uploads/2021/05/22mm-beetleweight-motor-500.png
+D2830 Weapon Motor:
+  Page:  https://itgresa.com/product/d2830evo-brushless-1300kv-motor/
+  Image: https://itgresa.com/wp-content/uploads/2023/05/2830EVO-side-sq-jpg-500.jpeg
+Repeat 2207 Hubmotor:
+  Page:  https://itgresa.com/product/repeat-2207-hubmotor-1200kv/
+  Image: https://itgresa.com/wp-content/uploads/2024/10/Repeat-Robotics-2207-hubmotor-Front-view-2-sq-jpg-500.jpg
+Micro Servo:
+  Page:  https://itgresa.com/product/turnabot-startabot-micro-servo/
+  Image: https://itgresa.com/wp-content/uploads/2025/10/Turnabot-Startabot-Servo-Side-View-sq-jpg-500.jpg
+15kg Analog Servo:
+  Page:  https://itgresa.com/product/gs-5515mg-analog-servo-15kg-cw-rotation/
+  Image: https://itgresa.com/wp-content/uploads/2022/02/FH-5515MG-Analog-Servo-CCW-jpg-500.jpeg
+20kg Metal Gear Servo:
+  Page:  https://itgresa.com/product/ds-servo-pro-20kg-combat-robot-servo/
+  Image: https://itgresa.com/wp-content/uploads/2025/10/DS-Servo-20kg-oblique-front-with-arm-sq-jpg-500.jpg
+25kg High Voltage Servo:
+  Page:  https://itgresa.com/product/25kg-9v-digital-servo-ccw/
+  Image: https://itgresa.com/wp-content/uploads/2025/01/Fingertech-25kg-9V-Digital-Servo-CCW-sq-jpg-500.png
+Snap Wheels:
+  Page:  https://itgresa.com/product/snap-wheels/
+  Image: https://itgresa.com/wp-content/uploads/2019/08/Multiple-wheels-image-sq-jpg-500.jpg
+Banebots Compliant Wheels:
+  Page:  https://itgresa.com/product/banebots-t61-compliant-wheels/
+  Image: https://itgresa.com/wp-content/uploads/2024/11/Banebots-compliant-T61P-203BG__54075-sq-jpg-500.jpg
+Banebots T81 Heavy Wheels:
+  Page:  https://itgresa.com/product/banebots-t81-wheels/
+  Image: https://itgresa.com/wp-content/uploads/2022/03/Banebots-2-x-0.8-Green-Sq-jpg-500.jpeg
+High Grip Tires:
+  Page:  https://itgresa.com/product/turnabot-30mm-high-grip-tires/
+  Image: https://itgresa.com/wp-content/uploads/2026/05/30mm-x-14mm-Rubber-Lego-style-High-Grip-tires-sq-jpg-500.jpg
+Aluminum Plate:
+  Page:  https://itgresa.com/product/viper-horizontal-spinner-armor-panels/
+  Image: https://itgresa.com/wp-content/uploads/2022/01/Viper-Armor-H-Spinner-Sq-500-jpg.jpeg
+TPU Plate:
+  Page:  https://itgresa.com/product/repeat-robotics-scalar-tpu-chassis/
+  Image: https://itgresa.com/wp-content/uploads/2026/01/Repeat-Robotics-Scalar-Antweight-combat-robot-tpu-chassis-sq-jpg-500.jpg
+Titanium Top Plate:
+  Page:  https://itgresa.com/product/just-cuz-robotics-ssp-kit-titanium-lid/
+  Image: https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-2-0-titanium-lid-sq-jpg-500-.jpg
+UHMW Wraparound Armor:
+  Page:  https://itgresa.com/product/saifu-wraparound-armor/
+  Image: https://itgresa.com/wp-content/uploads/2025/12/Saifu-Armor-sq-jpg-500.jpg
+Titanium Wedge:
+  Page:  https://itgresa.com/product/baby-nautiloid-titanium-wedge/
+  Image: https://itgresa.com/wp-content/uploads/2023/01/Baby-Nautiloid-Titanium-Wedge-sq-jpg-500.jpeg
+Steel Wedge:
+  Page:  https://itgresa.com/product/vertical-spinner-bent-steel-wedge/
+  Image: https://itgresa.com/wp-content/uploads/2022/08/Vertical-spinner-wedge-sq-jpg-500.jpeg
+AR500 Wedge:
+  Page:  https://itgresa.com/product/just-cuz-robotics-ssp-kit-ar500-wedge/
+  Image: https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-Kit-AR500-Wedge-sq-jpg-500.jpg
+Forks:
+  Page:  https://itgresa.com/product/black-frost-front-forks/
+  Image: https://itgresa.com/wp-content/uploads/2023/04/Black-Frost-Forks-Arranged-sq-jpg-500.jpeg
+Titanium Horns:
+  Page:  https://itgresa.com/product/saifu-symmetrical-titanium-horns/
+  Image: https://itgresa.com/wp-content/uploads/2026/08/Saifu-3-symmetrical-titanium-horns-back-to-back-sq-jpg-500.jpeg
+Timing Belt:
+  Page:  https://itgresa.com/product/fingertech-s3m-timing-belt/
+  Image: https://itgresa.com/wp-content/uploads/2021/07/Pulley-belt-sq-web.jpg
+Timing Pulley:
+  Page:  https://itgresa.com/product/fingertech-pulley/
+  Image: https://itgresa.com/wp-content/uploads/2021/07/Pulley-sq-web.jpg
+Horizontal Spinner:
+  Page:  https://itgresa.com/product/viper-horizontal-spinner/
+  Image: https://itgresa.com/wp-content/uploads/2019/09/Viper-Horizonta-Spinner-Kit-CAD-500.jpeg
+Bloodsport Bar:
+  Page:  https://itgresa.com/product/bloodsport-bar/
+  Image: https://itgresa.com/wp-content/uploads/2020/02/bloodsport-bar_gt-500.png
+Titanium Spinner Blade:
+  Page:  https://itgresa.com/product/viper-horizontal-spinner-titanium-blade/
+  Image: https://itgresa.com/wp-content/uploads/2023/11/Fingertech-6mm-titanium-blade-sq-jpg-500.jpg
+Vertical Spinner:
+  Page:  https://itgresa.com/product/viper-vertical-spinner-clamping-drum/
+  Image: https://itgresa.com/wp-content/uploads/2022/03/Clamping-Drum-sq-jpg-500.jpeg
+Single Tooth Disc:
+  Page:  https://itgresa.com/product/baby-nautiloid-weapon-disc-single-tooth-ar500/
+  Image: https://itgresa.com/wp-content/uploads/2023/01/Baby-Nautiloid-Weapon-Disc-with-bolts-sq-jpg-500.jpeg
+NightWing AR500 Disc:
+  Page:  https://itgresa.com/product/fingertech-nightwing-ar500-weapon-disc-10in/
+  Image: https://itgresa.com/wp-content/uploads/2026/03/Fingertech-Nightwing-10in-AR500-blade-sq-jpg-500.jpg
+Beater Bar:
+  Page:  https://itgresa.com/product/1lb-beater-bar/
+  Image: https://itgresa.com/wp-content/uploads/2021/08/1lb-beater-bar-new-version-500-sq.png
+Tail Spinner Kit:
+  Page:  https://itgresa.com/product/viper-tail-spinner-kit/
+  Image: https://itgresa.com/wp-content/uploads/2024/11/Viper-Tail-Spinner-installed-on-Viper-sq-jpg-500.jpg
+Cronos Scythe:
+  Page:  https://itgresa.com/product/cronos-scythe/
+  Image: https://itgresa.com/wp-content/uploads/2023/09/Cronos-Scythe-Oblique-sq-jpg-500-purple.jpg
+Chonk Key Blade:
+  Page:  https://itgresa.com/product/just-cuz-robotics-chonk-key-blade/
+  Image: https://itgresa.com/wp-content/uploads/2024/10/Chonk-Key-Subtraction-blade-sq-jpg-500.jpg
+Asymmetrical AR500 Blade:
+  Page:  https://itgresa.com/product/viper-asymmetrical-ar500-blade/
+  Image: https://itgresa.com/wp-content/uploads/2025/04/Fingertech-350-AR500-asymmetrical-blade-sq-jpg-500.jpg
+Four-Bar Lifter:
+  Page:  https://itgresa.com/product/viper-lifter-weapon/
+  Image: https://itgresa.com/wp-content/uploads/2020/09/lifter-add-on_gt-4x3-500.png
+Claw Forks:
+  Page:  https://itgresa.com/product/just-cuz-robotics-ssp-kit-claw-forks/
+  Image: https://itgresa.com/wp-content/uploads/2025/03/Just-Cuz-Robotics-SSP-Kit-AR500-Claw-forks-1-sq-jpg-500.jpg
+Lifter Arms:
+  Page:  https://itgresa.com/product/ft-viper-lifter-arms/
+  Image: https://itgresa.com/wp-content/uploads/2022/01/Lifter-arms-sq-500.png
+Viper Wedge Chassis:
+  Page:  https://itgresa.com/product/viper-combat-robot-kit-base/
+  Image: https://itgresa.com/wp-content/uploads/2020/01/Viper-V3-with-Galaxy-2S-battery-sq-jpg-500.jpg
+SSP 2.0 Billet Chassis:
+  Page:  https://itgresa.com/product/just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit/
+  Image: https://itgresa.com/wp-content/uploads/2025/07/Just-Cuz-Robotics-SSP-2.0-Kit-front-oblique-view-forks-sq-jpg-500.jpg
+Nautiloid Drum Chassis:
+  Page:  https://itgresa.com/product/baby-nautiloid-combat-robot-radio-ready/
+  Image: https://itgresa.com/wp-content/uploads/2022/09/Baby-Nautiloid-2-500.png
+Overthrow Flipper Chassis:
+  Page:  https://itgresa.com/product/turnabot-overthrow-fairyweight-combat-robot-kit/
+  Image: https://itgresa.com/wp-content/uploads/2026/06/Overthrow-oblique-side-right-black-sq-jpg-500.jpg
+Tracked Sumo Chassis:
+  Page:  https://itgresa.com/product/pololu-zumo-32u4-oled-arduino-sumo-robot/
+  Image: https://itgresa.com/wp-content/uploads/2022/03/Zumo-sq-jpg-500.jpeg
