@@ -43,4 +43,28 @@ Full rules writeup, diagrams, and quick-reference summaries are located in the [
 
 This repository contains code used to:
 - Scrape possible component ideas and datasheets (`scripts/fetch_components.py`)
-- Generate card layouts and definitions from component datasheets
+- Generate card layouts and definitions from component datasheets (`cardCreation/generateCards.py`)
+- Generate printable A3 chassis mats from CSV (`scripts/generate_chassis_sheets.py`)
+
+---
+
+## Interactive Robot Builder UI
+
+An interactive web-based tool for building robots that runs locally on both mobile devices (via Termux on Android) and desktop browsers with zero external dependencies.
+
+- **Launch:**
+  ```bash
+  sh builder.sh
+  ```
+  Or directly with Python:
+  ```bash
+  python3 -m builder.server
+  ```
+- **Features:**
+  - **A3 Chassis Mat Generation:** Select any chassis template from `cardDefinitions/chassis.csv` (Square, Triangle, Wide) rendered onto an A3 landscape workspace (420mm × 297mm).
+  - **Card Placement & Grid Snapping:** Place cards on the chassis with real-time 10mm grid snapping and 90° rotation.
+  - **Touch Adjacency:** Automatically detects and visualizes physical contact connections between cards.
+  - **Live Stat Tracking:** Dynamically calculates active robot weight and cost, flip strength, and supply deck budget.
+  - **Spare Parts Tray:** Dedicated space for spare components kept in your supply pool between tournament rounds.
+  - **CSV Save & Load:** Export and restore robot configurations to/from CSV files matching the automata specification (`id,card,location,connections`).
+  - **Mobile Optimized:** Touch pinch-to-zoom, pan, touch dragging, and PWA manifest for "Add to Home Screen".
