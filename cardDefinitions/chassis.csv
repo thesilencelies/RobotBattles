@@ -1,6 +1,4 @@
-Name,Weight,Cost,Template,Requirements,Outputs,Durability,Absorption,Keywords,Text,Picture
-Viper Wedge Chassis,,,,,,0,0,,,components/kits_and_chassis/viper-combat-robot-kit-base.jpg
-SSP 2.0 Billet Chassis,,,,,,0,0,,,components/kits_and_chassis/just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit.jpg
-Nautiloid Drum Chassis,,,,,,0,0,,,components/kits_and_chassis/baby-nautiloid-combat-robot-radio-ready.png
-Overthrow Flipper Chassis,,,,,,0,0,,,components/kits_and_chassis/turnabot-overthrow-fairyweight-combat-robot-kit.jpg
-Tracked Sumo Chassis,,,,,,0,0,,,components/kits_and_chassis/pololu-zumo-32u4-oled-arduino-sumo-robot.jpeg
+Name,Weight,Cost,Template,Flip strength,Keywords,Text,Picture
+Viper Wedge Chassis,3,2,Square,5,,,components/kits_and_chassis/viper-combat-robot-kit-base.jpg
+SSP 2.0 Billet Chassis,3,2,Triangle,4,,,components/kits_and_chassis/just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit.jpg
+Nautiloid Drum Chassis,3,2,Wide,4,,,components/kits_and_chassis/baby-nautiloid-combat-robot-radio-ready.png

@@ -6,32 +6,33 @@ Tattu 450 4S,1,2,,5E,6,0,,,components/batteries_and_power/gens-ace-tattu-450mah-
 Power Switch Protector,1,1,XE,XE,12,7,fragile,,components/batteries_and_power/power-supply-protector-small.jpeg
 Wires,0,0,XE,XE,7,0,fragile,,components/connectors_and_wiring/saifu-3-antweight-combat-robot-wire-harness.jpg
 Heavy Gauge Wire,0,1,XE,XE,8,4,fragile,,components/connectors_and_wiring/silicone-wire-14awg-red-and-black.jpeg
-Simple ESC,0,1,EE,CC,5,2,fragile,,components/electronics_and_escs/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg
-Aria 70A ESC,0,1,EEE,CCC,5,2,fragile,,components/electronics_and_escs/aria-70a-blheli-brushless-speed-controller.png
+Simple ESC,0,1,EE,CCC,5,2,fragile,,components/electronics_and_escs/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg
+Aria 70A ESC,0,1,EEE,CCCC,5,2,fragile,,components/electronics_and_escs/aria-70a-blheli-brushless-speed-controller.png
 Reversing Brushless ESC,0,1,EEE,CC,8,4,fragile,,components/electronics_and_escs/fingertech-bl40a-am32-reversing-esc.jpg
-Scorpion Mini ESC,0,1,E,C,6,2,fragile,,components/electronics_and_escs/scorpion-mini-esc.jpeg
+Scorpion Mini ESC,0,1,EE,CC,6,2,fragile,,components/electronics_and_escs/scorpion-mini-esc.jpeg
 Malenki Nano ESC-Receiver,1,2,EEEE,CCCC,8,2,fragile,,components/electronics_and_escs/malenki-nano-dual-esc-and-receiver.jpg
 Brushless Motor,1,2,CC,SSS,5,3,,,components/motors/repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg
 N20 Spark Gearmotor,2,1,CC,SS,7,4,,,components/motors/fingertech-n20-mini-spark-gearmotor.jpg
-22mm Beetle Gearmotor,1,1,C,S,5,2,,,components/motors/22mm-beetleweight-gearmotor.png
-D2830 Weapon Motor,2,2,CC,SS,10,4,,,components/motors/d2830evo-brushless-1300kv-motor.jpeg
+22mm Beetle Gearmotor,1,1,CCC,SSSS,5,2,,,components/motors/22mm-beetleweight-gearmotor.png
+D2830 Weapon Motor,2,2,CCC,SS,10,4,,,components/motors/d2830evo-brushless-1300kv-motor.jpeg
 Repeat 2207 Hubmotor,2,3,CCC,SSS,8,4,,,components/motors/repeat-2207-hubmotor-1200kv.jpg
-Micro Servo,1,1,CC,PP,0,0,,,components/servos_and_actuators/turnabot-startabot-micro-servo.jpg
-15kg Analog Servo,1,2,,,0,0,,,components/servos_and_actuators/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg
-20kg Metal Gear Servo,2,1,,,0,0,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg
-25kg High Voltage Servo,2,2,,,0,0,,,components/servos_and_actuators/25kg-9v-digital-servo-ccw.png
-Snap Wheels,1,,,,0,0,,,components/wheels_and_drive/snap-wheels.jpg
-Banebots Compliant Wheels,1,,,,0,0,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg
-Banebots T81 Heavy Wheels,2,,,,0,0,,,components/wheels_and_drive/banebots-t81-wheels.jpeg
-High Grip Tires,2,,,,0,0,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg
+Micro Servo,1,1,CC,PP,5,2,,,components/servos_and_actuators/turnabot-startabot-micro-servo.jpg
+15kg Analog Servo,1,2,CCC,PP,7,4,,,components/servos_and_actuators/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg
+20kg Metal Gear Servo,2,1,CCCC,PPP,6,3,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg
+25kg High Voltage Servo,2,2,CCCC,PP,8,5,,,components/servos_and_actuators/25kg-9v-digital-servo-ccw.png
+Snap Wheels,1,1,SS,5,6,2,,,components/wheels_and_drive/snap-wheels.jpg
+Banebots Compliant Wheels,1,1,SSS,DD,8,5,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg
+Banebots T81 Heavy Wheels,2,1,SSS,DD,7,3,invertible,,components/wheels_and_drive/banebots-t81-wheels.jpeg
+High Grip Tires,2,1,SS,DDD,6,2,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg
 Aluminum Plate,2,1,,,8,4,,,components/mechanicals_and_armor/viper-horizontal-spinner-armor-panels.jpeg
 TPU Plate,1,1,,,6,5,,,components/mechanicals_and_armor/repeat-robotics-scalar-tpu-chassis.jpg
-Titanium Top Plate,2,,,,0,0,,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-titanium-lid.jpg
-UHMW Wraparound Armor,3,,,,0,0,,,components/mechanicals_and_armor/saifu-wraparound-armor.jpg
-Titanium Wedge,4,,,,0,0,,,components/mechanicals_and_armor/baby-nautiloid-titanium-wedge.jpeg
-Steel Wedge,5,,,,0,0,,,components/mechanicals_and_armor/vertical-spinner-bent-steel-wedge.jpeg
-AR500 Wedge,5,,,,0,0,,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg
+Titanium Top Plate,2,2,,,12,5,,covers the top,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-titanium-lid.jpg
+UHMW Wraparound Armor,3,2,,,12,4,,covers a whole side,components/mechanicals_and_armor/saifu-wraparound-armor.jpg
+Titanium Wedge,4,3,,,12,4,wedge,,components/mechanicals_and_armor/baby-nautiloid-titanium-wedge.jpeg
+Steel Wedge,5,3,,,9,5,wedge,,components/mechanicals_and_armor/vertical-spinner-bent-steel-wedge.jpeg
+AR500 Wedge,5,4,,,15,4,wedge,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg
 Forks,1,1,,,4,2,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg
-Titanium Horns,3,,,,0,0,,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg
-Timing Belt,0,,,,0,0,,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg
-Timing Pulley,0,,,,0,0,,,components/mechanicals_and_armor/fingertech-pulley.jpg
+Titanium Horns,2,3,,,9,2,forks,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg
+Timing Belt,0,1,XS,XS,6,2,fragile,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg
+Timing Pulley,0,1,SS,SSS,4,2,fragile,,components/mechanicals_and_armor/fingertech-pulley.jpg
+Self righting arm,1,1,PP,,7,3,Self-right,""
