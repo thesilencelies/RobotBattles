@@ -10,7 +10,7 @@ from urllib.parse import parse_qs, urlsplit
 from .routes import Router
 
 DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 8000
+DEFAULT_PORT = 8001
 MAX_BODY = 10 * 1024 * 1024  # 10MB limit
 
 
