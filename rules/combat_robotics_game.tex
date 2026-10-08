@@ -321,7 +321,7 @@ When weapons collide with an opponent's chassis or components:
 \begin{itemize}
   \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the other robot to the components contacted.
   \item Then both robots are thrown away from the contact. The base throw strength is equal to the attack strength received.
-  \item Weapons receive feedback equal to half the attack strength.
+  \item Weapons receive feedback equal to half the total attack strength in the contact.
 \end{itemize}
 
 \begin{summarybox}{Contact Classification Quick Reference}
@@ -344,8 +344,10 @@ When weapons collide with an opponent's chassis or components:
 
 \subsection{Throws \& Inversion}
 
-A robot that is thrown is moved a random amount (2d6) up to the throw strength away in a random direction (scatter dice). If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted}.
-After the throw the thrown robot takes feedback at a randomly chosen component equal to the throw strength. Component is chosen randomly by dropping a card on it.
+A robot that is thrown is moved a random amount (2d6) up to the throw strength away from the contact point and rotated by spinning the model. 
+If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted}.
+After the throw the thrown robot takes feedback at a randomly chosen component equal to the throw strength. 
+Component is chosen randomly by dropping a card on it.
 
 
 \subsection{Damage Progression}
@@ -361,13 +363,14 @@ Damage progresses from the outermost component inwards, applying absorption at e
 
 \subsection{Feedback}
 
-Feedback represents components over-straining themselves under combat loads. It is damage that progresses back from the source component to each component that supplies it, shared equally if there are multiple components, down the tree until the damage is all absorbed.
+Feedback represents components over-straining themselves under combat loads. It is damage that progresses back from the source component 
+to each component that supplies it, shared equally if there are multiple components, down the tree until the damage is all absorbed.
 
 \subsection{Status Effects}
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons and drive without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Some components (mostly forks) will make the opponent raised if they make contact. A robot that is raised has its drive strength halved for as long as it is in contact with the component that raised it, and its flip strength is two lower.
+  \item[Raised:] Some components (mostly forks) will make the opponent raised if they make contact. A robot that is raised has its drive strength halved for as long as it is in contact with the component that raised it, and its flip strength is halved.
 \end{description}
 
 \begin{summarybox}{Damage \& Feedback Rules Summary}
