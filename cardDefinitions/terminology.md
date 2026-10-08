@@ -2,7 +2,6 @@
 | Name | Abbreviation |
 |-|-|
 | Energy | E |
-| Control | C |
 | Spin | S |
 | Pressure | P|
 | Drive | M |
@@ -12,7 +11,7 @@
 Resources noted as repeated letter i.e. EE have a symbol drawn for each letter
 
 Resources noted as a number followed by a letter have that number written next to one symbol
-The number may also be an algebraic expression i.e. 2XC would be noted as 2 X control symbol
+The number may also be an algebraic expression i.e. 4XW would be noted as 4 X damage symbol
 - in these cases the meaning of X is explained in the rules text
 
 # Keywords

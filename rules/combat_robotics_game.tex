@@ -152,7 +152,7 @@ The anatomy of each card consists of the following key attributes:
 \begin{description}[leftmargin=!, labelwidth=2.8cm, font=\bfseries\color{primaryDark}]
   \item[Price (\$\$):] You cannot have more total price in your pool than your budget.
   \item[Weight:] Your robot's total weight must be less than the weight limit.
-  \item[Requirements:] A component is only active if its requirements are supplied by connected components. (Power, control, spin, pressure are the resources that need supply.)
+  \item[Requirements:] A component is only active if its requirements are supplied by connected components. (Power, spin, pressure are the resources that need supply.)
   \item[Durability:] How much damage a component can take before destruction.
   \item[Absorption:] How much damage a component stops from being passed on during an attack.
   \item[Outputs:] What resources the component supplies. Also includes drive.
@@ -374,7 +374,7 @@ Feedback represents components over-straining themselves under combat loads. It 
 \begin{itemize}[leftmargin=*]
   \item \textbf{Damage Inward Progression:} Attack Damage $\rightarrow$ Absorbed by outermost layer $\rightarrow$ Excess damage hits next connected internal component.
   \item \textbf{Damage Conditions:} Exceeds durability $\implies$ \textbf{Destroyed}. Exceeds $\frac{1}{2}$ durability after absorption $\implies$ \textbf{Damaged}. Damaged again $\implies$ \textbf{Destroyed}.
-  \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/control/pressure suppliers, distributed equally.
+  \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally.
 \end{itemize}
 \end{summarybox}
 

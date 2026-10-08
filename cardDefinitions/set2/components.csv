@@ -1,16 +1,6 @@
 Name,Weight,Cost,Requirements,Outputs,Durability,Absorption,Keywords,Text,Picture
 GNB 850 4S,,,,,0,0,,,components/batteries_and_power/gaoneng-gnb-850mah-4s-lipo-battery.jpg
 Turnigy 300 2S,,,,,0,0,,,components/batteries_and_power/turnigy-300mah-2s-lipoly-pack-copy.jpg
-AM32 Brushless ESC,,,,,0,0,,,components/electronics_and_escs/e-power-aria-35a-am32-esc.jpg
-Pariah 70A AM32 ESC,,,,,0,0,,,components/electronics_and_escs/just-cuz-robotics-pariah-70a-am32-esc.jpg
-WEKA Dual Brushed ESC,,,,,0,0,,,components/electronics_and_escs/just-cuz-robotics-weka-dual-2x20-esc.jpg
-Scorpion Nano ESC,,,,,0,0,,,components/electronics_and_escs/scorpion-nano-esc.jpeg
-Scorpion CL ESC,,,,,0,0,,,components/electronics_and_escs/scorpion-cl-esc.jpeg
-Malenki Scarab HV ESC,,,,,0,0,,,components/electronics_and_escs/malenki-nano-dual-esc-scarab.jpg
-ReadytoSky Weapon ESC,,,,,0,0,,,components/electronics_and_escs/readytosky-35a-esc.jpg
-Repeat Ant Dual ESC,,,,,0,0,,,components/electronics_and_escs/repeat-robotics-ant-dual-esc.jpg
-Tiny ESC,,,,,0,0,,,components/electronics_and_escs/tiny-esc-v3.jpg
-Wasp ESC,,,,,0,0,,,components/electronics_and_escs/wasp-esc.jpg
 N10 Micro Gearmotor,,,,,0,0,,,components/motors/fingertech-n10-gearmotor.png
 N30 High Power Gearmotor,,,,,0,0,,,components/motors/turnabot-high-power-n30-motors.jpeg
 Silver Spark Gearmotor,,,,,0,0,,,components/motors/silver-spark-motor-2221.jpg

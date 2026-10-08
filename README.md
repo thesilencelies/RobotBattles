@@ -13,7 +13,7 @@ The core gameplay is split into two main parts:
 ### 1. Robot Construction (Cards & Chassis)
 - **Chassis:** Each robot is built onto a chassis mat that determines its shape, base weight, cost, flip strength, and any special abilities.
 - **Component Cards:** Represent modules such as motors, batteries, ESCs, armor, and weapons. Cards must physically sit on the chassis.
-- **Resource Connectivity:** A component is active only if its input requirements (Power, Control, Spin, Pressure) are supplied by connected (touching) components.
+- **Resource Connectivity:** A component is active only if its input requirements (Power, Spin, Pressure) are supplied by connected (touching) components.
 - **Budgets:** Robots must be built within the chosen cost budget (typically \$25) and weight capacity. Players may enter up to two robots (e.g., clusterbots) within the total budget.
 
 ### 2. Robot Battling (Arena & Miniatures)
