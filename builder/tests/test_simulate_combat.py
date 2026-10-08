@@ -41,13 +41,20 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(max_s, 4)
         self.assertEqual(d_map[4], 12)
 
-        # Beater Bar: XWW -> X*W + W = X + 1
+        # Beater Bar: XWWW -> X*W + 2W = X + 2
         beater = by_name["Beater Bar"]
         max_s, d_map, desc = parse_weapon_spin_and_damage(beater)
         self.assertEqual(max_s, 3)
+        self.assertEqual(d_map[1], 3)
+        self.assertEqual(d_map[2], 4)
+        self.assertEqual(d_map[3], 5)
+
+        # Cronos Scythe: XWW -> X*W + W = X + 1
+        scythe = by_name["Cronos Scythe"]
+        max_s, d_map, desc = parse_weapon_spin_and_damage(scythe)
+        self.assertEqual(max_s, 2)
         self.assertEqual(d_map[1], 2)
         self.assertEqual(d_map[2], 3)
-        self.assertEqual(d_map[3], 4)
 
         # Chonk Key Blade: XXW -> X^2 * W = X^2
         chonk = by_name["Chonk Key Blade"]
@@ -155,9 +162,24 @@ class TestCombatSimulation(unittest.TestCase):
 
         self.assertIn("<!DOCTYPE html>", html_out)
         self.assertIn("Vyper_Spinner", html_out)
-        self.assertIn("Direct Hit Lethality Matrix", html_out)
+        self.assertIn("Direct Hit Lethality Matrix (Perimeter Components)", html_out)
         self.assertIn("Feedback Chain Escalation & Failure Analysis", html_out)
         self.assertIn("Effective Throw Shock Damage Chart", html_out)
+
+        # Verify that direct hit matrix includes exposed perimeter components
+        self.assertIn("Horizontal Spinner", html_out)
+        self.assertIn("Titanium Wedge", html_out)
+        self.assertIn("TPU Plate", html_out)
+        self.assertIn("UHMW Wraparound Armor", html_out)
+
+        # Verify that internal components (battery #2, internal motors) are NOT in the matrix th columns
+        import re
+        matrix_header = re.search(r"<table class=\"matrix-table\">.*?<thead>\s*<tr>(.*?)</tr>\s*</thead>", html_out, re.DOTALL)
+        self.assertIsNotNone(matrix_header)
+        th_cells = re.findall(r"<th>(.*?)</th>", matrix_header.group(1), re.DOTALL)
+        self.assertEqual(len(th_cells), len(robot.outer_components))
+        # Ensure battery is not a column in direct hit matrix
+        self.assertFalse(any("Galaxy 300 3S" in th for th in th_cells))
 
 
 if __name__ == "__main__":

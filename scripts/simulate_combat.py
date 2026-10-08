@@ -101,16 +101,17 @@ def parse_weapon_spin_and_damage(weapon: Dict[str, Any]) -> Tuple[int, Dict[int,
         elif outputs == "XXW":
             damage_map[s] = s ** 2
             formula_desc = "X^2 (X^2 * W)"
-        elif re.match(r"^(\d*)XWW$", outputs):
-            m = re.match(r"^(\d*)XWW$", outputs)
+        elif re.match(r"^(\d*)X(W+)$", outputs):
+            m = re.match(r"^(\d*)X(W+)$", outputs)
             k = int(m.group(1)) if m.group(1) else 1
-            damage_map[s] = k * s + 1
-            formula_desc = f"{k}X + 1" if k > 1 else "X + 1"
-        elif re.match(r"^(\d+)XW$", outputs):
-            m = re.match(r"^(\d+)XW$", outputs)
-            k = int(m.group(1))
-            damage_map[s] = k * s
-            formula_desc = f"{k}X"
+            w_count = len(m.group(2))
+            extra_w = w_count - 1
+            damage_map[s] = k * s + extra_w
+            k_str = f"{k}X" if k > 1 else "X"
+            if extra_w > 0:
+                formula_desc = f"{k_str} + {extra_w}"
+            else:
+                formula_desc = f"{k_str}"
         elif re.match(r"^W+$", outputs):
             damage_map[s] = len(outputs)
             formula_desc = f"{len(outputs)} flat ({outputs})"
@@ -237,16 +238,32 @@ def build_robot_model(csv_path: Path, catalog: Dict[str, Any], tolerance: float 
                 if cid not in reverse_supply[nid]:
                     reverse_supply[nid].append(cid)
 
-    all_x = [comp.x for comp in components.values()]
-    all_y = [comp.y for comp in components.values()]
-    min_x, max_x = (min(all_x), max(all_x)) if all_x else (0, 0)
-    min_y, max_y = (min(all_y), max(all_y)) if all_y else (0, 0)
+    boxes = {cid: comp.box for cid, comp in components.items()}
+    if boxes:
+        layout_min_x = min(b[0] for b in boxes.values())
+        layout_min_y = min(b[1] for b in boxes.values())
+        layout_max_x = max(b[2] for b in boxes.values())
+        layout_max_y = max(b[3] for b in boxes.values())
+    else:
+        layout_min_x = layout_min_y = layout_max_x = layout_max_y = 0.0
 
     outer_components: List[str] = []
     for cid, comp in components.items():
-        is_protective = comp.is_wedge or "armor" in comp.name.lower() or "plate" in comp.name.lower() or "fork" in comp.name.lower()
+        is_protective = (
+            comp.is_wedge
+            or comp.is_forks
+            or "armor" in comp.name.lower()
+            or "plate" in comp.name.lower()
+            or "fork" in comp.name.lower()
+        )
         is_outer_mech = "wheel" in comp.name.lower() or comp.card_type == "weapon"
-        is_boundary = (comp.x <= min_x + 20) or (comp.x >= max_x - 20) or (comp.y <= min_y + 20) or (comp.y >= max_y - 20)
+        b = comp.box
+        is_boundary = (
+            abs(b[0] - layout_min_x) <= 2.0
+            or abs(b[1] - layout_min_y) <= 2.0
+            or abs(b[2] - layout_max_x) <= 2.0
+            or abs(b[3] - layout_max_y) <= 2.0
+        )
         if is_protective or is_outer_mech or is_boundary:
             outer_components.append(cid)
 
@@ -683,28 +700,51 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
         """)
 
         # ----------------------------------------------------------------------
-        # SECTION 1: SINGLE UNIFIED DIRECT HIT MATRIX
+        # SECTION 1: SINGLE UNIFIED DIRECT HIT MATRIX (PERIMETER ONLY)
         # ----------------------------------------------------------------------
-        sorted_comps = sorted(robot.components.values(), key=lambda x: int(x.id) if x.id.isdigit() else x.id)
+        outer_ids = set(robot.outer_components)
+        edge_comps = [c for c in robot.components.values() if c.id in outer_ids]
+        if not edge_comps:
+            edge_comps = list(robot.components.values())
 
-        # Header columns: Component Name + Dur/Abs
+        # Sort spatially: Front -> Back (comp.y), then Left -> Right (comp.x)
+        edge_comps.sort(key=lambda c: (c.y, c.x))
+
+        def get_comp_role_tag(c: PlacedComponent) -> str:
+            if c.card_type == "weapon":
+                return "Weapon"
+            if c.is_wedge:
+                return "Wedge"
+            if c.is_forks:
+                return "Forks"
+            if "wheel" in c.name.lower():
+                return "Wheel"
+            if "armor" in c.name.lower() or "plate" in c.name.lower():
+                return "Armor"
+            return "Perimeter"
+
+        # Header columns: Component Name + Dur/Abs + Role
         matrix_th_cols = "".join(
-            f'<th><div class="th-comp-name">{html.escape(c.name)}</div><div class="th-comp-stats">#{c.id} | D:{c.durability} A:{c.absorption}</div></th>'
-            for c in sorted_comps
+            f'<th>'
+            f'<div class="th-comp-name">{html.escape(c.name)}</div>'
+            f'<div class="th-comp-stats">#{c.id} · D:{c.durability} A:{c.absorption}</div>'
+            f'<span class="badge-role">{get_comp_role_tag(c)}</span>'
+            f'</th>'
+            for c in edge_comps
         )
 
         matrix_rows = []
         for atk in attack_configs:
             dmg = atk["damage"]
             td_cells = []
-            for c in sorted_comps:
+            for c in edge_comps:
                 res = resolve_single_component_hit(c, float(dmg), is_weapon_damage=True)
                 if res.status == "DESTROYED":
-                    cell_html = f'<span class="matrix-badge destroy" title="{c.name}: DESTROYED (Hits for {dmg} vs Dur {res.effective_durability})">DESTROY</span>'
+                    cell_html = f'<span class="matrix-badge destroy" title="{c.name} (#{c.id}): DESTROYED (Hits for {dmg} vs Dur {res.effective_durability})">DESTROY</span>'
                 elif res.status == "DAMAGED":
-                    cell_html = f'<span class="matrix-badge damaged" title="{c.name}: DAMAGED (Hits for {dmg}, absorbs {c.absorption})">DAMAGED</span>'
+                    cell_html = f'<span class="matrix-badge damaged" title="{c.name} (#{c.id}): DAMAGED (Hits for {dmg}, absorbs {c.absorption})">DAMAGED</span>'
                 else:
-                    cell_html = f'<span class="matrix-badge safe" title="{c.name}: SAFE (Absorbed)">SAFE</span>'
+                    cell_html = f'<span class="matrix-badge safe" title="{c.name} (#{c.id}): SAFE (Absorbed)">SAFE</span>'
                 td_cells.append(f"<td>{cell_html}</td>")
 
             matrix_rows.append(f"""
@@ -717,12 +757,13 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
             </tr>
             """)
 
+        num_internal = len(robot.components) - len(edge_comps)
         sections.append(f"""
         <div class="section-container">
           <div class="section-header-flex">
             <div>
-              <h3 class="section-title">🎯 Direct Hit Lethality Matrix</h3>
-              <p class="section-desc">Consolidated single matrix: Every weapon impact at each spin-up level across all components installed on the robot.</p>
+              <h3 class="section-title">🎯 Direct Hit Lethality Matrix (Perimeter Components)</h3>
+              <p class="section-desc">Direct hit outcomes across exposed perimeter components ({len(edge_comps)} edge components that can receive direct contact on an undamaged robot). Internal components ({num_internal} batteries, ESCs, motors) are shielded behind this perimeter and only take damage via punch-through penetration or feedback.</p>
             </div>
             <div class="legend-box">
               <span class="matrix-badge safe">SAFE</span>
@@ -1221,6 +1262,20 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       font-size: 10px;
       color: var(--text-muted);
       font-weight: normal;
+    }}
+
+    .badge-role {{
+      display: inline-block;
+      margin-top: 3px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 600;
+      background: var(--surface-hover);
+      color: var(--primary);
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }}
 
     .matrix-table td {{
