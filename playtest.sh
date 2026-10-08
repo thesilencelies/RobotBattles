@@ -3,14 +3,14 @@
 #
 # Termux:  copy or symlink this into ~/.shortcuts/ and add the Termux:Widget
 #          to the home screen -- tapping it starts the server and opens the
-#          browser at http://127.0.0.1:8000/.
+#          browser at http://127.0.0.1:8002/.
 # Desktop: sh playtest.sh
 #
 # Deliberately POSIX sh with no shebang dependencies beyond /bin/sh.
 set -eu
 
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-PORT="${PLAYTEST_PORT:-8000}"
+PORT="${PLAYTEST_PORT:-8002}"
 URL="http://127.0.0.1:${PORT}/"
 
 PY=$(command -v python3 2>/dev/null || command -v python 2>/dev/null || true)
