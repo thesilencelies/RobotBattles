@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Robot Battles - Combat Robotics Playtest</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+      <div class="brand-zone">
+        <span class="brand-badge">⚔️ Robot Battles</span>
+        <span class="brand-sub">Playtest</span>
+      </div>
+
+      <nav class="nav-tabs" id="main-nav">
+        <button class="nav-tab active" data-tab="arena">
+          <span class="tab-icon">🏟️</span>
+          <span class="tab-label">Field</span>
+        </button>
+        <button class="nav-tab" data-tab="player-robot">
+          <span class="tab-icon">🤖</span>
+          <span class="tab-label">Player Bot</span>
+        </button>
+        <button class="nav-tab" data-tab="automaton-robot">
+          <span class="tab-icon">👾</span>
+          <span class="tab-label">Automaton</span>
+        </button>
+        <button class="nav-tab" data-tab="builder">
+          <span class="tab-icon">🔨</span>
+          <span class="tab-label">Builder</span>
+        </button>
+        <button class="nav-tab" data-tab="log">
+          <span class="tab-icon">📜</span>
+          <span class="tab-label">Log</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Views Container -->
+    <main class="main-content">
+
+      <!-- ==================== TAB 1: ARENA (FIELD) ==================== -->
+      <section class="tab-view active" id="view-arena">
+        <!-- Match Status Ribbon -->
+        <div class="arena-match-ribbon">
+          <div class="ribbon-col">
+            <span class="ribbon-round" id="hud-round">Round 1 / 10</span>
+            <div id="hud-status">
+              <span class="badge badge-success">PLANNING PHASE</span>
+            </div>
+          </div>
+
+          <div class="ribbon-banner" id="hud-auto-banner">
+            <span>Opponent: <strong>Vyper Flipper</strong> (Ready)</span>
+          </div>
+
+          <div class="ribbon-actions">
+            <label for="auto-select" class="sr-only">Automaton</label>
+            <select id="auto-select" class="select-sm" title="Choose Automaton Opponent">
+              <option value="Vyper_flipper">Vyper Flipper</option>
+              <option value="Vyper_Spinner">Vyper Spinner</option>
+            </select>
+            <button id="btn-new-match" class="btn btn-sm btn-primary" title="Start new match">⚔️ New Match</button>
+            <button id="btn-reset-match" class="btn btn-sm btn-ghost" title="Reset match">🔄 Reset</button>
+          </div>
+        </div>
+
+        <!-- The Arena Stage (800mm x 800mm SVG) -->
+        <div class="arena-viewport">
+          <svg id="arena-svg" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <!-- Floor Grid Pattern -->
+              <pattern id="arena-grid-10" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+              </pattern>
+              <!-- Hazard Yellow Hatch Pattern -->
+              <pattern id="hazard-hatch" width="16" height="16" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="0" y2="16" stroke="#eab308" stroke-width="5" />
+                <line x1="8" y1="0" x2="8" y2="16" stroke="#000000" stroke-width="5" />
+              </pattern>
+              <!-- Robot Heading Markers -->
+              <marker id="arrow-player" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#00e5ff"/>
+              </marker>
+              <marker id="arrow-automaton" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e"/>
+              </marker>
+            </defs>
+
+            <!-- 1. Background Arena Floor -->
+            <rect x="0" y="0" width="800" height="800" fill="#0a0f18" />
+            <rect x="0" y="0" width="800" height="800" fill="url(#arena-grid-10)" />
+
+            <!-- 2. Hazard Pit Zones (4 Yellow Hatched Corners) -->
+            <rect x="0" y="0" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.6"/>
+            <rect x="650" y="0" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.6"/>
+            <rect x="0" y="650" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.6"/>
+            <rect x="650" y="650" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.6"/>
+
+            <!-- Pit Outlines -->
+            <rect x="0" y="0" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2"/>
+            <rect x="650" y="0" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2"/>
+            <rect x="0" y="650" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2"/>
+            <rect x="650" y="650" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2"/>
+
+            <!-- 3. Red Starting Deployment Zones -->
+            <!-- North / Automaton start box -->
+            <rect x="300" y="120" width="200" height="100" fill="rgba(239, 68, 68, 0.08)" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="6,4" rx="4"/>
+            <text x="400" y="175" fill="rgba(239, 68, 68, 0.4)" font-size="12" font-family="sans-serif" font-weight="bold" text-anchor="middle">AUTOMATON START</text>
+
+            <!-- South / Player start box -->
+            <rect x="300" y="580" width="200" height="100" fill="rgba(0, 229, 255, 0.08)" stroke="#00e5ff" stroke-width="1.8" stroke-dasharray="6,4" rx="4"/>
+            <text x="400" y="635" fill="rgba(0, 229, 255, 0.4)" font-size="12" font-family="sans-serif" font-weight="bold" text-anchor="middle">PLAYER START</text>
+
+            <!-- 4. Arena Perimeter Walls (Solid Black Lines) -->
+            <rect x="100" y="100" width="600" height="600" fill="none" stroke="#475569" stroke-width="4.5"/>
+            <line x1="400" y1="100" x2="400" y2="700" stroke="#334155" stroke-width="0.8" stroke-dasharray="4,4" opacity="0.4"/>
+            <line x1="100" y1="400" x2="700" y2="400" stroke="#334155" stroke-width="0.8" stroke-dasharray="4,4" opacity="0.4"/>
+
+            <!-- Dynamic SVG Layers -->
+            <g id="layer-ghosts"></g>
+            <g id="layer-robots"></g>
+            <g id="layer-effects"></g>
+          </svg>
+        </div>
+
+        <!-- Turn Planning Dock -->
+        <div class="turn-planning-dock">
+          <div class="planning-header">
+            <h3>🧭 Planning Phase: Choose Drive Pair (L / R)</h3>
+            <span class="planning-hint">Select integer drive values bounded by your robot's active drive count.</span>
+          </div>
+
+          <div class="drive-inputs-grid">
+            <!-- Left Drive Control -->
+            <div class="drive-control-box">
+              <div class="drive-box-head">
+                <span class="drive-side-label">LEFT DRIVE</span>
+                <span class="drive-number-badge" id="left-drive-val">0</span>
+              </div>
+              <div class="stepper-row">
+                <button class="btn-stepper" id="btn-left-minus">－</button>
+                <input type="range" id="left-drive-slider" class="drive-slider" min="-3" max="3" value="0" step="1">
+                <button class="btn-stepper" id="btn-left-plus">＋</button>
+              </div>
+            </div>
+
+            <!-- Right Drive Control -->
+            <div class="drive-control-box">
+              <div class="drive-box-head">
+                <span class="drive-side-label">RIGHT DRIVE</span>
+                <span class="drive-number-badge" id="right-drive-val">0</span>
+              </div>
+              <div class="stepper-row">
+                <button class="btn-stepper" id="btn-right-minus">－</button>
+                <input type="range" id="right-drive-slider" class="drive-slider" min="-3" max="3" value="0" step="1">
+                <button class="btn-stepper" id="btn-right-plus">＋</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Drive Presets -->
+          <div class="presets-row">
+            <span class="preset-label">Presets:</span>
+            <button class="btn-preset" data-preset="forward">⬆️ Full Ahead</button>
+            <button class="btn-preset" data-preset="curve-left">↖️ Curve Left</button>
+            <button class="btn-preset" data-preset="curve-right">↗️ Curve Right</button>
+            <button class="btn-preset" data-preset="pivot-left">🔄 Pivot Left</button>
+            <button class="btn-preset" data-preset="pivot-right">🔃 Pivot Right</button>
+            <button class="btn-preset" data-preset="reverse">⬇️ Reverse</button>
+            <button class="btn-preset" data-preset="stop">⏹️ Stop</button>
+          </div>
+
+          <!-- Execute Button -->
+          <div class="execute-row">
+            <button id="btn-execute-turn" class="btn btn-big btn-primary">
+              🚀 Lock in Drive & Execute Turn
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 2: PLAYER BOT ==================== -->
+      <section class="tab-view" id="view-player-robot">
+        <div id="player-robot-container" class="robot-view-scroll"></div>
+      </section>
+
+      <!-- ==================== TAB 3: AUTOMATON BOT ==================== -->
+      <section class="tab-view" id="view-automaton-robot">
+        <div id="automaton-robot-container" class="robot-view-scroll"></div>
+      </section>
+
+      <!-- ==================== TAB 4: BUILDER ==================== -->
+      <section class="tab-view" id="view-builder">
+        <div class="builder-bridge-bar">
+          <div>
+            <strong>Interactive Robot Builder</strong>
+            <span class="builder-desc">Design your bot within budget & weight limit on the A3 chassis sheet.</span>
+          </div>
+          <button id="btn-deploy-to-battle" class="btn btn-primary">
+            ⚔️ Deploy Robot to Battle Arena
+          </button>
+        </div>
+
+        <div id="canvas-container" class="canvas-container">
+          <svg id="mat-svg" class="mat-svg" viewBox="0 0 420 297" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <pattern id="ui-grid-10" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#253041" stroke-width="0.3" opacity="0.7"/>
+              </pattern>
+              <pattern id="ui-grid-50" width="50" height="50" patternUnits="userSpaceOnUse">
+                <rect width="50" height="50" fill="url(#ui-grid-10)"/>
+                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#334155" stroke-width="0.6" opacity="0.8"/>
+              </pattern>
+            </defs>
+            <g id="layer-sheet">
+              <rect id="sheet-bg" x="0" y="0" width="420" height="297" fill="#0c1017" stroke="#1e293b" stroke-width="1.2"/>
+              <rect id="sheet-grid" x="0" y="0" width="420" height="297" fill="url(#ui-grid-50)"/>
+            </g>
+            <g id="layer-chassis">
+              <polygon id="chassis-poly" points="100,24 320,24 320,280 100,280" fill="rgba(0, 229, 255, 0.04)" stroke="#00e5ff" stroke-width="2.5"/>
+            </g>
+            <g id="layer-connections"></g>
+            <g id="layer-cards"></g>
+          </svg>
+        </div>
+
+        <!-- Drawers for Catalogue & Spares -->
+        <div id="drawer-catalogue" class="drawer hidden">
+          <input type="text" id="card-search-input" placeholder="Search cards..." class="search-input">
+          <div class="pills-row">
+            <button class="pill active" data-cat="all">All</button>
+            <button class="pill" data-cat="weapon">Weapons</button>
+            <button class="pill" data-cat="component">Components</button>
+          </div>
+          <div id="catalogue-list" class="cards-grid"></div>
+        </div>
+        <div id="drawer-spares" class="drawer hidden">
+          <div id="spares-list" class="spares-grid"></div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 5: COMBAT LOG ==================== -->
+      <section class="tab-view" id="view-log">
+        <div class="log-panel-header">
+          <h3>📜 Battle Transcript</h3>
+          <span class="log-subtitle">Chronological record of moves, dice rolls, hits, and status changes.</span>
+        </div>
+        <div id="combat-log-container" class="combat-log-list"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
