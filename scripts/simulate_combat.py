@@ -3,7 +3,7 @@
 Combat Simulation Script for Robot Battles
 Tests weapon impacts, spin-up scaling, feedback propagation, and throw shock
 against robot layouts loaded from CSV files.
-Generates an interactive, styled HTML report and optional text summary in scripts/output/.
+Generates an interactive HTML report and text summary in scripts/output/.
 """
 
 from __future__ import annotations
@@ -125,7 +125,6 @@ def parse_weapon_spin_and_damage(weapon: Dict[str, Any]) -> Tuple[int, Dict[int,
     return max_spin, damage_map, formula_desc
 
 
-
 def get_weapon_attack_strength(weapon: Dict[str, Any], spin_level: int) -> int:
     """Returns the attack strength (used for throw strength and feedback)."""
     outputs = weapon.get("outputs", "").strip().upper()
@@ -144,7 +143,7 @@ def get_weapon_attack_strength(weapon: Dict[str, Any], spin_level: int) -> int:
 def boxes_touch(
     b1: Tuple[float, float, float, float],
     b2: Tuple[float, float, float, float],
-    tolerance: float = 6.5,
+    tolerance: float = 3.0,
 ) -> bool:
     """Checks if bounding boxes touch within tolerance (mm)."""
     x1_min, y1_min, x1_max, y1_max = b1
@@ -156,7 +155,7 @@ def boxes_touch(
     return True
 
 
-def build_robot_model(csv_path: Path, catalog: Dict[str, Any], tolerance: float = 6.5) -> RobotModel:
+def build_robot_model(csv_path: Path, catalog: Dict[str, Any], tolerance: float = 3.0) -> RobotModel:
     with open(csv_path, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -501,15 +500,157 @@ def simulate_throw_shock(
 
 
 # ==============================================================================
+# FEEDBACK CHAIN SIMULATION LOGIC
+# ==============================================================================
+
+@dataclass
+class ChainStepResult:
+    feedback_in: int
+    component_steps: List[Optional[DamageStepResult]]
+    category: str  # SAFE, DAMAGE_WITHOUT_FAILURE, SINK_FAILURE, UPSTREAM_FAILURE, ROOT_FAILURE
+    summary_text: str
+
+
+@dataclass
+class SubsystemChain:
+    name: str
+    sink_component: PlacedComponent
+    components_path: List[PlacedComponent]  # [End, Intermediate, ..., Root Battery]
+    escalation_results: List[ChainStepResult]
+    safe_window: Tuple[int, int]  # (min_fb, max_fb)
+    damage_without_fail_window: Tuple[Optional[int], Optional[int]]
+    sink_failure_threshold: Optional[int]
+    upstream_failure_threshold: Optional[int]
+    root_failure_threshold: Optional[int]
+
+
+def extract_robot_subsystem_chains(robot: RobotModel, max_fb: int = 20) -> List[SubsystemChain]:
+    """Identifies functional supply chains (Weapons, Lifters, Wheels) and traces feedback."""
+    chains: List[SubsystemChain] = []
+    seen_sinks = set()
+
+    for cid, comp in robot.components.items():
+        is_sink = comp.card_type == "weapon" or "wheel" in comp.name.lower() or "lifter" in comp.name.lower()
+        if not is_sink or cid in seen_sinks:
+            continue
+        seen_sinks.add(cid)
+
+        # Build path up supply tree
+        path = [comp]
+        curr = cid
+        visited_in_path = {cid}
+        while True:
+            sups = robot.supply_graph.get(curr, [])
+            valid_sups = [sid for sid in sups if sid not in visited_in_path]
+            if not valid_sups:
+                break
+            next_sid = valid_sups[0]
+            visited_in_path.add(next_sid)
+            path.append(robot.components[next_sid])
+            curr = next_sid
+
+        # Simulate escalation FB = 1..max_fb
+        steps_list: List[ChainStepResult] = []
+        safe_fb: List[int] = []
+        damage_without_fail_fb: List[int] = []
+        first_sink_fail: Optional[int] = None
+        first_upstream_fail: Optional[int] = None
+        first_root_fail: Optional[int] = None
+
+        for fb in range(1, max_fb + 1):
+            curr_dmg = float(fb)
+            comp_steps: List[Optional[DamageStepResult]] = []
+
+            for i, c in enumerate(path):
+                if curr_dmg > 0:
+                    step_res = resolve_single_component_hit(c, curr_dmg, is_weapon_damage=False)
+                    comp_steps.append(step_res)
+                    curr_dmg = step_res.excess_damage
+                else:
+                    comp_steps.append(None)
+
+            statuses = [r.status if r else "SAFE" for r in comp_steps]
+            any_dest = any(s == "DESTROYED" for s in statuses)
+            any_dam = any(s == "DAMAGED" for s in statuses)
+
+            if not any_dest and not any_dam:
+                cat = "SAFE"
+                safe_fb.append(fb)
+                desc = "All components absorbed feedback cleanly (0 Damage)"
+            elif any_dam and not any_dest:
+                cat = "DAMAGE_WITHOUT_FAILURE"
+                damage_without_fail_fb.append(fb)
+                damaged_names = [path[i].name for i, s in enumerate(statuses) if s == "DAMAGED"]
+                desc = f"Damage without failure: {', '.join(damaged_names)} took damage but survived!"
+            elif statuses[0] == "DESTROYED" and all(s != "DESTROYED" for s in statuses[1:]):
+                cat = "SINK_FAILURE"
+                if first_sink_fail is None:
+                    first_sink_fail = fb
+                desc = f"End component {path[0].name} destroyed; upstream components survived!"
+            elif len(statuses) > 1 and statuses[1] == "DESTROYED" and (len(statuses) <= 2 or statuses[2] != "DESTROYED"):
+                cat = "UPSTREAM_FAILURE"
+                if first_upstream_fail is None:
+                    first_upstream_fail = fb
+                desc = f"Upstream failure: {path[1].name} destroyed by passed feedback!"
+            elif len(statuses) > 2 and statuses[2] == "DESTROYED":
+                cat = "ROOT_FAILURE"
+                if first_root_fail is None:
+                    first_root_fail = fb
+                desc = f"Root battery {path[-1].name} destroyed by passed feedback!"
+            else:
+                cat = "SINK_FAILURE"
+                desc = "Component failure in chain"
+
+            steps_list.append(ChainStepResult(
+                feedback_in=fb,
+                component_steps=comp_steps,
+                category=cat,
+                summary_text=desc,
+            ))
+
+        safe_window = (min(safe_fb), max(safe_fb)) if safe_fb else (0, 0)
+        dwf_window = (min(damage_without_fail_fb), max(damage_without_fail_fb)) if damage_without_fail_fb else (None, None)
+
+        chain_name = f"{comp.name} Subsystem"
+        chains.append(SubsystemChain(
+            name=chain_name,
+            sink_component=comp,
+            components_path=path,
+            escalation_results=steps_list,
+            safe_window=safe_window,
+            damage_without_fail_window=dwf_window,
+            sink_failure_threshold=first_sink_fail,
+            upstream_failure_threshold=first_upstream_fail,
+            root_failure_threshold=first_root_fail,
+        ))
+
+    return chains
+
+
+# ==============================================================================
 # HTML REPORT GENERATOR
 # ==============================================================================
 
 def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> str:
-    """Generates a complete, beautiful standalone HTML report."""
     weapons = catalog["weapons"]
 
     robot_tabs_nav = []
     robot_tabs_content = []
+
+    # Compile list of all weapon attack configurations (Weapon Name @ Spin Level)
+    attack_configs = []
+    for w in weapons:
+        max_s, d_map, formula = parse_weapon_spin_and_damage(w)
+        for s, dmg in d_map.items():
+            spin_label = f"Spin {s}" if max_s > 0 else "Base"
+            label = f"{w['name']} ({spin_label}: {dmg} Dmg)"
+            attack_configs.append({
+                "weapon_name": w["name"],
+                "spin": s,
+                "damage": dmg,
+                "label": label,
+                "formula": formula,
+            })
 
     for idx, robot in enumerate(robots):
         active_cls = "active" if idx == 0 else ""
@@ -519,14 +660,9 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
             f'<button class="tab-btn {active_cls}" onclick="switchTab(\'{slug}\')">{html.escape(robot.name)}</button>'
         )
 
-        # Tab content
         sections = []
 
-        # Header summary stats
-        armor_comps = [c for c in robot.components.values() if c.is_wedge or "armor" in c.name.lower() or "plate" in c.name.lower()]
-        drive_wheels = [c for c in robot.components.values() if "wheel" in c.name.lower() or "tire" in c.name.lower() or "d" in c.outputs.lower()]
-        robot_weapons = [c for c in robot.components.values() if c.card_type == "weapon"]
-
+        # Robot Header Info
         sections.append(f"""
         <div class="robot-header-card">
           <div class="robot-title-row">
@@ -535,104 +671,169 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
           </div>
           <div class="metrics-grid">
             <div class="metric-box">
-              <span class="metric-label">Components</span>
+              <span class="metric-label">Total Components</span>
               <span class="metric-val">{len(robot.components)}</span>
             </div>
             <div class="metric-box">
-              <span class="metric-label">Armor Pieces</span>
-              <span class="metric-val">{len(armor_comps)}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-label">Active Drive</span>
-              <span class="metric-val">{len(drive_wheels)} Wheels</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-label">Weapons</span>
-              <span class="metric-val">{len(robot_weapons)}</span>
+              <span class="metric-label">Placement Dimensions</span>
+              <span class="metric-val">{robot.chassis.get('template', 'Standard')} Chassis</span>
             </div>
           </div>
         </div>
         """)
 
-        # 1. Executive Key Takeaways / Alerts
-        sections.append("""
+        # ----------------------------------------------------------------------
+        # SECTION 1: SINGLE UNIFIED DIRECT HIT MATRIX
+        # ----------------------------------------------------------------------
+        sorted_comps = sorted(robot.components.values(), key=lambda x: int(x.id) if x.id.isdigit() else x.id)
+
+        # Header columns: Component Name + Dur/Abs
+        matrix_th_cols = "".join(
+            f'<th><div class="th-comp-name">{html.escape(c.name)}</div><div class="th-comp-stats">#{c.id} | D:{c.durability} A:{c.absorption}</div></th>'
+            for c in sorted_comps
+        )
+
+        matrix_rows = []
+        for atk in attack_configs:
+            dmg = atk["damage"]
+            td_cells = []
+            for c in sorted_comps:
+                res = resolve_single_component_hit(c, float(dmg), is_weapon_damage=True)
+                if res.status == "DESTROYED":
+                    cell_html = f'<span class="matrix-badge destroy" title="{c.name}: DESTROYED (Hits for {dmg} vs Dur {res.effective_durability})">DESTROY</span>'
+                elif res.status == "DAMAGED":
+                    cell_html = f'<span class="matrix-badge damaged" title="{c.name}: DAMAGED (Hits for {dmg}, absorbs {c.absorption})">DAMAGED</span>'
+                else:
+                    cell_html = f'<span class="matrix-badge safe" title="{c.name}: SAFE (Absorbed)">SAFE</span>'
+                td_cells.append(f"<td>{cell_html}</td>")
+
+            matrix_rows.append(f"""
+            <tr>
+              <th class="matrix-row-header">
+                <span class="atk-name">{html.escape(atk['weapon_name'])}</span>
+                <span class="atk-badge">{html.escape(atk['label'].split('(')[-1].rstrip(')'))}</span>
+              </th>
+              {''.join(td_cells)}
+            </tr>
+            """)
+
+        sections.append(f"""
         <div class="section-container">
-          <h3 class="section-title">📊 Executive Tuning Insights</h3>
-          <div class="insights-grid">
-            <div class="insight-card danger">
-              <h4>💥 1-Hit Kill Vulnerability</h4>
-              <p>High-tier spinners (<strong>Bloodsport Bar</strong> at 18–24 dmg, <strong>Horizontal Spinner</strong> at 12–16 dmg) deal more than double the durability of internal motors and batteries (durability 5–7). Unshielded hits cause instantaneous destruction rather than progressive damage.</p>
+          <div class="section-header-flex">
+            <div>
+              <h3 class="section-title">🎯 Direct Hit Lethality Matrix</h3>
+              <p class="section-desc">Consolidated single matrix: Every weapon impact at each spin-up level across all components installed on the robot.</p>
             </div>
-            <div class="insight-card success">
-              <h4>🛡️ Armor Protection Value</h4>
-              <p>Perimeter armor is highly effective: <strong>UHMW Wraparound Armor</strong> (Dur 12, Abs 4) absorbs medium hits completely and disperses excess damage evenly among internal components, preventing any internal casualties up to 16 damage.</p>
+            <div class="legend-box">
+              <span class="matrix-badge safe">SAFE</span>
+              <span class="matrix-badge damaged">DAMAGED</span>
+              <span class="matrix-badge destroy">DESTROYED</span>
             </div>
-            <div class="insight-card warning">
-              <h4>🔄 Recoil Self-Destruction</h4>
-              <p>Weapons taking feedback equal to &lfloor;attack damage / 2&rfloor; destroy themselves at high spin-up: <strong>Horizontal Spinner</strong> destroys itself at Spin 4 (8 recoil > 7 dur), and <strong>Bloodsport Bar</strong> destroys itself at Spin 4 (12 recoil > 9 dur).</p>
-            </div>
-            <div class="insight-card danger">
-              <h4>🎲 Throw Shock Bypass</h4>
-              <p>Throw shock targets a <em>randomly chosen component</em> on the mat, completely bypassing perimeter armor. Throws above 8 strength instantly destroy unarmored batteries and motors in <strong>68% to 100%</strong> of cases unless deflected by a Wedge.</p>
-            </div>
+          </div>
+          <div class="table-scroll-container">
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th class="matrix-corner">Weapon Impact</th>
+                  {matrix_th_cols}
+                </tr>
+              </thead>
+              <tbody>
+                {''.join(matrix_rows)}
+              </tbody>
+            </table>
           </div>
         </div>
         """)
 
-        # 2. Weapon Direct Hit Lethality Matrix
-        weapon_select_options = ['<option value="all">Show All Weapons</option>']
-        for w in weapons:
-            w_slug = re.sub(r"[^a-zA-Z0-9_]", "_", w["name"])
-            weapon_select_options.append(f'<option value="{w_slug}">{html.escape(w["name"])}</option>')
+        # ----------------------------------------------------------------------
+        # SECTION 2: THE FEEDBACK CHAIN ANALYSIS (CORE FEATURE)
+        # ----------------------------------------------------------------------
+        subsystem_chains = extract_robot_subsystem_chains(robot, max_fb=20)
 
-        matrix_blocks = []
-        for w in weapons:
-            w_slug = re.sub(r"[^a-zA-Z0-9_]", "_", w["name"])
-            max_spin, d_map, formula = parse_weapon_spin_and_damage(w)
+        # 2A. Executive Chain Thresholds Summary Table
+        summary_rows = []
+        for chain in subsystem_chains:
+            path_str = " → ".join(f"{c.name} [D:{c.durability}, A:{c.absorption}]" for c in chain.components_path)
 
-            th_cols = "".join(f"<th>Spin {s} <br><small>({dmg} Dmg)</small></th>" for s, dmg in d_map.items())
+            safe_str = f"FB {chain.safe_window[0]}–{chain.safe_window[1]}" if chain.safe_window[1] > 0 else "None"
+            dwf_str = f"FB {chain.damage_without_fail_window[0]}–{chain.damage_without_fail_window[1]}" if chain.damage_without_fail_window[0] is not None else "None"
+            sink_str = f"FB {chain.sink_failure_threshold}" if chain.sink_failure_threshold is not None else "None"
+            up_str = f"FB {chain.upstream_failure_threshold}" if chain.upstream_failure_threshold is not None else "None"
+            root_str = f"FB {chain.root_failure_threshold}" if chain.root_failure_threshold is not None else "None"
 
-            rows = []
-            for cid, comp in sorted(robot.components.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]):
-                td_cols = []
-                for s, dmg in d_map.items():
-                    res = resolve_single_component_hit(comp, float(dmg), is_weapon_damage=True)
-                    if res.status == "DESTROYED":
-                        tag = '<span class="status-badge badge-danger">DESTROYED</span>'
-                    elif res.status == "DAMAGED":
-                        tag = '<span class="status-badge badge-warning">DAMAGED</span>'
+            summary_rows.append(f"""
+            <tr>
+              <td><strong>{html.escape(chain.name)}</strong></td>
+              <td class="chain-path-cell"><code>{html.escape(path_str)}</code></td>
+              <td><span class="badge-safe">{safe_str}</span></td>
+              <td><span class="badge-warning">{dwf_str}</span></td>
+              <td><span class="badge-danger">{sink_str}</span></td>
+              <td><span class="badge-destroy-heavy">{up_str}</span></td>
+              <td><span class="badge-destroy-heavy">{root_str}</span></td>
+            </tr>
+            """)
+
+        # 2B. Step-by-Step Chain Escalation Tables
+        chain_detail_blocks = []
+        for chain in subsystem_chains:
+            step_rows = []
+            for item in chain.escalation_results:
+                fb = item.feedback_in
+                st_cells = []
+                for idx_c, st in enumerate(item.component_steps):
+                    c_def = chain.components_path[idx_c]
+                    if st is None:
+                        st_cells.append('<td class="stat-col"><span class="badge-safe">SAFE (0 in)</span></td>')
+                    elif st.status == "DESTROYED":
+                        st_cells.append(f'<td class="stat-col"><span class="badge-danger">DESTROYED</span> <br><small>Passes {st.excess_damage:.1f}</small></td>')
+                    elif st.status == "DAMAGED":
+                        st_cells.append(f'<td class="stat-col"><span class="badge-warning">DAMAGED</span> <br><small>Passes {st.excess_damage:.1f}</small></td>')
                     else:
-                        tag = '<span class="status-badge badge-success">SAFE</span>'
-                    td_cols.append(f"<td>{tag}</td>")
+                        st_cells.append(f'<td class="stat-col"><span class="badge-safe">UNDAMAGED</span> <br><small>Passes {st.excess_damage:.1f}</small></td>')
 
-                kw_badge = f'<span class="mini-tag">{comp.keywords}</span>' if comp.keywords else ''
-                rows.append(f"""
+                cat_badge_cls = {
+                    "SAFE": "badge-safe",
+                    "DAMAGE_WITHOUT_FAILURE": "badge-warning",
+                    "SINK_FAILURE": "badge-danger",
+                    "UPSTREAM_FAILURE": "badge-destroy-heavy",
+                    "ROOT_FAILURE": "badge-destroy-heavy",
+                }.get(item.category, "badge-muted")
+
+                step_rows.append(f"""
                 <tr>
-                  <td class="comp-col"><strong>{html.escape(comp.name)}</strong> {kw_badge}</td>
-                  <td class="stat-col">{comp.durability}</td>
-                  <td class="stat-col">{comp.absorption}</td>
-                  {''.join(td_cols)}
+                  <td class="stat-col"><strong>FB {fb}</strong></td>
+                  {''.join(st_cells)}
+                  <td><span class="{cat_badge_cls}">{item.category.replace('_', ' ')}</span></td>
+                  <td class="desc-cell">{html.escape(item.summary_text)}</td>
                 </tr>
                 """)
 
-            matrix_blocks.append(f"""
-            <div class="weapon-matrix-block" data-weapon="{w_slug}">
-              <div class="weapon-block-header">
-                <h4>{html.escape(w['name'])}</h4>
-                <span class="weapon-desc">Formula: <code>{html.escape(formula)}</code> | Max Spin: <strong>{max_spin}</strong> | Req: <code>{w.get('requirements','')}</code></span>
+            comp_headers = "".join(f"<th>Level {i}: {html.escape(c.name)} <br><small>[D:{c.durability}, A:{c.absorption}]</small></th>" for i, c in enumerate(chain.components_path))
+
+            chain_detail_blocks.append(f"""
+            <div class="chain-card">
+              <div class="chain-header">
+                <h4>🔗 {html.escape(chain.name)} (Escalation Trace)</h4>
+                <div class="chain-tags">
+                  <span class="tag-primary">Safe: FB {chain.safe_window[0]}–{chain.safe_window[1]}</span>
+                  <span class="tag-warning">Damage Without Fail: FB {chain.damage_without_fail_window[0]}–{chain.damage_without_fail_window[1]}</span>
+                  <span class="tag-danger">First Fail: FB {chain.sink_failure_threshold}</span>
+                  <span class="tag-danger">Upstream Fail: FB {chain.upstream_failure_threshold}</span>
+                </div>
               </div>
               <div class="table-responsive">
                 <table class="report-table">
                   <thead>
                     <tr>
-                      <th style="min-width: 220px;">Component</th>
-                      <th style="width: 60px;">Dur</th>
-                      <th style="width: 60px;">Abs</th>
-                      {th_cols}
+                      <th style="width: 70px;">Feedback</th>
+                      {comp_headers}
+                      <th style="width: 170px;">Chain State</th>
+                      <th>Effect Narrative</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {''.join(rows)}
+                    {''.join(step_rows)}
                   </tbody>
                 </table>
               </div>
@@ -641,276 +842,107 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
 
         sections.append(f"""
         <div class="section-container">
-          <div class="section-header-flex">
-            <h3 class="section-title">⚔️ Direct Hit Lethality Matrix (Exposed Hits Without Armor)</h3>
-            <div class="filter-controls">
-              <label for="filter-{slug}">Filter Weapon: </label>
-              <select id="filter-{slug}" class="select-input" onchange="filterWeapon('{slug}', this.value)">
-                {''.join(weapon_select_options)}
-              </select>
-            </div>
+          <h3 class="section-title">⚡ Feedback Chain Escalation & Failure Analysis</h3>
+          <p class="section-desc">
+            Traces unabsorbed shock/strain traveling backwards from end components up to their supplying motors and batteries.
+            Shows exactly at what feedback numbers components take damage without failing, and at what numbers upstream components fail down the line.
+          </p>
+
+          <div class="sub-section-title">Summary of Critical Thresholds Across Subsystems</div>
+          <div class="table-responsive" style="margin-bottom: 24px;">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Subsystem Chain</th>
+                  <th>Supply Path (End → Intermediate → Root)</th>
+                  <th>Safe Window (0 Dmg)</th>
+                  <th>Damage Without Failure</th>
+                  <th>End Component Fails</th>
+                  <th>Upstream Motor/Servo Fails</th>
+                  <th>Root Battery Fails</th>
+                </tr>
+              </thead>
+              <tbody>
+                {''.join(summary_rows)}
+              </tbody>
+            </table>
           </div>
-          {''.join(matrix_blocks)}
+
+          <div class="sub-section-title">Step-by-Step Chain Escalation Logs (FB 1 to 20)</div>
+          {''.join(chain_detail_blocks)}
         </div>
         """)
 
-        # 3. Defensive Armor & Inward Penetration
-        if armor_comps:
-            armor_blocks = []
-            for ac in armor_comps:
-                rows = []
-                for w in weapons:
-                    max_spin, d_map, _ = parse_weapon_spin_and_damage(w)
-                    for s, dmg in d_map.items():
-                        steps = simulate_inward_damage_progression(robot, ac.id, float(dmg), is_weapon_damage=True)
-                        if not steps:
-                            continue
-                        armor_step = steps[0]
-                        internal_steps = steps[1:]
+        # ----------------------------------------------------------------------
+        # SECTION 3: SIMPLIFIED THROW SHOCK CHART (EFFECTIVE THROW STRENGTH)
+        # ----------------------------------------------------------------------
+        throw_rows = []
+        for eff_t in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 24]:
+            outcomes = simulate_throw_shock(robot, eff_t, hit_on_wedge=False)
+            num_comps = len(robot.components)
+            dest_count = 0
+            dam_count = 0
+            dest_names = []
+            dam_names = []
 
-                        if armor_step.status == "DESTROYED":
-                            armor_badge = '<span class="status-badge badge-danger">DESTROYED</span>'
-                        elif armor_step.status == "DAMAGED":
-                            armor_badge = '<span class="status-badge badge-warning">DAMAGED</span>'
-                        else:
-                            armor_badge = '<span class="status-badge badge-success">UNDAMAGED</span>'
+            for cid, steps in outcomes.items():
+                if steps:
+                    target_res = steps[0]
+                    if target_res.status == "DESTROYED":
+                        dest_count += 1
+                        dest_names.append(target_res.component_name)
+                    elif target_res.status == "DAMAGED":
+                        dam_count += 1
+                        dam_names.append(target_res.component_name)
 
-                        cas = []
-                        for st in internal_steps:
-                            if st.status == "DESTROYED":
-                                cas.append(f'<span class="tag-danger">{html.escape(st.component_name)} [DESTROYED]</span>')
-                            elif st.status == "DAMAGED":
-                                cas.append(f'<span class="tag-warning">{html.escape(st.component_name)} [DAMAGED]</span>')
-                        cas_html = " ".join(cas) if cas else '<span class="tag-success">None (Protected)</span>'
+            pct_dest = (dest_count / num_comps) * 100
+            pct_dam = (dam_count / num_comps) * 100
+            pct_safe = max(0.0, 100.0 - pct_dest - pct_dam)
 
-                        rows.append(f"""
-                        <tr>
-                          <td><strong>{html.escape(w['name'])}</strong></td>
-                          <td class="stat-col">{s}</td>
-                          <td class="stat-col">{dmg}</td>
-                          <td>{armor_badge}</td>
-                          <td class="stat-col">{armor_step.excess_damage:.1f}</td>
-                          <td>{cas_html}</td>
-                        </tr>
-                        """)
+            u_dest = list(dict.fromkeys(dest_names))
+            dest_str = ", ".join(u_dest[:3])
+            if len(u_dest) > 3:
+                dest_str += f" (+{len(u_dest)-3} more)"
+            dest_html = f'<span class="tag-danger">{html.escape(dest_str)}</span>' if dest_str else '<span class="tag-success">None</span>'
 
-                armor_blocks.append(f"""
-                <div class="armor-sub-card">
-                  <div class="armor-header">
-                    <h4>{html.escape(ac.name)} (#{ac.id})</h4>
-                    <span class="armor-stats">Durability: <strong>{ac.durability}</strong> | Absorption: <strong>{ac.absorption}</strong> {f'| Keywords: {ac.keywords}' if ac.keywords else ''}</span>
-                  </div>
-                  <div class="table-responsive">
-                    <table class="report-table">
-                      <thead>
-                        <tr>
-                          <th>Attacking Weapon</th>
-                          <th>Spin</th>
-                          <th>Dmg</th>
-                          <th>Armor Status</th>
-                          <th>Excess Passed Inward</th>
-                          <th>Internal Casualties</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {''.join(rows)}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                """)
+            u_dam = list(dict.fromkeys(dam_names))
+            dam_str = ", ".join(u_dam[:3])
+            if len(u_dam) > 3:
+                dam_str += f" (+{len(u_dam)-3} more)"
+            dam_html = f'<span class="tag-warning">{html.escape(dam_str)}</span>' if dam_str else '<span class="tag-success">None</span>'
 
-            sections.append(f"""
-            <div class="section-container">
-              <h3 class="section-title">🛡️ Defensive Options & Inward Penetration Through Armor</h3>
-              <p class="section-desc">Shows what happens when incoming attacks hit outer armor or wedges first, applying absorption and sharing excess damage evenly among connected inward components.</p>
-              {''.join(armor_blocks)}
+            bar_html = f"""
+            <div class="progress-container">
+              <div class="progress-fill {'danger' if pct_dest > 50 else 'warning' if pct_dest > 0 else 'safe'}" style="width: {pct_dest}%;"></div>
+              <span class="progress-text">{pct_dest:.1f}% ({dest_count}/{num_comps})</span>
             </div>
-            """)
+            """
 
-        # 4. Weapon Recoil Feedback
-        if robot_weapons:
-            rw_blocks = []
-            for rw in robot_weapons:
-                w_def = next((w for w in weapons if w["name"] == rw.name), None)
-                if not w_def:
-                    continue
-                max_spin, d_map, formula = parse_weapon_spin_and_damage(w_def)
-                rows = []
-                for s, dmg in d_map.items():
-                    att_str = get_weapon_attack_strength(w_def, s)
-                    fb_steps = simulate_weapon_feedback(robot, rw, att_str)
-                    recoil_val = att_str // 2
-
-                    if not fb_steps:
-                        w_badge = '<span class="status-badge badge-success">SAFE</span>'
-                        supp_html = '<span class="tag-success">No Strain</span>'
-                    else:
-                        w_step = fb_steps[0]
-                        if w_step.status == "DESTROYED":
-                            w_badge = '<span class="status-badge badge-danger">DESTROYED</span>'
-                        elif w_step.status == "DAMAGED":
-                            w_badge = '<span class="status-badge badge-warning">DAMAGED</span>'
-                        else:
-                            w_badge = '<span class="status-badge badge-success">UNDAMAGED</span>'
-
-                        supp_cas = []
-                        for st in fb_steps[1:]:
-                            if st.status != "UNDAMAGED":
-                                cls = "tag-danger" if st.status == "DESTROYED" else "tag-warning"
-                                supp_cas.append(f'<span class="{cls}">{html.escape(st.component_name)} [{st.status}]</span>')
-                        supp_html = " ".join(supp_cas) if supp_cas else '<span class="tag-success">Absorbed Cleanly</span>'
-
-                    rows.append(f"""
-                    <tr>
-                      <td class="stat-col">Spin {s}</td>
-                      <td class="stat-col">{att_str}</td>
-                      <td class="stat-col">{recoil_val}</td>
-                      <td>{w_badge}</td>
-                      <td>{supp_html}</td>
-                    </tr>
-                    """)
-
-                rw_blocks.append(f"""
-                <div class="armor-sub-card">
-                  <div class="armor-header">
-                    <h4>{html.escape(rw.name)} (#{rw.id})</h4>
-                    <span class="armor-stats">Durability: <strong>{rw.durability}</strong> | Absorption: <strong>{rw.absorption}</strong> | Formula: <code>{html.escape(formula)}</code></span>
-                  </div>
-                  <div class="table-responsive">
-                    <table class="report-table">
-                      <thead>
-                        <tr>
-                          <th>Spin Level</th>
-                          <th>Attack Damage</th>
-                          <th>Recoil Feedback (&lfloor;D/2&rfloor;)</th>
-                          <th>Weapon Status</th>
-                          <th>Supplying Motor / Battery Impact</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {''.join(rows)}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                """)
-
-            sections.append(f"""
-            <div class="section-container">
-              <h3 class="section-title">🔄 Weapon Recoil Feedback</h3>
-              <p class="section-desc">Rules: Weapons take feedback equal to &lfloor;attack damage / 2&rfloor;. Weapon resolves feedback first; excess feedback propagates back down to supplying motors and batteries.</p>
-              {''.join(rw_blocks)}
-            </div>
-            """)
-
-        # 5. Drive Train Pushing Feedback
-        drive_rows = []
-        for d in [1, 2, 3, 4, 5, 6]:
-            push_steps = simulate_drive_pushing_feedback(robot, d)
-            if not push_steps:
-                continue
-            wheel_step = push_steps[0]
-            w_badge = '<span class="status-badge badge-success">UNDAMAGED</span>' if wheel_step.status == "UNDAMAGED" else f'<span class="status-badge badge-warning">{wheel_step.status}</span>'
-            sub_cas = [f'<span class="tag-warning">{st.component_name} [{st.status}]</span>' for st in push_steps[1:] if st.status != "UNDAMAGED"]
-            sub_html = " ".join(sub_cas) if sub_cas else '<span class="tag-success">Absorbed Cleanly (Zero Damage)</span>'
-
-            drive_rows.append(f"""
+            throw_rows.append(f"""
             <tr>
-              <td class="stat-col"><strong>{d} Distance</strong></td>
-              <td class="stat-col">{wheel_step.incoming_damage:.2f}</td>
-              <td>{w_badge}</td>
-              <td>{sub_html}</td>
+              <td class="stat-col"><strong>Throw {eff_t}</strong></td>
+              <td>{bar_html}</td>
+              <td class="stat-col">{pct_dam:.1f}% ({dam_count}/{num_comps})</td>
+              <td class="stat-col">{pct_safe:.1f}%</td>
+              <td>{dest_html}</td>
+              <td>{dam_html}</td>
             </tr>
             """)
 
         sections.append(f"""
         <div class="section-container">
-          <h3 class="section-title">🚜 Drive Train Pushing Match Feedback</h3>
-          <p class="section-desc">Rules: Opponent remaining distance before contact is shared equally between remaining active drive wheels, propagating back to drive motors and batteries.</p>
+          <h3 class="section-title">🎲 Effective Throw Shock Damage Chart</h3>
+          <p class="section-desc">Shows outcomes when throw shock of a given effective strength lands on a randomly chosen component on the robot mat.</p>
           <div class="table-responsive">
             <table class="report-table">
               <thead>
                 <tr>
-                  <th>Opponent Remaining Distance</th>
-                  <th>Feedback Per Drive Wheel</th>
-                  <th>Drive Wheel Status</th>
-                  <th>Drive Motor / Battery Impact</th>
-                </tr>
-              </thead>
-              <tbody>
-                {''.join(drive_rows)}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        """)
-
-        # 6. Throw Shock Matrix
-        throw_rows = []
-        for ts in [2, 4, 6, 8, 10, 12, 16, 24]:
-            for on_wedge in [False, True]:
-                outcomes = simulate_throw_shock(robot, ts, hit_on_wedge=on_wedge)
-                eff_t = (ts + 1) // 2 if on_wedge else ts
-                num_comps = len(robot.components)
-                dest_count = 0
-                dam_count = 0
-                dest_names = []
-
-                for cid, steps in outcomes.items():
-                    if steps:
-                        target_res = steps[0]
-                        if target_res.status == "DESTROYED":
-                            dest_count += 1
-                            dest_names.append(target_res.component_name)
-                        elif target_res.status == "DAMAGED":
-                            dam_count += 1
-
-                pct_dest = (dest_count / num_comps) * 100
-                pct_dam = (dam_count / num_comps) * 100
-
-                unique_dest = list(dict.fromkeys(dest_names))
-                dest_sample = ", ".join(unique_dest[:3])
-                if len(unique_dest) > 3:
-                    dest_sample += f" (+{len(unique_dest)-3} more)"
-                if not dest_sample:
-                    dest_sample = '<span class="tag-success">None</span>'
-                else:
-                    dest_sample = f'<span class="tag-danger">{html.escape(dest_sample)}</span>'
-
-                wedge_badge = '<span class="tag-primary">Wedge Deflection (Halved)</span>' if on_wedge else '<span class="tag-muted">Direct Hit</span>'
-
-                # Progress bar style
-                bar_html = f"""
-                <div class="progress-container">
-                  <div class="progress-fill {'danger' if pct_dest > 50 else 'warning' if pct_dest > 0 else 'safe'}" style="width: {pct_dest}%;"></div>
-                  <span class="progress-text">{pct_dest:.1f}% ({dest_count}/{num_comps})</span>
-                </div>
-                """
-
-                throw_rows.append(f"""
-                <tr>
-                  <td class="stat-col"><strong>{ts}</strong> (Eff {eff_t})</td>
-                  <td>{wedge_badge}</td>
-                  <td>{bar_html}</td>
-                  <td class="stat-col">{pct_dam:.1f}%</td>
-                  <td>{dest_sample}</td>
-                </tr>
-                """)
-
-        sections.append(f"""
-        <div class="section-container">
-          <h3 class="section-title">🎲 Throw Shock Hazard (Random Component Strike)</h3>
-          <p class="section-desc">Rules: After a throw, the thrown robot takes feedback equal to throw strength at a randomly chosen component (by dropping a card on it). The Wedge keyword halves throw strength received.</p>
-          <div class="table-responsive">
-            <table class="report-table">
-              <thead>
-                <tr>
-                  <th>Throw Strength</th>
-                  <th>Target Contact</th>
-                  <th>% Instant Destruction</th>
-                  <th>% Damaged</th>
-                  <th>Sample Destroyed Targets</th>
+                  <th style="width: 110px;">Effective Throw</th>
+                  <th style="min-width: 170px;">% Instant Destruction</th>
+                  <th style="width: 120px;">% Damaged</th>
+                  <th style="width: 90px;">% Safe</th>
+                  <th>Destroyed Targets</th>
+                  <th>Damaged Targets</th>
                 </tr>
               </thead>
               <tbody>
@@ -921,20 +953,18 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
         </div>
         """)
 
-        # Add to tab content list
         robot_tabs_content.append(f"""
         <div id="tab-{slug}" class="tab-content {active_cls}">
           {''.join(sections)}
         </div>
         """)
 
-    # Combine into full HTML document
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Combat Robotics Simulation & Balance Report</title>
+  <title>Combat Robotics Balance & Feedback Scaling Report</title>
   <style>
     :root {{
       --bg: #0b0f17;
@@ -947,11 +977,11 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       --primary: #38bdf8;
       --primary-bg: rgba(56, 189, 248, 0.12);
       --danger: #ef4444;
-      --danger-bg: rgba(239, 68, 68, 0.16);
+      --danger-bg: rgba(239, 68, 68, 0.18);
       --warning: #f59e0b;
-      --warning-bg: rgba(245, 158, 11, 0.16);
+      --warning-bg: rgba(245, 158, 11, 0.18);
       --success: #10b981;
-      --success-bg: rgba(16, 185, 129, 0.16);
+      --success-bg: rgba(16, 185, 129, 0.18);
     }}
 
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -964,12 +994,12 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
     }}
 
     .container {{
-      max-width: 1400px;
+      max-width: 1550px;
       margin: 0 auto;
     }}
 
     header {{
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       padding-bottom: 16px;
       border-bottom: 1px solid var(--border);
     }}
@@ -978,13 +1008,12 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       font-size: 26px;
       color: #fff;
       font-weight: 700;
-      letter-spacing: -0.5px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }}
 
     .subtitle {{
       color: var(--text-muted);
-      font-size: 14px;
+      font-size: 13.5px;
     }}
 
     .nav-tabs {{
@@ -999,11 +1028,11 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text-muted);
-      padding: 10px 20px;
+      padding: 9px 18px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13.5px;
       transition: all 0.2s ease;
     }}
 
@@ -1018,19 +1047,14 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       color: #0b0f17;
     }}
 
-    .tab-content {{
-      display: none;
-    }}
-
-    .tab-content.active {{
-      display: block;
-    }}
+    .tab-content {{ display: none; }}
+    .tab-content.active {{ display: block; }}
 
     .robot-header-card {{
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 20px;
+      padding: 16px 20px;
       margin-bottom: 24px;
     }}
 
@@ -1038,7 +1062,7 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
       gap: 10px;
     }}
@@ -1051,37 +1075,34 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
     .chassis-badge {{
       background: var(--surface-hover);
       border: 1px solid var(--border);
-      padding: 6px 14px;
+      padding: 4px 12px;
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--primary);
       font-weight: 600;
     }}
 
     .metrics-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
+      display: flex;
+      gap: 16px;
     }}
 
     .metric-box {{
       background: var(--surface-card);
       border: 1px solid var(--border);
-      padding: 12px 16px;
-      border-radius: 8px;
+      padding: 8px 14px;
+      border-radius: 6px;
     }}
 
     .metric-label {{
-      display: block;
-      font-size: 11px;
+      font-size: 10.5px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
       color: var(--text-muted);
-      margin-bottom: 4px;
+      display: block;
     }}
 
     .metric-val {{
-      font-size: 20px;
+      font-size: 15px;
       font-weight: 700;
       color: #fff;
     }}
@@ -1097,84 +1118,155 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
     .section-title {{
       font-size: 18px;
       color: #fff;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      margin-bottom: 4px;
+    }}
+
+    .sub-section-title {{
+      font-size: 14.5px;
+      color: var(--primary);
+      font-weight: 600;
+      margin: 16px 0 8px 0;
     }}
 
     .section-desc {{
       font-size: 13px;
       color: var(--text-muted);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }}
 
     .section-header-flex {{
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
+      align-items: flex-end;
+      margin-bottom: 12px;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
     }}
 
-    .insights-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 14px;
+    .legend-box {{
+      display: flex;
+      gap: 6px;
+      align-items: center;
     }}
 
-    .insight-card {{
-      padding: 16px;
-      border-radius: 8px;
-      border-left: 4px solid transparent;
-      font-size: 13px;
-    }}
-
-    .insight-card h4 {{
-      font-size: 14px;
-      margin-bottom: 6px;
-    }}
-
-    .insight-card.danger {{
-      background: var(--danger-bg);
-      border-left-color: var(--danger);
-      color: #fca5a5;
-    }}
-    .insight-card.danger h4 {{ color: #f87171; }}
-
-    .insight-card.warning {{
-      background: var(--warning-bg);
-      border-left-color: var(--warning);
-      color: #fde68a;
-    }}
-    .insight-card.warning h4 {{ color: #fbbf24; }}
-
-    .insight-card.success {{
-      background: var(--success-bg);
-      border-left-color: var(--success);
-      color: #a7f3d0;
-    }}
-    .insight-card.success h4 {{ color: #34d399; }}
-
-    .select-input {{
-      background: var(--surface-card);
+    .table-scroll-container {{
+      overflow-x: auto;
+      max-height: 650px;
+      overflow-y: auto;
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 13px;
+      border-radius: 8px;
+    }}
+
+    .matrix-table {{
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 11.5px;
+      text-align: center;
+    }}
+
+    .matrix-table thead th {{
+      position: sticky;
+      top: 0;
+      background: #101726;
+      border-bottom: 2px solid var(--border);
+      padding: 8px 6px;
+      z-index: 10;
+      font-weight: 600;
+    }}
+
+    .matrix-corner {{
+      position: sticky;
+      left: 0;
+      top: 0;
+      z-index: 20 !important;
+      background: #0d131f !important;
+      min-width: 220px;
+      text-align: left !important;
+      padding-left: 12px !important;
+    }}
+
+    .matrix-row-header {{
+      position: sticky;
+      left: 0;
+      background: #101726;
+      border-right: 2px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 12px;
+      z-index: 5;
+      text-align: left;
+      white-space: nowrap;
+    }}
+
+    .atk-name {{
+      font-weight: 700;
+      color: #fff;
+      display: block;
+      font-size: 12px;
+    }}
+
+    .atk-badge {{
+      font-size: 10.5px;
+      color: var(--primary);
+    }}
+
+    .th-comp-name {{
+      font-weight: 700;
+      color: #fff;
+      font-size: 11px;
+      white-space: nowrap;
+    }}
+
+    .th-comp-stats {{
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: normal;
+    }}
+
+    .matrix-table td {{
+      padding: 6px 4px;
+      border-bottom: 1px solid rgba(38, 53, 74, 0.4);
+      border-right: 1px solid rgba(38, 53, 74, 0.4);
+      background: var(--surface);
+    }}
+
+    .matrix-badge {{
+      display: inline-block;
+      width: 100%;
+      min-width: 58px;
+      padding: 3px 0;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }}
+
+    .matrix-badge.destroy {{
+      background: var(--danger-bg);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }}
+
+    .matrix-badge.damaged {{
+      background: var(--warning-bg);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }}
+
+    .matrix-badge.safe {{
+      background: var(--success-bg);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
     }}
 
     .table-responsive {{
       overflow-x: auto;
-      margin-top: 10px;
     }}
 
     .report-table {{
       width: 100%;
       border-collapse: collapse;
-      font-size: 12.5px;
+      font-size: 12px;
       text-align: left;
     }}
 
@@ -1182,14 +1274,14 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       background: var(--surface-card);
       color: var(--text-muted);
       font-weight: 600;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
     }}
 
     .report-table td {{
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(38, 53, 74, 0.6);
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(38, 53, 74, 0.5);
       vertical-align: middle;
     }}
 
@@ -1202,56 +1294,89 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       font-variant-numeric: tabular-nums;
     }}
 
-    .status-badge {{
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      text-align: center;
-      white-space: nowrap;
+    .chain-card {{
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 16px;
     }}
 
-    .badge-danger {{
-      background: var(--danger-bg);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.4);
+    .chain-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }}
+
+    .chain-header h4 {{
+      color: #38bdf8;
+      font-size: 14px;
+    }}
+
+    .chain-tags {{
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }}
+
+    .chain-path-cell code {{
+      background: #0f172a;
+      padding: 3px 6px;
+      border-radius: 4px;
+      color: #38bdf8;
+      font-size: 11px;
+    }}
+
+    .desc-cell {{
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }}
+
+    .badge-safe {{
+      background: var(--success-bg);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+      display: inline-block;
     }}
 
     .badge-warning {{
       background: var(--warning-bg);
       color: #fbbf24;
       border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+      display: inline-block;
     }}
 
-    .badge-success {{
-      background: var(--success-bg);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-    }}
-
-    .tag-danger {{
+    .badge-danger {{
       background: var(--danger-bg);
       color: #f87171;
-      padding: 2px 6px;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 2px 7px;
       border-radius: 4px;
+      font-weight: 600;
       font-size: 11px;
+      display: inline-block;
     }}
 
-    .tag-warning {{
-      background: var(--warning-bg);
-      color: #fbbf24;
-      padding: 2px 6px;
+    .badge-destroy-heavy {{
+      background: #7f1d1d;
+      color: #fecaca;
+      border: 1px solid #ef4444;
+      padding: 2px 7px;
       border-radius: 4px;
+      font-weight: 700;
       font-size: 11px;
-    }}
-
-    .tag-success {{
-      background: var(--success-bg);
-      color: #34d399;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 11px;
+      display: inline-block;
     }}
 
     .tag-primary {{
@@ -1261,101 +1386,42 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       border-radius: 4px;
       font-size: 11px;
     }}
-
-    .tag-muted {{
-      background: var(--surface-card);
-      color: var(--text-muted);
+    .tag-warning {{
+      background: var(--warning-bg);
+      color: #fbbf24;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }}
+    .tag-danger {{
+      background: var(--danger-bg);
+      color: #f87171;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }}
+    .tag-success {{
+      background: var(--success-bg);
+      color: #34d399;
       padding: 2px 6px;
       border-radius: 4px;
       font-size: 11px;
     }}
 
-    .mini-tag {{
-      display: inline-block;
-      background: rgba(129, 140, 248, 0.15);
-      color: #a5b4fc;
-      font-size: 10px;
-      padding: 1px 5px;
-      border-radius: 3px;
-      margin-left: 6px;
-    }}
-
-    .weapon-matrix-block {{
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 16px;
-    }}
-
-    .weapon-block-header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-      gap: 8px;
-    }}
-
-    .weapon-block-header h4 {{
-      font-size: 15px;
-      color: var(--primary);
-    }}
-
-    .weapon-desc {{
-      font-size: 12px;
-      color: var(--text-muted);
-    }}
-
-    .weapon-desc code {{
-      background: #0f172a;
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #38bdf8;
-    }}
-
-    .armor-sub-card {{
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 16px;
-    }}
-
-    .armor-header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-      gap: 8px;
-    }}
-
-    .armor-header h4 {{
-      color: #38bdf8;
-      font-size: 15px;
-    }}
-
-    .armor-stats {{
-      font-size: 12px;
-      color: var(--text-muted);
-    }}
-
     .progress-container {{
       width: 100%;
-      min-width: 130px;
+      min-width: 120px;
       background: #0f172a;
       border-radius: 4px;
       overflow: hidden;
       position: relative;
-      height: 20px;
+      height: 18px;
     }}
 
     .progress-fill {{
       height: 100%;
       transition: width 0.3s ease;
     }}
-
     .progress-fill.danger {{ background: #ef4444; }}
     .progress-fill.warning {{ background: #f59e0b; }}
     .progress-fill.safe {{ background: #10b981; }}
@@ -1369,18 +1435,17 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       color: #fff;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }}
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>🤖 Combat Robotics Game Balance & Scaling Report</h1>
-      <p class="subtitle">Evaluates real weapon impacts, spin-up scaling, feedback loops, and throw shocks against robot layouts.</p>
+      <h1>🤖 Combat Robotics Damage & Feedback Scaling Report</h1>
+      <p class="subtitle">Detailed evaluation of weapon damage numbers, supply-chain feedback propagation, and throw shock scaling across robot components.</p>
     </header>
 
     <div class="nav-tabs">
@@ -1398,19 +1463,6 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       if (target) target.classList.add('active');
       event.target.classList.add('active');
     }}
-
-    function filterWeapon(robotSlug, weaponSlug) {{
-      const tab = document.getElementById('tab-' + robotSlug);
-      if (!tab) return;
-      const blocks = tab.querySelectorAll('.weapon-matrix-block');
-      blocks.forEach(b => {{
-        if (weaponSlug === 'all' || b.dataset.weapon === weaponSlug) {{
-          b.style.display = 'block';
-        }} else {{
-          b.style.display = 'none';
-        }}
-      }});
-    }}
   </script>
 </body>
 </html>
@@ -1424,43 +1476,28 @@ def generate_text_report(robot: RobotModel, catalog: Dict[str, Any]) -> str:
     lines.append(f" Chassis: {robot.chassis.get('name', 'Unknown')} (Flip Strength: {robot.chassis.get('flip_strength', 'N/A')})")
     lines.append("=" * 80)
 
-    # 1. Component Roster
-    lines.append("\n[1] COMPONENT ROSTER & STATS")
-    lines.append(f"{'ID':<3} {'Component Name':<28} {'Dur':<4} {'Abs':<4} {'Suppliers':<20} {'Keywords'}")
-    lines.append("-" * 80)
+    # Component Roster
+    lines.append("\n[1] COMPONENT ROSTER")
+    lines.append(f"{'ID':<3} {'Component Name':<28} {'Dur':<4} {'Abs':<4} {'Suppliers'}")
+    lines.append("-" * 75)
     for cid, c in sorted(robot.components.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]):
         sup_names = [robot.components[sid].name for sid in robot.supply_graph.get(cid, [])]
         sup_str = ", ".join(sup_names) if sup_names else "None (Source)"
-        lines.append(f"{cid:<3} {c.name:<28} {c.durability:<4} {c.absorption:<4} {sup_str:<20} {c.keywords}")
+        lines.append(f"{cid:<3} {c.name:<28} {c.durability:<4} {c.absorption:<4} {sup_str}")
 
-    # 2. Weapon Direct Hit Lethality Matrix
+    # Subsystem Chains
+    chains = extract_robot_subsystem_chains(robot, max_fb=20)
     lines.append("\n" + "=" * 80)
-    lines.append("[2] WEAPON DIRECT HIT LETHALITY MATRIX (Exposed Hits Without Armor)")
-    lines.append("Shows the outcome if an incoming weapon strikes a component directly.")
-    lines.append("Key: [X]=Destroyed (One-Hit Kill), [!]=Damaged, [.]=Undamaged / Absorbed")
+    lines.append("[2] FEEDBACK CHAIN THRESHOLDS SUMMARY")
     lines.append("=" * 80)
-
-    weapons = catalog["weapons"]
-    for w in weapons:
-        max_spin, d_map, formula = parse_weapon_spin_and_damage(w)
-        lines.append(f"\n--- Weapon: {w['name']} | Formula: {formula} | Max Spin: {max_spin} ---")
-
-        header = f"{'Component':<26}" + "".join(f"Spin {s} ({d_map[s]}D) " for s in d_map)
-        lines.append(header)
-        lines.append("-" * len(header))
-
-        for cid, comp in sorted(robot.components.items(), key=lambda x: int(x[0]) if x[0].isdigit() else x[0]):
-            row = f"{comp.name:<26}"
-            for s, dmg in d_map.items():
-                res = resolve_single_component_hit(comp, float(dmg), is_weapon_damage=True)
-                if res.status == "DESTROYED":
-                    tag = "[X] DESTROY"
-                elif res.status == "DAMAGED":
-                    tag = "[!] DAMAGED"
-                else:
-                    tag = "[.] SAFE   "
-                row += f"{tag:<14}"
-            lines.append(row)
+    lines.append(f"{'Chain':<24} {'Safe Window':<14} {'Damage w/o Fail':<18} {'Sink Fails':<12} {'Upstream Fails'}")
+    lines.append("-" * 80)
+    for ch in chains:
+        safe_str = f"FB {ch.safe_window[0]}-{ch.safe_window[1]}" if ch.safe_window[1] > 0 else "None"
+        dwf_str = f"FB {ch.damage_without_fail_window[0]}-{ch.damage_without_fail_window[1]}" if ch.damage_without_fail_window[0] is not None else "None"
+        sink_str = f"FB {ch.sink_failure_threshold}" if ch.sink_failure_threshold is not None else "None"
+        up_str = f"FB {ch.upstream_failure_threshold}" if ch.upstream_failure_threshold is not None else "None"
+        lines.append(f"{ch.name:<24} {safe_str:<14} {dwf_str:<18} {sink_str:<12} {up_str}")
 
     return "\n".join(lines)
 
@@ -1468,7 +1505,7 @@ def generate_text_report(robot: RobotModel, catalog: Dict[str, Any]) -> str:
 def main():
     parser = argparse.ArgumentParser(description="Simulate combat robotics damage and feedback scaling.")
     parser.add_argument("robot_csvs", nargs="*", help="Robot layout CSV paths in automata/ or elsewhere")
-    parser.add_argument("--tolerance", type=float, default=6.5, help="Physical connection tolerance in mm (default: 6.5)")
+    parser.add_argument("--tolerance", type=float, default=3.0, help="Physical connection tolerance in mm (default: 3.0)")
     parser.add_argument("--html", type=str, help="Path for HTML report (default: scripts/output/combat_simulation_report.html)")
     parser.add_argument("--text", action="store_true", help="Also output text report to terminal / stdout")
     args = parser.parse_args()

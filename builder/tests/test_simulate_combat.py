@@ -156,10 +156,8 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertIn("<!DOCTYPE html>", html_out)
         self.assertIn("Vyper_Spinner", html_out)
         self.assertIn("Direct Hit Lethality Matrix", html_out)
-        self.assertIn("Defensive Options", html_out)
-        self.assertIn("Weapon Recoil Feedback", html_out)
-        self.assertIn("Drive Train Pushing Match Feedback", html_out)
-        self.assertIn("Throw Shock Hazard", html_out)
+        self.assertIn("Feedback Chain Escalation & Failure Analysis", html_out)
+        self.assertIn("Effective Throw Shock Damage Chart", html_out)
 
 
 if __name__ == "__main__":
