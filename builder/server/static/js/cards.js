@@ -54,6 +54,9 @@ export class CardCatalogue {
     this.listContainer.innerHTML = "";
 
     const filtered = state.cardCatalog.filter(card => {
+      // Chassis are printed mats, not cards
+      if (card.type === "chassis") return false;
+
       // Category filter
       if (this.activeCategory !== "all" && card.type !== this.activeCategory) {
         return false;
@@ -111,39 +114,28 @@ export class CardCatalogue {
       const actions = document.createElement("div");
       actions.className = "catalog-card-actions";
 
-      if (card.type === "chassis") {
-        const btnSet = document.createElement("button");
-        btnSet.className = "btn btn-primary btn-block";
-        btnSet.textContent = "Select Chassis";
-        btnSet.addEventListener("click", () => {
-          state.setChassis(card);
-          this.close();
-        });
-        actions.appendChild(btnSet);
-      } else {
-        const btnAdd = document.createElement("button");
-        btnAdd.className = "btn btn-primary";
-        btnAdd.title = "Place on Chassis";
-        btnAdd.textContent = "+ Chassis";
-        btnAdd.addEventListener("click", () => {
-          state.addCardToChassis(card);
-          this.close();
-        });
+      const btnAdd = document.createElement("button");
+      btnAdd.className = "btn btn-primary";
+      btnAdd.title = "Place on Chassis";
+      btnAdd.textContent = "+ Chassis";
+      btnAdd.addEventListener("click", () => {
+        state.addCardToChassis(card);
+        this.close();
+      });
 
-        const btnSpares = document.createElement("button");
-        btnSpares.className = "btn btn-action";
-        btnSpares.title = "Add to Spare Parts";
-        btnSpares.textContent = "+ Spares";
-        btnSpares.addEventListener("click", () => {
-          state.addCardToSpares(card);
-          // Don't close immediately, allow adding multiple spares
-          btnSpares.textContent = "✓ Added";
-          setTimeout(() => { btnSpares.textContent = "+ Spares"; }, 800);
-        });
+      const btnSpares = document.createElement("button");
+      btnSpares.className = "btn btn-action";
+      btnSpares.title = "Add to Spare Parts";
+      btnSpares.textContent = "+ Spares";
+      btnSpares.addEventListener("click", () => {
+        state.addCardToSpares(card);
+        // Don't close immediately, allow adding multiple spares
+        btnSpares.textContent = "✓ Added";
+        setTimeout(() => { btnSpares.textContent = "+ Spares"; }, 800);
+      });
 
-        actions.appendChild(btnAdd);
-        actions.appendChild(btnSpares);
-      }
+      actions.appendChild(btnAdd);
+      actions.appendChild(btnSpares);
 
       item.appendChild(thumb);
       item.appendChild(title);

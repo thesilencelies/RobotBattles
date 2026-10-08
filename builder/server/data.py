@@ -76,6 +76,8 @@ def load_card_csv(
             if card_type == "chassis":
                 card["template"] = (row.get("Template") or "Square").strip()
                 card["flip_strength"] = safe_int(row.get("Flip strength"))
+                pic = (row.get("Picture") or "").strip()
+                card["picture_url"] = f"/{pic}" if pic else ""
             elif card_type == "component":
                 card["requirements"] = (row.get("Requirements") or "").strip()
                 card["outputs"] = (row.get("Outputs") or "").strip()
@@ -98,15 +100,16 @@ def load_all_cards() -> Dict[str, Any]:
     components = load_card_csv(CARD_DEFS_DIR / "components.csv", "component")
     weapons = load_card_csv(CARD_DEFS_DIR / "weapons.csv", "weapon")
 
-    all_list = chassis + components + weapons
-    catalog_by_name = {c["name"]: c for c in all_list}
+    # Playable cards that can be added to the robot/spares (chassis is a Mat, not a card)
+    playable_cards = components + weapons
+    all_by_name = {c["name"]: c for c in (chassis + components + weapons)}
 
     return {
         "chassis": chassis,
         "components": components,
         "weapons": weapons,
-        "all": all_list,
-        "by_name": catalog_by_name,
+        "all": playable_cards,
+        "by_name": all_by_name,
     }
 
 

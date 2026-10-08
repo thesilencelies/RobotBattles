@@ -28,6 +28,10 @@ class TestChassisSheets(unittest.TestCase):
         self.assertIn("Viper Wedge Chassis", svg)
         self.assertIn("chassis-boundary-shape", svg)
         self.assertIn("FRONT / HEADING", svg)
+        self.assertIn("WEIGHT", svg)
+        self.assertIn("COST", svg)
+        self.assertIn("FLIP STR", svg)
+        self.assertIn("<image", svg)
 
     def test_generate_printable_html(self):
         defs = get_chassis_definitions()

@@ -21,8 +21,12 @@ export class MatCanvas {
     this.layerInteraction = svgEl.querySelector("#layer-interaction");
 
     this.chassisPoly = svgEl.querySelector("#chassis-poly");
-    this.bannerName = svgEl.querySelector("#banner-name");
-    this.bannerStats = svgEl.querySelector("#banner-stats");
+    this.plateName = svgEl.querySelector("#plate-name");
+    this.plateTemplate = svgEl.querySelector("#plate-template");
+    this.plateImage = svgEl.querySelector("#plate-image");
+    this.plateWeight = svgEl.querySelector("#plate-weight");
+    this.plateCost = svgEl.querySelector("#plate-cost");
+    this.plateFlip = svgEl.querySelector("#plate-flip");
 
     // Viewport transform (mm coordinate space)
     this.viewBox = {
@@ -263,16 +267,20 @@ export class MatCanvas {
     const ch = state.chassis;
     if (!ch) return;
 
-    // Update banner texts
-    if (this.bannerName) {
-      this.bannerName.textContent = ch.name || "Chassis";
-    }
-    if (this.bannerStats) {
-      const tpl = ch.template || "Square";
-      const wt = ch.weight || 0;
-      const cost = ch.cost || 0;
-      const flip = ch.flip_strength || 0;
-      this.bannerStats.textContent = `Template: ${tpl} | Base Weight: ${wt} | Base Cost: $${cost} | Flip: ${flip}`;
+    if (this.plateName) this.plateName.textContent = ch.name || "Chassis";
+    if (this.plateTemplate) this.plateTemplate.textContent = `Template: ${ch.template || "Square"}`;
+    if (this.plateWeight) this.plateWeight.textContent = ch.weight || 0;
+    if (this.plateCost) this.plateCost.textContent = `$${ch.cost || 0}`;
+    if (this.plateFlip) this.plateFlip.textContent = ch.flip_strength || 0;
+
+    const picUrl = ch.picture_url || (ch.picture ? `/${ch.picture}` : "");
+    if (this.plateImage) {
+      if (picUrl) {
+        this.plateImage.setAttribute("href", picUrl);
+        this.plateImage.style.display = "";
+      } else {
+        this.plateImage.style.display = "none";
+      }
     }
 
     // Update chassis polygon

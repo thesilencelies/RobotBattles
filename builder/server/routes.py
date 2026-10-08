@@ -218,6 +218,12 @@ class Router:
             target = CARD_IMAGES_DIR / rel_file
             return self._read_file_response(target)
 
+        # Serve components/ and pictures/
+        if path.startswith("/components/") or path.startswith("/pictures/"):
+            rel_file = path.lstrip("/")
+            target = WORKSPACE_DIR / rel_file
+            return self._read_file_response(target)
+
         # Serve static directory files
         rel_path = path.lstrip("/")
         target = STATIC_DIR / rel_path

@@ -71,6 +71,11 @@ class TestServerRoutes(unittest.TestCase):
         self.assertEqual(res.status, 200)
         self.assertEqual(res.content_type, "image/png")
 
+    def test_serve_component_image(self):
+        res = self.router.dispatch("GET", "/components/kits_and_chassis/viper-combat-robot-kit-base.jpg", {}, b"")
+        self.assertEqual(res.status, 200)
+        self.assertEqual(res.content_type, "image/jpeg")
+
     def test_chassis_svg_endpoint(self):
         res = self.router.dispatch("GET", "/api/chassis/Viper%20Wedge%20Chassis/svg", {}, b"")
         self.assertEqual(res.status, 200)

@@ -13,15 +13,22 @@ from builder.server.data import (
     serialize_robot_csv,
 )
 
-
 class TestData(unittest.TestCase):
+    def test_card_dimensions(self):
+        self.assertEqual(CARD_WIDTH_MM, 44.0)
+        self.assertEqual(CARD_HEIGHT_MM, 64.0)
+
     def test_load_all_cards(self):
         catalog = load_all_cards()
         self.assertGreater(len(catalog["chassis"]), 0)
         self.assertGreater(len(catalog["components"]), 0)
         self.assertGreater(len(catalog["weapons"]), 0)
 
-        # Verify Viper Wedge Chassis is present
+        # Verify "all" only contains playable cards, no chassis
+        for card in catalog["all"]:
+            self.assertNotEqual(card.get("type"), "chassis")
+
+        # Verify Viper Wedge Chassis is present in chassis list
         viper = next((c for c in catalog["chassis"] if c["name"] == "Viper Wedge Chassis"), None)
         self.assertIsNotNone(viper)
         self.assertEqual(viper["weight"], 3)
