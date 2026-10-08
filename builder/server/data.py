@@ -118,49 +118,49 @@ A3_HEIGHT_MM = 297.0
 CARD_WIDTH_MM = 64.0
 CARD_HEIGHT_MM = 89.0
 
-# Chassis boundary templates
+# Chassis boundary templates roughly filling the A3 landscape sheet (420mm x 297mm)
 CHASSIS_TEMPLATES = {
     "Square": {
         "name": "Square",
-        "description": "Standard rectangular / square chassis box",
+        "description": "Standard rectangular / square chassis box roughly filling A3 sheet",
         "type": "polygon",
-        # Centered box: 220mm wide x 190mm high
+        # Fills roughly 384mm wide x 252mm high of A3 sheet
         "points": [
-            [100.0, 55.0],
-            [320.0, 55.0],
-            [320.0, 245.0],
-            [100.0, 245.0],
+            [18.0, 30.0],
+            [402.0, 30.0],
+            [402.0, 282.0],
+            [18.0, 282.0],
         ],
-        "bounds": {"x": 100.0, "y": 55.0, "width": 220.0, "height": 190.0},
+        "bounds": {"x": 18.0, "y": 30.0, "width": 384.0, "height": 252.0},
         "facing": "north",
     },
     "Triangle": {
         "name": "Triangle",
-        "description": "Wedge chassis with forward triangular front and rectangular base",
+        "description": "Wedge chassis with forward triangular front and rectangular base roughly filling A3 sheet",
         "type": "polygon",
-        # Centered house/wedge: width 220mm, body y=105 to 245, wedge tip at (210, 45)
+        # Fills roughly 384mm wide x 252mm high: rear y=282, shoulders y=135, apex tip at (210, 30)
         "points": [
-            [210.0, 45.0],   # Front tip
-            [320.0, 115.0],  # Right front corner
-            [320.0, 245.0],  # Right rear
-            [100.0, 245.0],  # Left rear
-            [100.0, 115.0],  # Left front corner
+            [210.0, 30.0],   # Front apex tip
+            [402.0, 135.0],  # Right front shoulder
+            [402.0, 282.0],  # Right rear corner
+            [18.0, 282.0],   # Left rear corner
+            [18.0, 135.0],   # Left front shoulder
         ],
-        "bounds": {"x": 100.0, "y": 45.0, "width": 220.0, "height": 200.0},
+        "bounds": {"x": 18.0, "y": 30.0, "width": 384.0, "height": 252.0},
         "facing": "north",
     },
     "Wide": {
         "name": "Wide",
-        "description": "Wide horizontal chassis profile (drum spinners / wide rollers)",
+        "description": "Wide horizontal chassis profile (drum spinners / wide rollers) roughly filling A3 sheet",
         "type": "polygon",
-        # Centered wide rectangle: 280mm wide x 150mm high
+        # Fills 390mm wide x 243mm high
         "points": [
-            [70.0, 75.0],
-            [350.0, 75.0],
-            [350.0, 225.0],
-            [70.0, 225.0],
+            [15.0, 35.0],
+            [405.0, 35.0],
+            [405.0, 278.0],
+            [15.0, 278.0],
         ],
-        "bounds": {"x": 70.0, "y": 75.0, "width": 280.0, "height": 150.0},
+        "bounds": {"x": 15.0, "y": 35.0, "width": 390.0, "height": 243.0},
         "facing": "north",
     },
 }

@@ -1,10 +1,10 @@
 id,card,location,connections
 1,Viper Wedge Chassis,"chassis:0,0,0",
-2,Four-Bar Lifter,"chassis:178.0,60.0,0",3;4;5
-3,15kg Analog Servo,"chassis:114.0,60.0,0",2;6
-4,Simple ESC,"chassis:242.0,60.0,0",2;7
-5,Galaxy 300 3S,"chassis:178.0,149.0,0",2;6;7
-6,Wires,"chassis:114.0,149.0,0",3;5
-7,Snap Wheels,"chassis:242.0,149.0,0",4;5
+2,Four-Bar Lifter,"chassis:178.0,40.0,0",3;4;5
+3,15kg Analog Servo,"chassis:114.0,40.0,0",2;6
+4,Simple ESC,"chassis:242.0,40.0,0",2;7
+5,Galaxy 300 3S,"chassis:178.0,129.0,0",2;6;7
+6,Wires,"chassis:114.0,129.0,0",3;5
+7,Snap Wheels,"chassis:242.0,129.0,0",4;5
 8,Timing Belt,spares:0,
 9,Galaxy 120,spares:1,

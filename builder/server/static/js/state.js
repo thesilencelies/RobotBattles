@@ -64,7 +64,7 @@ class RobotState {
     return Math.round(val / this.snapStepMm) * this.snapStepMm;
   }
 
-  addCardToChassis(cardData, x = 160.0, y = 100.0, rotation = 0) {
+  addCardToChassis(cardData, x = 180.0, y = 110.0, rotation = 0) {
     // If adding a chassis card from catalogue, set it as the active chassis instead
     if (cardData.type === "chassis") {
       this.setChassis(cardData);

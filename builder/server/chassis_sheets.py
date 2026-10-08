@@ -56,30 +56,30 @@ def generate_chassis_svg(chassis: Dict[str, Any]) -> str:
   <polygon points="{pts_str}" fill="rgba(0, 229, 255, 0.04)" stroke="#00e5ff" stroke-width="2.5" stroke-linejoin="round" class="chassis-boundary-shape"/>
 
   <!-- Forward / Facing Indicator -->
-  <g class="facing-indicator" transform="translate({A3_WIDTH_MM/2}, 38)">
-    <line x1="0" y1="12" x2="0" y2="0" stroke="#00d26a" stroke-width="2" marker-end="url(#arrow)"/>
-    <text x="0" y="-3" fill="#00d26a" font-family="sans-serif" font-size="6" font-weight="bold" text-anchor="middle" letter-spacing="1">FRONT / HEADING</text>
+  <g class="facing-indicator" transform="translate({A3_WIDTH_MM/2}, 20)">
+    <line x1="0" y1="8" x2="0" y2="0" stroke="#00d26a" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <text x="0" y="-2" fill="#00d26a" font-family="sans-serif" font-size="5" font-weight="bold" text-anchor="middle" letter-spacing="1">FRONT / HEADING</text>
   </g>
 
   <!-- Sheet Header / Title Box -->
-  <g class="sheet-title-banner" transform="translate(18, 12)">
-    <rect x="0" y="0" width="160" height="26" rx="3" fill="#161f2e" stroke="#253549" stroke-width="0.8"/>
-    <text x="8" y="11" fill="#ffffff" font-family="sans-serif" font-size="7.5" font-weight="bold">{name}</text>
-    <text x="8" y="20" fill="#94a3b8" font-family="sans-serif" font-size="5">Template: <tspan fill="#38bdf8" font-weight="bold">{tpl_name}</tspan> | Weight: <tspan fill="#f59e0b" font-weight="bold">{weight}</tspan> | Cost: <tspan fill="#10b981" font-weight="bold">${cost}</tspan> | Flip: <tspan fill="#ec4899" font-weight="bold">{flip}</tspan></text>
+  <g class="sheet-title-banner" transform="translate(18, 5)">
+    <rect x="0" y="0" width="155" height="21" rx="3" fill="#161f2e" stroke="#253549" stroke-width="0.8"/>
+    <text x="7" y="9" fill="#ffffff" font-family="sans-serif" font-size="6.5" font-weight="bold">{name}</text>
+    <text x="7" y="16.5" fill="#94a3b8" font-family="sans-serif" font-size="4.2">Template: <tspan fill="#38bdf8" font-weight="bold">{tpl_name}</tspan> | Weight: <tspan fill="#f59e0b" font-weight="bold">{weight}</tspan> | Cost: <tspan fill="#10b981" font-weight="bold">${cost}</tspan> | Flip: <tspan fill="#ec4899" font-weight="bold">{flip}</tspan></text>
   </g>
 
   <!-- Rules Note on Sheet -->
-  <g class="sheet-rules-note" transform="translate({A3_WIDTH_MM - 150}, 14)">
-    <text x="0" y="8" fill="#64748b" font-family="sans-serif" font-size="4.2">A3 Mat (420mm x 297mm) - Cards: 64mm x 89mm</text>
-    <text x="0" y="15" fill="#64748b" font-family="sans-serif" font-size="4.2">All cards installed on robot must be touching chassis</text>
+  <g class="sheet-rules-note" transform="translate({A3_WIDTH_MM - 140}, 7)">
+    <text x="0" y="6" fill="#64748b" font-family="sans-serif" font-size="3.8">A3 Mat (420mm x 297mm) - Poker Cards: 64mm x 89mm</text>
+    <text x="0" y="12" fill="#64748b" font-family="sans-serif" font-size="3.8">All installed robot cards must sit on the chassis boundary</text>
   </g>
 
   <!-- Scale Bar (Bottom Right) -->
-  <g class="scale-bar" transform="translate({A3_WIDTH_MM - 90}, {A3_HEIGHT_MM - 15})">
-    <line x1="0" y1="0" x2="64" y2="0" stroke="#ffffff" stroke-width="1"/>
-    <line x1="0" y1="-3" x2="0" y2="3" stroke="#ffffff" stroke-width="1"/>
-    <line x1="64" y1="-3" x2="64" y2="3" stroke="#ffffff" stroke-width="1"/>
-    <text x="32" y="7" fill="#94a3b8" font-family="sans-serif" font-size="4" text-anchor="middle">Standard Card Width (64mm)</text>
+  <g class="scale-bar" transform="translate({A3_WIDTH_MM - 85}, {A3_HEIGHT_MM - 7})">
+    <line x1="0" y1="0" x2="64" y2="0" stroke="#ffffff" stroke-width="0.8"/>
+    <line x1="0" y1="-2" x2="0" y2="2" stroke="#ffffff" stroke-width="0.8"/>
+    <line x1="64" y1="-2" x2="64" y2="2" stroke="#ffffff" stroke-width="0.8"/>
+    <text x="32" y="5" fill="#94a3b8" font-family="sans-serif" font-size="3.5" text-anchor="middle">Poker Card Width (64mm)</text>
   </g>
 </svg>
 """

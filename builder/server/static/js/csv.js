@@ -94,16 +94,16 @@ export function parseCsvToRobot(csvText) {
       });
     } else {
       // Chassis location format: chassis:x,y,rot
-      let x = 150.0;
-      let y = 100.0;
+      let x = 180.0;
+      let y = 110.0;
       let rot = 0;
 
       if (location.includes(":")) {
         const body = location.split(":")[1];
         const sep = body.includes(";") ? ";" : ",";
         const parts = body.split(sep).map(p => p.trim());
-        if (parts.length >= 1 && parts[0]) x = parseFloat(parts[0]) || 150.0;
-        if (parts.length >= 2 && parts[1]) y = parseFloat(parts[1]) || 100.0;
+        if (parts.length >= 1 && parts[0]) x = parseFloat(parts[0]) || 180.0;
+        if (parts.length >= 2 && parts[1]) y = parseFloat(parts[1]) || 110.0;
         if (parts.length >= 3 && parts[2]) rot = parseInt(parts[2], 10) || 0;
       }
 
