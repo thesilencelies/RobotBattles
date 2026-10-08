@@ -98,9 +98,9 @@ def parse_weapon_spin_and_damage(weapon: Dict[str, Any]) -> Tuple[int, Dict[int,
         if is_pure_throw:
             damage_map[s] = 0
             formula_desc = f"{outputs} (Deals 0 weapon damage; Throws only)"
-        elif outputs == "XXW":
+        elif outputs.upper() in ("XXW", "XXXW", "X*XW"):
             damage_map[s] = s ** 2
-            formula_desc = "X^2 (X^2 * W)"
+            formula_desc = "X^2 (XxX * W)"
         elif re.match(r"^(\d*)X(W+)$", outputs):
             m = re.match(r"^(\d*)X(W+)$", outputs)
             k = int(m.group(1)) if m.group(1) else 1

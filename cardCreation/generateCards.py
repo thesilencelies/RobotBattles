@@ -146,7 +146,7 @@ def find_component_image(picture_field: str = "") -> str:
 
 
 def format_resource_item(prefix: str, char: str) -> str:
-    """Formats a single resource item or repeated icons."""
+    """Formats a single resource item, repeated icons, or fixed + multiplier symbols."""
     if prefix and all(c == char for c in prefix):
         count = len(prefix) + 1
         icons = [f"\\resource{char}" for _ in range(count)]
@@ -160,8 +160,32 @@ def format_resource_item(prefix: str, char: str) -> str:
             row2 = r"\hspace{1.5pt}".join(icons[top_count:])
             return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
     elif prefix:
-        # Number or algebraic expression followed by letter -> vertical center aligned
+        # Check if prefix contains an algebraic multiplier with fixed symbols (e.g. "2XW", "XWW", "XW")
+        # In notations like "2XWW", regex captures prefix="2XW", char="W".
+        # Fixed symbols should be visualized first, followed by multiplier symbols.
+        mult_match = re.match(r"^(\d*(?:XxX|XX|X|\d+x\d+))([ECSMWPD]*)$", prefix, re.IGNORECASE)
+        if mult_match:
+            mult_expr, extra_icons = mult_match.groups()
+            if mult_expr.upper() == "XX":
+                mult_expr = "XxX"
+            esc_mult = escape_latex(mult_expr)
+            mult_element = rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+
+            fixed_count = len(extra_icons) if all(c == char for c in extra_icons) else 0
+            if fixed_count == 0:
+                return mult_element
+            elif fixed_count == 1:
+                return rf"$\vcenter{{\hbox{{\resource{char}}}}}\;\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+            else:
+                fixed_icons = [rf"\resource{char}" for _ in range(fixed_count)]
+                row1 = r"\hspace{1.5pt}".join(fixed_icons)
+                row2 = mult_element
+                return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
+
+        # Standard number or algebraic expression followed by letter -> vertical center aligned
         esc_prefix = escape_latex(prefix)
+        if esc_prefix.upper() == "XX":
+            esc_prefix = "XxX"
         return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_prefix}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
     else:
         return rf"\resource{char}"
@@ -175,6 +199,8 @@ def parse_resources(res_str: str) -> str:
         Repeat symbols are placed closer together, spilling into two rows if count >= 3.
       - Number or algebraic expression followed by letter (e.g. 4XW, 2XW, XE, 6W)
         -> prefix rendered in sans-serif text vertically center-aligned with the icon.
+      - Fixed symbols followed by multiplier symbols (e.g. 2XWW -> 1 fixed W + 2X W, XWWW -> 2 fixed W + X W).
+      - Multiplier XX is rendered as XxX (X times X).
     """
     if not res_str:
         return ""
@@ -183,7 +209,7 @@ def parse_resources(res_str: str) -> str:
     if not res_str:
         return ""
 
-    # Check for single token like "EE", "CC", "SSS", "4XW", "XE", "E", "PP", "DD"
+    # Check for single token like "EE", "CC", "SSS", "4XW", "XE", "E", "PP", "DD", "2XWW", "XWWW"
     match_expr = re.match(r"^([0-9]*[A-Za-z]*)([ECSMWPD])$", res_str)
     if match_expr:
         prefix, char = match_expr.groups()

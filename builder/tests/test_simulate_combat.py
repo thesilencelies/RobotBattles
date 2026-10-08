@@ -26,20 +26,20 @@ class TestCombatSimulation(unittest.TestCase):
     def test_weapon_damage_parsing(self):
         by_name = {w["name"]: w for w in self.catalog["weapons"]}
 
-        # Horizontal Spinner: 3XW, max spin 4
+        # Horizontal Spinner: 2XW, max spin 4
         h_spin = by_name["Horizontal Spinner"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(h_spin)
         self.assertEqual(max_s, 4)
-        self.assertEqual(d_map[1], 3)
-        self.assertEqual(d_map[2], 6)
-        self.assertEqual(d_map[3], 9)
-        self.assertEqual(d_map[4], 12)
+        self.assertEqual(d_map[1], 2)
+        self.assertEqual(d_map[2], 4)
+        self.assertEqual(d_map[3], 6)
+        self.assertEqual(d_map[4], 8)
 
-        # Bloodsport Bar: 3XW, max spin 4
+        # Bloodsport Bar: 2XW, max spin 4
         bb = by_name["Bloodsport Bar"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(bb)
         self.assertEqual(max_s, 4)
-        self.assertEqual(d_map[4], 12)
+        self.assertEqual(d_map[4], 8)
 
         # Beater Bar: XWWW -> X*W + 2W = X + 2
         beater = by_name["Beater Bar"]
@@ -141,8 +141,8 @@ class TestCombatSimulation(unittest.TestCase):
 
         # Test weapon recoil feedback
         h_spin = robot.components["19"]
-        # Spin 4 -> 16 attack damage -> 8 feedback -> destroys Horizontal Spinner (dur 7)
-        fb_steps = simulate_weapon_feedback(robot, h_spin, 16)
+        # Spin 4 with high damage -> 20 attack damage -> 10 feedback -> destroys Horizontal Spinner (dur 9)
+        fb_steps = simulate_weapon_feedback(robot, h_spin, 20)
         self.assertTrue(any(s.status == "DESTROYED" for s in fb_steps))
 
         # Test drive pushing feedback (opponent remaining distance 3)
@@ -181,7 +181,36 @@ class TestCombatSimulation(unittest.TestCase):
         # Ensure battery is not a column in direct hit matrix
         self.assertFalse(any("Galaxy 300 3S" in th for th in th_cells))
 
+    def test_card_resource_rendering(self):
+        from cardCreation.generateCards import parse_resources
+
+        # 2XWW -> 1 fixed W + 2X multiplier W
+        out_2xww = parse_resources("2XWW")
+        self.assertIn(r"\resourceW", out_2xww)
+        self.assertIn("2X", out_2xww)
+
+        # XWW -> 1 fixed W + X multiplier W
+        out_xww = parse_resources("XWW")
+        self.assertIn(r"\resourceW", out_xww)
+        self.assertIn("X", out_xww)
+
+        # XWWW -> 2 fixed W + X multiplier W
+        out_xwww = parse_resources("XWWW")
+        self.assertIn(r"\resourceW\hspace{1.5pt}\resourceW", out_xwww)
+        self.assertIn("X", out_xwww)
+
+        # XXW -> XxX multiplier W
+        out_xxw = parse_resources("XXW")
+        self.assertIn("XxX", out_xxw)
+        self.assertNotIn("XXW", out_xxw)
+
+        # Pure repeated letters: WWWW
+        out_wwww = parse_resources("WWWW")
+        self.assertIn(r"\parbox", out_wwww)
+        self.assertEqual(out_wwww.count(r"\resourceW"), 4)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
