@@ -2,8 +2,8 @@
  * Central state store for Robot Builder
  */
 
-export const CARD_WIDTH_MM = 64.0;
-export const CARD_HEIGHT_MM = 89.0;
+export const CARD_WIDTH_MM = 44.0;
+export const CARD_HEIGHT_MM = 64.0;
 export const A3_WIDTH_MM = 420.0;
 export const A3_HEIGHT_MM = 297.0;
 

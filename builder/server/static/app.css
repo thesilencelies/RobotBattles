@@ -595,7 +595,7 @@ html, body {
 
 .catalog-card-thumb {
   width: 100%;
-  aspect-ratio: 64 / 89;
+  aspect-ratio: 44 / 64;
   background: #000;
   border-radius: 4px;
   overflow: hidden;
@@ -656,7 +656,7 @@ html, body {
 
 .spare-item-thumb {
   width: 100%;
-  aspect-ratio: 64 / 89;
+  aspect-ratio: 44 / 64;
   border-radius: 4px;
   overflow: hidden;
 }

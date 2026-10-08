@@ -69,17 +69,17 @@ def generate_chassis_svg(chassis: Dict[str, Any]) -> str:
   </g>
 
   <!-- Rules Note on Sheet -->
-  <g class="sheet-rules-note" transform="translate({A3_WIDTH_MM - 140}, 7)">
-    <text x="0" y="6" fill="#64748b" font-family="sans-serif" font-size="3.8">A3 Mat (420mm x 297mm) - Poker Cards: 64mm x 89mm</text>
+  <g class="sheet-rules-note" transform="translate({A3_WIDTH_MM - 145}, 7)">
+    <text x="0" y="6" fill="#64748b" font-family="sans-serif" font-size="3.8">A3 Mat (420mm x 297mm) - Cards: 44mm x 64mm (Half-Poker)</text>
     <text x="0" y="12" fill="#64748b" font-family="sans-serif" font-size="3.8">All installed robot cards must sit on the chassis boundary</text>
   </g>
 
   <!-- Scale Bar (Bottom Right) -->
-  <g class="scale-bar" transform="translate({A3_WIDTH_MM - 85}, {A3_HEIGHT_MM - 7})">
-    <line x1="0" y1="0" x2="64" y2="0" stroke="#ffffff" stroke-width="0.8"/>
+  <g class="scale-bar" transform="translate({A3_WIDTH_MM - 65}, {A3_HEIGHT_MM - 7})">
+    <line x1="0" y1="0" x2="44" y2="0" stroke="#ffffff" stroke-width="0.8"/>
     <line x1="0" y1="-2" x2="0" y2="2" stroke="#ffffff" stroke-width="0.8"/>
-    <line x1="64" y1="-2" x2="64" y2="2" stroke="#ffffff" stroke-width="0.8"/>
-    <text x="32" y="5" fill="#94a3b8" font-family="sans-serif" font-size="3.5" text-anchor="middle">Poker Card Width (64mm)</text>
+    <line x1="44" y1="-2" x2="44" y2="2" stroke="#ffffff" stroke-width="0.8"/>
+    <text x="22" y="5" fill="#94a3b8" font-family="sans-serif" font-size="3.5" text-anchor="middle">Card Width (44mm)</text>
   </g>
 </svg>
 """
