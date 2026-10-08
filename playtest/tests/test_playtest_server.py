@@ -88,10 +88,19 @@ class TestPlaytestServer(unittest.TestCase):
         self.assertEqual(res_css.status, 200)
         self.assertIn("--bg-dark", res_css.body.decode("utf-8"))
 
-        # App JS
-        res_js = self.router.dispatch("GET", "/js/app.js", {}, b"")
-        self.assertEqual(res_js.status, 200)
-        self.assertIn("PlaytestApp", res_js.body.decode("utf-8"))
+        # Builder CSS
+        res_b_css = self.router.dispatch("GET", "/builder.css", {}, b"")
+        self.assertEqual(res_b_css.status, 200)
+
+        # Builder JS
+        res_b_js = self.router.dispatch("GET", "/js/builder.js", {}, b"")
+        self.assertEqual(res_b_js.status, 200)
+        self.assertIn("BuilderController", res_b_js.body.decode("utf-8"))
+
+        # Fallback to builder static files (canvas.js)
+        res_canvas = self.router.dispatch("GET", "/js/canvas.js", {}, b"")
+        self.assertEqual(res_canvas.status, 200)
+        self.assertIn("MatCanvas", res_canvas.body.decode("utf-8"))
 
 
 if __name__ == "__main__":

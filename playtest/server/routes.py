@@ -242,6 +242,9 @@ class Router:
             target = PLAYTEST_STATIC_DIR / "index.html"
             return self._read_file_response(target)
 
+        if path == "/builder.css":
+            return self._read_file_response(BUILDER_STATIC_DIR / "app.css")
+
         # Serve static CardImages/
         if path.startswith("/CardImages/"):
             rel_file = path[len("/CardImages/"):]

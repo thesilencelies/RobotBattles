@@ -112,13 +112,19 @@ export class RobotViewRenderer {
       statusTag = `<span class="badge badge-gray">NO POWER</span>`;
     }
 
-    const typeIcon = comp.card_type === "weapon" ? "⚔️" : "⚙️";
+    let spinTag = "";
+    if (comp.card_type === "weapon" && (comp.spin_counters !== undefined || (comp.keywords && comp.keywords.toLowerCase().includes("spin up")))) {
+      spinTag = `<span class="badge badge-cyan" style="background:#0284c7;color:#fff;font-weight:bold;">🌀 Spin: ${comp.spin_counters || 0}</span>`;
+    }
 
     return `
       <div class="${cardCls}">
         <div class="comp-head">
           <span class="comp-name">${typeIcon} ${comp.name}</span>
-          ${statusTag}
+          <div style="display:flex;gap:4px;align-items:center;">
+            ${spinTag}
+            ${statusTag}
+          </div>
         </div>
         <div class="comp-stats-row">
           <span>Durability: <strong>${comp.current_durability} / ${comp.max_durability}</strong></span>

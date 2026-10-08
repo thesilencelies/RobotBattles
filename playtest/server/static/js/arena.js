@@ -239,15 +239,28 @@ export class ArenaRenderer {
     const wKeywords = weaponComp.keywords || "";
     const wTemplate = weaponComp.template || (wName.includes("Spinner") ? "Circle" : "Bar");
 
+    const MAT_CENTER_X = 210.0;
+    const MAT_CENTER_Y = 150.0;
+    const MAT_TO_MINI_SCALE = 0.273;
+
+    const cardW = 44.0;
+    const cardH = 64.0;
+    const cardCx = (Number(weaponComp.x) || 100) + cardW / 2.0;
+    const cardCy = (Number(weaponComp.y) || 100) + cardH / 2.0;
+    const lx = (cardCx - MAT_CENTER_X) * MAT_TO_MINI_SCALE;
+    const ly = (cardCy - MAT_CENTER_Y) * MAT_TO_MINI_SCALE;
+
     const wg = document.createElementNS("http://www.w3.org/2000/svg", "g");
     wg.setAttribute("class", "miniature-weapon");
 
+    const spinCount = weaponComp.spin_counters || 0;
+
     if (wTemplate.includes("Circle") || wName.includes("Spinner") || wName.includes("Blade") || wName.includes("Disc")) {
-      // Circle spinner template: disc with red active perimeter
-      const radius = wName.includes("Bloodsport") ? 28 : 22;
+      // Circle spinner template: centered on equivalent card location
+      const radius = wName.includes("Bloodsport") ? 30 : 22;
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      circle.setAttribute("cx", "0");
-      circle.setAttribute("cy", "-10");
+      circle.setAttribute("cx", lx);
+      circle.setAttribute("cy", ly);
       circle.setAttribute("r", radius);
       circle.setAttribute("fill", "rgba(239, 68, 68, 0.2)");
       circle.setAttribute("stroke", "#ef4444");
@@ -255,60 +268,123 @@ export class ArenaRenderer {
       circle.setAttribute("stroke-dasharray", "6,3");
       wg.appendChild(circle);
 
-      // Red active teeth / tips
+      // Red active perimeter tooth / tip
       const tooth1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      tooth1.setAttribute("cx", "0");
-      tooth1.setAttribute("cy", `${-10 - radius}`);
+      tooth1.setAttribute("cx", lx);
+      tooth1.setAttribute("cy", `${ly - radius}`);
       tooth1.setAttribute("r", "3.5");
       tooth1.setAttribute("fill", "#ef4444");
       wg.appendChild(tooth1);
 
+      // Spin Counter visual badge if spun up
+      if (spinCount > 0) {
+        const sBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        sBadge.setAttribute("transform", `translate(${lx}, ${ly})`);
+
+        const sCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        sCircle.setAttribute("r", "7.5");
+        sCircle.setAttribute("fill", "#0284c7");
+        sCircle.setAttribute("stroke", "#ffffff");
+        sCircle.setAttribute("stroke-width", "1");
+        sBadge.appendChild(sCircle);
+
+        const sText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        sText.setAttribute("x", "0");
+        sText.setAttribute("y", "3");
+        sText.setAttribute("fill", "#ffffff");
+        sText.setAttribute("font-size", "7.5");
+        sText.setAttribute("font-weight", "bold");
+        sText.setAttribute("text-anchor", "middle");
+        sText.textContent = `${spinCount}`;
+        sBadge.appendChild(sText);
+
+        wg.appendChild(sBadge);
+      }
+
     } else if (wTemplate.includes("Prongs") || wName.includes("Scythe") || wName.includes("Claw")) {
-      // Dual prongs template
+      // Dual prongs template centered around lx, ly
       const prongL = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      prongL.setAttribute("x1", "-18");
-      prongL.setAttribute("y1", "-20");
-      prongL.setAttribute("x2", "-18");
-      prongL.setAttribute("y2", "-42");
+      prongL.setAttribute("x1", `${lx - 16}`);
+      prongL.setAttribute("y1", `${ly + 6}`);
+      prongL.setAttribute("x2", `${lx - 16}`);
+      prongL.setAttribute("y2", `${ly - 24}`);
       prongL.setAttribute("stroke", "#ef4444");
       prongL.setAttribute("stroke-width", "3.5");
       prongL.setAttribute("stroke-linecap", "round");
       wg.appendChild(prongL);
 
       const prongR = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      prongR.setAttribute("x1", "18");
-      prongR.setAttribute("y1", "-20");
-      prongR.setAttribute("x2", "18");
-      prongR.setAttribute("y2", "-42");
+      prongR.setAttribute("x1", `${lx + 16}`);
+      prongR.setAttribute("y1", `${ly + 6}`);
+      prongR.setAttribute("x2", `${lx + 16}`);
+      prongR.setAttribute("y2", `${ly - 24}`);
       prongR.setAttribute("stroke", "#ef4444");
       prongR.setAttribute("stroke-width", "3.5");
       prongR.setAttribute("stroke-linecap", "round");
       wg.appendChild(prongR);
 
     } else if (wTemplate.includes("Line") || wName.includes("Vertical")) {
-      // Single line drum / vertical spinner
+      // Single line drum / vertical spinner centered at lx, ly
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("x1", "0");
-      line.setAttribute("y1", "0");
-      line.setAttribute("x2", "0");
-      line.setAttribute("y2", "-40");
+      line.setAttribute("x1", `${lx}`);
+      line.setAttribute("y1", `${ly + 10}`);
+      line.setAttribute("x2", `${lx}`);
+      line.setAttribute("y2", `${ly - 22}`);
       line.setAttribute("stroke", "#ef4444");
       line.setAttribute("stroke-width", "4.5");
       line.setAttribute("stroke-linecap", "round");
       wg.appendChild(line);
 
+      if (spinCount > 0) {
+        const sBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        sBadge.setAttribute("transform", `translate(${lx + 9}, ${ly - 8})`);
+        const sCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        sCircle.setAttribute("r", "6.5");
+        sCircle.setAttribute("fill", "#0284c7");
+        sBadge.appendChild(sCircle);
+        const sText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        sText.setAttribute("x", "0");
+        sText.setAttribute("y", "2.5");
+        sText.setAttribute("fill", "#ffffff");
+        sText.setAttribute("font-size", "7");
+        sText.setAttribute("font-weight", "bold");
+        sText.setAttribute("text-anchor", "middle");
+        sText.textContent = `${spinCount}`;
+        sBadge.appendChild(sText);
+        wg.appendChild(sBadge);
+      }
+
     } else {
-      // Bar template (Lifter / Beater Bar)
+      // Bar template (Lifter / Beater Bar) centered at lx, ly
       const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      bar.setAttribute("x", "-28");
-      bar.setAttribute("y", "-40");
-      bar.setAttribute("width", "56");
-      bar.setAttribute("height", "12");
+      bar.setAttribute("x", `${lx - 24}`);
+      bar.setAttribute("y", `${ly - 8}`);
+      bar.setAttribute("width", "48");
+      bar.setAttribute("height", "14");
       bar.setAttribute("rx", "2");
       bar.setAttribute("fill", "rgba(239, 68, 68, 0.4)");
       bar.setAttribute("stroke", "#ef4444");
       bar.setAttribute("stroke-width", "2");
       wg.appendChild(bar);
+
+      if (spinCount > 0) {
+        const sBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        sBadge.setAttribute("transform", `translate(${lx}, ${ly - 14})`);
+        const sCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        sCircle.setAttribute("r", "6.5");
+        sCircle.setAttribute("fill", "#0284c7");
+        sBadge.appendChild(sCircle);
+        const sText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        sText.setAttribute("x", "0");
+        sText.setAttribute("y", "2.5");
+        sText.setAttribute("fill", "#ffffff");
+        sText.setAttribute("font-size", "7");
+        sText.setAttribute("font-weight", "bold");
+        sText.setAttribute("text-anchor", "middle");
+        sText.textContent = `${spinCount}`;
+        sBadge.appendChild(sText);
+        wg.appendChild(sBadge);
+      }
     }
 
     parentG.appendChild(wg);

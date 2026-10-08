@@ -2,13 +2,9 @@
  * Combat Robotics Playtest App Master Controller
  */
 
-import { MatCanvas } from "/js/canvas.js";
-import { CardCatalogue } from "/js/cards.js";
-import { serializeRobotToCsv } from "/js/csv.js";
-import { SparesDrawer } from "/js/spares.js";
-import { state } from "/js/state.js";
 import { PlaytestApi } from "./api.js";
 import { ArenaRenderer } from "./arena.js";
+import { BuilderController } from "./builder.js";
 import { CombatLogRenderer } from "./log.js";
 import { RobotViewRenderer } from "./robot_view.js";
 
@@ -16,7 +12,7 @@ class PlaytestApp {
   constructor() {
     this.currentMatch = null;
     this.arenaRenderer = null;
-    this.builderCanvas = null;
+    this.builderController = null;
     this.activeTab = "arena";
 
     // Turn selection state (2 numbers: left, right)
@@ -32,8 +28,13 @@ class PlaytestApp {
     // 1. Initialize Arena Renderer
     this.arenaRenderer = new ArenaRenderer(this.arenaSvg);
 
-    // 2. Initialize Builder Component
-    await this._initBuilder();
+    // 2. Initialize Builder Controller
+    this.builderController = new BuilderController({
+      onDeploy: async (csvText, robotName) => {
+        await this._deployFromBuilder(csvText, robotName);
+      },
+    });
+    await this.builderController.init();
 
     // 3. Load or Start Match
     await this._loadBattleState();
@@ -71,18 +72,15 @@ class PlaytestApp {
     this.playerRobotContainer = document.getElementById("player-robot-container");
     this.automatonRobotContainer = document.getElementById("automaton-robot-container");
     this.logContainer = document.getElementById("combat-log-container");
-
-    // Builder elements
-    this.builderContainer = document.getElementById("canvas-container");
-    this.matSvg = document.getElementById("mat-svg");
-    this.btnDeployToBattle = document.getElementById("btn-deploy-to-battle");
   }
 
   _bindTabs() {
     this.tabs.forEach(tab => {
       tab.addEventListener("click", () => {
         const targetView = tab.dataset.tab;
-        this.switchTab(targetView);
+        if (targetView) {
+          this.switchTab(targetView);
+        }
       });
     });
   }
@@ -94,13 +92,12 @@ class PlaytestApp {
 
     if (tabName === "arena" && this.currentMatch) {
       this.arenaRenderer.render(this.currentMatch);
-    } else if (tabName === "builder" && this.builderCanvas) {
-      setTimeout(() => this.builderCanvas.zoomFit(), 50);
+    } else if (tabName === "builder" && this.builderController) {
+      setTimeout(() => this.builderController.zoomFit(), 100);
     }
   }
 
   _bindBattleControls() {
-    // Steppers and Sliders
     const updateSliders = () => {
       this.leftDriveVal.textContent = this.turnLeft > 0 ? `+${this.turnLeft}` : this.turnLeft;
       this.rightDriveVal.textContent = this.turnRight > 0 ? `+${this.turnRight}` : this.turnRight;
@@ -150,37 +147,38 @@ class PlaytestApp {
       }
     });
 
-    // Presets
+    // Preset Buttons
     this.presetButtons.forEach(btn => {
       btn.addEventListener("click", () => {
-        const action = btn.dataset.preset;
-        const maxL = this.currentMatch?.player_robot?.left_drive_max || 3;
-        const maxR = this.currentMatch?.player_robot?.right_drive_max || 3;
+        const preset = btn.dataset.preset;
+        const maxL = this.currentMatch ? this.currentMatch.player_robot.left_drive_max : 3;
+        const maxR = this.currentMatch ? this.currentMatch.player_robot.right_drive_max : 3;
 
-        switch (action) {
+        switch (preset) {
           case "forward":
-            this.turnLeft = maxL;
-            this.turnRight = maxR;
+            const straight = Math.min(maxL, maxR);
+            this.turnLeft = straight;
+            this.turnRight = straight;
+            break;
+          case "curve-left":
+            this.turnLeft = Math.min(maxL, 1);
+            this.turnRight = Math.min(maxR, 3);
+            break;
+          case "curve-right":
+            this.turnLeft = Math.min(maxL, 3);
+            this.turnRight = Math.min(maxR, 1);
             break;
           case "pivot-left":
-            this.turnLeft = -Math.min(maxL, 2);
+            this.turnLeft = 0;
             this.turnRight = Math.min(maxR, 2);
             break;
           case "pivot-right":
             this.turnLeft = Math.min(maxL, 2);
-            this.turnRight = -Math.min(maxR, 2);
-            break;
-          case "curve-left":
-            this.turnLeft = Math.max(0, maxL - 2);
-            this.turnRight = maxR;
-            break;
-          case "curve-right":
-            this.turnLeft = maxL;
-            this.turnRight = Math.max(0, maxR - 2);
+            this.turnRight = 0;
             break;
           case "reverse":
-            this.turnLeft = -1;
-            this.turnRight = -1;
+            this.turnLeft = maxL > 0 ? -1 : 0;
+            this.turnRight = maxR > 0 ? -1 : 0;
             break;
           case "stop":
             this.turnLeft = 0;
@@ -191,30 +189,47 @@ class PlaytestApp {
       });
     });
 
-    // Turn Execution
-    this.btnExecuteTurn.addEventListener("click", async () => {
-      await this._onExecuteTurn();
-    });
+    // Execute Turn
+    this.btnExecuteTurn.addEventListener("click", () => this._onExecuteTurn());
 
-    // Match management
+    // New Match & Reset Buttons
     this.btnNewMatch.addEventListener("click", async () => {
-      const auto = this.autoSelect.value;
-      const csv = serializeRobotToCsv(state);
-      await this._startMatch(csv, auto, state.robotName || "Player 1");
+      const autoName = this.autoSelect.value;
+      const csv = this.builderController ? this.builderController.getRobotCSV() : "";
+      try {
+        const data = await PlaytestApi.startNewMatch({
+          player_csv: csv,
+          automaton: autoName,
+          player_name: "Player Bot",
+        });
+        this.currentMatch = data.match;
+        this._updateMatchUi();
+      } catch (err) {
+        alert("Failed to start new match: " + err.message);
+      }
     });
 
     this.btnResetMatch.addEventListener("click", async () => {
-      await PlaytestApi.resetBattle();
-      await this._loadBattleState();
+      if (confirm("Reset current match?")) {
+        await PlaytestApi.resetMatch();
+        await this._loadBattleState();
+      }
     });
+  }
 
-    if (this.btnDeployToBattle) {
-      this.btnDeployToBattle.addEventListener("click", async () => {
-        const auto = this.autoSelect.value;
-        const csv = serializeRobotToCsv(state);
-        await this._startMatch(csv, auto, state.robotName || "Custom Bot");
-        this.switchTab("arena");
+  async _deployFromBuilder(csvText, robotName) {
+    try {
+      const autoName = this.autoSelect ? this.autoSelect.value : "Vyper_flipper";
+      const data = await PlaytestApi.startNewMatch({
+        player_csv: csvText,
+        automaton: autoName,
+        player_name: robotName || "Player Bot",
       });
+      this.currentMatch = data.match;
+      this._updateMatchUi();
+      this.switchTab("arena");
+    } catch (err) {
+      alert("Failed to deploy robot: " + err.message);
     }
   }
 
@@ -224,18 +239,7 @@ class PlaytestApp {
       this.currentMatch = data.match;
       this._updateMatchUi();
     } catch (err) {
-      console.error("Failed to load match state:", err);
-    }
-  }
-
-  async _startMatch(csvContent, automaton, playerName) {
-    try {
-      const data = await PlaytestApi.startNewBattle(csvContent, automaton, playerName);
-      this.currentMatch = data.match;
-      this._updateMatchUi();
-      this.arenaRenderer.render(this.currentMatch);
-    } catch (err) {
-      alert("Error starting match: " + err.message);
+      console.warn("Could not load initial battle state:", err);
     }
   }
 
@@ -243,10 +247,10 @@ class PlaytestApp {
     if (!this.currentMatch || this.currentMatch.phase === "game_over") return;
 
     this.btnExecuteTurn.disabled = true;
-    this.btnExecuteTurn.textContent = "Moving...";
+    this.btnExecuteTurn.textContent = "⚙️ Executing...";
 
     try {
-      const data = await PlaytestApi.executeTurn(this.turnLeft, this.turnRight);
+      const data = await PlaytestApi.submitTurn(this.turnLeft, this.turnRight);
       this.currentMatch = data.match;
 
       // Animate trajectory movement on arena
@@ -279,12 +283,18 @@ class PlaytestApp {
       this.hudStatus.innerHTML = `<span class="badge badge-success">PLANNING PHASE</span>`;
     }
 
+    // Spin summary in banner
+    const pSpin = Object.values(pBot.weapon_spin_counters || {}).reduce((a, b) => a + b, 0);
+    const aSpin = Object.values(aBot.weapon_spin_counters || {}).reduce((a, b) => a + b, 0);
+    const pSpinBadge = pSpin > 0 ? ` <span class="badge badge-cyan">🌀 ${pSpin} Spin</span>` : "";
+    const aSpinBadge = aSpin > 0 ? ` <span class="badge badge-cyan">🌀 ${aSpin} Spin</span>` : "";
+
     if (m.automaton_roll !== null && m.automaton_action) {
       this.hudAutoBanner.innerHTML = `
-        <span>🤖 <strong>${aBot.name}</strong> rolled 🎲 ${m.automaton_roll} ➔ <strong>${m.automaton_action.toUpperCase()}</strong> [L: ${m.automaton_choice.left}, R: ${m.automaton_choice.right}]</span>
+        <span>🤖 <strong>${aBot.name}</strong> rolled 🎲 ${m.automaton_roll} ➔ <strong>${m.automaton_action.toUpperCase()}</strong> [L: ${m.automaton_choice.left}, R: ${m.automaton_choice.right}]${aSpinBadge}</span>
       `;
     } else {
-      this.hudAutoBanner.innerHTML = `<span>Opponent: <strong>${aBot.name}</strong> (Ready)</span>`;
+      this.hudAutoBanner.innerHTML = `<span>Opponent: <strong>${aBot.name}</strong>${aSpinBadge} (Ready)</span>`;
     }
 
     // Drive Sliders Bounds
@@ -308,60 +318,6 @@ class PlaytestApp {
     RobotViewRenderer.renderRobotState(this.automatonRobotContainer, aBot, true, m.automaton_roll, m.automaton_action);
     CombatLogRenderer.renderLog(this.logContainer, m.log);
   }
-
-  async _initBuilder() {
-    try {
-      const [cardsRes, chassisRes] = await Promise.all([
-        fetch("/api/cards").then(r => r.json()),
-        fetch("/api/chassis").then(r => r.json()),
-      ]);
-
-      state.cardCatalog = cardsRes.all || [];
-      state.chassisList = chassisRes || [];
-
-      // Set default chassis
-      const defaultChassis = state.chassisList.find(c => c.name.includes("Viper")) || state.chassisList[0];
-      if (defaultChassis) state.setChassis(defaultChassis);
-
-      // Initialize Builder Components
-      this.builderCanvas = new MatCanvas(this.builderContainer, this.matSvg);
-      new CardCatalogue(
-        document.getElementById("drawer-catalogue"),
-        document.getElementById("catalogue-list"),
-        document.getElementById("card-search-input"),
-        document.querySelectorAll(".pill")
-      );
-      new SparesDrawer(
-        document.getElementById("drawer-spares"),
-        document.getElementById("spares-list")
-      );
-
-      // Load initial bot build (Vyper_Spinner) into builder
-      const defaultCsv = await fetch("/api/robots/Vyper_Spinner").then(r => r.text()).catch(() => "");
-      if (defaultCsv) {
-        fromCsvToState(defaultCsv);
-      }
-
-    } catch (err) {
-      console.warn("Builder init warning:", err);
-    }
-  }
-}
-
-function fromCsvToState(csvText) {
-  fetch("/api/robots/parse", {
-    method: "POST",
-    headers: { "Content-Type": "text/csv" },
-    body: csvText,
-  })
-    .then(r => r.json())
-    .then(parsed => {
-      if (parsed.chassis) state.setChassis(parsed.chassis);
-      state.placedCards = parsed.placed_cards || [];
-      state.spareCards = parsed.spare_cards || [];
-      state.recalculate();
-    })
-    .catch(console.error);
 }
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from .collision import normalize_angle_deg
+from .movement import generate_trajectory, list_template_options
 from .types import MoveChoice, Pose, RobotState
 
 AUTOMATA_TABLES = {
@@ -40,12 +41,11 @@ def get_automaton_action(
     roll: int,
 ) -> str:
     """
-    Looks up action based on automaton type, weapon state, and d6 roll.
+    Looks up action based on automaton type, weapon spin state, and d6 roll.
     """
     clean_name = automaton_name.replace(" ", "_")
 
     if "Spinner" in clean_name:
-        # Check weapon spin counters
         spin_count = sum(automaton.weapon_spin_counters.values())
         table_key = "Vyper_Spinner_Charged" if spin_count >= 2 else "Vyper_Spinner_Uncharged"
     else:
@@ -64,66 +64,95 @@ def compute_automaton_drive(
     action: str,
 ) -> MoveChoice:
     """
-    Calculates the chosen (Left, Right) drive pair based on the selected action
-    and the opponent's relative position.
+    Evaluates available movement template options to execute the chosen action
+    (Rush, Face, Retreat) considering the opponent's current position.
     """
     d_l = automaton.left_drive_max
     d_r = automaton.right_drive_max
 
-    # If robot has no drive, return 0, 0
     if d_l <= 0 and d_r <= 0:
         return MoveChoice(0, 0)
 
-    # Vector from automaton to player
+    options = list_template_options(d_l, d_r)
+    if not options:
+        return MoveChoice(0, 0)
+
+    # Opponent position and relative bearing
     dx = player.pose.x - automaton.pose.x
     dy = player.pose.y - automaton.pose.y
-
-    # Heading of vector towards player (North is dy < 0)
     target_heading_deg = math.degrees(math.atan2(dx, -dy))
-    rel_bearing_deg = normalize_angle_deg(target_heading_deg - automaton.pose.theta)
+    current_bearing_deg = normalize_angle_deg(target_heading_deg - automaton.pose.theta)
 
     if action == "Rush":
-        # Drive at opponent at full speed
-        if abs(rel_bearing_deg) <= 20.0:
-            # Straight rush
-            return MoveChoice(left=d_l, right=d_r)
-        elif 20.0 < rel_bearing_deg <= 60.0:
-            # Curve right towards opponent
-            return MoveChoice(left=d_l, right=max(0, d_r - 2))
-        elif -60.0 <= rel_bearing_deg < -20.0:
-            # Curve left towards opponent
-            return MoveChoice(left=max(0, d_l - 2), right=d_r)
-        elif rel_bearing_deg > 60.0:
-            # Sharp clockwise turn
-            return MoveChoice(left=d_l, right=-min(d_r, 2))
-        else:
-            # Sharp counter-clockwise turn
-            return MoveChoice(left=-min(d_l, 2), right=d_r)
+        # Maximum speed closing distance to opponent
+        # Filter for forward movement options (straight, curve)
+        forward_opts = [o for o in options if o["category"] in ("straight", "curve") and o["left"] > 0 and o["right"] > 0]
+        if not forward_opts:
+            forward_opts = [o for o in options if o["left"] > 0 or o["right"] > 0]
+        if not forward_opts:
+            return MoveChoice(0, 0)
+
+        best_opt = forward_opts[0]
+        min_dist = float("inf")
+
+        for opt in forward_opts:
+            choice = MoveChoice(opt["left"], opt["right"])
+            traj = generate_trajectory(automaton.pose, choice, num_steps=5, clamp_to_walls=True)
+            end_pose = traj[-1]
+            dist_to_opp = math.hypot(player.pose.x - end_pose.x, player.pose.y - end_pose.y)
+            if dist_to_opp < min_dist:
+                min_dist = dist_to_opp
+                best_opt = opt
+
+        return MoveChoice(best_opt["left"], best_opt["right"])
 
     elif action == "Face":
         # Rotate on the spot to face opponent
-        if abs(rel_bearing_deg) <= 10.0:
+        # If already facing opponent within 15 deg, stop or slight adjust
+        if abs(current_bearing_deg) <= 15.0:
             return MoveChoice(0, 0)
-        elif rel_bearing_deg > 0:
-            turn_amt = min(d_l, d_r, 2)
-            return MoveChoice(left=turn_amt, right=-turn_amt)
-        else:
-            turn_amt = min(d_l, d_r, 2)
-            return MoveChoice(left=-turn_amt, right=turn_amt)
+
+        turn_opts = [o for o in options if o["category"] in ("spin", "pivot")]
+        if not turn_opts:
+            return MoveChoice(0, 0)
+
+        best_opt = turn_opts[0]
+        min_bearing_diff = float("inf")
+
+        for opt in turn_opts:
+            choice = MoveChoice(opt["left"], opt["right"])
+            traj = generate_trajectory(automaton.pose, choice, num_steps=5, clamp_to_walls=True)
+            end_pose = traj[-1]
+            end_bearing = abs(normalize_angle_deg(target_heading_deg - end_pose.theta))
+            if end_bearing < min_bearing_diff:
+                min_bearing_diff = end_bearing
+                best_opt = opt
+
+        return MoveChoice(best_opt["left"], best_opt["right"])
 
     elif action == "Retreat":
         # Face opponent and move backwards 1 step
-        if abs(rel_bearing_deg) > 35.0:
-            # First orient to face them
-            turn_amt = min(d_l, d_r, 2)
-            if rel_bearing_deg > 0:
-                return MoveChoice(left=turn_amt, right=-turn_amt)
-            else:
-                return MoveChoice(left=-turn_amt, right=turn_amt)
+        if abs(current_bearing_deg) <= 35.0:
+            # Already facing opponent, reverse 1 step if available
+            rev_opts = [o for o in options if o["category"] == "reverse"]
+            if rev_opts:
+                return MoveChoice(-1, -1)
+            # If no reverse, pivot away
+            return MoveChoice(0, 0)
         else:
-            # Reverse away 1 step
-            step_l = -1 if d_l > 0 else 0
-            step_r = -1 if d_r > 0 else 0
-            return MoveChoice(left=step_l, right=step_r)
+            # Turn to face them first
+            turn_opts = [o for o in options if o["category"] in ("spin", "pivot")]
+            if not turn_opts:
+                return MoveChoice(0, 0)
+            best_opt = turn_opts[0]
+            min_bearing = float("inf")
+            for opt in turn_opts:
+                choice = MoveChoice(opt["left"], opt["right"])
+                traj = generate_trajectory(automaton.pose, choice, num_steps=5, clamp_to_walls=True)
+                diff = abs(normalize_angle_deg(target_heading_deg - traj[-1].theta))
+                if diff < min_bearing:
+                    min_bearing = diff
+                    best_opt = opt
+            return MoveChoice(best_opt["left"], best_opt["right"])
 
     return MoveChoice(0, 0)

@@ -1,4 +1,4 @@
-"""Combat resolution: damage progression, feedback propagation, throws, and status effects."""
+"""Combat resolution, damage progression, recoil feedback, pushing matches, and throws."""
 
 from __future__ import annotations
 
@@ -7,17 +7,37 @@ import random
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from .field import WALL_BOTTOM, WALL_LEFT, WALL_RIGHT, WALL_TOP, is_in_hazard
+from .field import (
+    ARENA_HEIGHT,
+    ARENA_WIDTH,
+    MAT_CENTER_X,
+    MAT_CENTER_Y,
+    WALL_BOTTOM,
+    WALL_LEFT,
+    WALL_RIGHT,
+    WALL_TOP,
+    is_in_hazard,
+)
+from .movement import DRIVE_UNIT_MM, MINIATURE_RADIUS
 from .types import CollisionEvent, CombatLogEntry, ComponentHealth, Pose, RobotState
 
 
-def parse_weapon_spin_and_damage(outputs: str, keywords: str, text: str) -> Tuple[int, Dict[int, int], str]:
+def parse_weapon_spin_and_damage(outputs: str, keywords: str, text: str) -> Tuple[int, int, Dict[int, int], str]:
     """
-    Parses weapon keywords and outputs into max spin and a map of {spin_level: damage}.
-    Reused from verified simulate_combat.py implementation.
+    Parses weapon keywords and outputs into:
+    (spin_up_rate, max_spin, {spin_level: damage}, formula_description).
     """
-    spin_match = re.search(r"Spin up\s*\(\s*(\d+)", keywords, re.IGNORECASE)
-    max_spin = int(spin_match.group(1)) if spin_match else 0
+    spin_match = re.search(r"Spin up\s*\(\s*(\d+)(?:\s*,\s*(\d+))?", keywords, re.IGNORECASE)
+    if spin_match:
+        if spin_match.group(2):
+            spin_rate = int(spin_match.group(1))
+            max_spin = int(spin_match.group(2))
+        else:
+            spin_rate = 1
+            max_spin = int(spin_match.group(1))
+    else:
+        spin_rate = 0
+        max_spin = 0
 
     damage_map: Dict[int, int] = {}
     is_pure_throw = "deals no damage" in text.lower() or ("throws" in text.lower() and "no damage" in text.lower())
@@ -52,7 +72,7 @@ def parse_weapon_spin_and_damage(outputs: str, keywords: str, text: str) -> Tupl
             damage_map[s] = s
             formula_desc = outputs
 
-    return max_spin, damage_map, formula_desc
+    return spin_rate, max_spin, damage_map, formula_desc
 
 
 def get_weapon_attack_strength(comp: ComponentHealth, spin_level: int) -> int:
@@ -64,7 +84,7 @@ def get_weapon_attack_strength(comp: ComponentHealth, spin_level: int) -> int:
             return int(m.group(1))
         return 5
 
-    _, d_map, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
+    _, _, d_map, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
     return d_map.get(spin_level, 0)
 
 
@@ -74,7 +94,10 @@ def apply_damage_to_component(
     is_weapon_damage: bool = True,
 ) -> Tuple[str, float, float]:
     """
-    Applies incoming damage to a component.
+    Applies incoming damage according to the canonical rules:
+    - Exceeds durability -> Destroyed, absorbs durability, excess continues.
+    - Exceeds 1/2 durability after absorption -> Damaged (or destroyed if already damaged).
+    - Otherwise -> absorbs absorption, excess continues.
     Returns (status, absorbed_amount, excess_amount).
     """
     eff_dur = comp.max_durability
@@ -82,7 +105,6 @@ def apply_damage_to_component(
         eff_dur = 1
 
     if incoming > eff_dur:
-        # Destroyed
         comp.is_destroyed = True
         comp.current_durability = 0
         comp.is_active = False
@@ -95,7 +117,6 @@ def apply_damage_to_component(
 
     if net_after_abs > half_dur:
         if comp.is_damaged:
-            # Repeated damage destroys it
             comp.is_destroyed = True
             comp.current_durability = 0
             comp.is_active = False
@@ -122,7 +143,6 @@ def resolve_inward_damage_progression(
 ) -> List[str]:
     """
     Propagates damage from the initial contacted component inwards.
-    Returns human-readable step logs.
     """
     logs: List[str] = []
     if damage <= 0 or initial_target_id not in robot.components:
@@ -135,9 +155,6 @@ def resolve_inward_damage_progression(
     visited: Set[str] = {initial_target_id}
     current_front = [(initial_target_id, excess)]
 
-    # Chassis center is (210, 150)
-    cx, cy = 210.0, 150.0
-
     while current_front:
         next_front = []
         for src_id, rem_dmg in current_front:
@@ -148,13 +165,13 @@ def resolve_inward_damage_progression(
             for nid in robot.connections.get(src_id, []):
                 if nid not in visited and nid in robot.components and not robot.components[nid].is_destroyed:
                     ncomp = robot.components[nid]
-                    dist = math.hypot(ncomp.x - cx, ncomp.y - cy)
+                    dist = math.hypot(ncomp.x - MAT_CENTER_X, ncomp.y - MAT_CENTER_Y)
                     candidates.append((nid, dist))
 
             if not candidates:
                 continue
 
-            # Sort inwards (closer to center first)
+            # Prioritize inward path closer to chassis center
             candidates.sort(key=lambda c: c[1])
             split_dmg = rem_dmg / len(candidates)
 
@@ -177,7 +194,8 @@ def resolve_feedback_propagation(
     feedback_amount: float,
 ) -> List[str]:
     """
-    Propagates feedback backwards along supply graph (to motors, ESCs, batteries).
+    Propagates feedback backwards along the supply graph
+    (from weapon/drive back to motors, ESCs, batteries).
     """
     logs: List[str] = []
     if feedback_amount <= 0 or source_id not in robot.components:
@@ -185,7 +203,7 @@ def resolve_feedback_propagation(
 
     src_comp = robot.components[source_id]
     status, absorbed, excess = apply_damage_to_component(src_comp, feedback_amount, is_weapon_damage=False)
-    logs.append(f"Feedback on {src_comp.name} (#{src_comp.id}): {feedback_amount:.1f} -> {status}")
+    logs.append(f"Feedback on {src_comp.name} (#{src_comp.id}): {feedback_amount:.1f} -> {status} (absorbed {absorbed:.1f})")
 
     current_layer = [(source_id, excess)]
     visited = {source_id}
@@ -196,7 +214,7 @@ def resolve_feedback_propagation(
             if rem_dmg <= 0.05:
                 continue
 
-            suppliers = [sid for sid in robot.supply_graph.get(cid, []) if sid not in visited and sid in robot.components]
+            suppliers = [sid for sid in robot.supply_graph.get(cid, []) if sid not in visited and sid in robot.components and not robot.components[sid].is_destroyed]
             if not suppliers:
                 continue
 
@@ -214,15 +232,57 @@ def resolve_feedback_propagation(
     return logs
 
 
+def simulate_dropping_card(robot: RobotState) -> Optional[str]:
+    """
+    Simulates randomly dropping a card on the A3 chassis sheet
+    to determine which component takes throw shock.
+    """
+    active_comps = [c for c in robot.components.values() if not c.is_destroyed]
+    if not active_comps:
+        return None
+
+    # Drop card at random position on the A3 mat (420 x 297 mm)
+    drop_x = random.uniform(80.0, 340.0)
+    drop_y = random.uniform(40.0, 260.0)
+    card_w, card_h = 44.0, 64.0
+    if random.choice([True, False]):
+        card_w, card_h = 64.0, 44.0
+    drop_box = (drop_x, drop_y, drop_x + card_w, drop_y + card_h)
+
+    # Check which placed components overlap the dropped card
+    hit_ids = []
+    for comp in active_comps:
+        b = comp.box
+        overlap = not (
+            b[2] < drop_box[0] or
+            b[0] > drop_box[2] or
+            b[3] < drop_box[1] or
+            b[1] > drop_box[3]
+        )
+        if overlap:
+            hit_ids.append(comp.id)
+
+    if hit_ids:
+        return random.choice(hit_ids)
+
+    # If dropped card missed placed cards, pick nearest active component
+    nearest_cid = min(
+        active_comps,
+        key=lambda c: math.hypot(
+            (c.box[0] + c.box[2]) / 2.0 - drop_x,
+            (c.box[1] + c.box[3]) / 2.0 - drop_y
+        )
+    ).id
+    return nearest_cid
+
+
 def refresh_robot_drive_and_power(robot: RobotState) -> None:
     """
     Recomputes active components and left/right drive max counts based on current health.
     """
-    # 1. Topological / connected activation: batteries are self-supplying
-    # Components requiring inputs must have an undamaged, active supplier
     active_set: Set[str] = set()
 
-    # Pass 1: Batteries (no requirements)
+    # Pass 1: Self-supplying components (batteries with no requirements)
     for cid, c in robot.components.items():
         if not c.is_destroyed:
             reqs = c.requirements.strip().upper()
@@ -247,24 +307,25 @@ def refresh_robot_drive_and_power(robot: RobotState) -> None:
                 active_set.add(cid)
                 changed = True
 
-    # Compute drive strength on left and right sides
-    chassis_cx = 210.0
+    # Count drive outputs on left and right sides
     left_drive = 0
     right_drive = 0
 
     for cid, c in robot.components.items():
+        # Keep spin counter synced on component
+        c.spin_counters = robot.weapon_spin_counters.get(cid, 0)
+
         if not c.is_active or c.is_destroyed:
             continue
         out = c.outputs.upper()
         if "D" in out or "M" in out:
-            # Count D's or M's
             count = out.count("D") + out.count("M")
-            # If inverted, wheels without invertible keyword don't work
+            # Inverted check: non-invertible wheels stop functioning
             if robot.is_inverted and not c.is_invertible:
                 continue
 
-            card_cx = c.x + (c.box[2] - c.box[0]) / 2.0
-            if card_cx < chassis_cx:
+            card_cx = (c.box[0] + c.box[2]) / 2.0
+            if card_cx < MAT_CENTER_X:
                 left_drive += count
             else:
                 right_drive += count
@@ -278,6 +339,26 @@ def refresh_robot_drive_and_power(robot: RobotState) -> None:
     robot.right_drive_max = right_drive
 
 
+def start_of_turn_spin_up(robot: RobotState) -> List[str]:
+    """
+    Executes Spin up (X, Y) keyword at the start of turn:
+    Add X spin counters up to max Y.
+    """
+    logs: List[str] = []
+    for cid, comp in robot.components.items():
+        if comp.card_type != "weapon" or comp.is_destroyed or not comp.is_active:
+            continue
+        spin_rate, max_spin, _, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
+        if max_spin > 0:
+            curr = robot.weapon_spin_counters.get(cid, 0)
+            if curr < max_spin:
+                new_val = min(max_spin, curr + spin_rate)
+                robot.weapon_spin_counters[cid] = new_val
+                comp.spin_counters = new_val
+                logs.append(f"🌀 {robot.name}'s {comp.name} spins up (+{spin_rate} -> {new_val}/{max_spin} spin counters)")
+    return logs
+
+
 def resolve_collision_combat(
     col: CollisionEvent,
     r1: RobotState,
@@ -285,139 +366,163 @@ def resolve_collision_combat(
     round_num: int,
 ) -> List[CombatLogEntry]:
     """
-    Executes full combat and physics collision resolution according to Robot Battles rules.
+    Executes combat resolution adhering strictly to combat_robotics_game.tex.
     """
     logs: List[CombatLogEntry] = []
 
-    # Identify weapons and components
-    w1_list = [
-        r1.components[cid] for cid in col.robot1_components
-        if cid in r1.components and r1.components[cid].card_type == "weapon" and not r1.components[cid].is_destroyed
-    ]
-    w2_list = [
-        r2.components[cid] for cid in col.robot2_components
-        if cid in r2.components and r2.components[cid].card_type == "weapon" and not r2.components[cid].is_destroyed
-    ]
-
-    is_active_hit = (col.contact_type == "ACTIVE") and (bool(w1_list) or bool(w2_list))
-
-    if is_active_hit:
-        # ACTIVE CONTACT (Weapon Strikes)
+    if col.contact_type == "ACTIVE":
+        # ======================================================================
+        # ACTIVE WEAPON CONTACT
+        # ======================================================================
         logs.append(CombatLogEntry(
             round=round_num,
             phase="collision",
-            message=f"⚔️ ACTIVE WEAPON HIT between {r1.name} and {r2.name}!",
+            message=f"⚔️ ACTIVE WEAPON HIT: {col.description}",
         ))
 
-        # Check ground game: Forks
+        # Check Ground Game: Forks keyword
         r1_forks = any(r1.components[cid].is_forks for cid in col.robot1_components if cid in r1.components)
         r2_forks = any(r2.components[cid].is_forks for cid in col.robot2_components if cid in r2.components)
         if r1_forks and not r2_forks:
             r2.is_raised = True
             logs.append(CombatLogEntry(
-                round=round_num, phase="collision", message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: drive & flip halved)"
+                round=round_num, phase="collision",
+                message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: drive & flip strength halved)",
             ))
         elif r2_forks and not r1_forks:
             r1.is_raised = True
             logs.append(CombatLogEntry(
-                round=round_num, phase="collision", message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: drive & flip halved)"
+                round=round_num, phase="collision",
+                message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: drive & flip strength halved)",
             ))
 
-        # Attacker 1 -> Defender 2
-        throw_str_2 = 0
-        if w1_list:
-            w1 = w1_list[0]
-            spin1 = r1.weapon_spin_counters.get(w1.id, 0)
-            atk_str_1 = get_weapon_attack_strength(w1, spin1)
-            dmg_1 = atk_str_1
-            if "deals no damage" in w1.text.lower():
-                dmg_1 = 0
+        # Identify attacking weapons involved
+        w1_attacking = [
+            r1.components[cid] for cid in col.robot1_components
+            if cid in r1.components and r1.components[cid].card_type == "weapon" and not r1.components[cid].is_destroyed
+            and col.r1_active_hit
+        ]
+        w2_attacking = [
+            r2.components[cid] for cid in col.robot2_components
+            if cid in r2.components and r2.components[cid].card_type == "weapon" and not r2.components[cid].is_destroyed
+            and col.r2_active_hit
+        ]
 
+        atk_str_1 = 0
+        w1_comp = None
+        if w1_attacking:
+            w1_comp = w1_attacking[0]
+            spin1 = r1.weapon_spin_counters.get(w1_comp.id, 0)
+            atk_str_1 = get_weapon_attack_strength(w1_comp, spin1)
+
+        atk_str_2 = 0
+        w2_comp = None
+        if w2_attacking:
+            w2_comp = w2_attacking[0]
+            spin2 = r2.weapon_spin_counters.get(w2_comp.id, 0)
+            atk_str_2 = get_weapon_attack_strength(w2_comp, spin2)
+
+        # Total attack strength in the contact
+        total_contact_atk = atk_str_1 + atk_str_2
+
+        # 1. Apply Weapon 1 damage to Robot 2
+        throw_str_2 = 0
+        if w1_comp:
+            spin1 = r1.weapon_spin_counters.get(w1_comp.id, 0)
+            dmg1 = 0 if "deals no damage" in w1_comp.text.lower() else atk_str_1
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"💥 {r1.name} attacks with {w1.name} at Spin {spin1} dealing {dmg_1} damage (Attack Strength {atk_str_1})!"
+                message=f"💥 {r1.name} attacks with {w1_comp.name} at Spin {spin1} dealing {dmg1} dmg (Attack Strength {atk_str_1})!",
             ))
 
-            # Apply damage to R2's contacted component
-            target_id_2 = col.robot2_components[0] if col.robot2_components else list(r2.components.keys())[0]
-            dmg_logs = resolve_inward_damage_progression(r2, target_id_2, float(dmg_1), is_weapon_damage=True)
-            for dlog in dmg_logs:
-                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {dlog}"))
+            target2_id = col.robot2_components[0] if col.robot2_components else list(r2.components.keys())[0]
+            dmg_logs = resolve_inward_damage_progression(r2, target2_id, float(dmg1), is_weapon_damage=True)
+            for dl in dmg_logs:
+                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {dl}"))
 
-            # Recoil feedback on R1 weapon: half attack strength
-            fb1 = atk_str_1 // 2
-            if fb1 > 0:
-                fb_logs = resolve_feedback_propagation(r1, w1.id, float(fb1))
-                for flog in fb_logs:
-                    logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil FB] {flog}"))
-
-            # Reset spin counters
-            r1.weapon_spin_counters[w1.id] = 0
+            # Remove spin counters after attack
+            r1.weapon_spin_counters[w1_comp.id] = 0
+            w1_comp.spin_counters = 0
 
             # Base throw strength
             throw_str_2 = atk_str_1
-            if "double the throw strength" in w1.text.lower():
+            if "double the throw strength" in w1_comp.text.lower():
                 throw_str_2 *= 2
-            if "always inverts" in w1.text.lower():
+            if "always inverts" in w1_comp.text.lower():
                 r2.is_inverted = not r2.is_inverted
-                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"🔄 {w1.name} always inverts: {r2.name} is now INVERTED!"))
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"🔄 {w1_comp.name} always inverts: {r2.name} is now {'INVERTED' if r2.is_inverted else 'UPRIGHT'}!",
+                ))
 
-        # Attacker 2 -> Defender 1
+        # 2. Apply Weapon 2 damage to Robot 1
         throw_str_1 = 0
-        if w2_list:
-            w2 = w2_list[0]
-            spin2 = r2.weapon_spin_counters.get(w2.id, 0)
-            atk_str_2 = get_weapon_attack_strength(w2, spin2)
-            dmg_2 = atk_str_2
-            if "deals no damage" in w2.text.lower():
-                dmg_2 = 0
-
+        if w2_comp:
+            spin2 = r2.weapon_spin_counters.get(w2_comp.id, 0)
+            dmg2 = 0 if "deals no damage" in w2_comp.text.lower() else atk_str_2
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"💥 {r2.name} attacks with {w2.name} at Spin {spin2} dealing {dmg_2} damage (Attack Strength {atk_str_2})!"
+                message=f"💥 {r2.name} attacks with {w2_comp.name} at Spin {spin2} dealing {dmg2} dmg (Attack Strength {atk_str_2})!",
             ))
 
-            target_id_1 = col.robot1_components[0] if col.robot1_components else list(r1.components.keys())[0]
-            dmg_logs = resolve_inward_damage_progression(r1, target_id_1, float(dmg_2), is_weapon_damage=True)
-            for dlog in dmg_logs:
-                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {dlog}"))
+            target1_id = col.robot1_components[0] if col.robot1_components else list(r1.components.keys())[0]
+            dmg_logs = resolve_inward_damage_progression(r1, target1_id, float(dmg2), is_weapon_damage=True)
+            for dl in dmg_logs:
+                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {dl}"))
 
-            fb2 = atk_str_2 // 2
-            if fb2 > 0:
-                fb_logs = resolve_feedback_propagation(r2, w2.id, float(fb2))
-                for flog in fb_logs:
-                    logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil FB] {flog}"))
-
-            r2.weapon_spin_counters[w2.id] = 0
+            r2.weapon_spin_counters[w2_comp.id] = 0
+            w2_comp.spin_counters = 0
 
             throw_str_1 = atk_str_2
-            if "double the throw strength" in w2.text.lower():
+            if "double the throw strength" in w2_comp.text.lower():
                 throw_str_1 *= 2
-            if "always inverts" in w2.text.lower():
+            if "always inverts" in w2_comp.text.lower():
                 r1.is_inverted = not r1.is_inverted
-                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"🔄 {w2.name} always inverts: {r1.name} is now INVERTED!"))
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"🔄 {w2_comp.name} always inverts: {r1.name} is now {'INVERTED' if r1.is_inverted else 'UPRIGHT'}!",
+                ))
 
-        # Check Wedge throw reflection
+        # 3. Weapons receive feedback equal to half the total attack strength in the contact
+        if total_contact_atk > 0:
+            recoil_fb = total_contact_atk // 2
+            if w1_comp and recoil_fb > 0:
+                fb_logs = resolve_feedback_propagation(r1, w1_comp.id, float(recoil_fb))
+                for fl in fb_logs:
+                    logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
+            if w2_comp and recoil_fb > 0:
+                fb_logs = resolve_feedback_propagation(r2, w2_comp.id, float(recoil_fb))
+                for fl in fb_logs:
+                    logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
+
+        # 4. Check Wedge keyword throw reflection
         r1_wedge = any(r1.components[cid].is_wedge for cid in col.robot1_components if cid in r1.components)
         r2_wedge = any(r2.components[cid].is_wedge for cid in col.robot2_components if cid in r2.components)
         if r1_wedge and throw_str_1 > 0:
             reflected = throw_str_1 // 2
             throw_str_1 -= reflected
             throw_str_2 += reflected
-            logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"🛡️ {r1.name}'s Wedge reflects {reflected} throw strength to {r2.name}!"))
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=f"🛡️ {r1.name}'s Wedge reflects {reflected} throw strength to {r2.name}!",
+            ))
         if r2_wedge and throw_str_2 > 0:
             reflected = throw_str_2 // 2
             throw_str_2 -= reflected
             throw_str_1 += reflected
-            logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"🛡️ {r2.name}'s Wedge reflects {reflected} throw strength to {r1.name}!"))
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=f"🛡️ {r2.name}'s Wedge reflects {reflected} throw strength to {r1.name}!",
+            ))
 
-        # Execute throws for both robots
+        # 5. Execute Throws away from contact point
         for robot, throw_str, opp in [(r1, throw_str_1, r2), (r2, throw_str_2, r1)]:
             if throw_str <= 0:
                 continue
 
             roll_2d6 = random.randint(1, 6) + random.randint(1, 6)
-            throw_dist = min(throw_str, roll_2d6) * 12.0  # scaled to arena mm
+            thrown_units = min(throw_str, roll_2d6)
+            displacement_mm = thrown_units * DRIVE_UNIT_MM
 
             # Vector away from contact point
             dx = robot.pose.x - col.contact_point[0]
@@ -426,89 +531,135 @@ def resolve_collision_combat(
             if dist < 1e-4:
                 dx, dy = 1.0, 0.0
                 dist = 1.0
+            nx, ny = dx / dist, dy / dist
 
-            throw_nx = dx / dist
-            throw_ny = dy / dist
-
-            robot.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, robot.pose.x + throw_nx * throw_dist))
-            robot.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, robot.pose.y + throw_ny * throw_dist))
-            # Random model spin rotation
+            robot.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, robot.pose.x + nx * displacement_mm))
+            robot.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, robot.pose.y + ny * displacement_mm))
+            # Model rotated by spinning
             spin_rot = random.choice([45.0, 90.0, 135.0, 180.0])
             robot.pose.theta = (robot.pose.theta + spin_rot) % 360.0
 
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🚀 {robot.name} is THROWN! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> {throw_dist:.0f}mm away)"
+                message=f"🚀 {robot.name} is THROWN! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> {thrown_units} units / {displacement_mm:.0f}mm away)",
             ))
 
-            # Flip / Inversion check
-            eff_flip = robot.flip_strength
-            if robot.is_raised:
-                eff_flip = max(1, eff_flip // 2)
-
-            excess_throw = throw_str - (throw_dist / 12.0)
+            # Flip check: if throw strength - thrown distance > flip value of chassis
+            eff_flip = robot.flip_strength // 2 if robot.is_raised else robot.flip_strength
+            excess_throw = throw_str - thrown_units
             if excess_throw > eff_flip:
                 robot.is_inverted = not robot.is_inverted
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"🔄 FLIP! (Remaining throw {excess_throw:.1f} > Flip {eff_flip}) -> {robot.name} is now {'INVERTED' if robot.is_inverted else 'UPRIGHT'}!"
+                    message=f"🔄 FLIP! (Remaining throw {excess_throw} > Flip value {eff_flip}) -> {robot.name} is now {'INVERTED' if robot.is_inverted else 'UPRIGHT'}!",
                 ))
 
-            # Throw shock feedback at a randomly chosen component
-            active_cids = [cid for cid, c in robot.components.items() if not c.is_destroyed]
-            if active_cids:
-                shock_target_id = random.choice(active_cids)
-                shock_target = robot.components[shock_target_id]
-                shock_logs = resolve_feedback_propagation(robot, shock_target_id, float(throw_str))
+            # Throw shock feedback: at a randomly chosen component (dropping a card)
+            shock_cid = simulate_dropping_card(robot)
+            if shock_cid and shock_cid in robot.components:
+                shock_comp = robot.components[shock_cid]
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"⚡ Throw shock of {throw_str} hits {shock_target.name} (#{shock_target.id})!"
+                    message=f"⚡ Dropping card: throw shock of {throw_str} hits {shock_comp.name} (#{shock_comp.id})!",
                 ))
+                shock_logs = resolve_feedback_propagation(robot, shock_cid, float(throw_str))
+                for sl in shock_logs:
+                    logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Shock Feedback] {sl}"))
 
             # Hazard pit elimination check
             if is_in_hazard(robot.pose.x, robot.pose.y):
                 robot.is_eliminated = True
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"☠️ {robot.name} fell into the HAZARD PIT / out of the arena! ELIMINATED!"
+                    message=f"☠️ {robot.name} fell into the HAZARD PIT / out of the arena! ELIMINATED!",
                 ))
 
     else:
+        # ======================================================================
         # INERT CONTACT (Pushing Match)
+        # ======================================================================
         logs.append(CombatLogEntry(
             round=round_num,
             phase="collision",
-            message=f"🛡️ Inert contact pushing match between {r1.name} and {r2.name}!",
+            message=f"🛡️ PUSHING MATCH: {col.description}",
         ))
 
-        # Line between centers through contact point
-        dx = r2.pose.x - r1.pose.x
-        dy = r2.pose.y - r1.pose.y
-        dist = math.hypot(dx, dy)
-        if dist < 1e-4:
-            dx, dy = 1.0, 0.0
-            dist = 1.0
-        nx, ny = dx / dist, dy / dist
+        # Pair moves along the line drawn between centers by net remaining motion
+        push_dx, push_dy = col.push_vector
+        net_dist = math.hypot(push_dx, push_dy)
 
-        # Separate them slightly to avoid overlap
-        sep = 30.0
-        r1.pose.x -= nx * (sep / 2)
-        r1.pose.y -= ny * (sep / 2)
-        r2.pose.x += nx * (sep / 2)
-        r2.pose.y += ny * (sep / 2)
+        # Check if either robot is pushed into a wall
+        # Determine target positions
+        new_r1_x = r1.pose.x + push_dx
+        new_r1_y = r1.pose.y + push_dy
+        new_r2_x = r2.pose.x + push_dx
+        new_r2_y = r2.pose.y + push_dy
 
-        # Drive feedback from pushing: 2 drive feedback to both
-        fb_push = 2.0
-        for robot in [r1, r2]:
-            wheels = [cid for cid, c in robot.components.items() if "wheel" in c.name.lower() and not c.is_destroyed]
-            if wheels:
-                resolve_feedback_propagation(robot, wheels[0], fb_push)
+        pushed_into_wall_robot = None
+        excess_wall_dist = 0.0
+
+        for r_target, r_curr, robot_obj in [
+            (new_r1_x, r1.pose.x, r1),
+            (new_r2_x, r2.pose.x, r2),
+        ]:
+            clamped_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_r1_x))
+            clamped_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_r1_y))
+            lost_x = abs(new_r1_x - clamped_x)
+            lost_y = abs(new_r1_y - clamped_y)
+            if lost_x > 2.0 or lost_y > 2.0:
+                pushed_into_wall_robot = robot_obj
+                excess_wall_dist = math.hypot(lost_x, lost_y)
+
+        # Displace pair
+        r1.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, new_r1_x))
+        r1.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, new_r1_y))
+        r2.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, new_r2_x))
+        r2.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, new_r2_y))
+
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"Drive strains in pushing match: drive components absorb feedback."
+            message=f"Robots push together along line between centers: displacement {net_dist / DRIVE_UNIT_MM:.1f} units ({net_dist:.0f}mm).",
         ))
 
-    # Re-check drive and power supplies on both robots
+        # Wall throw check
+        if pushed_into_wall_robot and excess_wall_dist > 5.0:
+            wall_throw_str = int(round(excess_wall_dist / DRIVE_UNIT_MM))
+            if wall_throw_str > 0:
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"💥 {pushed_into_wall_robot.name} was pushed into the wall! THROWN with throw strength {wall_throw_str}!",
+                ))
+                # Resolve throw away from wall
+                # Shock feedback equal to throw strength
+                shock_cid = simulate_dropping_card(pushed_into_wall_robot)
+                if shock_cid:
+                    resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, float(wall_throw_str))
+
+        # Drive feedback: each robot takes feedback shared equally between active drive equal to opponent remaining distance
+        opp_rem_1 = col.r2_remaining_dist / DRIVE_UNIT_MM  # What R2 had before contact
+        opp_rem_2 = col.r1_remaining_dist / DRIVE_UNIT_MM  # What R1 had before contact
+
+        for robot, opp_rem in [(r1, opp_rem_1), (r2, opp_rem_2)]:
+            if opp_rem <= 0.1:
+                continue
+            active_drives = [
+                c for c in robot.components.values()
+                if not c.is_destroyed and c.is_active and ("D" in c.outputs.upper() or "M" in c.outputs.upper())
+            ]
+            if active_drives:
+                fb_per_drive = opp_rem / len(active_drives)
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"{robot.name}'s active drive absorbs {opp_rem:.1f} feedback from opponent's remaining momentum ({fb_per_drive:.1f} per drive).",
+                ))
+                for dcomp in active_drives:
+                    resolve_feedback_propagation(robot, dcomp.id, fb_per_drive)
+
+    # After contact, robots are pushed or thrown apart -> clear raised status
+    r1.is_raised = False
+    r2.is_raised = False
+
+    # Refresh drive capabilities and power
     refresh_robot_drive_and_power(r1)
     refresh_robot_drive_and_power(r2)
 

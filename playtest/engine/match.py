@@ -22,6 +22,7 @@ from .combat import (
     parse_weapon_spin_and_damage,
     refresh_robot_drive_and_power,
     resolve_collision_combat,
+    start_of_turn_spin_up,
 )
 from .field import AUTOMATON_START_POSE, PLAYER_START_POSE
 from .movement import generate_trajectory
@@ -51,11 +52,10 @@ def build_robot_state(
     parsed = parse_robot_csv(csv_text)
     chassis = parsed.get("chassis") or {}
     chassis_name = chassis.get("name", "Viper Wedge Chassis")
-    chassis_template = chassis.get("template", "Triangle")
+    chassis_template = chassis.get("template", "Square")
     flip_strength = int(chassis.get("flip_strength", 5))
 
     components: Dict[str, ComponentHealth] = {}
-    connections: Dict[str, List[str]] = {}
 
     for c in parsed.get("placed_cards", []):
         cid = str(c.get("id"))
@@ -91,6 +91,8 @@ def build_robot_state(
             is_wedge="wedge" in kw,
             is_forks="forks" in kw,
             is_invertible="invertible" in kw,
+            template=str(cdata.get("template", "")),
+            spin_counters=0,
         )
         components[cid] = comp
 
@@ -123,13 +125,11 @@ def build_robot_state(
                     supply_graph[cid].append(nid)
                     reverse_supply[nid].append(cid)
 
-    # Initial spin counters for weapons
+    # Weapons start at 0 spin counters
     spin_counters: Dict[str, int] = {}
     for cid, comp in components.items():
         if comp.card_type == "weapon":
-            max_s, _, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
-            if max_s > 0:
-                spin_counters[cid] = 1  # Start with 1 spin counter spun up
+            spin_counters[cid] = 0
 
     pose = Pose(x=start_pose[0], y=start_pose[1], theta=start_pose[2])
 
@@ -171,7 +171,6 @@ def create_match(
     # Load automaton CSV
     auto_csv = read_saved_robot(automaton_name)
     if not auto_csv:
-        # Fallback to Vyper_Spinner or Vyper_flipper
         auto_csv = read_saved_robot("Vyper_Spinner.csv") or read_saved_robot("Vyper_flipper.csv")
     if not auto_csv:
         raise ValueError(f"Could not load automaton '{automaton_name}'")
@@ -184,6 +183,20 @@ def create_match(
         catalog=catalog,
     )
 
+    # Start of Turn (Round 1) Spin Up
+    p_spin_logs = start_of_turn_spin_up(player_robot)
+    a_spin_logs = start_of_turn_spin_up(auto_robot)
+
+    logs: List[CombatLogEntry] = [
+        CombatLogEntry(
+            round=1,
+            phase="planning",
+            message=f"Match initialized: {player_robot.name} vs {auto_robot.name} (10 rounds max)",
+        )
+    ]
+    for smsg in p_spin_logs + a_spin_logs:
+        logs.append(CombatLogEntry(round=1, phase="planning", message=smsg))
+
     match = MatchState(
         match_id=str(uuid.uuid4())[:8],
         round=1,
@@ -191,13 +204,7 @@ def create_match(
         player_robot=player_robot,
         automaton_robot=auto_robot,
         automaton_type=automaton_name,
-        log=[
-            CombatLogEntry(
-                round=1,
-                phase="planning",
-                message=f"Match initialized: {player_robot.name} vs {auto_robot.name} (10 rounds max)",
-            )
-        ],
+        log=logs,
     )
     return match
 
@@ -209,10 +216,10 @@ def execute_turn(
 ) -> MatchState:
     """
     Executes a complete 4-phase combat turn:
-    1. Planning: Rolls automaton action, calculates choices.
-    2. Movement: Generates trajectories.
-    3. Collision: Detects collisions, resolves damage/feedback/throws.
-    4. Cleanup: Checks status, updates spin counters, checks win condition.
+    1. Planning: Automaton d6 roll & action table lookup -> template drive choice.
+    2. Movement: Generate trajectories along templates.
+    3. Collision: Check collision & resolve active strikes or inert pushing match.
+    4. Cleanup: Self-right check, status reset, win conditions, and advance to next round.
     """
     if match.phase == "game_over":
         return match
@@ -250,12 +257,12 @@ def execute_turn(
     match.player_trajectory = p_traj
     match.automaton_trajectory = a_traj
 
-    # 3. Collision Check
+    # 3. Collision Phase
     col = detect_collision(p_bot, p_traj, a_bot, a_traj)
     match.last_collision = col
 
     if col:
-        # Stop both at collision point
+        # Move both to contact point
         col_idx = max(1, int(col.time_t * len(p_traj)))
         if col_idx < len(p_traj):
             p_bot.pose = Pose(p_traj[col_idx].x, p_traj[col_idx].y, p_traj[col_idx].theta)
@@ -271,11 +278,11 @@ def execute_turn(
         p_bot.pose = Pose(p_traj[-1].x, p_traj[-1].y, p_traj[-1].theta)
         a_bot.pose = Pose(a_traj[-1].x, a_traj[-1].y, a_traj[-1].theta)
         match.log.append(CombatLogEntry(
-            round=r_num, phase="movement", message="Both robots advanced along their paths without contact."
+            round=r_num, phase="movement", message="Both robots advanced along their template tracks without contact."
         ))
 
     # 4. Cleanup Phase
-    # Self-righting keyword check if no contact occurred this turn
+    # Self-right check: if round ended without contact and robot is inverted, invert it
     if not col:
         for robot in [p_bot, a_bot]:
             if robot.is_inverted:
@@ -289,22 +296,7 @@ def execute_turn(
                         round=r_num, phase="cleanup", message=f"🔄 {robot.name} self-rights and is now UPRIGHT!"
                     ))
 
-    # Reset raised status at end of round
-    p_bot.is_raised = False
-    a_bot.is_raised = False
-
-    # Increment spin counters for weapons with Spin up (X, Y)
-    for robot in [p_bot, a_bot]:
-        for cid, comp in robot.components.items():
-            if comp.card_type == "weapon" and not comp.is_destroyed:
-                m = re.search(r"Spin up\s*\(\s*(\d+)", comp.keywords, re.IGNORECASE)
-                if m:
-                    max_spin = int(m.group(1))
-                    curr = robot.weapon_spin_counters.get(cid, 0)
-                    if curr < max_spin:
-                        robot.weapon_spin_counters[cid] = curr + 1
-
-    # Refresh active drive and components
+    # Refresh active drive and power
     refresh_robot_drive_and_power(p_bot)
     refresh_robot_drive_and_power(a_bot)
 
@@ -334,7 +326,6 @@ def execute_turn(
         match.phase = "game_over"
     elif match.round >= 10:
         match.phase = "game_over"
-        # Judge's decision: Remaining total durability
         p_dur = sum(c.current_durability for c in p_bot.components.values())
         a_dur = sum(c.current_durability for c in a_bot.components.values())
         if p_dur > a_dur:
@@ -350,6 +341,12 @@ def execute_turn(
         # Advance to next round
         match.round += 1
         match.phase = "planning"
+
+        # Start of Next Round: Spin Up keyword
+        p_spin = start_of_turn_spin_up(p_bot)
+        a_spin = start_of_turn_spin_up(a_bot)
+        for smsg in p_spin + a_spin:
+            match.log.append(CombatLogEntry(round=match.round, phase="planning", message=smsg))
 
     if match.phase == "game_over":
         match.log.append(CombatLogEntry(

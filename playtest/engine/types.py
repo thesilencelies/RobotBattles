@@ -62,6 +62,8 @@ class ComponentHealth:
     is_wedge: bool = False
     is_forks: bool = False
     is_invertible: bool = False
+    template: str = ""
+    spin_counters: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -86,6 +88,8 @@ class ComponentHealth:
             "is_wedge": self.is_wedge,
             "is_forks": self.is_forks,
             "is_invertible": self.is_invertible,
+            "template": self.template,
+            "spin_counters": self.spin_counters,
         }
 
 
@@ -108,6 +112,11 @@ class CollisionEvent:
     robot2_components: List[str]
     contact_type: str  # "ACTIVE" or "INERT"
     description: str
+    r1_remaining_dist: float = 0.0
+    r2_remaining_dist: float = 0.0
+    push_vector: Tuple[float, float] = (0.0, 0.0)
+    r1_active_hit: bool = False
+    r2_active_hit: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -119,6 +128,11 @@ class CollisionEvent:
             "robot2_components": self.robot2_components,
             "contact_type": self.contact_type,
             "description": self.description,
+            "r1_remaining_dist": self.r1_remaining_dist,
+            "r2_remaining_dist": self.r2_remaining_dist,
+            "push_vector": list(self.push_vector),
+            "r1_active_hit": self.r1_active_hit,
+            "r2_active_hit": self.r2_active_hit,
         }
 
 

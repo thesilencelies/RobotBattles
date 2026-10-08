@@ -44,10 +44,10 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertAlmostEqual(traj_stat[-1].x, 400.0)
         self.assertAlmostEqual(traj_stat[-1].y, 600.0)
 
-        # 2. Straight (3, 3) -> Forward along North (-y) by 3 * 35 = 105 mm
+        # 2. Straight (3, 3) -> Forward along North (-y) by 3 * 40 = 120 mm
         traj_fwd = generate_trajectory(start, MoveChoice(3, 3), num_steps=10)
         self.assertAlmostEqual(traj_fwd[-1].x, 400.0, places=1)
-        self.assertAlmostEqual(traj_fwd[-1].y, 495.0, places=1)
+        self.assertAlmostEqual(traj_fwd[-1].y, 480.0, places=1)
         self.assertAlmostEqual(traj_fwd[-1].theta, 0.0, places=1)
 
         # 3. Pivot on spot (-2, 2) -> Center stays same, theta rotates
@@ -177,5 +177,86 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertIsNotNone(match.win_reason)
 
 
+    def test_weapon_template_placement(self):
+        from playtest.engine.field import card_to_miniature_offset, get_weapon_template_geometry
+        # Mat center is 210, 150. A weapon placed near front center: x=188, y=50 (width 44, height 64)
+        # Card center: cx = 188 + 22 = 210, cy = 50 + 32 = 82
+        # Offset: dx = 0, dy = (82 - 150) * 0.273 = -18.564 (forward on miniature)
+        lx, ly = card_to_miniature_offset(188.0, 50.0, 44.0, 64.0)
+        self.assertAlmostEqual(lx, 0.0, places=2)
+        self.assertLess(ly, -15.0)
+
+        geom = get_weapon_template_geometry("Circle", (lx, ly))
+        self.assertAlmostEqual(geom["center"][0], lx)
+        self.assertAlmostEqual(geom["center"][1], ly)
+        self.assertEqual(geom["radius"], 22.0)
+
+    def test_start_of_turn_spin_up(self):
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        # In Round 1 initialization, start_of_turn_spin_up already fired
+        # Horizontal Spinner has Spin up (4), starts at 1 spin counter (0 + 1)
+        player_bot = match.player_robot
+        spin_weapons = [c for c in player_bot.components.values() if "spin up" in c.keywords.lower()]
+        self.assertGreater(len(spin_weapons), 0)
+        w = spin_weapons[0]
+        self.assertGreaterEqual(w.spin_counters, 1)
+
+    def test_pushing_match_resolution(self):
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Create simulated inert collision event
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[list(p_bot.components.keys())[0]],
+            robot2_components=[list(a_bot.components.keys())[0]],
+            contact_type="INERT",
+            description="Pushing match",
+            r1_remaining_dist=80.0,
+            r2_remaining_dist=40.0,
+            push_vector=(0.0, -10.0),
+        )
+        logs = resolve_collision_combat(col, p_bot, a_bot, 1)
+        self.assertGreater(len(logs), 0)
+        # Drive should absorb feedback equal to opponent's remaining momentum
+        self.assertTrue(any("feedback" in entry.message.lower() for entry in logs))
+
+    def test_flip_inversion_math(self):
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Setup spin counters on automaton weapon
+        auto_weapon = [c for c in a_bot.components.values() if c.card_type == "weapon"][0]
+        a_bot.weapon_spin_counters[auto_weapon.id] = 4
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[list(p_bot.components.keys())[0]],
+            robot2_components=[auto_weapon.id],
+            contact_type="ACTIVE",
+            description="Active strike",
+            r1_active_hit=False,
+            r2_active_hit=True,
+        )
+        logs = resolve_collision_combat(col, p_bot, a_bot, 1)
+        self.assertTrue(any("THROWN" in entry.message for entry in logs))
+
+
 if __name__ == "__main__":
     unittest.main()
+

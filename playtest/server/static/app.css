@@ -757,3 +757,36 @@ html, body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Embedded Builder Tab Styling */
+#view-builder {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.embedded-builder-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-deploy-arena {
+  background: linear-gradient(135deg, #0284c7, #2563eb) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.4) !important;
+  border: 1px solid #38bdf8 !important;
+}
+
+.btn-deploy-arena:hover {
+  background: linear-gradient(135deg, #0369a1, #1d4ed8) !important;
+  box-shadow: 0 0 14px rgba(2, 132, 199, 0.6) !important;
+}
+
