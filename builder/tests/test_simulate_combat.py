@@ -26,20 +26,20 @@ class TestCombatSimulation(unittest.TestCase):
     def test_weapon_damage_parsing(self):
         by_name = {w["name"]: w for w in self.catalog["weapons"]}
 
-        # Horizontal Spinner: 4XW, max spin 4
+        # Horizontal Spinner: 3XW, max spin 4
         h_spin = by_name["Horizontal Spinner"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(h_spin)
         self.assertEqual(max_s, 4)
-        self.assertEqual(d_map[1], 4)
-        self.assertEqual(d_map[2], 8)
-        self.assertEqual(d_map[3], 12)
-        self.assertEqual(d_map[4], 16)
+        self.assertEqual(d_map[1], 3)
+        self.assertEqual(d_map[2], 6)
+        self.assertEqual(d_map[3], 9)
+        self.assertEqual(d_map[4], 12)
 
-        # Bloodsport Bar: 6XW, max spin 4
+        # Bloodsport Bar: 3XW, max spin 4
         bb = by_name["Bloodsport Bar"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(bb)
         self.assertEqual(max_s, 4)
-        self.assertEqual(d_map[4], 24)
+        self.assertEqual(d_map[4], 12)
 
         # Beater Bar: XWW -> X*W + W = X + 1
         beater = by_name["Beater Bar"]
@@ -146,6 +146,22 @@ class TestCombatSimulation(unittest.TestCase):
         shock_outcomes = simulate_throw_shock(robot, 10, hit_on_wedge=False)
         self.assertEqual(len(shock_outcomes), len(robot.components))
 
+    def test_generate_html_report(self):
+        from scripts.simulate_combat import generate_html_report
+
+        csv_path = REPO_ROOT / "automata" / "Vyper_Spinner.csv"
+        robot = build_robot_model(csv_path, self.catalog)
+        html_out = generate_html_report([robot], self.catalog)
+
+        self.assertIn("<!DOCTYPE html>", html_out)
+        self.assertIn("Vyper_Spinner", html_out)
+        self.assertIn("Direct Hit Lethality Matrix", html_out)
+        self.assertIn("Defensive Options", html_out)
+        self.assertIn("Weapon Recoil Feedback", html_out)
+        self.assertIn("Drive Train Pushing Match Feedback", html_out)
+        self.assertIn("Throw Shock Hazard", html_out)
+
 
 if __name__ == "__main__":
     unittest.main()
+
