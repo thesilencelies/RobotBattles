@@ -300,12 +300,81 @@ def create_template_prongs():
     print(f"Created {ICONS_DIR / 'template_prongs.png'}")
 
 
+def create_pressure_icon():
+    # Pressure gauge / manometer (Resource P)
+    im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(im)
+
+    # Bottom threaded mount stem
+    draw.rectangle((175, 330, 225, 395), fill=(70, 75, 85, 255), outline=(30, 30, 35, 255), width=8)
+    draw.rectangle((165, 345, 235, 360), fill=(90, 95, 105, 255), outline=(30, 30, 35, 255), width=6)
+
+    # Outer gauge ring (metallic slate)
+    cx, cy = 200, 185
+    r_outer = 160
+    draw.ellipse((cx - r_outer, cy - r_outer, cx + r_outer, cy + r_outer), fill=(40, 45, 55, 255), outline=(20, 20, 25, 255), width=10)
+
+    # Inner dial background (clean off-white dial face)
+    r_inner = 135
+    draw.ellipse((cx - r_inner, cy - r_inner, cx + r_inner, cy + r_inner), fill=(245, 248, 250, 255))
+
+    # Dial ticks: 270 deg sweep (from 135 deg to 405 deg)
+    start_ang = 135
+    end_ang = 405
+    num_ticks = 10
+    for i in range(num_ticks + 1):
+        ang_deg = start_ang + i * (end_ang - start_ang) / num_ticks
+        ang_rad = math.radians(ang_deg)
+
+        if i > 7:
+            t_color = (210, 30, 30, 255)
+            lw = 8
+        else:
+            t_color = (40, 45, 55, 255)
+            lw = 6
+
+        x_start = cx + (r_inner - 5) * math.cos(ang_rad)
+        y_start = cy + (r_inner - 5) * math.sin(ang_rad)
+        x_end = cx + (r_inner - 28) * math.cos(ang_rad)
+        y_end = cy + (r_inner - 28) * math.sin(ang_rad)
+        draw.line([(x_start, y_start), (x_end, y_end)], fill=t_color, width=lw)
+
+    # Warning arc band at high pressure
+    arc_bbox = (cx - r_inner + 12, cy - r_inner + 12, cx + r_inner - 12, cy + r_inner - 12)
+    draw.arc(arc_bbox, start=330, end=405, fill=(220, 35, 35, 255), width=10)
+
+    # Gauge needle (red, pointing up-right at ~315 degrees / high pressure)
+    needle_ang = math.radians(315)
+    nx_tip = cx + 115 * math.cos(needle_ang)
+    ny_tip = cy + 115 * math.sin(needle_ang)
+
+    perp_ang = needle_ang + math.pi / 2
+    pw = 9
+    p1 = (cx - 20 * math.cos(needle_ang) + pw * math.cos(perp_ang), cy - 20 * math.sin(needle_ang) + pw * math.sin(perp_ang))
+    p2 = (cx - 20 * math.cos(needle_ang) - pw * math.cos(perp_ang), cy - 20 * math.sin(needle_ang) - pw * math.sin(perp_ang))
+    p3 = (nx_tip, ny_tip)
+    draw.polygon([p1, p2, p3], fill=(225, 25, 25, 255))
+
+    # Center hub
+    draw.ellipse((cx - 22, cy - 22, cx + 22, cy + 22), fill=(40, 45, 55, 255))
+    draw.ellipse((cx - 10, cy - 10, cx + 10, cy + 10), fill=(200, 205, 215, 255))
+
+    out_path = ICONS_DIR / "pressure.png"
+    im.save(out_path, "PNG")
+    # Also save to icons/ directory
+    root_icons = WORKSPACE / "icons"
+    if root_icons.is_dir():
+        im.save(root_icons / "pressure.png", "PNG")
+    print(f"Created {out_path}")
+
+
 def main():
     print(f"Generating temporary icons in {ICONS_DIR}...")
     create_weight_icon()
     create_energy_icon()
     create_control_icon()
     create_spin_icon()
+    create_pressure_icon()
     create_damage_icon()
     create_drive_icon()
     create_durability_icon()

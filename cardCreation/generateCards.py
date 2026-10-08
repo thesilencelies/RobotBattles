@@ -183,17 +183,17 @@ def parse_resources(res_str: str) -> str:
     if not res_str:
         return ""
 
-    # Check for single token like "EE", "CC", "SSS", "4XW", "XE", "E"
-    match_expr = re.match(r"^([0-9]*[A-Za-z]*)([ECSMW])$", res_str)
+    # Check for single token like "EE", "CC", "SSS", "4XW", "XE", "E", "PP", "DD"
+    match_expr = re.match(r"^([0-9]*[A-Za-z]*)([ECSMWPD])$", res_str)
     if match_expr:
         prefix, char = match_expr.groups()
         return format_resource_item(prefix, char)
 
     # Multi-token strings
-    tokens = re.findall(r"([0-9]*[A-Za-z]*[ECSMW]|[A-Za-z0-9+]+)", res_str)
+    tokens = re.findall(r"([0-9]*[A-Za-z]*[ECSMWPD]|[A-Za-z0-9+]+)", res_str)
     out_elements = []
     for tok in tokens:
-        submatch = re.match(r"^([0-9]*[A-Za-z]*)([ECSMW])$", tok)
+        submatch = re.match(r"^([0-9]*[A-Za-z]*)([ECSMWPD])$", tok)
         if submatch:
             prefix, char = submatch.groups()
             out_elements.append(format_resource_item(prefix, char))
@@ -247,7 +247,9 @@ def create_macros(extra_colors: dict = None):
 \newcommand{\resourceE}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/energy.png}}
 \newcommand{\resourceC}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/control.png}}
 \newcommand{\resourceS}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/spin.png}}
+\newcommand{\resourceP}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/pressure.png}}
 \newcommand{\resourceM}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/drive.png}}
+\newcommand{\resourceD}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/drive.png}}
 \newcommand{\resourceW}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/damage.png}}
 
 % Card stat icon commands
@@ -312,10 +314,19 @@ def generate_card_tex(card: dict) -> str:
 
     # Cost (top-right, green dollar signs)
     if cost > 0:
-        cost_str = r"\$" * cost
-        lines.append(
-            rf"    \node [anchor=center] at (5.70, 8.20) {{\textcolor{{costgreen}}{{\sffamily\textbf{{\Huge {cost_str}}}}}}};"
-        )
+        if cost < 4:
+            cost_str = r"\$" * cost
+            lines.append(
+                rf"    \node [anchor=center] at (5.70, 8.20) {{\textcolor{{costgreen}}{{\sffamily\textbf{{\Huge {cost_str}}}}}}};"
+            )
+        else:
+            top_count = (cost + 1) // 2
+            bot_count = cost - top_count
+            row1 = r"\$" * top_count
+            row2 = r"\$" * bot_count
+            lines.append(
+                rf"    \node [anchor=center] at (5.70, 8.20) {{\textcolor{{costgreen}}{{\sffamily\bfseries\Large\begin{{tabular}}{{@{{}}c@{{}}}}{row1}\\[-5pt]{row2}\end{{tabular}}}}}};"
+            )
 
     # Template Icon (below cost, if weapon card)
     if template and template in TEMPLATE_ICONS:
@@ -336,12 +347,12 @@ def generate_card_tex(card: dict) -> str:
             rf"    \node [rectangle, draw=gray!40, rounded corners=0.15cm, dashed, minimum width=3.4cm, minimum height=2.0cm, fill=gray!5] at ({art_cx:.2f}, {art_cy:.2f}) {{\small\color{{gray}}\textsf{{[ {esc_name} ]}}}};"
         )
 
-    # --- MIDDLE BAND: Left/Right Chevrons & Resource Flow ---
+    # --- MIDDLE BAND: Left/Right Pointy Chevrons & Resource Flow ---
     lines.append(
-        r"    \draw [line width=7.5pt, draw=chevronpurple, line cap=round, line join=round] (0.05, 5.50) -- (0.85, 4.60) -- (0.05, 3.70);"
+        r"    \fill [chevronpurple] (0.00, 5.50) -- (0.85, 4.60) -- (0.00, 3.70) -- cycle;"
     )
     lines.append(
-        r"    \draw [line width=7.5pt, draw=chevronpurple, line cap=round, line join=round] (5.55, 5.50) -- (6.35, 4.60) -- (5.55, 3.70);"
+        r"    \fill [chevronpurple] (5.55, 5.50) -- (6.40, 4.60) -- (5.55, 3.70) -- cycle;"
     )
 
     if req_markup:
@@ -368,7 +379,7 @@ def generate_card_tex(card: dict) -> str:
             rf"    \node [anchor=center, text width=5.4cm, align=center] at (3.20, 2.75) {{{full_text}}};"
         )
 
-    # --- BOTTOM ROW: Durability (Left) & Absorption (Right) ---
+    # --- BOTTOM ROW: Durability (Left), Absorption (Right) & Copyright Line ---
     if durability:
         lines.append(
             rf"    \node [anchor=center] at (1.95, 0.95) {{$\vcenter{{\hbox{{\durabilityicon}}}}\;\vcenter{{\hbox{{\sffamily\bfseries\Huge {escape_latex(durability)}}}}}$}};"
@@ -378,6 +389,12 @@ def generate_card_tex(card: dict) -> str:
         lines.append(
             rf"    \node [anchor=center] at (4.55, 0.95) {{$\vcenter{{\hbox{{\absorptionicon}}}}\;\vcenter{{\hbox{{\sffamily\bfseries\Huge {escape_latex(absorption)}}}}}$}};"
         )
+
+    artist = (card.get("Artist") or card.get("Art") or "itgresa.com").strip()
+    esc_artist = escape_latex(artist)
+    lines.append(
+        rf"    \node [anchor=center] at (3.20, 0.22) {{\fontsize{{5pt}}{{6pt}}\selectfont\sffamily\color{{textdark!60}}\textcopyright{{}} LiLiCo \quad Art: {esc_artist}}};"
+    )
 
     lines.append(r"  \end{scope}")
     lines.append(r"\end{tikzpicture}%")
