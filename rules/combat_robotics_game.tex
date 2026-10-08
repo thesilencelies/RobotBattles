@@ -498,6 +498,17 @@ If you just want to dive right into the action, you can grab one of the automato
 
 There are some automaton robots which come with a pre-built setup printed on their A3 sheet. You can use dry-erase markers to write on this damage during a fight.
 
-They will take actions according to the table written on the right-hand side of their sheet --- each turn roll a d6 and look up the value from that table. They will always try to turn to face their opponent when turning.
+They will take actions according to the table written on the right-hand side of their sheet.
+First check the chart to see which table to roll on based on the current state of the robot.
+Then roll a d6 to see which action they take.
+The possible actions are as follows:
+\begin{itemize}
+  \item \textbf{Rush:} They will move at maximum speed towards their opponent.
+  \item \textbf{Face:} They rotate on the spot to face their opponent.
+  \item \textbf{Retreat:} They face towards their opponent and move backwards 1 step.
+\end{itemize}
+From this you can calculate the drive values that they will choose (for each they consider the current position of their opponent). 
+Roll this after deciding your own drive values.
+
 
 \end{document}
