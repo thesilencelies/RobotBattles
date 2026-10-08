@@ -1,13 +1,13 @@
 Name,Weight,Cost,Template,Requirements,Outputs,Durability,Absorption,Keywords,Text,Picture,Artist
-Horizontal Spinner,3,3,Circle,SS,4XW,7,2,Spin up (4);Invertible,,components/kits_and_chassis/viper-horizontal-spinner.jpeg,itgresa.com
-Bloodsport Bar,4,3,Large Circle,SSSS,6XW,9,3,Spin up (4),,components/weapons/bloodsport-bar.png,itgresa.com
-Titanium Spinner Blade,3,4,Circle,SSS,4XW,11,3,Spin up (4);Invertible,,components/weapons/viper-horizontal-spinner-titanium-blade.jpg,itgresa.com
-Vertical Spinner,2,3,Line,SS,2XW,6,3,Spin up (2),Double the flip chance on hit,components/weapons/viper-vertical-spinner-clamping-drum.jpeg,itgresa.com
-Single Tooth Disc,2,3,Line,SS,WWW,7,3,Self-right,Double the flip chance on hit,components/weapons/baby-nautiloid-weapon-disc-single-tooth-ar500.jpeg,itgresa.com
+Horizontal Spinner,3,3,Circle,SS,3XW,7,2,Spin up (4);Invertible,,components/kits_and_chassis/viper-horizontal-spinner.jpeg,itgresa.com
+Bloodsport Bar,4,3,Large Circle,SSSS,3XW,9,3,Spin up (4),,components/weapons/bloodsport-bar.png,itgresa.com
+Titanium Spinner Blade,3,4,Circle,SSS,2XWW,11,3,Spin up (4);Invertible,,components/weapons/viper-horizontal-spinner-titanium-blade.jpg,itgresa.com
+Vertical Spinner,2,3,Line,SS,2XWW,6,3,Spin up (2),Double the flip chance on hit,components/weapons/viper-vertical-spinner-clamping-drum.jpeg,itgresa.com
+Single Tooth Disc,2,3,Line,SS,WWWW,7,3,Self-right,Double the flip chance on hit,components/weapons/baby-nautiloid-weapon-disc-single-tooth-ar500.jpeg,itgresa.com
 NightWing AR500 Disc,2,4,Line,SSS,2XW,10,3,Spin up (3),Double the flip chance on hit,components/weapons/fingertech-nightwing-ar500-weapon-disc-10in.jpg,itgresa.com
 Beater Bar,4,3,Bar,SSS,XWW,9,4,Spin up (3);Self-right,Double the flip chance on hit,components/weapons/1lb-beater-bar.png,itgresa.com
 Cronos Scythe,4,3,Prongs,SSS,XWW,7,2,Spin up (2;Self-right,Double the flip chance on hit,components/weapons/cronos-scythe.jpg,itgresa.com
 Chonk Key Blade,3,3,Circle,SSSS,XXW,10,4,Spin up (3),,components/weapons/just-cuz-robotics-chonk-key-blade.jpg,itgresa.com
-Four-Bar Lifter,3,4,Line,PPPP,10W,9,2,Self-right,Deals no damage only throws,components/weapons/viper-lifter-weapon.png,itgresa.com
-Claw Forks,2,2,Prongs,PP,2W,7,2,Forks,Deals no damage. Always inverts.,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-claw-forks.jpg,itgresa.com
+Four-Bar Lifter,3,4,Line,PPPP,8W,9,2,Self-right,Deals no damage only throws,components/weapons/viper-lifter-weapon.png,itgresa.com
+Claw Forks,2,2,Prongs,PP,WWW,7,2,Forks,Deals no damage. Always inverts.,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-claw-forks.jpg,itgresa.com
 Lifter Arms,3,3,Bar,PPPP,5W,7,3,Self-right,Deals no damage. Always inverts.,components/mechanicals_and_armor/ft-viper-lifter-arms.png,itgresa.com

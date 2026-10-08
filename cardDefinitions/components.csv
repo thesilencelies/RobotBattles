@@ -3,7 +3,7 @@ Galaxy 120,1,1,,EE,6,0,,,components/batteries_and_power/galaxy-120mah-2s-lipoly-
 Galaxy 300 3S,1,2,,EEEE,7,0,,,components/batteries_and_power/galaxy-300mah-3s-lipoly-pack-xt30.jpg,itgresa.com
 Galaxy 1000 3S,2,3,,6E,9,0,,,components/batteries_and_power/galaxy-1000mah-3s-lipoly-pack.jpeg,itgresa.com
 Tattu 450 4S,1,2,,5E,6,0,,,components/batteries_and_power/gens-ace-tattu-450mah-4s-lipoly-pack.jpeg,itgresa.com
-Power Switch Protector,1,1,XE,XE,12,7,fragile,,components/batteries_and_power/power-supply-protector-small.jpeg,itgresa.com
+Power Switch Protector,1,1,XE,XE,8,6,fragile,,components/batteries_and_power/power-supply-protector-small.jpeg,itgresa.com
 Wires,0,0,XE,XE,7,0,fragile,,components/connectors_and_wiring/saifu-3-antweight-combat-robot-wire-harness.jpg,itgresa.com
 Heavy Gauge Wire,0,1,XE,XE,8,4,fragile,,components/connectors_and_wiring/silicone-wire-14awg-red-and-black.jpeg,itgresa.com
 Simple ESC,0,1,EE,EE,5,3,fragile,,components/electronics_and_escs/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg,itgresa.com

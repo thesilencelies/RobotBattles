@@ -71,3 +71,6 @@ Thumbs.db
 
 # Scraped info
 components/*
+
+# scripts output
+scripts/output/
