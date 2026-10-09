@@ -21,7 +21,7 @@ Components may
 | Fragile | If this component takes weapon damage it is destroyed as if it had a durability of 1 |
 | Spin up (X, Y) | At the start of each turn add X spin counters (max Y) and remove them all if the weapon attacks.|
 | Forks | If component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted |
-| Wedge | If an attack hits the wedge half the  throw strength received is given to the other robot instead |
+| Wedge | If this component is hit this robot is not thrown. |
 | Invertible | This component works inverted |
 | Self-right | If a turn ends without contact and this robot is inverted, invert it.|
 
