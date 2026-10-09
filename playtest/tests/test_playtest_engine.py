@@ -278,6 +278,10 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertFalse(any("rotated a random amount" in entry.message for entry in logs))
         self.assertEqual(p_bot.pose.theta, 0.0)
         self.assertEqual(a_bot.pose.theta, 180.0)
+        # Inertial separation moves both robots 1 step away from each other
+        self.assertTrue(any("Inertial separation" in entry.message for entry in logs))
+        self.assertEqual(p_bot.pose.y, 660.0)
+        self.assertEqual(a_bot.pose.y, 135.0)  # Clamped to WALL_TOP + MINIATURE_RADIUS (100 + 35)
 
     def test_flip_inversion_math(self):
         from playtest.engine.combat import resolve_collision_combat
@@ -803,6 +807,8 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("PUSHING MATCH" in msg for msg in log_messages))
         # 5. At the end of inertial contact, both robots rotated a random amount
         self.assertTrue(any("End of inertial contact: both robots are rotated a random amount" in msg for msg in log_messages))
+        # 6. Inertial separation occurred
+        self.assertTrue(any("Inertial separation" in msg for msg in log_messages))
         self.assertNotEqual(p_bot.pose.theta, orig_p_theta)
         self.assertNotEqual(a_bot.pose.theta, orig_a_theta)
 
@@ -849,6 +855,40 @@ class TestPlaytestEngine(unittest.TestCase):
             self.assertTrue(any("is THROWN" in msg for msg in log_messages))
             # Did NOT proceed to inertial contact
             self.assertFalse(any("proceeding with inertial contact" in msg for msg in log_messages))
+
+    def test_inertial_separation_wall_clamped(self):
+        """Tests that inertial separation respects arena boundary walls ('if possible')."""
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # p_bot is close to left wall: WALL_LEFT is 100, min robot x is 135 (WALL_LEFT + MINIATURE_RADIUS 35)
+        p_bot.pose = Pose(x=145.0, y=400.0, theta=0.0)
+        a_bot.pose = Pose(x=175.0, y=400.0, theta=180.0)
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(160.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[list(p_bot.components.keys())[0]],
+            robot2_components=[list(a_bot.components.keys())[0]],
+            contact_type="INERT",
+            description="Pushing match near wall",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(0.0, 0.0),
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        # p_bot tries to move left (-x) by 40mm: 145 - 40 = 105, clamped to 135 (only 10mm moved)
+        self.assertEqual(p_bot.pose.x, 135.0)
+        # a_bot moves right (+x) by 40mm: 175 + 40 = 215 (well within bounds)
+        self.assertEqual(a_bot.pose.x, 215.0)
+        self.assertTrue(any("Inertial separation" in entry.message for entry in logs))
 
 
 if __name__ == "__main__":

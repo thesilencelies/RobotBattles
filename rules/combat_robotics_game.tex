@@ -395,6 +395,7 @@ Essentially a pushing match between colliding chassis surfaces:
   \item The distance they move is the sum of their remaining motion in that direction: all other distance is lost.
   \item If a robot is pushed into a wall, it is thrown with a throw strength equal to the amount it would have moved if the wall wasn't there.
   \item Each robot takes feedback shared equally between its remaining active drive equal to the remaining distance the opponent had before the contact.
+  \item After any inertial contact, separate the robots by moving them both away from each other one step if possible.
 \end{itemize}
 
 \begin{draftnotebox}
@@ -417,7 +418,7 @@ When weapons collide with an opponent's chassis or components:
   \midrule
   \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage level $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. If robots are still in contact, proceed with inertial contact (rotating both robots a random amount at the end). \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match along line between centers $\rightarrow$ Move sum of remaining motion in that direction $\rightarrow$ Wall collision causes throw $\rightarrow$ Drive takes feedback equal to opponent's remaining distance. \\
+  \textbf{Inert Contact} & Pushing match along line between centers $\rightarrow$ Move sum of remaining motion in that direction $\rightarrow$ Wall collision causes throw $\rightarrow$ Drive takes feedback equal to opponent's remaining distance $\rightarrow$ Separate robots by moving both away from each other 1 step if possible. \\
 \end{tabularx}
 \end{summarybox}
 
@@ -469,6 +470,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Damage Conditions:} Exceeds durability $\implies$ \textbf{Destroyed}. Exceeds $\frac{1}{2}$ durability after absorption $\implies$ \textbf{Damaged}. Damaged again $\implies$ \textbf{Destroyed}.
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
   \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact, at the end of which both robots are rotated a random amount.
+  \item \textbf{Inertial Separation:} After any inertial contact, separate the robots by moving them both away from each other 1 step if possible.
   \item \textbf{Durability in Play:} Total durability is not recorded anywhere in gameplay.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
 \end{itemize}

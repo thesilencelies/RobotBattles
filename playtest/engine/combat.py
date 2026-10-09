@@ -692,10 +692,10 @@ def resolve_inert_contact(
             excess_wall_dist = math.hypot(lost_x, lost_y)
 
     # Displace pair
-    r1.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, new_r1_x))
-    r1.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, new_r1_y))
-    r2.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, new_r2_x))
-    r2.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, new_r2_y))
+    r1.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_r1_x))
+    r1.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_r1_y))
+    r2.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_r2_x))
+    r2.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_r2_y))
 
     logs.append(CombatLogEntry(
         round=round_num, phase="collision",
@@ -747,18 +747,35 @@ def resolve_inert_contact(
             message=f"🔄 End of inertial contact: both robots are rotated a random amount ({r1.name}: +{rot1:.0f}°, {r2.name}: +{rot2:.0f}°).",
         ))
 
-        # Separation if overlapping after rotation
-        d_sep = math.hypot(r2.pose.x - r1.pose.x, r2.pose.y - r1.pose.y)
-        if d_sep < 40.0:
-            if d_sep < 1e-4:
-                nx, ny = 1.0, 0.0
-            else:
-                nx, ny = (r2.pose.x - r1.pose.x) / d_sep, (r2.pose.y - r1.pose.y) / d_sep
-            overlap = (40.0 - d_sep) / 2.0
-            r1.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, r1.pose.x - nx * overlap))
-            r1.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, r1.pose.y - ny * overlap))
-            r2.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, r2.pose.x + nx * overlap))
-            r2.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, r2.pose.y + ny * overlap))
+    # Separation rule: After any inertial contact, separate the robots by moving them both away from each other 1 step if possible
+    d_sep = math.hypot(r2.pose.x - r1.pose.x, r2.pose.y - r1.pose.y)
+    if d_sep < 1e-4:
+        nx, ny = 1.0, 0.0
+    else:
+        nx, ny = (r2.pose.x - r1.pose.x) / d_sep, (r2.pose.y - r1.pose.y) / d_sep
+
+    target_r1_x = r1.pose.x - nx * DRIVE_UNIT_MM
+    target_r1_y = r1.pose.y - ny * DRIVE_UNIT_MM
+    target_r2_x = r2.pose.x + nx * DRIVE_UNIT_MM
+    target_r2_y = r2.pose.y + ny * DRIVE_UNIT_MM
+
+    new_r1_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r1_x))
+    new_r1_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r1_y))
+    new_r2_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r2_x))
+    new_r2_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r2_y))
+
+    actual_step1 = math.hypot(new_r1_x - r1.pose.x, new_r1_y - r1.pose.y)
+    actual_step2 = math.hypot(new_r2_x - r2.pose.x, new_r2_y - r2.pose.y)
+
+    r1.pose.x = new_r1_x
+    r1.pose.y = new_r1_y
+    r2.pose.x = new_r2_x
+    r2.pose.y = new_r2_y
+
+    logs.append(CombatLogEntry(
+        round=round_num, phase="collision",
+        message=f"↔️ Inertial separation: robots move 1 step away from each other ({r1.name}: {actual_step1:.0f}mm, {r2.name}: {actual_step2:.0f}mm).",
+    ))
 
     # Hazard pit elimination check
     for robot in (r1, r2):
