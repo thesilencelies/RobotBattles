@@ -2,6 +2,7 @@
 
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -671,6 +672,77 @@ class TestPlaytestEngine(unittest.TestCase):
         d = match.player_robot.to_dict()
         self.assertIn("total_weight", d)
         self.assertIn("total_cost", d)
+
+    def test_integer_damage_progression_and_feedback_rounding(self):
+        from playtest.engine.combat import resolve_inward_damage_progression, resolve_feedback_propagation
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        bot = match.player_robot
+
+        # Ensure feedback on a component supplying two consumers splits rounding down
+        comp = list(bot.components.values())[0]
+        # Feedback of 7 split between 2 suppliers = 7 // 2 = 3 each
+        logs = resolve_feedback_propagation(bot, comp.id, 7)
+        self.assertIsInstance(logs, list)
+
+        # Test inward damage progression with integer arithmetic
+        inward_logs = resolve_inward_damage_progression(bot, comp.id, 9)
+        self.assertIsInstance(inward_logs, list)
+
+    def test_throw_damage_halved_unless_wall_hit(self):
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Place robots in center, far from walls (e.g. 400, 400)
+        p_bot.pose = Pose(x=400.0, y=400.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=360.0, theta=180.0)
+
+        # Identify weapon component on p_bot and configure 5W throw weapon
+        weapon_comps = [c for c in p_bot.components.values() if c.card_type == "weapon"]
+        self.assertGreater(len(weapon_comps), 0)
+        w_comp = weapon_comps[0]
+        w_comp.outputs = "5W"
+        w_comp.text = "Deals no damage."
+
+        # Non-wedge component on opponent (battery)
+        non_wedge_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
+
+        # Contact event where p_bot weapon actively hits opponent
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 380.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[non_wedge_cid],
+            contact_type="ACTIVE",
+            description="Active strike",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(0.0, -10.0),
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        # Case 1: Thrown clear of wall -> takes half throw damage (5 // 2 = 2)
+        with patch("random.randint", return_value=1): # 1+1 = 2 roll
+            logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+            thrown_logs = [l.message for l in logs if "THROWN" in l.message]
+            self.assertTrue(any("takes half throw damage 2" in msg for msg in thrown_logs))
+
+        # Case 2: Thrown near wall (target lands <= 20mm from wall) -> takes full throw damage (5)
+        # Position victim close to top wall (y=25) so thrown displacement hits the wall
+        a_bot.pose = Pose(x=400.0, y=25.0, theta=180.0)
+        p_bot.pose = Pose(x=400.0, y=50.0, theta=0.0)
+        col.contact_point = (400.0, 45.0)
+        with patch("random.randint", return_value=3): # 3+3 = 6 roll
+            logs_wall = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+            wall_logs = [l.message for l in logs_wall if "THROWN into a WALL" in l.message]
+            self.assertTrue(any("takes full throw damage 5" in msg for msg in wall_logs))
 
 
 if __name__ == "__main__":

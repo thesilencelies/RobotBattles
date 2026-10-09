@@ -432,7 +432,7 @@ When weapons collide with an opponent's chassis or components:
 
 A robot that is thrown is moved a random amount (2d6) up to the throw strength away from the contact point and rotated by spinning the model. 
 If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted}.
-After the throw the thrown robot takes feedback at a randomly chosen component equal to the throw strength. 
+After the throw the thrown robot takes feedback at a randomly chosen component equal to half the throw strength (unless the robot hits a wall, in which case it takes feedback equal to the full throw strength). 
 Component is chosen randomly by dropping a card on it.
 
 
@@ -447,12 +447,12 @@ Damage progresses from the outermost component inwards, applying absorption at e
   \item \textbf{Absorption on Destruction:} If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
 \end{itemize}
 
-Total durability is not recorded anywhere in gameplay; components simply transition between undamaged, damaged, and destroyed.
+All damage numbers are integers; when sharing or dividing, round down. Total durability is not recorded anywhere in gameplay; components simply transition between undamaged, damaged, and destroyed.
 
 \subsection{Feedback}
 
 Feedback represents components over-straining themselves under combat loads. It is damage that progresses back from the source component 
-to each component that supplies it, shared equally if there are multiple components, down the tree until the damage is all absorbed.
+to each component that supplies it, shared equally if there are multiple components (rounding down), down the tree until the damage is all absorbed.
 
 \subsection{Status Effects}
 
@@ -463,10 +463,12 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{summarybox}{Damage \& Feedback Rules Summary}
 \begin{itemize}[leftmargin=*]
+  \item \textbf{Integer Damage:} All damage numbers are integers; when sharing or dividing, round down.
   \item \textbf{Damage Inward Progression:} Attack Damage $\rightarrow$ Absorbed by outermost layer $\rightarrow$ Excess damage hits next connected internal component.
   \item \textbf{Damage Conditions:} Exceeds durability $\implies$ \textbf{Destroyed}. Exceeds $\frac{1}{2}$ durability after absorption $\implies$ \textbf{Damaged}. Damaged again $\implies$ \textbf{Destroyed}.
+  \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
   \item \textbf{Durability in Play:} Total durability is not recorded anywhere in gameplay.
-  \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally.
+  \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
 \end{itemize}
 \end{summarybox}
 

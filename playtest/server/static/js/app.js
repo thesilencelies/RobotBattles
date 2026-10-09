@@ -53,7 +53,9 @@ class PlaytestApp {
     this.hudAutoBanner = document.getElementById("hud-auto-banner");
     this.btnNewMatch = document.getElementById("btn-new-match");
     this.btnResetMatch = document.getElementById("btn-reset-match");
+    this.btnToggleTopBar = document.getElementById("btn-toggle-top-bar");
     this.autoSelect = document.getElementById("auto-select");
+    this.viewArena = document.getElementById("view-arena");
 
     // Arena Stage
     this.arenaSvg = document.getElementById("arena-svg");
@@ -225,6 +227,13 @@ class PlaytestApp {
         await this._loadBattleState();
       }
     });
+
+    if (this.btnToggleTopBar && this.viewArena) {
+      this.btnToggleTopBar.addEventListener("click", () => {
+        const isCollapsed = this.viewArena.classList.toggle("top-bar-collapsed");
+        this.btnToggleTopBar.textContent = isCollapsed ? "▼ Show Controls" : "▲ Hide Controls";
+      });
+    }
   }
 
   async _deployFromBuilder(csvText, robotName) {
@@ -316,13 +325,8 @@ class PlaytestApp {
     const pSpinBadge = pSpin > 0 ? ` <span class="badge badge-cyan">🌀 ${pSpin} Spin</span>` : "";
     const aSpinBadge = aSpin > 0 ? ` <span class="badge badge-cyan">🌀 ${aSpin} Spin</span>` : "";
 
-    if (m.automaton_roll !== null && m.automaton_action) {
-      this.hudAutoBanner.innerHTML = `
-        <span>🤖 <strong>${aBot.name}</strong> rolled 🎲 ${m.automaton_roll} ➔ <strong>${m.automaton_action.toUpperCase()}</strong> [L: ${m.automaton_choice.left}, R: ${m.automaton_choice.right}]${aSpinBadge}</span>
-      `;
-    } else {
-      this.hudAutoBanner.innerHTML = `<span>Opponent: <strong>${aBot.name}</strong>${aSpinBadge} (Ready)</span>`;
-    }
+    // Opponent header banner (rolling is executed after player choices and kept strictly to the combat log)
+    this.hudAutoBanner.innerHTML = `<span>Opponent: <strong>${aBot.name}</strong>${aSpinBadge}</span>`;
 
     // Drive Sliders Bounds
     const maxL = pBot.left_drive_max;

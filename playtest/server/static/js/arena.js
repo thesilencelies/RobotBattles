@@ -55,11 +55,13 @@ export class ArenaRenderer {
     if (this.btnZoomOut) this.btnZoomOut.addEventListener("click", () => this.zoomOut());
     if (this.btnZoomFit) this.btnZoomFit.addEventListener("click", () => this.zoomFit());
 
-    // Wheel zoom on SVG
+    // Wheel zoom on SVG (only intercepts wheel when Ctrl/Cmd is held or already zoomed in, otherwise allows page scroll)
     this.svg.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
-      this.setZoom(this.zoom * zoomFactor);
+      if (e.ctrlKey || e.metaKey || this.zoom > 1.05) {
+        e.preventDefault();
+        const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+        this.setZoom(this.zoom * zoomFactor);
+      }
     }, { passive: false });
 
     // Touch & pointer pan
@@ -70,6 +72,8 @@ export class ArenaRenderer {
 
     this.svg.addEventListener("pointerdown", (e) => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
+      // Allow natural touch scrolling on mobile when arena is not zoomed in
+      if (e.pointerType === "touch" && this.zoom <= 1.05) return;
       isDragging = true;
       startPoint = { x: e.clientX, y: e.clientY };
       if (this.svg.setPointerCapture) {

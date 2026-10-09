@@ -91,16 +91,18 @@ def get_weapon_attack_strength(comp: ComponentHealth, spin_level: int) -> int:
 
 def apply_damage_to_component(
     comp: ComponentHealth,
-    incoming: float,
+    incoming: int,
     is_weapon_damage: bool = True,
-) -> Tuple[str, float, float]:
+) -> Tuple[str, int, int]:
     """
-    Applies incoming damage according to the canonical rules:
+    Applies incoming integer damage according to the canonical rules:
+    - All damage numbers are integers; when sharing or dividing, round down.
     - Exceeds durability -> Destroyed, absorbs durability, excess continues.
     - Exceeds 1/2 durability after absorption -> Damaged (or destroyed if already damaged).
     - Otherwise -> absorbs absorption, excess continues.
     Returns (status, absorbed_amount, excess_amount).
     """
+    incoming = int(incoming)
     eff_dur = comp.max_durability
     if comp.is_fragile and is_weapon_damage:
         eff_dur = 1
@@ -109,11 +111,11 @@ def apply_damage_to_component(
         comp.is_destroyed = True
         comp.current_durability = 0
         comp.is_active = False
-        absorbed = float(eff_dur)
-        excess = max(0.0, incoming - absorbed)
+        absorbed = eff_dur
+        excess = max(0, incoming - absorbed)
         return "DESTROYED", absorbed, excess
 
-    net_after_abs = max(0.0, incoming - comp.absorption)
+    net_after_abs = max(0, incoming - comp.absorption)
     half_dur = eff_dur / 2.0
 
     if net_after_abs > half_dur:
@@ -121,17 +123,17 @@ def apply_damage_to_component(
             comp.is_destroyed = True
             comp.current_durability = 0
             comp.is_active = False
-            absorbed = float(eff_dur)
-            excess = max(0.0, incoming - absorbed)
+            absorbed = eff_dur
+            excess = max(0, incoming - absorbed)
             return "DESTROYED", absorbed, excess
         else:
             comp.is_damaged = True
-            comp.current_durability = max(1, eff_dur - int(net_after_abs))
-            absorbed = min(incoming, float(comp.absorption))
+            comp.current_durability = max(1, eff_dur - net_after_abs)
+            absorbed = min(incoming, comp.absorption)
             excess = net_after_abs
             return "DAMAGED", absorbed, excess
     else:
-        absorbed = min(incoming, float(comp.absorption))
+        absorbed = min(incoming, comp.absorption)
         excess = net_after_abs
         return "UNDAMAGED", absorbed, excess
 
@@ -139,27 +141,29 @@ def apply_damage_to_component(
 def resolve_inward_damage_progression(
     robot: RobotState,
     initial_target_id: str,
-    damage: float,
+    damage: int,
     is_weapon_damage: bool = True,
 ) -> List[str]:
     """
-    Propagates damage from the initial contacted component inwards.
+    Propagates integer damage from the initial contacted component inwards.
+    When sharing damage among connected components, round down.
     """
     logs: List[str] = []
+    damage = int(damage)
     if damage <= 0 or initial_target_id not in robot.components:
         return logs
 
     target = robot.components[initial_target_id]
     status, absorbed, excess = apply_damage_to_component(target, damage, is_weapon_damage)
-    logs.append(f"{target.name} (#{target.id}) takes {damage:.1f} dmg -> {status} (absorbed {absorbed:.1f}, excess {excess:.1f})")
+    logs.append(f"{target.name} (#{target.id}) takes {damage} dmg -> {status} (absorbed {absorbed}, excess {excess})")
 
     visited: Set[str] = {initial_target_id}
-    current_front = [(initial_target_id, excess)]
+    current_front: List[Tuple[str, int]] = [(initial_target_id, excess)]
 
     while current_front:
-        next_front = []
+        next_front: List[Tuple[str, int]] = []
         for src_id, rem_dmg in current_front:
-            if rem_dmg <= 0.05:
+            if rem_dmg <= 0:
                 continue
 
             candidates = []
@@ -174,13 +178,15 @@ def resolve_inward_damage_progression(
 
             # Prioritize inward path closer to chassis center
             candidates.sort(key=lambda c: c[1])
-            split_dmg = rem_dmg / len(candidates)
+            split_dmg = rem_dmg // len(candidates)
+            if split_dmg <= 0:
+                continue
 
             for nid, _ in candidates:
                 visited.add(nid)
                 ncomp = robot.components[nid]
                 nstatus, nabsorbed, nexcess = apply_damage_to_component(ncomp, split_dmg, is_weapon_damage)
-                logs.append(f"{ncomp.name} (#{ncomp.id}) takes {split_dmg:.1f} excess dmg -> {nstatus} (absorbed {nabsorbed:.1f})")
+                logs.append(f"{ncomp.name} (#{ncomp.id}) takes {split_dmg} excess dmg -> {nstatus} (absorbed {nabsorbed})")
                 if nexcess > 0:
                     next_front.append((nid, nexcess))
 
@@ -192,39 +198,44 @@ def resolve_inward_damage_progression(
 def resolve_feedback_propagation(
     robot: RobotState,
     source_id: str,
-    feedback_amount: float,
+    feedback_amount: int,
 ) -> List[str]:
     """
     Propagates feedback backwards along the supply graph
     (from weapon/drive back to motors, ESCs, batteries).
+    When sharing among suppliers, round down.
     """
     logs: List[str] = []
+    feedback_amount = int(feedback_amount)
     if feedback_amount <= 0 or source_id not in robot.components:
         return logs
 
     src_comp = robot.components[source_id]
     status, absorbed, excess = apply_damage_to_component(src_comp, feedback_amount, is_weapon_damage=False)
-    logs.append(f"Feedback on {src_comp.name} (#{src_comp.id}): {feedback_amount:.1f} -> {status} (absorbed {absorbed:.1f})")
+    logs.append(f"Feedback on {src_comp.name} (#{src_comp.id}): {feedback_amount} -> {status} (absorbed {absorbed})")
 
-    current_layer = [(source_id, excess)]
+    current_layer: List[Tuple[str, int]] = [(source_id, excess)]
     visited = {source_id}
 
     while current_layer:
-        next_layer = []
+        next_layer: List[Tuple[str, int]] = []
         for cid, rem_dmg in current_layer:
-            if rem_dmg <= 0.05:
+            if rem_dmg <= 0:
                 continue
 
             suppliers = [sid for sid in robot.supply_graph.get(cid, []) if sid not in visited and sid in robot.components and not robot.components[sid].is_destroyed]
             if not suppliers:
                 continue
 
-            split_dmg = rem_dmg / len(suppliers)
+            split_dmg = rem_dmg // len(suppliers)
+            if split_dmg <= 0:
+                continue
+
             for sid in suppliers:
                 visited.add(sid)
                 scomp = robot.components[sid]
                 sstatus, sabsorbed, sexcess = apply_damage_to_component(scomp, split_dmg, is_weapon_damage=False)
-                logs.append(f"Feedback passed to supplier {scomp.name} (#{scomp.id}): {split_dmg:.1f} -> {sstatus}")
+                logs.append(f"Feedback passed to supplier {scomp.name} (#{scomp.id}): {split_dmg} -> {sstatus}")
                 if sexcess > 0:
                     next_layer.append((sid, sexcess))
 
@@ -761,11 +772,11 @@ def resolve_collision_combat(
         if total_contact_atk > 0:
             recoil_fb = total_contact_atk // 2
             if w1_comp and recoil_fb > 0:
-                fb_logs = resolve_feedback_propagation(r1, w1_comp.id, float(recoil_fb))
+                fb_logs = resolve_feedback_propagation(r1, w1_comp.id, recoil_fb)
                 for fl in fb_logs:
                     logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
             if w2_comp and recoil_fb > 0:
-                fb_logs = resolve_feedback_propagation(r2, w2_comp.id, float(recoil_fb))
+                fb_logs = resolve_feedback_propagation(r2, w2_comp.id, recoil_fb)
                 for fl in fb_logs:
                     logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
 
@@ -803,16 +814,36 @@ def resolve_collision_combat(
                 dist = 1.0
             nx, ny = dx / dist, dy / dist
 
-            robot.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, robot.pose.x + nx * displacement_mm))
-            robot.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, robot.pose.y + ny * displacement_mm))
+            target_x = robot.pose.x + nx * displacement_mm
+            target_y = robot.pose.y + ny * displacement_mm
+
+            # Check if throw hits a wall
+            hit_wall = (
+                target_x <= (WALL_LEFT + 20)
+                or target_x >= (WALL_RIGHT - 20)
+                or target_y <= (WALL_TOP + 20)
+                or target_y >= (WALL_BOTTOM - 20)
+            )
+
+            robot.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, target_x))
+            robot.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, target_y))
             # Model rotated by spinning
             spin_rot = random.choice([45.0, 90.0, 135.0, 180.0])
             robot.pose.theta = (robot.pose.theta + spin_rot) % 360.0
 
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🚀 {robot.name} is THROWN! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> {thrown_units} units / {displacement_mm:.0f}mm away)",
-            ))
+            # Throw damage rule: half throw strength (round down) unless robot hits a wall
+            throw_dmg = throw_str if hit_wall else (throw_str // 2)
+
+            if hit_wall:
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"🚀 {robot.name} is THROWN into a WALL! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> hit wall, takes full throw damage {throw_dmg})",
+                ))
+            else:
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"🚀 {robot.name} is THROWN! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> {thrown_units} units / {displacement_mm:.0f}mm away, takes half throw damage {throw_dmg})",
+                ))
 
             # Flip check: if throw strength - thrown distance > flip value of chassis
             eff_flip = robot.flip_strength // 2 if robot.is_raised else robot.flip_strength
@@ -825,16 +856,17 @@ def resolve_collision_combat(
                 ))
 
             # Throw shock feedback: at a randomly chosen component (dropping a card)
-            shock_cid = simulate_dropping_card(robot)
-            if shock_cid and shock_cid in robot.components:
-                shock_comp = robot.components[shock_cid]
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"⚡ Dropping card: throw shock of {throw_str} hits {shock_comp.name} (#{shock_comp.id})!",
-                ))
-                shock_logs = resolve_feedback_propagation(robot, shock_cid, float(throw_str))
-                for sl in shock_logs:
-                    logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Shock Feedback] {sl}"))
+            if throw_dmg > 0:
+                shock_cid = simulate_dropping_card(robot)
+                if shock_cid and shock_cid in robot.components:
+                    shock_comp = robot.components[shock_cid]
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"⚡ Dropping card: throw shock of {throw_dmg} hits {shock_comp.name} (#{shock_comp.id})!",
+                    ))
+                    shock_logs = resolve_feedback_propagation(robot, shock_cid, throw_dmg)
+                    for sl in shock_logs:
+                        logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Shock Feedback] {sl}"))
 
             # Hazard pit elimination check
             if is_in_hazard(robot.pose.x, robot.pose.y):
@@ -903,27 +935,28 @@ def resolve_collision_combat(
                 # Shock feedback equal to throw strength
                 shock_cid = simulate_dropping_card(pushed_into_wall_robot)
                 if shock_cid:
-                    resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, float(wall_throw_str))
+                    resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str)
 
         # Drive feedback: each robot takes feedback shared equally between active drive equal to opponent remaining distance
-        opp_rem_1 = col.r2_remaining_dist / DRIVE_UNIT_MM  # What R2 had before contact
-        opp_rem_2 = col.r1_remaining_dist / DRIVE_UNIT_MM  # What R1 had before contact
+        opp_rem_1 = int(round(col.r2_remaining_dist / DRIVE_UNIT_MM))  # What R2 had before contact
+        opp_rem_2 = int(round(col.r1_remaining_dist / DRIVE_UNIT_MM))  # What R1 had before contact
 
         for robot, opp_rem in [(r1, opp_rem_1), (r2, opp_rem_2)]:
-            if opp_rem <= 0.1:
+            if opp_rem <= 0:
                 continue
             active_drives = [
                 c for c in robot.components.values()
                 if not c.is_destroyed and c.is_active and ("D" in c.outputs.upper() or "M" in c.outputs.upper())
             ]
             if active_drives:
-                fb_per_drive = opp_rem / len(active_drives)
+                fb_per_drive = opp_rem // len(active_drives)
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"{robot.name}'s active drive absorbs {opp_rem:.1f} feedback from opponent's remaining momentum ({fb_per_drive:.1f} per drive).",
+                    message=f"{robot.name}'s active drive absorbs {opp_rem} feedback from opponent's remaining momentum ({fb_per_drive} per drive).",
                 ))
-                for dcomp in active_drives:
-                    resolve_feedback_propagation(robot, dcomp.id, fb_per_drive)
+                if fb_per_drive > 0:
+                    for dcomp in active_drives:
+                        resolve_feedback_propagation(robot, dcomp.id, fb_per_drive)
 
     # After contact, robots are pushed or thrown apart -> clear raised status
     r1.is_raised = False
