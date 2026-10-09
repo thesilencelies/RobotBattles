@@ -268,10 +268,16 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_remaining_dist=40.0,
             push_vector=(0.0, -10.0),
         )
+        p_bot.pose.theta = 0.0
+        a_bot.pose.theta = 180.0
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
         self.assertGreater(len(logs), 0)
         # Drive should absorb feedback equal to opponent's remaining momentum
         self.assertTrue(any("feedback" in entry.message.lower() for entry in logs))
+        # Standalone inert contact does NOT rotate robots
+        self.assertFalse(any("rotated a random amount" in entry.message for entry in logs))
+        self.assertEqual(p_bot.pose.theta, 0.0)
+        self.assertEqual(a_bot.pose.theta, 180.0)
 
     def test_flip_inversion_math(self):
         from playtest.engine.combat import resolve_collision_combat
