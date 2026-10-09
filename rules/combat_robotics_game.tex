@@ -322,6 +322,8 @@ Combat takes place inside a hazard-filled enclosed arena.
 
 The battle is played for \textbf{10 rounds} or until a robot is unable to move --- they have no active drive, or all their drive does not work due to inversion and they cannot unflip.
 
+If neither robot is immobilized by the end of round 10, the winner is decided by a \textbf{Judge's Decision}. The judge's decision damage count is the number of cards destroyed followed by the number of cards damaged (the robot with fewer cards destroyed wins; if tied, the robot with fewer cards damaged wins; if still tied, the match is a draw). Total durability is not recorded anywhere in gameplay.
+
 \subsection{Round Structure}
 
 Each round follows a strict sequence of four phases:
@@ -445,6 +447,8 @@ Damage progresses from the outermost component inwards, applying absorption at e
   \item \textbf{Absorption on Destruction:} If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
 \end{itemize}
 
+Total durability is not recorded anywhere in gameplay; components simply transition between undamaged, damaged, and destroyed.
+
 \subsection{Feedback}
 
 Feedback represents components over-straining themselves under combat loads. It is damage that progresses back from the source component 
@@ -461,6 +465,7 @@ to each component that supplies it, shared equally if there are multiple compone
 \begin{itemize}[leftmargin=*]
   \item \textbf{Damage Inward Progression:} Attack Damage $\rightarrow$ Absorbed by outermost layer $\rightarrow$ Excess damage hits next connected internal component.
   \item \textbf{Damage Conditions:} Exceeds durability $\implies$ \textbf{Destroyed}. Exceeds $\frac{1}{2}$ durability after absorption $\implies$ \textbf{Damaged}. Damaged again $\implies$ \textbf{Destroyed}.
+  \item \textbf{Durability in Play:} Total durability is not recorded anywhere in gameplay.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally.
 \end{itemize}
 \end{summarybox}

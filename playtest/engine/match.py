@@ -330,17 +330,32 @@ def execute_turn(
         match.phase = "game_over"
     elif match.round >= 10:
         match.phase = "game_over"
-        p_dur = sum(c.current_durability for c in p_bot.components.values())
-        a_dur = sum(c.current_durability for c in a_bot.components.values())
-        if p_dur > a_dur:
+        p_destroyed = sum(1 for c in p_bot.components.values() if c.is_destroyed)
+        p_damaged = sum(1 for c in p_bot.components.values() if c.is_damaged and not c.is_destroyed)
+        a_destroyed = sum(1 for c in a_bot.components.values() if c.is_destroyed)
+        a_damaged = sum(1 for c in a_bot.components.values() if c.is_damaged and not c.is_destroyed)
+
+        # Fewer destroyed cards wins; if tied, fewer damaged cards wins.
+        if (p_destroyed, p_damaged) < (a_destroyed, a_damaged):
             match.winner = "player"
-            match.win_reason = f"Judge's Decision: {p_bot.name} has {p_dur} durability remaining vs {a_dur}!"
-        elif a_dur > p_dur:
+            match.win_reason = (
+                f"Judge's Decision: {p_bot.name} took less damage "
+                f"({p_destroyed} destroyed, {p_damaged} damaged vs "
+                f"{a_destroyed} destroyed, {a_damaged} damaged)!"
+            )
+        elif (a_destroyed, a_damaged) < (p_destroyed, p_damaged):
             match.winner = "automaton"
-            match.win_reason = f"Judge's Decision: {a_bot.name} has {a_dur} durability remaining vs {p_dur}!"
+            match.win_reason = (
+                f"Judge's Decision: {a_bot.name} took less damage "
+                f"({a_destroyed} destroyed, {a_damaged} damaged vs "
+                f"{p_destroyed} destroyed, {p_damaged} damaged)!"
+            )
         else:
             match.winner = "draw"
-            match.win_reason = "Judge's Decision: Exact tie on remaining durability!"
+            match.win_reason = (
+                f"Judge's Decision: Exact tie on damage "
+                f"({p_destroyed} destroyed, {p_damaged} damaged each)!"
+            )
     else:
         # Advance to next round
         match.round += 1

@@ -447,6 +447,78 @@ class TestPlaytestEngine(unittest.TestCase):
         active_weapons = [cid for cid in ["m1", "m2"] if robot.components[cid].is_active]
         self.assertEqual(len(active_weapons), 1, "Exactly one of m1 or m2 should be active")
 
+    def test_judges_decision_destroyed_and_damaged_counts(self):
+        from playtest.engine.match import execute_turn
+        from playtest.engine.types import MoveChoice
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        match.round = 10  # simulate final round
+
+        # Scenario 1: Player has 0 destroyed, 2 damaged. Automaton has 1 destroyed, 0 damaged.
+        # Player must win because fewer cards were destroyed (0 vs 1).
+        p_comps = list(match.player_robot.components.values())
+        a_comps = list(match.automaton_robot.components.values())
+
+        p_comps[0].is_damaged = True
+        p_comps[1].is_damaged = True
+
+        a_comps[0].is_destroyed = True
+
+        execute_turn(match, MoveChoice(left=0, right=0), fixed_automaton_roll=1)
+
+        self.assertEqual(match.phase, "game_over")
+        self.assertEqual(match.winner, "player")
+        self.assertIn("Judge's Decision", match.win_reason)
+        self.assertIn("0 destroyed, 2 damaged vs 1 destroyed, 0 damaged", match.win_reason)
+        self.assertNotIn("durability", match.win_reason.lower())
+
+    def test_judges_decision_damaged_tiebreaker(self):
+        from playtest.engine.match import execute_turn
+        from playtest.engine.types import MoveChoice
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        match.round = 10
+
+        p_comps = list(match.player_robot.components.values())
+        a_comps = list(match.automaton_robot.components.values())
+
+        # Tied on destroyed (1 each), but automaton has more damaged (2 vs 1)
+        p_comps[0].is_destroyed = True
+        p_comps[1].is_damaged = True
+
+        a_comps[0].is_destroyed = True
+        a_comps[1].is_damaged = True
+        a_comps[2].is_damaged = True
+
+        execute_turn(match, MoveChoice(left=0, right=0), fixed_automaton_roll=1)
+
+        self.assertEqual(match.phase, "game_over")
+        self.assertEqual(match.winner, "player")
+        self.assertIn("Judge's Decision", match.win_reason)
+        self.assertIn("1 destroyed, 1 damaged vs 1 destroyed, 2 damaged", match.win_reason)
+
+    def test_judges_decision_exact_tie(self):
+        from playtest.engine.match import execute_turn
+        from playtest.engine.types import MoveChoice
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        match.round = 10
+
+        p_comps = list(match.player_robot.components.values())
+        a_comps = list(match.automaton_robot.components.values())
+
+        p_comps[0].is_destroyed = True
+        p_comps[1].is_damaged = True
+
+        a_comps[0].is_destroyed = True
+        a_comps[1].is_damaged = True
+
+        execute_turn(match, MoveChoice(left=0, right=0), fixed_automaton_roll=1)
+
+        self.assertEqual(match.phase, "game_over")
+        self.assertEqual(match.winner, "draw")
+        self.assertIn("Exact tie", match.win_reason)
+
 
 if __name__ == "__main__":
     unittest.main()
