@@ -49,12 +49,12 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(d_map[2], 4)
         self.assertEqual(d_map[3], 5)
 
-        # Cronos Scythe: XWW -> X*W + W = X + 1
+        # Cronos Scythe: XWWW -> X*W + 2W = X + 2
         scythe = by_name["Cronos Scythe"]
         max_s, d_map, desc = parse_weapon_spin_and_damage(scythe)
         self.assertEqual(max_s, 2)
-        self.assertEqual(d_map[1], 2)
-        self.assertEqual(d_map[2], 3)
+        self.assertEqual(d_map[1], 3)
+        self.assertEqual(d_map[2], 4)
 
         # Chonk Key Blade: XXW -> X^2 * W = X^2
         chonk = by_name["Chonk Key Blade"]
@@ -152,6 +152,15 @@ class TestCombatSimulation(unittest.TestCase):
         # Test throw shock
         shock_outcomes = simulate_throw_shock(robot, 10, hit_on_wedge=False)
         self.assertEqual(len(shock_outcomes), len(robot.components))
+        shock_on_wedge = simulate_throw_shock(robot, 10, hit_on_wedge=True)
+        self.assertEqual(len(shock_on_wedge), 0)
+
+    def test_load_all_automata(self):
+        for name in ["Beater_wide.csv", "Nightwing_wide.csv", "Chonk.csv", "Vyper_flipper.csv", "Vyper_Spinner.csv"]:
+            csv_path = REPO_ROOT / "automata" / name
+            self.assertTrue(csv_path.exists(), f"{name} should exist")
+            robot = build_robot_model(csv_path, self.catalog)
+            self.assertGreater(len(robot.components), 0)
 
     def test_generate_html_report(self):
         from scripts.simulate_combat import generate_html_report

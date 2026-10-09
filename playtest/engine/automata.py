@@ -1,31 +1,67 @@
-"""Automata AI logic and action table resolution for Vyper_flipper and Vyper_Spinner."""
+"""Automata AI logic and action table resolution for combat robotics automata."""
 
 from __future__ import annotations
 
 import math
 import random
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from .collision import normalize_angle_deg
+from .combat import parse_weapon_spin_and_damage
 from .movement import generate_trajectory, list_template_options
 from .types import MoveChoice, Pose, RobotState
 
+# Archetype tables defined in automata/Action_tables.md
+ARCHETYPE_TABLES: Dict[str, Dict[str, List[Dict[str, Any]]]] = {
+    "Full Rush": {
+        "default": [
+            {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
+            {"roll_min": 2, "roll_max": 2, "action": "Face"},
+            {"roll_min": 3, "roll_max": 6, "action": "Rush"},
+        ],
+    },
+    "Spin Up": {
+        "charged": [  # Spin counters >= 2
+            {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
+            {"roll_min": 2, "roll_max": 2, "action": "Face"},
+            {"roll_min": 3, "roll_max": 6, "action": "Rush"},
+        ],
+        "uncharged": [  # Spin counters < 2
+            {"roll_min": 1, "roll_max": 3, "action": "Retreat"},
+            {"roll_min": 4, "roll_max": 5, "action": "Face"},
+            {"roll_min": 6, "roll_max": 6, "action": "Rush"},
+        ],
+    },
+    "Balanced": {
+        "full_spin": [  # Weapon is at full spin
+            {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
+            {"roll_min": 2, "roll_max": 3, "action": "Face"},
+            {"roll_min": 4, "roll_max": 6, "action": "Rush"},
+        ],
+        "sub_spin": [  # Weapon is not at full spin
+            {"roll_min": 1, "roll_max": 2, "action": "Retreat"},
+            {"roll_min": 3, "roll_max": 4, "action": "Face"},
+            {"roll_min": 5, "roll_max": 6, "action": "Rush"},
+        ],
+    },
+}
+
+# Per automata allocation mapping from Action_tables.md
+AUTOMATA_ARCHETYPES: Dict[str, str] = {
+    "vyper_flipper": "Full Rush",
+    "vyper_spinner": "Spin Up",
+    "beater_wide": "Balanced",
+    "nightwing_wide": "Balanced",
+    "chonk": "Spin Up",
+}
+
+# Backward compatibility alias
 AUTOMATA_TABLES = {
-    "Vyper_flipper": [
-        {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
-        {"roll_min": 2, "roll_max": 2, "action": "Face"},
-        {"roll_min": 3, "roll_max": 6, "action": "Rush"},
-    ],
-    "Vyper_Spinner_Charged": [  # Spin counters >= 2
-        {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
-        {"roll_min": 2, "roll_max": 2, "action": "Face"},
-        {"roll_min": 3, "roll_max": 6, "action": "Rush"},
-    ],
-    "Vyper_Spinner_Uncharged": [  # Spin counters < 2
-        {"roll_min": 1, "roll_max": 3, "action": "Retreat"},
-        {"roll_min": 4, "roll_max": 5, "action": "Face"},
-        {"roll_min": 6, "roll_max": 6, "action": "Rush"},
-    ],
+    "Vyper_flipper": ARCHETYPE_TABLES["Full Rush"]["default"],
+    "Vyper_Spinner_Charged": ARCHETYPE_TABLES["Spin Up"]["charged"],
+    "Vyper_Spinner_Uncharged": ARCHETYPE_TABLES["Spin Up"]["uncharged"],
+    "Balanced_Full": ARCHETYPE_TABLES["Balanced"]["full_spin"],
+    "Balanced_Sub": ARCHETYPE_TABLES["Balanced"]["sub_spin"],
 }
 
 
@@ -35,23 +71,67 @@ def roll_d6(fixed_roll: Optional[int] = None) -> int:
     return random.randint(1, 6)
 
 
+def get_automaton_archetype(automaton_name: str) -> str:
+    clean = automaton_name.strip().lower().replace(" ", "_").replace(".csv", "")
+    for bot_key, arch in AUTOMATA_ARCHETYPES.items():
+        if bot_key in clean:
+            return arch
+    # Fallback heuristics
+    if "flipper" in clean or "rush" in clean:
+        return "Full Rush"
+    if "spinner" in clean or "chonk" in clean:
+        return "Spin Up"
+    if "beater" in clean or "nightwing" in clean or "balanced" in clean:
+        return "Balanced"
+    return "Full Rush"
+
+
+def is_weapon_at_full_spin(automaton: RobotState) -> bool:
+    """
+    Returns True if any active spin weapon on the automaton has reached max spin.
+    """
+    for cid, comp in automaton.components.items():
+        if comp.card_type == "weapon" and not comp.is_destroyed:
+            _, max_spin, _, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
+            if max_spin > 0:
+                current_spin = automaton.weapon_spin_counters.get(cid, 0)
+                if current_spin >= max_spin:
+                    return True
+    return False
+
+
 def get_automaton_action(
     automaton_name: str,
     automaton: RobotState,
     roll: int,
 ) -> str:
     """
-    Looks up action based on automaton type, weapon spin state, and d6 roll.
+    Looks up action based on automaton archetype, weapon spin state, and d6 roll.
     """
-    clean_name = automaton_name.replace(" ", "_")
+    archetype = get_automaton_archetype(automaton_name)
+    total_spin = sum(automaton.weapon_spin_counters.values())
 
-    if "Spinner" in clean_name:
-        spin_count = sum(automaton.weapon_spin_counters.values())
-        table_key = "Vyper_Spinner_Charged" if spin_count >= 2 else "Vyper_Spinner_Uncharged"
+    if archetype == "Full Rush":
+        table = ARCHETYPE_TABLES["Full Rush"]["default"]
+    elif archetype == "Spin Up":
+        table = (
+            ARCHETYPE_TABLES["Spin Up"]["charged"]
+            if total_spin >= 2
+            else ARCHETYPE_TABLES["Spin Up"]["uncharged"]
+        )
+    elif archetype == "Balanced":
+        at_full = is_weapon_at_full_spin(automaton)
+        # Fallback if dummy/test state has no components registered
+        if not automaton.components and total_spin >= 3:
+            at_full = True
+        table = (
+            ARCHETYPE_TABLES["Balanced"]["full_spin"]
+            if at_full
+            else ARCHETYPE_TABLES["Balanced"]["sub_spin"]
+        )
     else:
-        table_key = "Vyper_flipper"
+        table = ARCHETYPE_TABLES["Full Rush"]["default"]
 
-    table = AUTOMATA_TABLES.get(table_key, AUTOMATA_TABLES["Vyper_flipper"])
     for row in table:
         if row["roll_min"] <= roll <= row["roll_max"]:
             return row["action"]

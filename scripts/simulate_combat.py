@@ -478,7 +478,8 @@ def simulate_throw_shock(
     throw_strength: int,
     hit_on_wedge: bool = False,
 ) -> Dict[str, List[DamageStepResult]]:
-    eff_throw = (throw_strength + 1) // 2 if hit_on_wedge else throw_strength
+    # If hit on wedge, robot is not thrown (effective throw strength is 0)
+    eff_throw = 0 if hit_on_wedge else throw_strength
     outcomes: Dict[str, List[DamageStepResult]] = {}
 
     if eff_throw <= 0:

@@ -769,24 +769,20 @@ def resolve_collision_combat(
                 for fl in fb_logs:
                     logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
 
-        # 4. Check Wedge keyword throw reflection
+        # 4. Check Wedge keyword: If this component is hit this robot is not thrown.
         r1_wedge = any(r1.components[cid].is_wedge for cid in col.robot1_components if cid in r1.components)
         r2_wedge = any(r2.components[cid].is_wedge for cid in col.robot2_components if cid in r2.components)
         if r1_wedge and throw_str_1 > 0:
-            reflected = throw_str_1 // 2
-            throw_str_1 -= reflected
-            throw_str_2 += reflected
+            throw_str_1 = 0
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🛡️ {r1.name}'s Wedge reflects {reflected} throw strength to {r2.name}!",
+                message=f"🛡️ {r1.name}'s Wedge was hit — {r1.name} is not thrown!",
             ))
         if r2_wedge and throw_str_2 > 0:
-            reflected = throw_str_2 // 2
-            throw_str_2 -= reflected
-            throw_str_1 += reflected
+            throw_str_2 = 0
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🛡️ {r2.name}'s Wedge reflects {reflected} throw strength to {r1.name}!",
+                message=f"🛡️ {r2.name}'s Wedge was hit — {r2.name} is not thrown!",
             ))
 
         # 5. Execute Throws away from contact point

@@ -100,10 +100,53 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 4), "Face")
         self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 6), "Rush")
 
-        # Vyper_flipper: 1 = Retreat, 2 = Face, 3..6 = Rush
+        # Vyper_flipper (Full Rush): 1 = Retreat, 2 = Face, 3..6 = Rush
         self.assertEqual(get_automaton_action("Vyper_flipper", robot, 1), "Retreat")
         self.assertEqual(get_automaton_action("Vyper_flipper", robot, 2), "Face")
         self.assertEqual(get_automaton_action("Vyper_flipper", robot, 5), "Rush")
+
+        # Chonk (Spin Up):
+        # Charged (>= 2)
+        robot.weapon_spin_counters["w"] = 2
+        self.assertEqual(get_automaton_action("Chonk", robot, 1), "Retreat")
+        self.assertEqual(get_automaton_action("Chonk", robot, 2), "Face")
+        self.assertEqual(get_automaton_action("Chonk", robot, 5), "Rush")
+        # Uncharged (< 2)
+        robot.weapon_spin_counters["w"] = 1
+        self.assertEqual(get_automaton_action("Chonk", robot, 2), "Retreat")
+        self.assertEqual(get_automaton_action("Chonk", robot, 5), "Face")
+        self.assertEqual(get_automaton_action("Chonk", robot, 6), "Rush")
+
+        # Beater_wide / Nightwing_wide (Balanced):
+        # Setup Beater Bar component with max_spin = 3
+        beater_comp = ComponentHealth(
+            id="16", name="Beater Bar", card_type="weapon", max_durability=9,
+            current_durability=9, absorption=1, requirements="SSS", outputs="XWWW",
+            keywords="Spin up (3);Self-right", text="", x=180, y=30, rotation=0,
+            box=(180, 30, 224, 94), is_wedge=False,
+        )
+        robot.components = {"16": beater_comp}
+
+        # Sub-spin (< 3): 1..2 = Retreat, 3..4 = Face, 5..6 = Rush
+        robot.weapon_spin_counters = {"16": 1}
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 1), "Retreat")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 2), "Retreat")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 3), "Face")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 4), "Face")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 5), "Rush")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 6), "Rush")
+
+        # Full-spin (>= 3): 1 = Retreat, 2..3 = Face, 4..6 = Rush
+        robot.weapon_spin_counters = {"16": 3}
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 1), "Retreat")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 2), "Face")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 3), "Face")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 4), "Rush")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 6), "Rush")
+
+        # Nightwing_wide behaves identically under Balanced archetype
+        self.assertEqual(get_automaton_action("Nightwing_wide", robot, 2), "Face")
+        self.assertEqual(get_automaton_action("Nightwing_wide", robot, 4), "Rush")
 
     def test_automata_drive_calculation(self):
         player = RobotState(
@@ -255,6 +298,43 @@ class TestPlaytestEngine(unittest.TestCase):
         )
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
         self.assertTrue(any("THROWN" in entry.message for entry in logs))
+
+    def test_wedge_prevents_throw(self):
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Ensure player robot has a wedge component hit
+        wedge_comp = ComponentHealth(
+            id="wedge_1", name="Titanium Wedge", card_type="component",
+            max_durability=9, current_durability=9, absorption=1, requirements="",
+            outputs="", keywords="wedge", text="", x=100, y=20, rotation=0,
+            box=(100, 20, 144, 84), is_wedge=True,
+        )
+        p_bot.components["wedge_1"] = wedge_comp
+
+        auto_weapon = [c for c in a_bot.components.values() if c.card_type == "weapon"][0]
+        a_bot.weapon_spin_counters[auto_weapon.id] = 4
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["wedge_1"],
+            robot2_components=[auto_weapon.id],
+            contact_type="ACTIVE",
+            description="Active strike hitting wedge",
+            r1_active_hit=False,
+            r2_active_hit=True,
+        )
+        logs = resolve_collision_combat(col, p_bot, a_bot, 1)
+        # Wedge was hit: p_bot is NOT thrown, and no throw reflection to a_bot
+        self.assertTrue(any("Wedge was hit" in entry.message for entry in logs))
+        self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
 
     def test_split_supply_distribution(self):
         """

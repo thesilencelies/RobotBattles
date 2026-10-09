@@ -627,30 +627,66 @@ export class RobotViewRenderer {
   }
 
   static _renderAutomataTable(robot, lastRoll, lastAction) {
-    const isSpinner = robot.name.includes("Spinner");
+    const rawName = (robot.name || "").toLowerCase().replace(/\s+/g, "_");
     const spinCount = Object.values(robot.weapon_spin_counters || {}).reduce((a, b) => a + b, 0);
+
+    // Identify archetype based on allocation in Action_tables.md
+    let archetype = "Full Rush";
+    if (rawName.includes("beater") || rawName.includes("nightwing")) {
+      archetype = "Balanced";
+    } else if (rawName.includes("spinner") || rawName.includes("chonk")) {
+      archetype = "Spin Up";
+    } else if (rawName.includes("flipper")) {
+      archetype = "Full Rush";
+    }
 
     let rows = [];
     let tableNote = "";
 
-    if (isSpinner) {
+    if (archetype === "Spin Up") {
       if (spinCount >= 2) {
-        tableNote = `Active Table: <strong>Charged</strong> (Spin counters >= 2: Currently ${spinCount})`;
+        tableNote = `Spin Up (Charged: Spin counters >= 2, Currently ${spinCount})`;
         rows = [
           { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
           { roll: "2", action: "Face", desc: "Rotate on spot to face opponent" },
           { roll: "3–6", action: "Rush", desc: "Drive at opponent at full speed" },
         ];
       } else {
-        tableNote = `Active Table: <strong>Uncharged</strong> (Spin counters < 2: Currently ${spinCount})`;
+        tableNote = `Spin Up (Uncharged: Spin counters < 2, Currently ${spinCount})`;
         rows = [
           { roll: "1–3", action: "Retreat", desc: "Face opponent and move back 1 step" },
           { roll: "4–5", action: "Face", desc: "Rotate on spot to face opponent" },
           { roll: "6", action: "Rush", desc: "Drive at opponent at full speed" },
         ];
       }
+    } else if (archetype === "Balanced") {
+      let maxSpin = 3;
+      if (robot.components) {
+        for (const comp of Object.values(robot.components)) {
+          if (comp.card_type === "weapon" && comp.keywords) {
+            const m = comp.keywords.match(/Spin up\s*\(\s*(\d+)/i);
+            if (m) maxSpin = parseInt(m[1], 10);
+          }
+        }
+      }
+      const isFull = spinCount >= maxSpin;
+      if (isFull) {
+        tableNote = `Balanced (Full Spin: ${spinCount}/${maxSpin})`;
+        rows = [
+          { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
+          { roll: "2–3", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "4–6", action: "Rush", desc: "Drive at opponent at full speed" },
+        ];
+      } else {
+        tableNote = `Balanced (Spinning Up: ${spinCount}/${maxSpin})`;
+        rows = [
+          { roll: "1–2", action: "Retreat", desc: "Face opponent and move back 1 step" },
+          { roll: "3–4", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "5–6", action: "Rush", desc: "Drive at opponent at full speed" },
+        ];
+      }
     } else {
-      tableNote = "Always uses Vyper Flipper action table";
+      tableNote = "Full Rush (Always active)";
       rows = [
         { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
         { roll: "2", action: "Face", desc: "Rotate on spot to face opponent" },
