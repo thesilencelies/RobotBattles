@@ -34,6 +34,133 @@ export class ArenaRenderer {
 
     this.animating = false;
     this.animFrame = null;
+
+    // Arena Zoom & Pan state
+    this.zoom = 1.0;
+    this.pan = { x: 0, y: 0 };
+    this.baseW = 800;
+    this.baseH = 800;
+    this.minZoom = 0.6;
+    this.maxZoom = 4.0;
+
+    this._initZoomControls();
+  }
+
+  _initZoomControls() {
+    this.btnZoomIn = document.getElementById("btn-arena-zoom-in");
+    this.btnZoomOut = document.getElementById("btn-arena-zoom-out");
+    this.btnZoomFit = document.getElementById("btn-arena-zoom-fit");
+
+    if (this.btnZoomIn) this.btnZoomIn.addEventListener("click", () => this.zoomIn());
+    if (this.btnZoomOut) this.btnZoomOut.addEventListener("click", () => this.zoomOut());
+    if (this.btnZoomFit) this.btnZoomFit.addEventListener("click", () => this.zoomFit());
+
+    // Wheel zoom on SVG
+    this.svg.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+      this.setZoom(this.zoom * zoomFactor);
+    }, { passive: false });
+
+    // Touch & pointer pan
+    let isDragging = false;
+    let startPoint = { x: 0, y: 0 };
+    let initialPinchDist = null;
+    let initialZoom = 1.0;
+
+    this.svg.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      isDragging = true;
+      startPoint = { x: e.clientX, y: e.clientY };
+      if (this.svg.setPointerCapture) {
+        try { this.svg.setPointerCapture(e.pointerId); } catch (_) {}
+      }
+    });
+
+    this.svg.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      const dx = (e.clientX - startPoint.x) / (this.zoom * 1.0);
+      const dy = (e.clientY - startPoint.y) / (this.zoom * 1.0);
+      startPoint = { x: e.clientX, y: e.clientY };
+      this.pan.x -= dx;
+      this.pan.y -= dy;
+      this._clampPan();
+      this._updateViewBox();
+    });
+
+    const endDrag = (e) => {
+      isDragging = false;
+      if (this.svg.releasePointerCapture) {
+        try { this.svg.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+    };
+    this.svg.addEventListener("pointerup", endDrag);
+    this.svg.addEventListener("pointercancel", endDrag);
+
+    // Touch pinch gesture
+    this.svg.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 2) {
+        initialPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialZoom = this.zoom;
+      }
+    }, { passive: true });
+
+    this.svg.addEventListener("touchmove", (e) => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = dist / initialPinchDist;
+        this.setZoom(initialZoom * factor);
+      }
+    }, { passive: true });
+
+    this.svg.addEventListener("touchend", (e) => {
+      if (e.touches.length < 2) {
+        initialPinchDist = null;
+      }
+    }, { passive: true });
+  }
+
+  zoomIn() {
+    this.setZoom(this.zoom * 1.25);
+  }
+
+  zoomOut() {
+    this.setZoom(this.zoom / 1.25);
+  }
+
+  zoomFit() {
+    this.zoom = 1.0;
+    this.pan = { x: 0, y: 0 };
+    this._updateViewBox();
+  }
+
+  setZoom(newZoom) {
+    this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, newZoom));
+    this._clampPan();
+    this._updateViewBox();
+  }
+
+  _clampPan() {
+    const w = this.baseW / this.zoom;
+    const h = this.baseH / this.zoom;
+    const maxPanX = Math.max(0, (this.baseW - w) / 2 + 250);
+    const maxPanY = Math.max(0, (this.baseH - h) / 2 + 250);
+    this.pan.x = Math.max(-maxPanX, Math.min(maxPanX, this.pan.x));
+    this.pan.y = Math.max(-maxPanY, Math.min(maxPanY, this.pan.y));
+  }
+
+  _updateViewBox() {
+    const w = this.baseW / this.zoom;
+    const h = this.baseH / this.zoom;
+    const x = (this.baseW / 2) - (w / 2) + this.pan.x;
+    const y = (this.baseH / 2) - (h / 2) + this.pan.y;
+    this.svg.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
   }
 
   render(matchState) {

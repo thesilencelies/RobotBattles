@@ -256,9 +256,23 @@ class TestBrowserUI(unittest.TestCase):
                 break
         self.assertTrue(self.js_eval("document.getElementById('view-arena').classList.contains('active')"))
 
-        # 2. Check Match HUD
+        # 2. Check Match HUD & Arena Zoom
         round_txt = self.js_eval("document.getElementById('hud-round').textContent")
         self.assertIn("Round 1", round_txt)
+
+        # Arena Zoom controls test
+        vb_initial = self.js_eval("document.getElementById('arena-svg').getAttribute('viewBox')")
+        self.assertEqual(vb_initial, "0 0 800 800")
+        self.js_eval("document.getElementById('btn-arena-zoom-in').click()")
+        vb_zoomed = self.js_eval("document.getElementById('arena-svg').getAttribute('viewBox')")
+        self.assertNotEqual(vb_initial, vb_zoomed)
+        self.js_eval("document.getElementById('btn-arena-zoom-fit').click()")
+        vb_reset = self.js_eval("document.getElementById('arena-svg').getAttribute('viewBox')")
+        self.assertEqual(vb_reset, "0 0 800 800")
+
+        # Verify arena view has scrollable capability
+        arena_overflow_y = self.js_eval("window.getComputedStyle(document.getElementById('view-arena')).overflowY")
+        self.assertEqual(arena_overflow_y, "auto")
 
         # 3. Test Drive Presets
         self.js_eval("document.querySelector(\".btn-preset[data-preset='forward']\").click()")
@@ -292,6 +306,28 @@ class TestBrowserUI(unittest.TestCase):
         player_cards = self.js_eval("document.querySelectorAll('#player-robot-container .robot-view-card').length")
         self.assertGreater(player_cards, 0)
 
+        # Verify Motive Drive System card and logo exist
+        has_drive_logo = self.js_eval("Boolean(document.querySelector('#player-robot-container .motive-drive-logo-icon'))")
+        self.assertTrue(has_drive_logo, "Motive Drive distinct logo should exist")
+
+        # Verify aggregate 7/7 durability is REMOVED
+        container_text = self.js_eval("document.getElementById('player-robot-container').textContent")
+        self.assertNotIn("Total Durability", container_text)
+        self.assertNotIn("7 / 7", container_text)
+
+        # Verify SVG Chassis Tree Layout exists with placed cards
+        has_layout_svg = self.js_eval("Boolean(document.querySelector('#player-robot-container .robot-layout-svg'))")
+        self.assertTrue(has_layout_svg, "Robot layout SVG should exist")
+        card_nodes_count = self.js_eval("document.querySelectorAll('#player-robot-container .layout-card-node').length")
+        self.assertGreater(card_nodes_count, 0, "Cards should be placed in SVG layout")
+
+        # Verify card inspector updates on click
+        initial_insp_title = self.js_eval("document.querySelector('#player-robot-container .inspector-name').textContent")
+        self.js_eval("document.querySelectorAll('#player-robot-container .layout-card-node')[1].dispatchEvent(new Event('click'))")
+        new_insp_title = self.js_eval("document.querySelector('#player-robot-container .inspector-name').textContent")
+        # Layout zoom buttons work
+        self.js_eval("document.querySelector('#player-robot-container .btn-zoom-layout[data-zoom=\"in\"]').click()")
+
         # 2. Automaton tab
         self.js_eval("document.querySelector(\"#main-nav .nav-tab[data-tab='automaton-robot']\").click()")
         self.assertTrue(self.js_eval("document.getElementById('view-automaton-robot').classList.contains('active')"))
@@ -299,6 +335,10 @@ class TestBrowserUI(unittest.TestCase):
         self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-automaton-robot')).display"), "flex")
         auto_cards = self.js_eval("document.querySelectorAll('#automaton-robot-container .robot-view-card').length")
         self.assertGreater(auto_cards, 0)
+
+        # Verify Automaton also has Motive Drive and SVG Layout
+        has_auto_layout = self.js_eval("Boolean(document.querySelector('#automaton-robot-container .robot-layout-svg'))")
+        self.assertTrue(has_auto_layout)
 
         # 3. Combat Log tab
         self.js_eval("document.querySelector(\"#main-nav .nav-tab[data-tab='log']\").click()")

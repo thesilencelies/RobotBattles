@@ -274,6 +274,12 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
   \item Each robot must have active drive to be submitted.
 \end{itemize}
 
+\subsection{Resource Supply and Split Supply}
+
+A component is only active if its requirements are supplied by connected components. If a component supplying multiple components can supply all of their needs between them (that is, the sum of the requirements is less than or equal to its output) then they are all supplied fine. If it cannot, then it supplies components based on their connected endpoint: drive first, then weapons, unless the robot chose to not use that side's drive this turn (drive = 0). Within the same category it supplies from the largest requirement going down.
+
+If multiple components supply the same multiple components, sum up the supply and distribute as above.
+
 \vspace{0.8em}
 
 \section{The Arena}

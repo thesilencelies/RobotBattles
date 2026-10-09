@@ -242,6 +242,10 @@ def execute_turn(
     match.automaton_action = auto_action
     match.automaton_choice = a_choice
 
+    # Refresh active components taking into account movement choices (e.g. drive = 0 frees up power for weapons/other drive)
+    refresh_robot_drive_and_power(p_bot, p_choice)
+    refresh_robot_drive_and_power(a_bot, a_choice)
+
     match.log.append(CombatLogEntry(
         round=r_num,
         phase="planning",

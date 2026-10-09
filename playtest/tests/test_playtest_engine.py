@@ -256,7 +256,66 @@ class TestPlaytestEngine(unittest.TestCase):
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
         self.assertTrue(any("THROWN" in entry.message for entry in logs))
 
+    def test_split_supply_distribution(self):
+        """
+        Verify the canonical rule:
+        - If a supplier can supply all downstream components, they are all supplied.
+        - If not, priority is: drive first, then weapons, unless drive side is 0 this turn.
+        - Within same category: largest requirement going down.
+        """
+        # Battery output 2E
+        battery = ComponentHealth(
+            id="bat", name="Battery", card_type="component",
+            max_durability=5, current_durability=5, absorption=0,
+            requirements="", outputs="2E", keywords="", text="",
+            x=200, y=200, rotation=0, box=(200, 200, 244, 264)
+        )
+        # Left drive motor requiring 2E, outputs D
+        left_motor = ComponentHealth(
+            id="m_left", name="Left Motor", card_type="component",
+            max_durability=3, current_durability=3, absorption=0,
+            requirements="2E", outputs="D", keywords="", text="",
+            x=100, y=100, rotation=0, box=(100, 100, 144, 164)
+        )
+        # Weapon requiring 2E, outputs 4W
+        weapon = ComponentHealth(
+            id="wep", name="Spinner Weapon", card_type="weapon",
+            max_durability=4, current_durability=4, absorption=0,
+            requirements="2E", outputs="4W", keywords="Spin up (1, 3)", text="",
+            x=210, y=50, rotation=0, box=(210, 50, 254, 114)
+        )
+
+        robot = RobotState(
+            id="test_bot", name="Test Bot", chassis_name="Square", chassis_template="Square",
+            flip_strength=3, pose=Pose(400, 400, 0),
+            components={"bat": battery, "m_left": left_motor, "wep": weapon},
+            connections={"bat": ["m_left", "wep"], "m_left": ["bat"], "wep": ["bat"]},
+            supply_graph={"m_left": ["bat"], "wep": ["bat"], "bat": []},
+            reverse_supply={"bat": ["m_left", "wep"], "m_left": [], "wep": []},
+        )
+
+        # 1. Normal state: drive is used by default (current_move=None)
+        # 2E total supply: drive takes priority over weapon!
+        refresh_robot_drive_and_power(robot)
+        self.assertTrue(robot.components["bat"].is_active)
+        self.assertTrue(robot.components["m_left"].is_active, "Drive should be supplied first")
+        self.assertFalse(robot.components["wep"].is_active, "Weapon should be unpowered due to 2E supply limit")
+        self.assertEqual(robot.left_drive_max, 1)
+
+        # 2. Divert power: Robot chooses not to use left drive this turn (left = 0)
+        refresh_robot_drive_and_power(robot, current_move=MoveChoice(left=0, right=0))
+        self.assertTrue(robot.components["bat"].is_active)
+        self.assertFalse(robot.components["m_left"].is_active, "Drive not used this turn, so power is freed")
+        self.assertTrue(robot.components["wep"].is_active, "Weapon should receive freed power")
+
+        # 3. Sufficient power: Battery upgraded to 4E -> both are supplied
+        battery.outputs = "4E"
+        refresh_robot_drive_and_power(robot)
+        self.assertTrue(robot.components["m_left"].is_active)
+        self.assertTrue(robot.components["wep"].is_active)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
