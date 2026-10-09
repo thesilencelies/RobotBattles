@@ -744,6 +744,106 @@ class TestPlaytestEngine(unittest.TestCase):
             wall_logs = [l.message for l in logs_wall if "THROWN into a WALL" in l.message]
             self.assertTrue(any("takes full throw damage 5" in msg for msg in wall_logs))
 
+    def test_active_contact_still_in_contact_proceeds_to_inertial_and_rotates(self):
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Position touching at center
+        p_bot.pose = Pose(x=400.0, y=410.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+
+        # Configure weapon with 5 attack strength
+        w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        w_comp.outputs = "5W"
+        w_comp.text = "Deals no damage."
+
+        # Opponent component contacted is a Wedge! (Titanium Wedge)
+        # The wedge keyword prevents the opponent from being thrown!
+        wedge_cid = [cid for cid, c in a_bot.components.items() if c.is_wedge][0]
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[wedge_cid],
+            contact_type="ACTIVE",
+            description="Active strike into wedge",
+            r1_remaining_dist=20.0,
+            r2_remaining_dist=20.0,
+            push_vector=(0.0, -10.0),
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        orig_p_theta = p_bot.pose.theta
+        orig_a_theta = a_bot.pose.theta
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        log_messages = [l.message for l in logs]
+
+        # 1. Active contact occurred
+        self.assertTrue(any("ACTIVE WEAPON HIT" in msg for msg in log_messages))
+        # 2. Wedge prevented throw
+        self.assertTrue(any("is not thrown" in msg for msg in log_messages))
+        # 3. Because robots remain in contact, inertial contact proceeded
+        self.assertTrue(any("proceeding with inertial contact" in msg for msg in log_messages))
+        # 4. Pushing match occurred
+        self.assertTrue(any("PUSHING MATCH" in msg for msg in log_messages))
+        # 5. At the end of inertial contact, both robots rotated a random amount
+        self.assertTrue(any("End of inertial contact: both robots are rotated a random amount" in msg for msg in log_messages))
+        self.assertNotEqual(p_bot.pose.theta, orig_p_theta)
+        self.assertNotEqual(a_bot.pose.theta, orig_a_theta)
+
+    def test_active_contact_thrown_clear_does_not_proceed_to_inertial(self):
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        p_bot.pose = Pose(x=400.0, y=410.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+
+        w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        w_comp.outputs = "8W"
+        w_comp.text = "Deals no damage."
+
+        # Opponent component is NOT a wedge (battery)
+        non_wedge_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[non_wedge_cid],
+            contact_type="ACTIVE",
+            description="Active strike into battery",
+            r1_remaining_dist=20.0,
+            r2_remaining_dist=20.0,
+            push_vector=(0.0, -10.0),
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        # Throw roll is high (6+6 = 12 -> 8 units / 320mm displacement away!)
+        with patch("random.randint", return_value=6):
+            logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+            log_messages = [l.message for l in logs]
+
+            # Robot was thrown away
+            self.assertTrue(any("is THROWN" in msg for msg in log_messages))
+            # Did NOT proceed to inertial contact
+            self.assertFalse(any("proceeding with inertial contact" in msg for msg in log_messages))
+
 
 if __name__ == "__main__":
     unittest.main()

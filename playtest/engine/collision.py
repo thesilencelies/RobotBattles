@@ -361,3 +361,18 @@ def detect_collision(
             )
 
     return None
+
+
+def check_robots_in_contact(r1: RobotState, r2: RobotState) -> bool:
+    """
+    Checks whether any body polygons (chassis or weapons) of r1 and r2
+    are currently intersecting in their current poses.
+    """
+    parts1 = get_robot_miniature_parts(r1, r1.pose.x, r1.pose.y, r1.pose.theta)
+    parts2 = get_robot_miniature_parts(r2, r2.pose.x, r2.pose.y, r2.pose.theta)
+
+    for polyA in parts1["all_body_polygons"]:
+        for polyB in parts2["all_body_polygons"]:
+            if polygons_intersect(polyA, polyB):
+                return True
+    return False
