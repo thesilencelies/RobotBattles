@@ -180,10 +180,24 @@ class TestBrowserUI(unittest.TestCase):
         tabs = self.js_eval("[...document.querySelectorAll('#main-nav .nav-tab')].map(t => t.dataset.tab)")
         self.assertEqual(tabs, ["arena", "player-robot", "automaton-robot", "builder", "log"])
 
+        # Check that only arena is visible on load and builder is hidden
+        arena_disp = self.js_eval("window.getComputedStyle(document.getElementById('view-arena')).display")
+        builder_disp = self.js_eval("window.getComputedStyle(document.getElementById('view-builder')).display")
+        self.assertEqual(arena_disp, "flex")
+        self.assertEqual(builder_disp, "none")
+
     def test_02_builder_catalogue_and_card_selection(self):
         # 1. Switch to Builder tab
         self.js_eval("document.querySelector(\"#main-nav .nav-tab[data-tab='builder']\").click()")
         self.assertTrue(self.js_eval("document.getElementById('view-builder').classList.contains('active')"))
+        self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-builder')).display"), "flex")
+        self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-arena')).display"), "none")
+
+        # Verify horizontal scroll on top-row-main
+        top_row_overflow = self.js_eval("window.getComputedStyle(document.querySelector('#view-builder .top-row-main')).overflowX")
+        self.assertEqual(top_row_overflow, "auto")
+        top_row_wrap = self.js_eval("window.getComputedStyle(document.querySelector('#view-builder .top-row-main')).flexWrap")
+        self.assertEqual(top_row_wrap, "nowrap")
 
         # 2. Check chassis selector options
         chassis_opts = self.js_eval("[...document.getElementById('chassis-select').options].map(o => o.value)")
@@ -273,18 +287,24 @@ class TestBrowserUI(unittest.TestCase):
         # 1. Player Robot tab
         self.js_eval("document.querySelector(\"#main-nav .nav-tab[data-tab='player-robot']\").click()")
         self.assertTrue(self.js_eval("document.getElementById('view-player-robot').classList.contains('active')"))
+        self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-builder')).display"), "none")
+        self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-player-robot')).display"), "flex")
         player_cards = self.js_eval("document.querySelectorAll('#player-robot-container .robot-view-card').length")
         self.assertGreater(player_cards, 0)
 
         # 2. Automaton tab
         self.js_eval("document.querySelector(\"#main-nav .nav-tab[data-tab='automaton-robot']\").click()")
         self.assertTrue(self.js_eval("document.getElementById('view-automaton-robot').classList.contains('active')"))
+        self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-builder')).display"), "none")
+        self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-automaton-robot')).display"), "flex")
         auto_cards = self.js_eval("document.querySelectorAll('#automaton-robot-container .robot-view-card').length")
         self.assertGreater(auto_cards, 0)
 
         # 3. Combat Log tab
         self.js_eval("document.querySelector(\"#main-nav .nav-tab[data-tab='log']\").click()")
         self.assertTrue(self.js_eval("document.getElementById('view-log').classList.contains('active')"))
+        self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-builder')).display"), "none")
+        self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-log')).display"), "flex")
         self.assertTrue(self.js_eval("document.querySelectorAll('#combat-log-container .log-entry').length > 0"))
 
 
