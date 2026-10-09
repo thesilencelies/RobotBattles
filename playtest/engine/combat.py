@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections
 import math
 import random
 import re
@@ -342,16 +343,71 @@ def _get_downstream_endpoints(cid: str, robot: RobotState) -> Set[str]:
     return endpoints
 
 
+def _edmonds_karp(
+    capacities: Dict[Tuple[str, str], int],
+    adj: Dict[str, Set[str]],
+    source: str,
+    sink: str,
+) -> Tuple[int, Dict[Tuple[str, str], int]]:
+    """
+    Edmonds-Karp algorithm for maximum flow in a directed network.
+    Returns (total_flow, flow_map).
+    """
+    flow: Dict[Tuple[str, str], int] = collections.defaultdict(int)
+    total_flow = 0
+
+    while True:
+        parent: Dict[str, Optional[str]] = {source: None}
+        queue = collections.deque([source])
+        while queue:
+            u = queue.popleft()
+            if u == sink:
+                break
+            for v in adj.get(u, ()):
+                residual = capacities.get((u, v), 0) - flow[(u, v)]
+                if v not in parent and residual > 0:
+                    parent[v] = u
+                    queue.append(v)
+
+        if sink not in parent:
+            break
+
+        path_flow = 999999999
+        curr = sink
+        while curr != source:
+            prev = parent[curr]
+            assert prev is not None
+            residual = capacities.get((prev, curr), 0) - flow[(prev, curr)]
+            path_flow = min(path_flow, residual)
+            curr = prev
+
+        curr = sink
+        while curr != source:
+            prev = parent[curr]
+            assert prev is not None
+            flow[(prev, curr)] += path_flow
+            flow[(curr, prev)] -= path_flow
+            curr = prev
+
+        total_flow += path_flow
+
+    return total_flow, flow
+
+
 def refresh_robot_drive_and_power(robot: RobotState, current_move: Optional[MoveChoice] = None) -> None:
     """
     Recomputes active components and left/right drive max counts based on current health,
     enforcing resource supply and split supply rules:
-    - If a component supplying multiple components can supply all of their needs between them,
-      then they are all supplied fine.
-    - If it cannot, then it supplies components based on their connected endpoint:
-      drive first, then weapons, unless the robot chose not to use that side's drive this turn (drive = 0).
+    - A component is only active if its requirements are supplied by connected components.
+    - Supply is resolved on a best-effort basis across connected components:
+      if a component is able to be supplied, then it is supplied unless that would mean
+      a higher priority component would become inactive.
+    - Where supply is insufficient to power all connected components, priority is given
+      based on their connected endpoint: drive first, then weapons, unless the robot
+      chose not to use that side's drive this turn (drive = 0).
     - Within the same category, it supplies from the largest requirement going down.
-    - If multiple components supply the same multiple components, sum up the supply and distribute as above.
+    - If multiple components supply multiple components, sum up and distribute available
+      supply according to the best-effort and priority rules above.
     """
     left_drive_active = current_move is None or current_move.left != 0
     right_drive_active = current_move is None or current_move.right != 0
@@ -372,6 +428,26 @@ def refresh_robot_drive_and_power(robot: RobotState, current_move: Optional[Move
                 active_set.add(cid)
                 avail_supply[cid] = parse_resource_counts(c.outputs)
 
+    def deduct_supply(sup_id: str, res: str, amt: int, visited: Optional[Set[str]] = None) -> None:
+        if visited is None:
+            visited = set()
+        if sup_id in visited or amt <= 0:
+            return
+        visited.add(sup_id)
+        cur = avail_supply.get(sup_id, {}).get(res, 0)
+        if cur == -1:
+            # Pass-through node: propagate deduction upstream
+            rem = amt
+            for usup in robot.supply_graph.get(sup_id, []):
+                if usup in active_set and rem > 0:
+                    u_cur = avail_supply.get(usup, {}).get(res, 0)
+                    if u_cur > 0:
+                        take = min(rem, u_cur)
+                        deduct_supply(usup, res, take, visited)
+                        rem -= take
+        elif cur > 0:
+            avail_supply[sup_id][res] = max(0, cur - amt)
+
     # Pass 2: Iteratively propagate and allocate supply along the supply graph
     changed = True
     iterations = 0
@@ -379,40 +455,33 @@ def refresh_robot_drive_and_power(robot: RobotState, current_move: Optional[Move
         changed = False
         iterations += 1
 
-        # Group components whose suppliers are in active_set
-        eligible_cids = [
-            cid for cid, c in robot.components.items()
-            if not c.is_destroyed and not c.is_active and any(sid in active_set for sid in robot.supply_graph.get(cid, []))
-        ]
+        for res_type in ["E", "S", "P", "D", "M"]:
+            # 1. Collect active suppliers that provide res_type
+            suppliers = [
+                sid for sid in active_set
+                if avail_supply.get(sid, {}).get(res_type, 0) > 0 or avail_supply.get(sid, {}).get(res_type, 0) == -1
+            ]
+            if not suppliers:
+                continue
 
-        if not eligible_cids:
-            break
+            # 2. Collect eligible unpowered consumers requiring res_type connected to these suppliers
+            candidate_cids = [
+                cid for cid, c in robot.components.items()
+                if not c.is_destroyed
+                and not c.is_active
+                and (parse_resource_counts(c.requirements).get(res_type, 0) > 0
+                     or parse_resource_counts(c.requirements).get(res_type, 0) == -1)
+                and any(sid in suppliers for sid in robot.supply_graph.get(cid, []))
+            ]
+            if not candidate_cids:
+                continue
 
-        # Collect suppliers providing to these eligible components
-        # To handle 'multiple components supply the same multiple components, sum up supply':
-        # Group components by their active supplier set
-        supplier_clusters: Dict[Tuple[str, ...], List[str]] = {}
-        for cid in eligible_cids:
-            active_sups = tuple(sorted([sid for sid in robot.supply_graph.get(cid, []) if sid in active_set]))
-            if active_sups:
-                supplier_clusters.setdefault(active_sups, []).append(cid)
-
-        for sups, consumers in supplier_clusters.items():
-            # Sum up available supply from these suppliers for each resource type
-            cluster_supply: Dict[str, int] = {}
-            for sid in sups:
-                s_counts = avail_supply.get(sid, {})
-                for res, count in s_counts.items():
-                    if count == -1:  # Pass-through unlimited
-                        cluster_supply[res] = cluster_supply.get(res, 0) + 9999
-                    else:
-                        cluster_supply[res] = cluster_supply.get(res, 0) + count
-
-            # Priority sorting for consumers based on connected endpoint:
-            # 1. Drive first (unless drive side is not used this turn)
-            # 2. Weapons second
-            # 3. Other / unused drive
-            # Within same category: largest requirement going down
+            # 3. Sort candidates according to canonical rules:
+            # - Drive first (unless that side's drive is 0 this turn)
+            # - Weapons second
+            # - Other / unused drive third
+            # - Within same category, largest requirement first
+            # - Stable tie-breaker by cid
             def consumer_sort_key(cid: str):
                 c = robot.components[cid]
                 endpoints = _get_downstream_endpoints(cid, robot)
@@ -430,84 +499,87 @@ def refresh_robot_drive_and_power(robot: RobotState, current_move: Optional[Move
                     cat_pri = 2
 
                 req_counts = parse_resource_counts(c.requirements)
-                total_req = sum(v for v in req_counts.values() if v > 0)
-                # Sort by (cat_pri asc, total_req desc)
-                return (cat_pri, -total_req, cid)
+                req_val = req_counts.get(res_type, 0)
+                if req_val == -1:
+                    req_val = 0
+                return (cat_pri, -req_val, cid)
 
-            sorted_consumers = sorted(consumers, key=consumer_sort_key)
+            sorted_candidates = sorted(candidate_cids, key=consumer_sort_key)
 
-            # Check if total available supply can supply all needs between them
-            total_reqs: Dict[str, int] = {}
-            for cid in sorted_consumers:
-                for res, req_val in parse_resource_counts(robot.components[cid].requirements).items():
+            # 4. Helper to construct flow network and test feasibility
+            def solve_flow_network(test_consumers: List[str]) -> Tuple[bool, int, Dict[Tuple[str, str], int]]:
+                SRC = "__SRC__"
+                DST = "__DST__"
+                capacities: Dict[Tuple[str, str], int] = {}
+                adj: Dict[str, Set[str]] = collections.defaultdict(set)
+
+                def add_edge(u: str, v: str, cap: int):
+                    if cap > 0:
+                        capacities[(u, v)] = cap
+                        adj[u].add(v)
+                        adj[v].add(u)
+
+                for sid in suppliers:
+                    s_cap = avail_supply.get(sid, {}).get(res_type, 0)
+                    if s_cap == -1:
+                        s_cap = 9999
+                    add_edge(SRC, sid, s_cap)
+
+                target = 0
+                for cid in test_consumers:
+                    c = robot.components[cid]
+                    req_val = parse_resource_counts(c.requirements).get(res_type, 0)
+                    if req_val == -1:
+                        req_val = 0
+                    target += req_val
                     if req_val > 0:
-                        total_reqs[res] = total_reqs.get(res, 0) + req_val
+                        add_edge(cid, DST, req_val)
 
-            def deduct_from_suppliers(res: str, amount: int):
-                rem = amount
-                for sid in sups:
-                    if rem <= 0:
-                        break
-                    s_cnt = avail_supply.get(sid, {}).get(res, 0)
-                    if s_cnt == -1:  # pass-through unlimited
-                        continue
-                    take = min(rem, s_cnt)
-                    avail_supply[sid][res] = s_cnt - take
-                    rem -= take
+                    for sid in robot.supply_graph.get(cid, []):
+                        if sid in suppliers:
+                            add_edge(sid, cid, 9999)
 
-            can_supply_all = all(cluster_supply.get(res, 0) >= req_tot for res, req_tot in total_reqs.items())
+                if target == 0:
+                    return True, 0, {}
 
-            if can_supply_all:
-                for cid in sorted_consumers:
-                    c = robot.components[cid]
-                    if not c.is_active:
-                        # Deduct from suppliers
-                        for res, req_val in parse_resource_counts(c.requirements).items():
-                            if req_val > 0:
-                                cluster_supply[res] = cluster_supply.get(res, 0) - req_val
-                                deduct_from_suppliers(res, req_val)
+                total_flow, flow_map = _edmonds_karp(capacities, adj, SRC, DST)
+                return (total_flow == target), total_flow, flow_map
 
-                        c.is_active = True
-                        active_set.add(cid)
-                        # Compute its available outputs
-                        out_counts = parse_resource_counts(c.outputs)
-                        # Pass-through handling (XE / XS)
-                        for r, cnt in out_counts.items():
-                            if cnt == -1:
-                                req_in = parse_resource_counts(c.requirements).get(r, 0)
-                                out_counts[r] = req_in if req_in > 0 else 9999
-                        avail_supply[cid] = out_counts
-                        changed = True
-            else:
-                # Distribute according to priority
-                for cid in sorted_consumers:
-                    c = robot.components[cid]
-                    if c.is_active:
-                        continue
-                    req_counts = parse_resource_counts(c.requirements)
-                    # Check if current cluster_supply can satisfy this component
-                    can_satisfy = True
-                    for res, req_val in req_counts.items():
-                        if req_val > 0 and cluster_supply.get(res, 0) < req_val:
-                            can_satisfy = False
-                            break
+            # 5. Best-effort greedy selection using max-flow feasibility:
+            # A component is supplied unless doing so would make a higher-priority component inactive
+            selected_consumers: List[str] = []
+            for cand in sorted_candidates:
+                feasible, _, _ = solve_flow_network(selected_consumers + [cand])
+                if feasible:
+                    selected_consumers.append(cand)
 
-                    if can_satisfy:
-                        # Deduct requirement from cluster and individual suppliers
-                        for res, req_val in req_counts.items():
-                            if req_val > 0:
-                                cluster_supply[res] = cluster_supply.get(res, 0) - req_val
-                                deduct_from_suppliers(res, req_val)
+            if not selected_consumers:
+                continue
 
-                        c.is_active = True
-                        active_set.add(cid)
-                        out_counts = parse_resource_counts(c.outputs)
-                        for r, cnt in out_counts.items():
-                            if cnt == -1:
-                                req_in = req_counts.get(r, 0)
-                                out_counts[r] = req_in if req_in > 0 else 9999
-                        avail_supply[cid] = out_counts
-                        changed = True
+            # 6. Extract exact flows for the accepted consumer set
+            _, _, final_flows = solve_flow_network(selected_consumers)
+
+            # Deduct flows from suppliers
+            for sid in suppliers:
+                for cid in selected_consumers:
+                    f = final_flows.get((sid, cid), 0)
+                    if f > 0:
+                        deduct_supply(sid, res_type, f)
+
+            # 7. Activate selected components and expose their outputs
+            for cid in selected_consumers:
+                c = robot.components[cid]
+                c.is_active = True
+                active_set.add(cid)
+
+                out_counts = parse_resource_counts(c.outputs)
+                # Pass-through handling (XE / XS)
+                for r, cnt in out_counts.items():
+                    if cnt == -1:
+                        req_in = parse_resource_counts(c.requirements).get(r, 0)
+                        out_counts[r] = req_in if req_in > 0 else 9999
+                avail_supply[cid] = out_counts
+                changed = True
 
     # Count drive outputs on left and right sides
     left_drive = 0

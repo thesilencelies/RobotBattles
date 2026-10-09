@@ -314,6 +314,139 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(robot.components["m_left"].is_active)
         self.assertTrue(robot.components["wep"].is_active)
 
+    def test_best_effort_split_supply_overlapping_batteries(self):
+        """
+        Tests the exact user scenario:
+        A 4-supply battery (bat1) is connected to 2 motors (m1, m2).
+        A 2-supply battery (bat2) is connected to both those motors (m1, m2) AND a 3rd motor (m3).
+        Each motor requires 2E.
+        Best-effort max-flow must supply bat1 -> m1 (2E), bat1 -> m2 (2E), bat2 -> m3 (2E),
+        so ALL 3 motors are active, regardless of component ID ordering.
+        """
+        for id_swap in [False, True]:
+            b1_id = "bat_alpha" if not id_swap else "bat_zeta"
+            b2_id = "bat_zeta" if not id_swap else "bat_alpha"
+
+            bat1 = ComponentHealth(
+                id=b1_id, name="Battery 4E", card_type="component",
+                max_durability=5, current_durability=5, absorption=0,
+                requirements="", outputs="4E", keywords="", text="",
+                x=100, y=100, rotation=0, box=(100, 100, 144, 164)
+            )
+            bat2 = ComponentHealth(
+                id=b2_id, name="Battery 2E", card_type="component",
+                max_durability=5, current_durability=5, absorption=0,
+                requirements="", outputs="2E", keywords="", text="",
+                x=300, y=100, rotation=0, box=(300, 100, 344, 164)
+            )
+            m1 = ComponentHealth(
+                id="m1", name="Motor 1", card_type="component",
+                max_durability=3, current_durability=3, absorption=0,
+                requirements="2E", outputs="D", keywords="", text="",
+                x=50, y=200, rotation=0, box=(50, 200, 94, 264)
+            )
+            m2 = ComponentHealth(
+                id="m2", name="Motor 2", card_type="component",
+                max_durability=3, current_durability=3, absorption=0,
+                requirements="2E", outputs="D", keywords="", text="",
+                x=150, y=200, rotation=0, box=(150, 200, 194, 264)
+            )
+            m3 = ComponentHealth(
+                id="m3", name="Motor 3", card_type="component",
+                max_durability=3, current_durability=3, absorption=0,
+                requirements="2E", outputs="D", keywords="", text="",
+                x=350, y=200, rotation=0, box=(350, 200, 394, 264)
+            )
+
+            components = {b1_id: bat1, b2_id: bat2, "m1": m1, "m2": m2, "m3": m3}
+            supply_graph = {
+                b1_id: [],
+                b2_id: [],
+                "m1": [b1_id, b2_id],
+                "m2": [b1_id, b2_id],
+                "m3": [b2_id],
+            }
+            reverse_supply = {
+                b1_id: ["m1", "m2"],
+                b2_id: ["m1", "m2", "m3"],
+                "m1": [],
+                "m2": [],
+                "m3": [],
+            }
+            robot = RobotState(
+                id="tree_bot", name="Tree Bot", chassis_name="Square", chassis_template="Square",
+                flip_strength=3, pose=Pose(400, 400, 0),
+                components=components,
+                connections={},
+                supply_graph=supply_graph,
+                reverse_supply=reverse_supply,
+            )
+
+            refresh_robot_drive_and_power(robot)
+            self.assertTrue(robot.components["m1"].is_active, f"m1 must be active (swap={id_swap})")
+            self.assertTrue(robot.components["m2"].is_active, f"m2 must be active (swap={id_swap})")
+            self.assertTrue(robot.components["m3"].is_active, f"m3 must be active (swap={id_swap})")
+
+    def test_best_effort_split_supply_priority_preservation(self):
+        """
+        When supply is constrained (2E + 2E = 4E total, but 3 motors require 6E):
+        - If m3 is drive and m1, m2 are weapons, m3 (drive) must stay active.
+        """
+        bat1 = ComponentHealth(
+            id="bat1", name="Battery 2E #1", card_type="component",
+            max_durability=5, current_durability=5, absorption=0,
+            requirements="", outputs="2E", keywords="", text="",
+            x=100, y=100, rotation=0, box=(100, 100, 144, 164)
+        )
+        bat2 = ComponentHealth(
+            id="bat2", name="Battery 2E #2", card_type="component",
+            max_durability=5, current_durability=5, absorption=0,
+            requirements="", outputs="2E", keywords="", text="",
+            x=300, y=100, rotation=0, box=(300, 100, 344, 164)
+        )
+        # m1 and m2 are weapon motors (cat_pri = 1)
+        m1 = ComponentHealth(
+            id="m1", name="Weapon Motor 1", card_type="component",
+            max_durability=3, current_durability=3, absorption=0,
+            requirements="2E", outputs="4W", keywords="", text="",
+            x=50, y=200, rotation=0, box=(50, 200, 94, 264)
+        )
+        m2 = ComponentHealth(
+            id="m2", name="Weapon Motor 2", card_type="component",
+            max_durability=3, current_durability=3, absorption=0,
+            requirements="2E", outputs="4W", keywords="", text="",
+            x=150, y=200, rotation=0, box=(150, 200, 194, 264)
+        )
+        # m3 is drive motor (cat_pri = 0)
+        m3 = ComponentHealth(
+            id="m3", name="Drive Motor 3", card_type="component",
+            max_durability=3, current_durability=3, absorption=0,
+            requirements="2E", outputs="D", keywords="", text="",
+            x=350, y=200, rotation=0, box=(350, 200, 394, 264)
+        )
+
+        robot = RobotState(
+            id="tree_bot", name="Tree Bot", chassis_name="Square", chassis_template="Square",
+            flip_strength=3, pose=Pose(400, 400, 0),
+            components={"bat1": bat1, "bat2": bat2, "m1": m1, "m2": m2, "m3": m3},
+            connections={},
+            supply_graph={
+                "bat1": [],
+                "bat2": [],
+                "m1": ["bat1", "bat2"],
+                "m2": ["bat1", "bat2"],
+                "m3": ["bat2"],
+            },
+            reverse_supply={},
+        )
+
+        refresh_robot_drive_and_power(robot)
+        # Drive (m3) has higher priority than weapon motors (m1, m2), so m3 must be active!
+        self.assertTrue(robot.components["m3"].is_active, "Drive motor m3 must be prioritized")
+        # One weapon motor gets remaining 2E from bat1, the other is unpowered
+        active_weapons = [cid for cid in ["m1", "m2"] if robot.components[cid].is_active]
+        self.assertEqual(len(active_weapons), 1, "Exactly one of m1 or m2 should be active")
+
 
 if __name__ == "__main__":
     unittest.main()
