@@ -263,7 +263,26 @@ class RobotState {
 
   loadRobot(parsedData) {
     if (parsedData.chassis) {
-      this.chassis = parsedData.chassis;
+      const cName = parsedData.chassis.name;
+      const matched = (this.chassisList || []).find(
+        c => c.name.toLowerCase() === cName.toLowerCase() ||
+             (cName.length > 3 && c.name.toLowerCase().includes(cName.toLowerCase()))
+      );
+      this.chassis = matched || parsedData.chassis;
+    } else {
+      // Fallback: check if any placed card was actually the chassis
+      const placed = parsedData.placed_cards || [];
+      const chassisCardIdx = placed.findIndex(c => {
+        const name = (c.card || (c.cardData && c.cardData.name) || "").toLowerCase();
+        return (this.chassisList || []).some(ch => ch.name.toLowerCase() === name);
+      });
+      if (chassisCardIdx !== -1) {
+        const chCard = placed[chassisCardIdx];
+        const name = (chCard.card || (chCard.cardData && chCard.cardData.name) || "").toLowerCase();
+        const matched = (this.chassisList || []).find(ch => ch.name.toLowerCase() === name);
+        if (matched) this.chassis = matched;
+        placed.splice(chassisCardIdx, 1);
+      }
     }
     this.placedCards = (parsedData.placed_cards || []).map(c => {
       const parsedX = Number(c.x);

@@ -90,6 +90,8 @@ export class RobotViewRenderer {
             <div class="chassis-subtitle">
               Chassis: <strong>${robot.chassis_name}</strong> (${robot.chassis_template})
               • Flip Strength: <strong>${robot.flip_strength}</strong>
+              • ⚖️ <strong>${robot.total_weight || 0} Wt</strong>
+              • 💰 <strong>$${robot.total_cost || 0}</strong>
             </div>
           </div>
           <div class="status-badge-group">

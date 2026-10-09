@@ -269,16 +269,36 @@ export class ArenaRenderer {
     g.setAttribute("transform", `translate(${x}, ${y}) rotate(${theta})`);
     g.setAttribute("class", `miniature ${role} ${robot.is_inverted ? "inverted" : ""}`);
 
-    // 1. Chassis Template Polygon
+    // 1. Inverted Outer Warning Aura
+    if (robot.is_inverted) {
+      const halo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      halo.setAttribute("cx", "0");
+      halo.setAttribute("cy", "0");
+      halo.setAttribute("r", "34");
+      halo.setAttribute("fill", "rgba(245, 158, 11, 0.16)");
+      halo.setAttribute("stroke", "#f59e0b");
+      halo.setAttribute("stroke-width", "2.2");
+      halo.setAttribute("stroke-dasharray", "6,4");
+      g.appendChild(halo);
+    }
+
+    // 1b. Chassis Template Polygon
     const templateName = robot.chassis_template || "Triangle";
     const shape = CHASSIS_MINIATURE_SHAPES[templateName] || CHASSIS_MINIATURE_SHAPES.Triangle;
     const pointsStr = shape.map(pt => `${pt[0]},${pt[1]}`).join(" ");
 
     const chassisPoly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
     chassisPoly.setAttribute("points", pointsStr);
-    chassisPoly.setAttribute("fill", secondaryColor);
-    chassisPoly.setAttribute("stroke", primaryColor);
-    chassisPoly.setAttribute("stroke-width", "2.8");
+    if (robot.is_inverted) {
+      chassisPoly.setAttribute("fill", "rgba(245, 158, 11, 0.35)");
+      chassisPoly.setAttribute("stroke", "#f59e0b");
+      chassisPoly.setAttribute("stroke-width", "3.2");
+      chassisPoly.setAttribute("stroke-dasharray", "5,3");
+    } else {
+      chassisPoly.setAttribute("fill", secondaryColor);
+      chassisPoly.setAttribute("stroke", primaryColor);
+      chassisPoly.setAttribute("stroke-width", "2.8");
+    }
     chassisPoly.setAttribute("stroke-linejoin", "round");
     g.appendChild(chassisPoly);
 
@@ -294,9 +314,15 @@ export class ArenaRenderer {
     arrow.setAttribute("y1", "-10");
     arrow.setAttribute("x2", "0");
     arrow.setAttribute("y2", "-32");
-    arrow.setAttribute("stroke", primaryColor);
-    arrow.setAttribute("stroke-width", "2.5");
-    arrow.setAttribute("marker-end", `url(#arrow-${role})`);
+    if (robot.is_inverted) {
+      arrow.setAttribute("stroke", "#f59e0b");
+      arrow.setAttribute("stroke-width", "2.2");
+      arrow.setAttribute("stroke-dasharray", "4,3");
+    } else {
+      arrow.setAttribute("stroke", primaryColor);
+      arrow.setAttribute("stroke-width", "2.5");
+      arrow.setAttribute("marker-end", `url(#arrow-${role})`);
+    }
     g.appendChild(arrow);
 
     // 4. Center Core Dot
@@ -304,7 +330,7 @@ export class ArenaRenderer {
     dot.setAttribute("cx", "0");
     dot.setAttribute("cy", "0");
     dot.setAttribute("r", "4");
-    dot.setAttribute("fill", primaryColor);
+    dot.setAttribute("fill", robot.is_inverted ? "#f59e0b" : primaryColor);
     g.appendChild(dot);
 
     // 5. Inverted or Status Indicator
@@ -312,12 +338,40 @@ export class ArenaRenderer {
       const invText = document.createElementNS("http://www.w3.org/2000/svg", "text");
       invText.setAttribute("x", "0");
       invText.setAttribute("y", "4");
-      invText.setAttribute("fill", "#fbbf24");
+      invText.setAttribute("fill", "#ffffff");
       invText.setAttribute("font-size", "14");
       invText.setAttribute("font-weight", "bold");
       invText.setAttribute("text-anchor", "middle");
       invText.textContent = "🔄";
       g.appendChild(invText);
+
+      // Upright prominent pill badge above miniature
+      const invBadgeG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      invBadgeG.setAttribute("transform", `rotate(${-theta}) translate(0, -42)`);
+
+      const invPill = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      invPill.setAttribute("x", "-38");
+      invPill.setAttribute("y", "-8");
+      invPill.setAttribute("width", "76");
+      invPill.setAttribute("height", "16");
+      invPill.setAttribute("rx", "8");
+      invPill.setAttribute("fill", "#f59e0b");
+      invPill.setAttribute("stroke", "#ffffff");
+      invPill.setAttribute("stroke-width", "1");
+      invBadgeG.appendChild(invPill);
+
+      const invPillText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      invPillText.setAttribute("x", "0");
+      invPillText.setAttribute("y", "3.5");
+      invPillText.setAttribute("fill", "#000000");
+      invPillText.setAttribute("font-size", "7.5");
+      invPillText.setAttribute("font-weight", "900");
+      invPillText.setAttribute("letter-spacing", "0.5");
+      invPillText.setAttribute("text-anchor", "middle");
+      invPillText.textContent = "⚠️ INVERTED";
+      invBadgeG.appendChild(invPillText);
+
+      g.appendChild(invBadgeG);
     }
 
     if (robot.is_raised) {
@@ -343,8 +397,8 @@ export class ArenaRenderer {
     labelBg.setAttribute("height", "18");
     labelBg.setAttribute("rx", "4");
     labelBg.setAttribute("fill", "rgba(15, 23, 42, 0.85)");
-    labelBg.setAttribute("stroke", primaryColor);
-    labelBg.setAttribute("stroke-width", "0.8");
+    labelBg.setAttribute("stroke", robot.is_inverted ? "#f59e0b" : primaryColor);
+    labelBg.setAttribute("stroke-width", "1");
     labelG.appendChild(labelBg);
 
     const nameText = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -386,16 +440,29 @@ export class ArenaRenderer {
 
     if (wTemplate.includes("Circle") || wName.includes("Spinner") || wName.includes("Blade") || wName.includes("Disc")) {
       // Circle spinner template: centered on equivalent card location
-      const radius = wName.includes("Bloodsport") ? 30 : 22;
+      const isLargeCircle = wTemplate.toLowerCase().includes("large") || wName.includes("Bloodsport");
+      const radius = isLargeCircle ? 30 : 22;
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.setAttribute("cx", lx);
       circle.setAttribute("cy", ly);
       circle.setAttribute("r", radius);
-      circle.setAttribute("fill", "rgba(239, 68, 68, 0.2)");
+      circle.setAttribute("fill", isLargeCircle ? "rgba(239, 68, 68, 0.24)" : "rgba(239, 68, 68, 0.2)");
       circle.setAttribute("stroke", "#ef4444");
       circle.setAttribute("stroke-width", "2.5");
       circle.setAttribute("stroke-dasharray", "6,3");
       wg.appendChild(circle);
+
+      if (isLargeCircle) {
+        const innerRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        innerRing.setAttribute("cx", lx);
+        innerRing.setAttribute("cy", ly);
+        innerRing.setAttribute("r", "18");
+        innerRing.setAttribute("fill", "none");
+        innerRing.setAttribute("stroke", "rgba(239, 68, 68, 0.5)");
+        innerRing.setAttribute("stroke-width", "1.2");
+        innerRing.setAttribute("stroke-dasharray", "3,3");
+        wg.appendChild(innerRing);
+      }
 
       // Red active perimeter tooth / tip
       const tooth1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");

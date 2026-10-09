@@ -131,6 +131,14 @@ def build_robot_state(
         if comp.card_type == "weapon":
             spin_counters[cid] = 0
 
+    total_weight = int(chassis.get("weight", 0))
+    total_cost = int(chassis.get("cost", 0))
+    for c in parsed.get("placed_cards", []):
+        cname = c.get("card", "")
+        cdata = by_name.get(cname, {})
+        total_weight += int(cdata.get("weight", 0))
+        total_cost += int(cdata.get("cost", 0))
+
     pose = Pose(x=start_pose[0], y=start_pose[1], theta=start_pose[2])
 
     state = RobotState(
@@ -145,6 +153,8 @@ def build_robot_state(
         supply_graph=supply_graph,
         reverse_supply=reverse_supply,
         weapon_spin_counters=spin_counters,
+        total_weight=total_weight,
+        total_cost=total_cost,
     )
 
     refresh_robot_drive_and_power(state)
@@ -207,6 +217,52 @@ def create_match(
         log=logs,
     )
     return match
+
+
+def can_robot_uninvert_to_regain_drive(robot: RobotState) -> bool:
+    """
+    Checks if an inverted robot has a mechanism to uninvert itself
+    (an active, non-destroyed component with the Self-right keyword)
+    and would regain active drive once uninverted.
+    """
+    if not robot.is_inverted:
+        return False
+
+    has_self_right = any(
+        "self-right" in c.keywords.lower() and not c.is_destroyed and c.is_active
+        for c in robot.components.values()
+    )
+    if not has_self_right:
+        return False
+
+    orig_inverted = robot.is_inverted
+    orig_left = robot.left_drive_max
+    orig_right = robot.right_drive_max
+    try:
+        robot.is_inverted = False
+        refresh_robot_drive_and_power(robot)
+        return (robot.left_drive_max > 0 or robot.right_drive_max > 0)
+    finally:
+        robot.is_inverted = orig_inverted
+        robot.left_drive_max = orig_left
+        robot.right_drive_max = orig_right
+
+
+def is_robot_defeated(robot: RobotState) -> bool:
+    """
+    Rule: "A robot is defeated if it has no active drive and no way to uninvert itself to regain drive"
+    Also defeated if eliminated (e.g. pushed into hazard pit).
+    """
+    if robot.is_eliminated:
+        return True
+
+    if robot.left_drive_max > 0 or robot.right_drive_max > 0:
+        return False
+
+    if can_robot_uninvert_to_regain_drive(robot):
+        return False
+
+    return True
 
 
 def execute_turn(
@@ -305,10 +361,14 @@ def execute_turn(
     refresh_robot_drive_and_power(a_bot)
 
     # Win Condition Evaluation
-    p_immobile = (p_bot.left_drive_max == 0 and p_bot.right_drive_max == 0) or p_bot.is_eliminated
-    a_immobile = (a_bot.left_drive_max == 0 and a_bot.right_drive_max == 0) or a_bot.is_eliminated
+    p_defeated = is_robot_defeated(p_bot)
+    a_defeated = is_robot_defeated(a_bot)
 
-    if p_bot.is_eliminated:
+    if p_bot.is_eliminated and a_bot.is_eliminated:
+        match.winner = "draw"
+        match.win_reason = "Both robots were eliminated in the hazard pit!"
+        match.phase = "game_over"
+    elif p_bot.is_eliminated:
         match.winner = "automaton"
         match.win_reason = f"{p_bot.name} was eliminated in the hazard pit!"
         match.phase = "game_over"
@@ -316,17 +376,17 @@ def execute_turn(
         match.winner = "player"
         match.win_reason = f"{a_bot.name} was eliminated in the hazard pit!"
         match.phase = "game_over"
-    elif p_immobile and a_immobile:
+    elif p_defeated and a_defeated:
         match.winner = "draw"
-        match.win_reason = "Both robots are immobilized!"
+        match.win_reason = "Both robots are defeated (no active drive and no way to uninvert to regain drive)!"
         match.phase = "game_over"
-    elif p_immobile:
+    elif p_defeated:
         match.winner = "automaton"
-        match.win_reason = f"{p_bot.name} has no active drive remaining!"
+        match.win_reason = f"{p_bot.name} is defeated (no active drive and no way to uninvert to regain drive)!"
         match.phase = "game_over"
-    elif a_immobile:
+    elif a_defeated:
         match.winner = "player"
-        match.win_reason = f"{a_bot.name} has no active drive remaining!"
+        match.win_reason = f"{a_bot.name} is defeated (no active drive and no way to uninvert to regain drive)!"
         match.phase = "game_over"
     elif match.round >= 10:
         match.phase = "game_over"

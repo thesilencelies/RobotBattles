@@ -264,6 +264,14 @@ class TestBrowserUI(unittest.TestCase):
         round_txt = self.js_eval("document.getElementById('hud-round').textContent")
         self.assertIn("Round 1", round_txt)
 
+        # Verify combatants specs bar exists and displays weight and cost
+        pspecs = self.js_eval("document.getElementById('hud-pspecs').textContent")
+        self.assertIn("Wt", pspecs)
+        self.assertIn("$", pspecs)
+        aspecs = self.js_eval("document.getElementById('hud-aspecs').textContent")
+        self.assertIn("Wt", aspecs)
+        self.assertIn("$", aspecs)
+
         # Arena Zoom controls test
         vb_initial = self.js_eval("document.getElementById('arena-svg').getAttribute('viewBox')")
         self.assertEqual(vb_initial, "0 0 800 800")
@@ -389,6 +397,15 @@ class TestBrowserUI(unittest.TestCase):
         })()
         """)
         self.assertIn("translate(190, 0)", wep_transform)
+
+        # Check chassis is properly set in builder state
+        chassis_res = self.js_eval("""
+        (async () => {
+          const { state } = await import("/js/state.js");
+          return state.chassis ? state.chassis.name : null;
+        })()
+        """)
+        self.assertEqual(chassis_res, "Viper Wedge Chassis")
 
 
 if __name__ == "__main__":

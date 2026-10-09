@@ -257,6 +257,42 @@ def create_template_circle():
     print(f"Created {ICONS_DIR / 'template_circle.png'}")
 
 
+def create_template_large_circle():
+    # Large circle template: a circle visibly larger than the robot
+    # Visually distinct from template_circle by featuring a center robot chassis square
+    # and a wide double-ring / expanded red perimeter extending well past the robot.
+    im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(im)
+
+    red = (235, 10, 10, 255)
+    black = (10, 10, 10, 255)
+
+    # 1. Robot chassis body in the center (square with rounded corners)
+    draw.rounded_rectangle((135, 135, 265, 265), radius=16, fill=black)
+    # Center pivot core dot
+    draw.ellipse((185, 185, 215, 215), fill=(240, 240, 240, 255))
+
+    # 2. Outer large circle extending close to edge
+    lw_outer = 34
+    draw.ellipse((16, 16, 384, 384), outline=red, width=lw_outer)
+
+    # 3. Inner concentric dashed ring to show expansion / large spinner sweep
+    for deg in range(0, 360, 20):
+        rad_start = math.radians(deg)
+        rad_end = math.radians(deg + 12)
+        r_dash = 145
+        cx, cy = 200, 200
+        # Draw arc segment
+        bbox = (cx - r_dash, cy - r_dash, cx + r_dash, cy + r_dash)
+        draw.arc(bbox, start=deg, end=deg + 12, fill=red, width=10)
+
+    im.save(ICONS_DIR / "template_large_circle.png", "PNG")
+    root_icons = WORKSPACE / "icons"
+    if root_icons.is_dir():
+        im.save(root_icons / "template_large_circle.png", "PNG")
+    print(f"Created {ICONS_DIR / 'template_large_circle.png'}")
+
+
 def create_template_line():
     # Single line template
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
@@ -380,6 +416,7 @@ def main():
     create_durability_icon()
     create_absorption_icon()
     create_template_circle()
+    create_template_large_circle()
     create_template_line()
     create_template_bar()
     create_template_prongs()

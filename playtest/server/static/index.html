@@ -77,6 +77,27 @@
           </div>
         </div>
 
+        <!-- Match Combatants Specs Bar: Weight, Cost & Inversion Status -->
+        <div class="arena-match-bots-bar" id="hud-bots-bar">
+          <div class="bot-badge bot-badge-player">
+            <div class="bot-info-line">
+              <span class="bot-tag bot-tag-p">PLAYER</span>
+              <strong class="bot-name" id="hud-pname">Player 1</strong>
+              <span class="bot-specs" id="hud-pspecs">⚖️ 0 Wt • 💰 $0</span>
+            </div>
+            <span class="badge badge-warning pulse-badge" id="hud-pinverted" style="display:none;">⚠️ INVERTED</span>
+          </div>
+          <div class="match-vs-tag">VS</div>
+          <div class="bot-badge bot-badge-auto">
+            <div class="bot-info-line">
+              <span class="bot-tag bot-tag-a">OPPONENT</span>
+              <strong class="bot-name" id="hud-aname">Vyper Flipper</strong>
+              <span class="bot-specs" id="hud-aspecs">⚖️ 0 Wt • 💰 $0</span>
+            </div>
+            <span class="badge badge-warning pulse-badge" id="hud-ainverted" style="display:none;">⚠️ INVERTED</span>
+          </div>
+        </div>
+
         <!-- The Arena Stage (800mm x 800mm SVG) -->
         <div class="arena-viewport">
           <div class="arena-zoom-controls">

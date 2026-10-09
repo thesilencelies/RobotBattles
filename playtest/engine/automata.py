@@ -164,8 +164,23 @@ def compute_automaton_drive(
     current_bearing_deg = normalize_angle_deg(target_heading_deg - automaton.pose.theta)
 
     if action == "Rush":
-        # Maximum speed closing distance to opponent
-        # Filter for forward movement options (straight, curve)
+        # Automata turn around to face their opponent even on rush if not facing them
+        if abs(current_bearing_deg) > 45.0:
+            turn_opts = [o for o in options if o["category"] in ("spin", "pivot")]
+            if not turn_opts:
+                turn_opts = options
+            best_opt = turn_opts[0]
+            min_bearing_diff = float("inf")
+            for opt in turn_opts:
+                choice = MoveChoice(opt["left"], opt["right"])
+                traj = generate_trajectory(automaton.pose, choice, num_steps=5, clamp_to_walls=True)
+                end_bearing = abs(normalize_angle_deg(target_heading_deg - traj[-1].theta))
+                if end_bearing < min_bearing_diff:
+                    min_bearing_diff = end_bearing
+                    best_opt = opt
+            return MoveChoice(best_opt["left"], best_opt["right"])
+
+        # Maximum speed closing distance to opponent when facing within 45 deg
         forward_opts = [o for o in options if o["category"] in ("straight", "curve") and o["left"] > 0 and o["right"] > 0]
         if not forward_opts:
             forward_opts = [o for o in options if o["left"] > 0 or o["right"] > 0]

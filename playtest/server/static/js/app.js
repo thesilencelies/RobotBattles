@@ -58,6 +58,14 @@ class PlaytestApp {
     // Arena Stage
     this.arenaSvg = document.getElementById("arena-svg");
 
+    // Combatants Specs Bar
+    this.hudPname = document.getElementById("hud-pname");
+    this.hudPspecs = document.getElementById("hud-pspecs");
+    this.hudPinverted = document.getElementById("hud-pinverted");
+    this.hudAname = document.getElementById("hud-aname");
+    this.hudAspecs = document.getElementById("hud-aspecs");
+    this.hudAinverted = document.getElementById("hud-ainverted");
+
     // Turn Planning Controls
     this.leftDriveVal = document.getElementById("left-drive-val");
     this.rightDriveVal = document.getElementById("right-drive-val");
@@ -246,7 +254,13 @@ class PlaytestApp {
   }
 
   async _onExecuteTurn() {
-    if (!this.currentMatch || this.currentMatch.phase === "game_over") return;
+    if (!this.currentMatch) return;
+
+    if (this.currentMatch.phase === "game_over") {
+      // Tap button to start a fresh match
+      this.btnNewMatch.click();
+      return;
+    }
 
     this.btnExecuteTurn.disabled = true;
     this.btnExecuteTurn.textContent = "⚙️ Executing...";
@@ -258,14 +272,12 @@ class PlaytestApp {
       // Animate trajectory movement on arena
       this.arenaRenderer.animateTurn(this.currentMatch, () => {
         this._updateMatchUi();
-        this.btnExecuteTurn.disabled = this.currentMatch.phase === "game_over";
-        this.btnExecuteTurn.textContent = this.currentMatch.phase === "game_over" ? "Match Complete" : "🚀 Execute Turn";
       });
 
     } catch (err) {
       alert("Turn failed: " + err.message);
       this.btnExecuteTurn.disabled = false;
-      this.btnExecuteTurn.textContent = "🚀 Execute Turn";
+      this.btnExecuteTurn.textContent = "🚀 Lock in Drive & Execute Turn";
     }
   }
 
@@ -281,9 +293,22 @@ class PlaytestApp {
 
     if (m.phase === "game_over") {
       this.hudStatus.innerHTML = `<span class="badge badge-danger">🏆 WINNER: ${m.winner.toUpperCase()} (${m.win_reason})</span>`;
+      this.btnExecuteTurn.disabled = false;
+      this.btnExecuteTurn.textContent = "🔄 Match Complete — Tap for New Match";
     } else {
       this.hudStatus.innerHTML = `<span class="badge badge-success">PLANNING PHASE</span>`;
+      this.btnExecuteTurn.disabled = false;
+      this.btnExecuteTurn.textContent = "🚀 Lock in Drive & Execute Turn";
     }
+
+    // Combatants Bar: Weight, Cost & Inversion Status
+    if (this.hudPname) this.hudPname.textContent = pBot.name;
+    if (this.hudPspecs) this.hudPspecs.textContent = `⚖️ ${pBot.total_weight || 0} Wt • 💰 $${pBot.total_cost || 0}`;
+    if (this.hudPinverted) this.hudPinverted.style.display = pBot.is_inverted ? "inline-block" : "none";
+
+    if (this.hudAname) this.hudAname.textContent = aBot.name;
+    if (this.hudAspecs) this.hudAspecs.textContent = `⚖️ ${aBot.total_weight || 0} Wt • 💰 $${aBot.total_cost || 0}`;
+    if (this.hudAinverted) this.hudAinverted.style.display = aBot.is_inverted ? "inline-block" : "none";
 
     // Spin summary in banner
     const pSpin = Object.values(pBot.weapon_spin_counters || {}).reduce((a, b) => a + b, 0);

@@ -193,6 +193,104 @@ html, body {
   font-weight: 600;
 }
 
+.arena-match-bots-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #090e17;
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px 14px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.bot-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bot-badge-auto {
+  justify-content: flex-end;
+}
+
+.bot-info-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+.bot-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.bot-tag-p {
+  background: rgba(0, 229, 255, 0.12);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.35);
+}
+
+.bot-tag-a {
+  background: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.bot-name {
+  color: #f8fafc;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bot-specs {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.8rem;
+  background: rgba(30, 41, 59, 0.6);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #334155;
+  white-space: nowrap;
+}
+
+.match-vs-tag {
+  font-weight: 900;
+  font-size: 0.75rem;
+  color: #64748b;
+  letter-spacing: 1px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.pulse-badge {
+  animation: pulse-glow 1.5s infinite alternate ease-in-out;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  white-space: nowrap;
+}
+
+@keyframes pulse-glow {
+  from {
+    transform: scale(0.97);
+    box-shadow: 0 0 4px rgba(245, 158, 11, 0.3);
+  }
+  to {
+    transform: scale(1.03);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+  }
+}
+
+.miniature.inverted {
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.7));
+}
+
 .arena-viewport {
   flex: 1;
   display: flex;
@@ -1158,6 +1256,22 @@ html, body {
   .ribbon-actions {
     margin-left: auto;
     gap: 4px;
+  }
+
+  .arena-match-bots-bar {
+    padding: 4px 8px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .bot-info-line {
+    font-size: 0.78rem;
+    gap: 4px;
+  }
+
+  .bot-specs {
+    font-size: 0.74rem;
+    padding: 1px 4px;
   }
 
   .ribbon-actions .select-sm {

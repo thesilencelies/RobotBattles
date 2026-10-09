@@ -89,16 +89,21 @@ export function parseCsvToRobot(csvText) {
 
     if (!cardName) continue;
 
-    // Lookup card from catalog
-    const cardObj = state.cardCatalog.find(c => c.name.toLowerCase() === cardName.toLowerCase()) || {
+    // Lookup chassis first from state.chassisList, then card from state.cardCatalog
+    const chassisDef = (state.chassisList || []).find(
+      c => c.name.toLowerCase() === cardName.toLowerCase() ||
+           (cardName.length > 3 && c.name.toLowerCase().includes(cardName.toLowerCase()))
+    );
+    const cardObj = chassisDef || (state.cardCatalog || []).find(c => c.name.toLowerCase() === cardName.toLowerCase()) || {
       name: cardName,
       type: "component",
       weight: 0,
       cost: 0,
     };
 
-    if (cardObj.type === "chassis") {
-      if (!chassis) chassis = cardObj;
+    const isChassis = Boolean(chassisDef) || cardObj.type === "chassis" || location.toLowerCase().startsWith("chassis:0,0,0");
+    if (isChassis) {
+      if (!chassis) chassis = chassisDef || cardObj;
       continue;
     }
 

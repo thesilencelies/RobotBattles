@@ -51,6 +51,8 @@ KEYWORD_PALETTE = {
 
 TEMPLATE_ICONS = {
     "circle": "pictures/icons/template_circle.png",
+    "large circle": "pictures/icons/template_large_circle.png",
+    "large_circle": "pictures/icons/template_large_circle.png",
     "line": "pictures/icons/template_line.png",
     "bar": "pictures/icons/template_bar.png",
     "prongs": "pictures/icons/template_prongs.png",

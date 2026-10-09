@@ -599,6 +599,79 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(match.winner, "draw")
         self.assertIn("Exact tie", match.win_reason)
 
+    def test_large_circle_template_geometry(self):
+        from playtest.engine.field import get_weapon_template_geometry
+        geom = get_weapon_template_geometry("Large Circle", (5.0, -10.0))
+        self.assertEqual(geom["type"], "circle")
+        self.assertEqual(geom["radius"], 30.0)
+        self.assertEqual(geom["center"], (5.0, -10.0))
+
+    def test_defeat_rule_invert_and_self_right(self):
+        from playtest.engine.match import is_robot_defeated, can_robot_uninvert_to_regain_drive
+        csv_text = read_saved_robot("Vyper_flipper.csv")
+        match = create_match(csv_text, "Vyper_Spinner", "Player Bot")
+        bot = match.player_robot
+
+        # Initial state: upright, has active drive -> NOT defeated
+        self.assertFalse(is_robot_defeated(bot))
+
+        # Invert the robot
+        bot.is_inverted = True
+
+        # Destroy invertible wheels so drive is 0 while inverted
+        for comp in bot.components.values():
+            if "invertible" in comp.keywords.lower():
+                comp.is_destroyed = True
+
+        from playtest.engine.combat import refresh_robot_drive_and_power
+        refresh_robot_drive_and_power(bot)
+
+        # Drive is now 0 while inverted
+        self.assertEqual(bot.left_drive_max, 0)
+        self.assertEqual(bot.right_drive_max, 0)
+
+        # But it has Self-right on lifter and would have drive when upright -> NOT defeated!
+        self.assertTrue(can_robot_uninvert_to_regain_drive(bot))
+        self.assertFalse(is_robot_defeated(bot))
+
+        # Now destroy the self-righting weapon/component
+        for comp in bot.components.values():
+            if "self-right" in comp.keywords.lower():
+                comp.is_destroyed = True
+
+        # Now it has no way to uninvert itself to regain drive -> IS defeated!
+        self.assertFalse(can_robot_uninvert_to_regain_drive(bot))
+        self.assertTrue(is_robot_defeated(bot))
+
+    def test_automata_rush_turns_to_face_opponent_behind(self):
+        from playtest.engine.automata import compute_automaton_drive
+        csv_text = read_saved_robot("Vyper_flipper.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        auto_bot = match.automaton_robot
+        p_bot = match.player_robot
+
+        # Position automaton at (400, 400) facing North (theta = 0 deg)
+        auto_bot.pose = Pose(x=400.0, y=400.0, theta=0.0)
+        # Position player behind automaton at (400, 600 - South, theta=0)
+        p_bot.pose = Pose(x=400.0, y=600.0, theta=0.0)
+
+        # Automaton is facing North, opponent is to the South (behind it, bearing ~ 180 degrees)
+        # On "Rush", it should turn around to face the player instead of driving away!
+        choice = compute_automaton_drive(auto_bot, p_bot, "Rush")
+        # A turn to face them means asymmetric drive (spin or pivot, where left != right)
+        self.assertNotEqual(choice.left, choice.right, "Automaton should turn (spin/pivot) to face opponent behind")
+
+    def test_match_records_weight_and_cost(self):
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        self.assertGreater(match.player_robot.total_weight, 0)
+        self.assertGreater(match.player_robot.total_cost, 0)
+        self.assertGreater(match.automaton_robot.total_weight, 0)
+        self.assertGreater(match.automaton_robot.total_cost, 0)
+        d = match.player_robot.to_dict()
+        self.assertIn("total_weight", d)
+        self.assertIn("total_cost", d)
+
 
 if __name__ == "__main__":
     unittest.main()

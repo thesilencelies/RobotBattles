@@ -170,6 +170,8 @@ class RobotState:
     is_eliminated: bool = False
     left_drive_max: int = 0
     right_drive_max: int = 0
+    total_weight: int = 0
+    total_cost: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -188,6 +190,8 @@ class RobotState:
             "is_eliminated": self.is_eliminated,
             "left_drive_max": self.left_drive_max,
             "right_drive_max": self.right_drive_max,
+            "total_weight": self.total_weight,
+            "total_cost": self.total_cost,
         }
 
 
