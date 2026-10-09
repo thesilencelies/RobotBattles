@@ -18,19 +18,26 @@ export class CardCatalogue {
   }
 
   _bindEvents() {
-    this.searchInput.addEventListener("input", (e) => {
-      this.searchQuery = e.target.value.toLowerCase().trim();
-      this.render();
-    });
+    if (this.searchInput) {
+      this.searchInput.addEventListener("input", (e) => {
+        this.searchQuery = e.target.value.toLowerCase().trim();
+        this.render();
+      });
+    }
 
-    this.categoryPills.addEventListener("click", (e) => {
-      const btn = e.target.closest(".pill-btn");
-      if (!btn) return;
-      this.categoryPills.querySelectorAll(".pill-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      this.activeCategory = btn.getAttribute("data-category") || "all";
-      this.render();
-    });
+    if (this.categoryPills) {
+      const container = this.categoryPills instanceof NodeList ? this.categoryPills[0]?.parentElement : this.categoryPills;
+      if (container && typeof container.addEventListener === "function") {
+        container.addEventListener("click", (e) => {
+          const btn = e.target.closest(".pill-btn");
+          if (!btn) return;
+          container.querySelectorAll(".pill-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          this.activeCategory = btn.getAttribute("data-category") || "all";
+          this.render();
+        });
+      }
+    }
   }
 
   open() {
@@ -97,6 +104,10 @@ export class CardCatalogue {
         img.src = card.image_url;
         img.alt = card.name;
         img.loading = "lazy";
+        img.onerror = () => {
+          img.style.display = "none";
+          thumb.textContent = card.name.charAt(0);
+        };
         thumb.appendChild(img);
       } else {
         thumb.textContent = card.name.charAt(0);

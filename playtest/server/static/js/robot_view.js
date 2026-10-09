@@ -40,7 +40,7 @@ export class RobotViewRenderer {
     }
 
     container.innerHTML = `
-      <div class="robot-state-card">
+      <div class="robot-state-card robot-view-card">
         <div class="state-header-row">
           <div>
             <h2 class="robot-title" style="color: ${roleColor}">${robot.name}</h2>
@@ -116,6 +116,8 @@ export class RobotViewRenderer {
     if (comp.card_type === "weapon" && (comp.spin_counters !== undefined || (comp.keywords && comp.keywords.toLowerCase().includes("spin up")))) {
       spinTag = `<span class="badge badge-cyan" style="background:#0284c7;color:#fff;font-weight:bold;">🌀 Spin: ${comp.spin_counters || 0}</span>`;
     }
+
+    const typeIcon = comp.card_type === "weapon" ? "⚔️" : comp.card_type === "chassis" ? "🛡️" : comp.card_type === "drive" ? "⚙️" : "📦";
 
     return `
       <div class="${cardCls}">

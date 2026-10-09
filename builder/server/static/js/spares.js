@@ -52,6 +52,10 @@ export class SparesDrawer {
         img.src = cardData.image_url;
         img.alt = cardData.name;
         img.loading = "lazy";
+        img.onerror = () => {
+          img.style.display = "none";
+          thumb.textContent = cardData.name.charAt(0);
+        };
         thumb.appendChild(img);
       } else {
         thumb.textContent = cardData.name.charAt(0);

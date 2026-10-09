@@ -44,6 +44,12 @@ export class PlaytestApi {
   }
 
   static async startNewBattle(playerCsv, automatonName = "Vyper_Spinner", playerName = "Player 1") {
+    if (playerCsv && typeof playerCsv === "object") {
+      const opts = playerCsv;
+      playerCsv = opts.player_csv;
+      automatonName = opts.automaton || automatonName;
+      playerName = opts.player_name || playerName;
+    }
     const res = await fetch("/api/battle/new", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -58,6 +64,10 @@ export class PlaytestApi {
       throw new Error(err.error || "Failed to start battle");
     }
     return res.json();
+  }
+
+  static async startNewMatch(optsOrCsv, automatonName = "Vyper_Spinner", playerName = "Player 1") {
+    return this.startNewBattle(optsOrCsv, automatonName, playerName);
   }
 
   static async executeTurn(left, right, fixedRoll = null) {
@@ -77,9 +87,17 @@ export class PlaytestApi {
     return res.json();
   }
 
+  static async submitTurn(left, right, fixedRoll = null) {
+    return this.executeTurn(left, right, fixedRoll);
+  }
+
   static async resetBattle() {
     const res = await fetch("/api/battle/reset", { method: "POST" });
     if (!res.ok) throw new Error("Failed to reset battle");
     return res.json();
+  }
+
+  static async resetMatch() {
+    return this.resetBattle();
   }
 }

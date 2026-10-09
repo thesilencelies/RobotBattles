@@ -38,11 +38,13 @@ class PlaytestApp {
 
     // 3. Load or Start Match
     await this._loadBattleState();
+
+    this.isReady = true;
   }
 
   _cacheElements() {
-    // Navigation Tabs
-    this.tabs = document.querySelectorAll(".nav-tab");
+    // Navigation Tabs (scope to top bar to avoid colliding with builder's bottom nav)
+    this.tabs = document.querySelectorAll("#main-nav .nav-tab");
     this.tabViews = document.querySelectorAll(".tab-view");
 
     // Match Header HUD
@@ -322,5 +324,6 @@ class PlaytestApp {
 
 document.addEventListener("DOMContentLoaded", () => {
   const app = new PlaytestApp();
+  window.app = app;
   app.init();
 });

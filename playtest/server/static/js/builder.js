@@ -53,6 +53,10 @@ export class BuilderController {
       );
       this.spares = new SparesDrawer(this.drawerSpares, this.sparesList);
 
+      // Pre-render catalogue and spares drawers so cards are immediately available in the DOM
+      if (this.catalogue) this.catalogue.render();
+      if (this.spares) this.spares.render();
+
       state.subscribe(() => this._onStateChange());
       this._onStateChange();
 
@@ -95,6 +99,8 @@ export class BuilderController {
     this.btnLoadModal = document.getElementById("btn-load-modal");
     this.btnPrintSheet = document.getElementById("btn-print-sheet");
     this.btnDeployToArena = document.getElementById("btn-deploy-to-arena");
+    this.btnTopCatalogue = document.getElementById("btn-top-catalogue");
+    this.btnTopSpares = document.getElementById("btn-top-spares");
 
     // Stats
     this.statWeightVal = document.getElementById("stat-weight-val");
@@ -133,7 +139,7 @@ export class BuilderController {
     this.drawerCatalogue = document.getElementById("drawer-catalogue");
     this.btnCloseCatalogue = document.getElementById("btn-close-catalogue");
     this.cardSearchInput = document.getElementById("card-search-input");
-    this.categoryPills = document.querySelectorAll(".category-pills .pill-btn, .pills-row .pill");
+    this.categoryPills = document.querySelector(".category-pills");
     this.catalogueList = document.getElementById("catalogue-list");
 
     this.drawerSpares = document.getElementById("drawer-spares");
@@ -214,7 +220,7 @@ export class BuilderController {
     // Card Inspector actions
     if (this.btnRotateCard) {
       this.btnRotateCard.addEventListener("click", () => {
-        if (state.selectedCardId) state.rotateCard(state.selectedCardId, 90);
+        if (state.selectedCardId) state.rotatePlacedCard(state.selectedCardId, 90);
       });
     }
     if (this.btnToSpares) {
@@ -224,7 +230,7 @@ export class BuilderController {
     }
     if (this.btnDupCard) {
       this.btnDupCard.addEventListener("click", () => {
-        if (state.selectedCardId) state.duplicateCard(state.selectedCardId);
+        if (state.selectedCardId) state.duplicatePlacedCard(state.selectedCardId);
       });
     }
     if (this.btnDelCard) {
@@ -234,19 +240,21 @@ export class BuilderController {
     }
     if (this.btnCloseInspector) {
       this.btnCloseInspector.addEventListener("click", () => {
-        state.selectedCardId = null;
-        state.notify();
+        state.selectCard(null);
       });
     }
 
-    // Drawers toggle
-    if (this.tabBtnCatalogue) this.tabBtnCatalogue.addEventListener("click", () => this._openDrawer("catalogue"));
-    if (this.tabBtnSpares) this.tabBtnSpares.addEventListener("click", () => this._openDrawer("spares"));
-    if (this.badgeSparesToggle) this.badgeSparesToggle.addEventListener("click", () => this._openDrawer("spares"));
+    // Drawer and Bottom Navigation Controls
+    if (this.tabBtnCatalogue) this.tabBtnCatalogue.addEventListener("click", () => this._openCatalogue());
+    if (this.btnTopCatalogue) this.btnTopCatalogue.addEventListener("click", () => this._openCatalogue());
 
-    if (this.btnCloseCatalogue) this.btnCloseCatalogue.addEventListener("click", () => this._closeDrawers());
-    if (this.btnCloseSpares) this.btnCloseSpares.addEventListener("click", () => this._closeDrawers());
-    if (this.tabBtnCanvas) this.tabBtnCanvas.addEventListener("click", () => this._closeDrawers());
+    if (this.tabBtnSpares) this.tabBtnSpares.addEventListener("click", () => this._openSpares());
+    if (this.btnTopSpares) this.btnTopSpares.addEventListener("click", () => this._openSpares());
+    if (this.badgeSparesToggle) this.badgeSparesToggle.addEventListener("click", () => this._openSpares());
+
+    if (this.tabBtnCanvas) this.tabBtnCanvas.addEventListener("click", () => this._closeAllDrawers());
+    if (this.btnCloseCatalogue) this.btnCloseCatalogue.addEventListener("click", () => this._closeAllDrawers());
+    if (this.btnCloseSpares) this.btnCloseSpares.addEventListener("click", () => this._closeAllDrawers());
 
     // Storage Modal
     if (this.btnSaveModal) {
@@ -280,7 +288,8 @@ export class BuilderController {
 
     if (this.btnDownloadCsv) {
       this.btnDownloadCsv.addEventListener("click", () => {
-        downloadCsvFile(`${state.robotName || "Combat_Bot"}.csv`);
+        const csv = serializeRobotToCsv();
+        downloadCsvFile(`${state.robotName || "Combat_Bot"}.csv`, csv);
       });
     }
 
@@ -310,7 +319,8 @@ export class BuilderController {
       this.btnServerSave.addEventListener("click", async () => {
         const name = (this.serverSaveName.value || state.robotName || "bot").trim();
         try {
-          await saveRobotToServer(name);
+          const csv = serializeRobotToCsv();
+          await saveRobotToServer(name, csv);
           alert(`Saved ${name}.csv to server!`);
           this._refreshSavedRobotsList();
         } catch (err) {
@@ -338,26 +348,28 @@ export class BuilderController {
     }
   }
 
-  _openDrawer(type) {
-    if (type === "catalogue" && this.drawerCatalogue) {
-      this.drawerCatalogue.classList.add("open");
-      if (this.drawerSpares) this.drawerSpares.classList.remove("open");
-      if (this.tabBtnCatalogue) this.tabBtnCatalogue.classList.add("active");
-      if (this.tabBtnSpares) this.tabBtnSpares.classList.remove("active");
-    } else if (type === "spares" && this.drawerSpares) {
-      this.drawerSpares.classList.add("open");
-      if (this.drawerCatalogue) this.drawerCatalogue.classList.remove("open");
-      if (this.tabBtnSpares) this.tabBtnSpares.classList.add("active");
-      if (this.tabBtnCatalogue) this.tabBtnCatalogue.classList.remove("active");
-    }
+  _openCatalogue() {
+    this._setActiveNavTab("catalogue");
+    if (this.spares) this.spares.close();
+    if (this.catalogue) this.catalogue.open();
   }
 
-  _closeDrawers() {
-    if (this.drawerCatalogue) this.drawerCatalogue.classList.remove("open");
-    if (this.drawerSpares) this.drawerSpares.classList.remove("open");
-    if (this.tabBtnCatalogue) this.tabBtnCatalogue.classList.remove("active");
-    if (this.tabBtnSpares) this.tabBtnSpares.classList.remove("active");
-    if (this.tabBtnCanvas) this.tabBtnCanvas.classList.add("active");
+  _openSpares() {
+    this._setActiveNavTab("spares");
+    if (this.catalogue) this.catalogue.close();
+    if (this.spares) this.spares.open();
+  }
+
+  _closeAllDrawers() {
+    this._setActiveNavTab("canvas");
+    if (this.catalogue) this.catalogue.close();
+    if (this.spares) this.spares.close();
+  }
+
+  _setActiveNavTab(tab) {
+    if (this.tabBtnCanvas) this.tabBtnCanvas.classList.toggle("active", tab === "canvas");
+    if (this.tabBtnCatalogue) this.tabBtnCatalogue.classList.toggle("active", tab === "catalogue");
+    if (this.tabBtnSpares) this.tabBtnSpares.classList.toggle("active", tab === "spares");
   }
 
   _openStorageModal(mode) {
@@ -401,7 +413,7 @@ export class BuilderController {
         `;
         item.querySelector("button").addEventListener("click", async () => {
           try {
-            const parsed = await loadRobotFromServer(r.name);
+            const parsed = await loadRobotFromServer(r.filename || r.name);
             state.loadRobot(parsed);
             state.setRobotName(r.name);
             this._closeStorageModal();
@@ -452,6 +464,13 @@ export class BuilderController {
       } else {
         this.cardInspector.classList.add("hidden");
       }
+    }
+
+    // Sync active nav tab if drawers are closed
+    const catOpen = this.drawerCatalogue && this.drawerCatalogue.classList.contains("open");
+    const sparesOpen = this.drawerSpares && this.drawerSpares.classList.contains("open");
+    if (!catOpen && !sparesOpen) {
+      this._setActiveNavTab("canvas");
     }
   }
 }

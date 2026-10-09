@@ -88,7 +88,7 @@ html, body {
   border: 1px solid var(--border-color);
 }
 
-.nav-tab {
+.nav-tabs .nav-tab {
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -103,12 +103,12 @@ html, body {
   transition: all 0.15s ease;
 }
 
-.nav-tab:hover {
+.nav-tabs .nav-tab:hover {
   color: var(--text-main);
   background: rgba(255, 255, 255, 0.05);
 }
 
-.nav-tab.active {
+.nav-tabs .nav-tab.active {
   background: var(--accent-blue);
   color: #041226;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
