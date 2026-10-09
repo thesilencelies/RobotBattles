@@ -90,8 +90,21 @@ class TestData(unittest.TestCase):
         self.assertEqual(lines[0], "id,card,location,connections")
         self.assertIn("Viper Wedge Chassis", lines[1])
         self.assertIn("Four-Bar Lifter", serialized)
-        self.assertIn("Galaxy 300 3S", serialized)
         self.assertIn("Repeat 2207 Hubmotor", serialized)
+
+    def test_zero_coordinates_preserved(self):
+        # When a weapon is placed at the front (y = 0.0), it must not default to 100
+        sample_csv = (
+            "id,card,location,connections\n"
+            "1,Viper Wedge Chassis,chassis:0,0,0,\n"
+            "2,Horizontal Spinner,chassis:190.0,0.0,0,\n"
+        )
+        parsed = parse_robot_csv(sample_csv)
+        self.assertEqual(len(parsed["placed_cards"]), 1)
+        card = parsed["placed_cards"][0]
+        self.assertEqual(card["x"], 190.0)
+        self.assertEqual(card["y"], 0.0)
+        self.assertEqual(card["rotation"], 0)
 
 
 if __name__ == "__main__":

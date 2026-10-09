@@ -251,8 +251,10 @@ export class RobotViewRenderer {
 
       const cW = (consumer.rotation === 90 || consumer.rotation === 270) ? 64.0 : 44.0;
       const cH = (consumer.rotation === 90 || consumer.rotation === 270) ? 44.0 : 64.0;
-      const cx = (Number(consumer.x) || 100) + cW / 2;
-      const cy = (Number(consumer.y) || 100) + cH / 2;
+      const rawCx = Number(consumer.x);
+      const rawCy = Number(consumer.y);
+      const cx = (Number.isFinite(rawCx) ? rawCx : 100.0) + cW / 2;
+      const cy = (Number.isFinite(rawCy) ? rawCy : 100.0) + cH / 2;
 
       for (const supplierId of supplierIds) {
         const supplier = comps[supplierId];
@@ -260,8 +262,10 @@ export class RobotViewRenderer {
 
         const sW = (supplier.rotation === 90 || supplier.rotation === 270) ? 64.0 : 44.0;
         const sH = (supplier.rotation === 90 || supplier.rotation === 270) ? 44.0 : 64.0;
-        const sx = (Number(supplier.x) || 100) + sW / 2;
-        const sy = (Number(supplier.y) || 100) + sH / 2;
+        const rawSx = Number(supplier.x);
+        const rawSy = Number(supplier.y);
+        const sx = (Number.isFinite(rawSx) ? rawSx : 100.0) + sW / 2;
+        const sy = (Number.isFinite(rawSy) ? rawSy : 100.0) + sH / 2;
 
         const isActive = supplier.is_active && !supplier.is_destroyed;
         const strokeColor = isActive ? "#38bdf8" : "#64748b";
@@ -304,8 +308,10 @@ export class RobotViewRenderer {
     const rot = comp.rotation || 0;
     const w = (rot === 90 || rot === 270) ? 64.0 : 44.0;
     const h = (rot === 90 || rot === 270) ? 44.0 : 64.0;
-    const x = Number(comp.x) || 100.0;
-    const y = Number(comp.y) || 100.0;
+    const rawX = Number(comp.x);
+    const rawY = Number(comp.y);
+    const x = Number.isFinite(rawX) ? rawX : 100.0;
+    const y = Number.isFinite(rawY) ? rawY : 100.0;
 
     const isDrive = comp.outputs && (comp.outputs.includes("D") || comp.outputs.includes("M"));
     const isWeapon = comp.card_type === "weapon" || (comp.outputs && comp.outputs.includes("W"));

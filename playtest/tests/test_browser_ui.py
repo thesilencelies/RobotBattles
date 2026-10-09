@@ -143,7 +143,7 @@ class TestBrowserUI(unittest.TestCase):
                 pass
 
         # Disable blocking modals
-        cls._eval_static("window.alert = (m) => console.log('ALERT:', m); window.confirm = () => true;")
+        cls._eval_static("window.alert = (m) => { console.log('ALERT:', m); window.lastAlert = m; }; window.confirm = () => true;")
 
     @classmethod
     def tearDownClass(cls):
@@ -160,7 +160,7 @@ class TestBrowserUI(unittest.TestCase):
         msg = json.dumps({
             "id": cls.msg_id,
             "method": "Runtime.evaluate",
-            "params": {"expression": expr, "returnByValue": True},
+            "params": {"expression": expr, "returnByValue": True, "awaitPromise": True},
         })
         cls.sock.sendall(encode_ws_frame(msg))
         while True:
@@ -254,7 +254,11 @@ class TestBrowserUI(unittest.TestCase):
             time.sleep(0.1)
             if self.js_eval("document.getElementById('view-arena').classList.contains('active')"):
                 break
-        self.assertTrue(self.js_eval("document.getElementById('view-arena').classList.contains('active')"))
+        alert_msg = self.js_eval("window.lastAlert")
+        self.assertTrue(
+            self.js_eval("document.getElementById('view-arena').classList.contains('active')"),
+            f"View arena was not active. Last alert: {alert_msg}",
+        )
 
         # 2. Check Match HUD & Arena Zoom
         round_txt = self.js_eval("document.getElementById('hud-round').textContent")
@@ -346,6 +350,45 @@ class TestBrowserUI(unittest.TestCase):
         self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-builder')).display"), "none")
         self.assertEqual(self.js_eval("window.getComputedStyle(document.getElementById('view-log')).display"), "flex")
         self.assertTrue(self.js_eval("document.querySelectorAll('#combat-log-container .log-entry').length > 0"))
+
+    def test_05_loaded_robot_weapon_position_at_front(self):
+        # Switch to builder tab
+        self.js_eval("document.querySelector(\"#main-nav .nav-tab[data-tab='builder']\").click()")
+
+        # Load robot CSV with weapon placed at front (y = 0.0)
+        csv_script = """
+        (async () => {
+          const csvText = `id,card,location,connections
+1,"Viper Wedge Chassis","chassis:0,0,0",
+2,"Horizontal Spinner","chassis:190.0,0.0,0",
+3,"Brushless Motor","chassis:190.0,70.0,0",
+`;
+          const { parseCsvToRobot } = await import("/js/csv.js");
+          const { state } = await import("/js/state.js");
+          const parsed = parseCsvToRobot(csvText);
+          state.loadRobot(parsed);
+          const wep = state.placedCards.find(c => c.cardData && c.cardData.name === "Horizontal Spinner");
+          return {
+            wepY: wep ? wep.y : null,
+            wepX: wep ? wep.x : null,
+          };
+        })()
+        """
+        res = self.js_eval(csv_script)
+        self.assertIsNotNone(res)
+        self.assertEqual(res["wepY"], 0.0, "Weapon loaded from CSV at y=0.0 must have y=0.0, not default to 100/110")
+        self.assertEqual(res["wepX"], 190.0)
+
+        # Check SVG canvas rendering of the weapon
+        wep_transform = self.js_eval("""
+        (async () => {
+          const { state } = await import("/js/state.js");
+          const wep = state.placedCards.find(c => c.cardData && c.cardData.name === "Horizontal Spinner");
+          const el = document.querySelector(`#layer-cards g[data-card-id="${wep.id}"]`);
+          return el ? el.getAttribute("transform") : "";
+        })()
+        """)
+        self.assertIn("translate(190, 0)", wep_transform)
 
 
 if __name__ == "__main__":

@@ -269,6 +269,23 @@ def parse_robot_csv(csv_text: str) -> Dict[str, Any]:
         location = (row.get("location") or "").strip()
         conn_str = (row.get("connections") or "").strip()
 
+        # Handle unquoted chassis coordinates that might have been split across columns
+        if location.startswith("chassis:") and "," not in location and ";" not in location:
+            extras = []
+            conn_val = ""
+            if conn_str and re.match(r"^-?\d+(\.\d+)?$", conn_str):
+                extras.append(conn_str)
+                rest = row.get(None, [])
+                for r_val in rest:
+                    r_str = str(r_val).strip()
+                    if re.match(r"^-?\d+(\.\d+)?$", r_str):
+                        extras.append(r_str)
+                    else:
+                        conn_val = r_str
+                        break
+                location = location + "," + ",".join(extras)
+                conn_str = conn_val
+
         if not card_name:
             continue
 
@@ -305,9 +322,18 @@ def parse_robot_csv(csv_text: str) -> Dict[str, Any]:
             else:
                 coords = [p.strip() for p in loc_body.split(",") if p.strip()]
 
-            x = float(coords[0]) if len(coords) >= 1 and coords[0] else 100.0
-            y = float(coords[1]) if len(coords) >= 2 and coords[1] else 100.0
-            rot = int(coords[2]) if len(coords) >= 3 and coords[2] else 0
+            try:
+                x = float(coords[0]) if len(coords) >= 1 and coords[0] != "" else 100.0
+            except (ValueError, TypeError):
+                x = 100.0
+            try:
+                y = float(coords[1]) if len(coords) >= 2 and coords[1] != "" else 100.0
+            except (ValueError, TypeError):
+                y = 100.0
+            try:
+                rot = int(float(coords[2])) if len(coords) >= 3 and coords[2] != "" else 0
+            except (ValueError, TypeError):
+                rot = 0
 
             placed_cards.append({
                 "id": cid,

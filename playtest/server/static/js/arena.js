@@ -372,8 +372,10 @@ export class ArenaRenderer {
 
     const cardW = 44.0;
     const cardH = 64.0;
-    const cardCx = (Number(weaponComp.x) || 100) + cardW / 2.0;
-    const cardCy = (Number(weaponComp.y) || 100) + cardH / 2.0;
+    const rawX = Number(weaponComp.x);
+    const rawY = Number(weaponComp.y);
+    const cardCx = (Number.isFinite(rawX) ? rawX : 100.0) + cardW / 2.0;
+    const cardCy = (Number.isFinite(rawY) ? rawY : 100.0) + cardH / 2.0;
     const lx = (cardCx - MAT_CENTER_X) * MAT_TO_MINI_SCALE;
     const ly = (cardCy - MAT_CENTER_Y) * MAT_TO_MINI_SCALE;
 

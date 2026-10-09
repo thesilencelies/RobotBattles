@@ -265,13 +265,18 @@ class RobotState {
     if (parsedData.chassis) {
       this.chassis = parsedData.chassis;
     }
-    this.placedCards = (parsedData.placed_cards || []).map(c => ({
-      id: c.id || this.generateId(),
-      cardData: c.card_data || c.cardData || { name: c.card, weight: 0, cost: 0 },
-      x: Number(c.x || 100),
-      y: Number(c.y || 100),
-      rotation: Number(c.rotation || 0),
-    }));
+    this.placedCards = (parsedData.placed_cards || []).map(c => {
+      const parsedX = Number(c.x);
+      const parsedY = Number(c.y);
+      const parsedRot = Number(c.rotation);
+      return {
+        id: c.id || this.generateId(),
+        cardData: c.card_data || c.cardData || { name: c.card, weight: 0, cost: 0 },
+        x: Number.isFinite(parsedX) ? parsedX : 100.0,
+        y: Number.isFinite(parsedY) ? parsedY : 100.0,
+        rotation: Number.isFinite(parsedRot) ? parsedRot : 0,
+      };
+    });
     this.spareCards = (parsedData.spare_cards || []).map(s => ({
       id: s.id || this.generateId(),
       cardData: s.card_data || s.cardData || { name: s.card, weight: 0, cost: 0 },

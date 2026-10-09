@@ -67,8 +67,25 @@ export function parseCsvToRobot(csvText) {
 
     const cid = (row[colId] || String(i)).trim();
     const cardName = (row[colCard] || "").trim();
-    const location = (row[colLoc] || "").trim();
-    const connections = colConn !== -1 ? (row[colConn] || "").trim() : "";
+    let location = (row[colLoc] || "").trim();
+    let connections = colConn !== -1 ? (row[colConn] || "").trim() : "";
+
+    // Support unquoted chassis coordinates that might have been split across columns
+    if (location.startsWith("chassis:") && !location.includes(",") && !location.includes(";")) {
+      const extraParts = [];
+      for (let j = colLoc + 1; j < row.length; j++) {
+        const val = (row[j] || "").trim();
+        if (/^-?\d+(\.\d+)?$/.test(val)) {
+          extraParts.push(val);
+        } else {
+          connections = val;
+          break;
+        }
+      }
+      if (extraParts.length > 0) {
+        location = location + "," + extraParts.join(",");
+      }
+    }
 
     if (!cardName) continue;
 
@@ -102,9 +119,18 @@ export function parseCsvToRobot(csvText) {
         const body = location.split(":")[1];
         const sep = body.includes(";") ? ";" : ",";
         const parts = body.split(sep).map(p => p.trim());
-        if (parts.length >= 1 && parts[0]) x = parseFloat(parts[0]) || 180.0;
-        if (parts.length >= 2 && parts[1]) y = parseFloat(parts[1]) || 110.0;
-        if (parts.length >= 3 && parts[2]) rot = parseInt(parts[2], 10) || 0;
+        if (parts.length >= 1 && parts[0] !== "") {
+          const px = parseFloat(parts[0]);
+          if (Number.isFinite(px)) x = px;
+        }
+        if (parts.length >= 2 && parts[1] !== "") {
+          const py = parseFloat(parts[1]);
+          if (Number.isFinite(py)) y = py;
+        }
+        if (parts.length >= 3 && parts[2] !== "") {
+          const pr = parseInt(parts[2], 10);
+          if (Number.isFinite(pr)) rot = pr;
+        }
       }
 
       placed.push({
