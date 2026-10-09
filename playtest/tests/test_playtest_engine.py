@@ -347,6 +347,44 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("Wedge was hit" in entry.message for entry in logs))
         self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
 
+    def test_wedge_keyword_when_raised_does_not_prevent_throw(self):
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Ensure player robot has a wedge component hit, but is raised!
+        wedge_comp = ComponentHealth(
+            id="wedge_1", name="Titanium Wedge", card_type="component",
+            max_durability=9, current_durability=9, absorption=1, requirements="",
+            outputs="", keywords="wedge", text="", x=100, y=20, rotation=0,
+            box=(100, 20, 144, 84), is_wedge=True,
+        )
+        p_bot.components["wedge_1"] = wedge_comp
+        p_bot.is_raised = True
+
+        auto_weapon = [c for c in a_bot.components.values() if c.card_type == "weapon"][0]
+        a_bot.weapon_spin_counters[auto_weapon.id] = 4
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["wedge_1"],
+            robot2_components=[auto_weapon.id],
+            contact_type="ACTIVE",
+            description="Active strike hitting raised wedge",
+            r1_active_hit=False,
+            r2_active_hit=True,
+        )
+        logs = resolve_collision_combat(col, p_bot, a_bot, 1)
+        # Wedge was hit, but p_bot is raised: Wedge effect does NOT apply, so p_bot IS thrown!
+        self.assertTrue(any("Wedge effect does not apply" in entry.message for entry in logs))
+        self.assertTrue(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
+
     def test_split_supply_distribution(self):
         """
         Verify the canonical rule:

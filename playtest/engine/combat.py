@@ -926,20 +926,33 @@ def resolve_collision_combat(
                     logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
 
         # 4. Check Wedge keyword: If this component is hit this robot is not thrown.
+        # This effect does not apply if the robot is raised.
         r1_wedge = any(r1.components[cid].is_wedge for cid in col.robot1_components if cid in r1.components)
         r2_wedge = any(r2.components[cid].is_wedge for cid in col.robot2_components if cid in r2.components)
         if r1_wedge and throw_str_1 > 0:
-            throw_str_1 = 0
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🛡️ {r1.name}'s Wedge was hit — {r1.name} is not thrown!",
-            ))
+            if not r1.is_raised:
+                throw_str_1 = 0
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"🛡️ {r1.name}'s Wedge was hit — {r1.name} is not thrown!",
+                ))
+            else:
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"⚠️ {r1.name}'s Wedge was hit, but {r1.name} is raised — Wedge effect does not apply!",
+                ))
         if r2_wedge and throw_str_2 > 0:
-            throw_str_2 = 0
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🛡️ {r2.name}'s Wedge was hit — {r2.name} is not thrown!",
-            ))
+            if not r2.is_raised:
+                throw_str_2 = 0
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"🛡️ {r2.name}'s Wedge was hit — {r2.name} is not thrown!",
+                ))
+            else:
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"⚠️ {r2.name}'s Wedge was hit, but {r2.name} is raised — Wedge effect does not apply!",
+                ))
 
         # 5. Execute Throws away from contact point
         for robot, throw_str, opp in [(r1, throw_str_1, r2), (r2, throw_str_2, r1)]:

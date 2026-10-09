@@ -227,7 +227,7 @@ Components may have keywords that define specific mechanical rules and interacti
   \keywordbadge{kw_fragile}{Fragile} & If this component takes weapon damage it is destroyed as if it had a durability of 1. \\
   \keywordbadge{kw_spin_up}{Spin up (X, Y)} & At the start of each turn add X spin counters (max Y) and remove them all if the weapon attacks. \\
   \keywordbadge{kw_forks}{Forks} & If component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted. \\
-  \keywordbadge{kw_wedge}{Wedge} & If this component is hit this robot is not thrown. \\
+  \keywordbadge{kw_wedge}{Wedge} & If this component is hit this robot is not thrown. This effect does not apply if the robot is raised. \\
   \keywordbadge{kw_invertible}{Invertible} & This component works inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & If a turn ends without contact and this robot is inverted, invert it. \\
   \bottomrule
@@ -460,7 +460,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons and drive without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Some components (mostly forks) will make the opponent raised if they make contact. A robot that is raised has its drive strength halved for as long as it is in contact with the component that raised it, and its flip strength is halved.
+  \item[Raised:] Some components (mostly forks) will make the opponent raised if they make contact. A robot that is raised has its drive strength halved for as long as it is in contact with the component that raised it, and its flip strength is halved. The Wedge effect does not apply if the robot is raised.
 \end{description}
 
 \begin{summarybox}{Damage \& Feedback Rules Summary}
@@ -471,6 +471,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
   \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact, at the end of which both robots are rotated a random amount.
   \item \textbf{Inertial Separation:} After any inertial contact, separate the robots by moving them both away from each other 1 step if possible.
+  \item \textbf{Wedge Immunity:} A component with the Wedge keyword prevents the robot from being thrown when hit; this effect does not apply if the robot is raised.
   \item \textbf{Durability in Play:} Total durability is not recorded anywhere in gameplay.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
 \end{itemize}
