@@ -202,7 +202,7 @@ Components produce, require, and consume various resource types. The primary res
   \inlineIcon{\resourceM} & \textbf{Drive}    & \texttt{M} & Motive force delivered to wheels or tracks for arena mobility. \\
   \inlineIcon{\resourceW} & \textbf{Damage}   & \texttt{W} & Destructive impact force dealt to opposing components during active contact. \\
   \bottomrule
-\end{tabularx}
+\end{tabularx}}
 \end{center}
 
 \subsection{Resource Notation}
@@ -231,7 +231,7 @@ Components may have keywords that define specific mechanical rules and interacti
   \keywordbadge{kw_invertible}{Invertible} & This component works inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & If a turn ends without contact and this robot is inverted, invert it. \\
   \bottomrule
-\end{tabularx}
+\end{tabularx}}
 \end{center}
 
 \begin{summarybox}{Keywords Quick Summary}
@@ -317,6 +317,7 @@ Combat takes place inside a hazard-filled enclosed arena.
 % ==============================================================================
 
 \section{Battle Rules}
+\enlargethispage{2\baselineskip}
 
 \subsection{Match Length \& Win Conditions}
 
@@ -328,8 +329,8 @@ If neither robot is immobilized by the end of round 10, the winner is decided by
 
 Each round follows a strict sequence of four phases:
 
-\begin{center}
-\begin{tabularx}{\textwidth}{l p{12.2cm}}
+\noindent
+{\small\begin{tabularx}{\textwidth}{l p{12.5cm}}
   \toprule
   \textbf{Phase} & \textbf{Summary} \\
   \midrule
@@ -338,36 +339,37 @@ Each round follows a strict sequence of four phases:
   \textbf{3. Collision} & Collisions and contacts (active weapon hits or inert pushes) are resolved. \\
   \textbf{4. Cleanup}  & Reset temporary states, verify active drive, and proceed to the next round. \\
   \bottomrule
-\end{tabularx}
-\end{center}
-
+\end{tabularx}}
 \subsection{Movement Execution}
 
 Movement units are found on the straight movement template. Where an effect says a robot moves that amount, move them along that template without changing facing.
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}[c]{0.36\textwidth}
+  \begin{minipage}[c]{0.32\textwidth}
     \centering
-    \includegraphics[height=6.2cm]{images/movement_templates.png}
+    \includegraphics[height=4.6cm]{images/movement_templates.png}
     \caption{Movement Templates}
     \label{fig:movement_templates}
   \end{minipage}
   \hfill
-  \begin{minipage}[c]{0.60\textwidth}
-    \begin{enumerate}[label=\alph*., leftmargin=*]
+  \begin{minipage}[c]{0.66\textwidth}
+    \begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=1pt]
       \item In the planning step, each player chooses for each side a number with absolute value less than or equal to their active drive count for that side. \texttt{0/0} means no movement.
       \item Then the choices are revealed and both robots are moved along the template corresponding to their chosen number pair.
-      \item The robot starts with its front at the black line on the template and ends with its front in line with the corresponding line.
+      \item \textbf{Forward Movement:} The robot starts with its front at the black baseline on the template and ends with its front in line with the corresponding line.
+      \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right-turning maneuvers ($L \ge R$). If a chosen move turns left ($R > L$), flip the template over face-down.
+      \item \textbf{Forwards/Backwards (Reverse Placement):} For reverse moves where drive is negative, place the template's black baseline against the \textbf{back} (rear) of the robot instead of the front, and move the robot backward along the template to the corresponding line.
+      \item \textbf{Rotations \& Pivots:} In-place spins ($L = -R$) rotate around the center spin disc template. Single-wheel pivots ($R = 0$ or $L = 0$) swing around the stationary wheel along the pivot fan template.
     \end{enumerate}
-    \vspace{0.6em}
+    \vspace{0.2em}
     \textbf{Path Overlap \& Collision Check:}\\
     If the paths overlap then there is a collision at that point, and there is a collision if the robot would end up placed inside or in contact with something else.
   \end{minipage}
 \end{figure}
 
 \begin{summarybox}{Movement Planning Summary}
-Drive values chosen in the Planning phase directly determine robot displacement and turning trajectory. A player with 3 active drive on the left and 2 on the right may choose any pair within $[-3, +3]$ and $[-2, +2]$.
+Drive values chosen in the Planning phase directly determine robot displacement and turning trajectory. A player with 3 active drive on the left and 2 on the right may choose any pair within $[-3, +3]$ and $[-2, +2]$. Templates cover all permutations with minimal physical pieces: flipping handles left/right turns, placing at the rear handles reverse maneuvers, and shared track lines cover multiple drive magnitudes.
 \end{summarybox}
 
 \clearpage

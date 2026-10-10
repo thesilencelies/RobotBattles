@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160.0 160.0" width="160.0mm" height="160.0mm">
+  <defs>
+    <style>
+      text { user-select: none; }
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff" />
+<g id="template_tight_L5_Rm2">
+<path d="M 48.57142857142857 95.0 A 46.42857142857143 46.42857142857143 0 1 1 113.28078355039702 137.67815832110722 L 87.68768657984118 77.92873667155712 A 18.571428571428573 18.571428571428573 0 1 0 113.57142857142857 95.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<line x1="48.57142857142857" y1="95.0" x2="113.57142857142857" y2="95.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
+<text x="81.07142857142857" y="107.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="113.28078355039702" y1="137.67815832110722" x2="87.68768657984118" y2="77.92873667155712" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="100.4842350651191" y="104.80344749633217" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-2</text>
+<text x="20.0" y="27.0" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
+</g>
+</svg>

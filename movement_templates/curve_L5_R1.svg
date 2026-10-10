@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 239.4 121.1" width="239.4mm" height="121.1mm">
+  <defs>
+    <style>
+      text { user-select: none; }
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff" />
+<g id="template_curve_L5_R1">
+<path d="M 15.0 116.25 A 81.25 81.25 0 0 1 159.42501466455812 65.15714313983935 L 108.88500293291162 106.03142862796787 A 16.25 16.25 0 0 0 80.0 116.25 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 47.5 116.25 A 48.75 48.75 0 0 1 134.15500879873488 85.59428588390361" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="15.0" y1="116.25" x2="80.0" y2="116.25" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
+<text x="47.5" y="127.25" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
+<line x1="159.42501466455812" y1="65.15714313983935" x2="108.88500293291162" y2="106.03142862796787" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="134.15500879873485" y="82.59428588390361" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R1</text>
+<text x="20.0" y="27.0" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
+</g>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 95.0 95.0" width="95.0mm" height="95.0mm">
+  <defs>
+    <style>
+      text { user-select: none; }
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff" />
+<g id="template_spin">
+<circle cx="60.0" cy="60.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="60.0" cy="60.0" r="2" fill="#0f172a" />
+<line x1="60.0" y1="60.0" x2="60.0" y2="25.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+<text x="60.0" y="21.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="60.0" y1="60.0" x2="92.99609701526099" y2="48.327057707694905" stroke="#2563eb" stroke-width="2.2" />
+<text x="100.53806204732064" y="48.65895661231088" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R-1</text>
+<line x1="60.0" y1="60.0" x2="82.00923064745382" y2="87.21385247088658" stroke="#2563eb" stroke-width="2.2" />
+<text x="87.0399119383004" y="96.43416160708922" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2</text>
+<line x1="60.0" y1="60.0" x2="41.684616084496795" y2="89.82526968910301" stroke="#2563eb" stroke-width="2.2" />
+<text x="37.498242618096064" y="99.64247418946941" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-3</text>
+<line x1="60.0" y1="60.0" x2="25.773945380712924" y2="52.68035621101833" stroke="#2563eb" stroke-width="2.2" />
+<text x="17.95084718201874" y="54.0072947735368" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4</text>
+<line x1="60.0" y1="60.0" x2="55.4857404604049" y2="25.29234290809628" stroke="#2563eb" stroke-width="2.2" />
+<text x="54.45390970849745" y="20.359164144232572" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-5</text>
+<text x="60.0" y="109.0" font-family="sans-serif" font-size="7" fill="#64748b" text-anchor="middle">SPIN DISC | Flip for CCW</text>
+</g>
+</svg>

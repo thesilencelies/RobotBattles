@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.2 153.4" width="205.2mm" height="153.4mm">
+  <defs>
+    <style>
+      text { user-select: none; }
+    </style>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff" />
+<g id="template_curve_L4_R1">
+<path d="M 15.0 121.66666666666667 A 86.66666666666667 86.66666666666667 0 0 1 125.23055378693789 38.264902087646945 L 107.55763844673447 100.81622552191175 A 21.666666666666668 21.666666666666668 0 0 0 80.0 121.66666666666667 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 47.5 121.66666666666667 A 54.16666666666667 54.16666666666667 0 0 1 116.39409611683618 69.54056380477934" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="15.0" y1="121.66666666666667" x2="80.0" y2="121.66666666666667" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
+<text x="47.5" y="132.66666666666669" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
+<line x1="125.23055378693789" y1="38.264902087646945" x2="107.55763844673447" y2="100.81622552191175" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="116.39409611683618" y="66.54056380477934" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R1</text>
+<text x="20.0" y="27.0" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
+</g>
+</svg>
