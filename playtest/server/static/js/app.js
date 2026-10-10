@@ -55,6 +55,7 @@ class PlaytestApp {
     this.btnResetMatch = document.getElementById("btn-reset-match");
     this.btnToggleTopBar = document.getElementById("btn-toggle-top-bar");
     this.autoSelect = document.getElementById("auto-select");
+    this.playcountSelect = document.getElementById("playcount-select");
     this.viewArena = document.getElementById("view-arena");
 
     // Arena Stage
@@ -204,15 +205,39 @@ class PlaytestApp {
     // Execute Turn
     this.btnExecuteTurn.addEventListener("click", () => this._onExecuteTurn());
 
+    // Playcount (Max Rounds) Select Change
+    if (this.playcountSelect) {
+      this.playcountSelect.addEventListener("change", (e) => {
+        if (e.target.value === "custom") {
+          const val = prompt("Enter max rounds / playcount (1 - 100):", "10");
+          const num = parseInt(val, 10);
+          if (!isNaN(num) && num > 0) {
+            let opt = [...this.playcountSelect.options].find(o => o.value === String(num));
+            if (!opt) {
+              opt = document.createElement("option");
+              opt.value = String(num);
+              opt.textContent = `${num} Rds`;
+              this.playcountSelect.insertBefore(opt, this.playcountSelect.lastElementChild);
+            }
+            this.playcountSelect.value = String(num);
+          } else {
+            this.playcountSelect.value = "10";
+          }
+        }
+      });
+    }
+
     // New Match & Reset Buttons
     this.btnNewMatch.addEventListener("click", async () => {
       const autoName = this.autoSelect.value;
       const csv = this.builderController ? this.builderController.getRobotCSV() : "";
+      const maxRounds = this.playcountSelect ? (parseInt(this.playcountSelect.value, 10) || 10) : 10;
       try {
         const data = await PlaytestApi.startNewMatch({
           player_csv: csv,
           automaton: autoName,
           player_name: "Player Bot",
+          max_rounds: maxRounds,
         });
         this.currentMatch = data.match;
         this._updateMatchUi();
@@ -239,10 +264,12 @@ class PlaytestApp {
   async _deployFromBuilder(csvText, robotName) {
     try {
       const autoName = this.autoSelect ? this.autoSelect.value : "Vyper_flipper";
+      const maxRounds = this.playcountSelect ? (parseInt(this.playcountSelect.value, 10) || 10) : 10;
       const data = await PlaytestApi.startNewMatch({
         player_csv: csvText,
         automaton: autoName,
         player_name: robotName || "Player Bot",
+        max_rounds: maxRounds,
       });
       this.currentMatch = data.match;
       this._updateMatchUi();
@@ -298,7 +325,19 @@ class PlaytestApp {
     const aBot = m.automaton_robot;
 
     // HUD Header
-    this.hudRound.textContent = `Round ${m.round} / 10`;
+    const maxRounds = m.max_rounds || 10;
+    this.hudRound.textContent = `Round ${m.round} / ${maxRounds}`;
+
+    if (this.playcountSelect && this.playcountSelect.value !== String(maxRounds)) {
+      let opt = [...this.playcountSelect.options].find(o => o.value === String(maxRounds));
+      if (!opt) {
+        opt = document.createElement("option");
+        opt.value = String(maxRounds);
+        opt.textContent = `${maxRounds} Rds`;
+        this.playcountSelect.insertBefore(opt, this.playcountSelect.lastElementChild);
+      }
+      this.playcountSelect.value = String(maxRounds);
+    }
 
     if (m.phase === "game_over") {
       this.hudStatus.innerHTML = `<span class="badge badge-danger">🏆 WINNER: ${m.winner.toUpperCase()} (${m.win_reason})</span>`;

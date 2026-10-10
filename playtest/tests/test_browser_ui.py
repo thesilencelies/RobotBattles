@@ -263,6 +263,11 @@ class TestBrowserUI(unittest.TestCase):
         # 2. Check Match HUD & Arena Zoom
         round_txt = self.js_eval("document.getElementById('hud-round').textContent")
         self.assertIn("Round 1", round_txt)
+        self.assertIn("/ 10", round_txt)
+
+        # Verify playcount select exists with default 10
+        playcount_val = self.js_eval("document.getElementById('playcount-select').value")
+        self.assertEqual(playcount_val, "10")
 
         # Verify combatants specs bar exists and displays weight and cost
         pspecs = self.js_eval("document.getElementById('hud-pspecs').textContent")

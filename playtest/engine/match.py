@@ -165,6 +165,7 @@ def create_match(
     player_csv: str,
     automaton_name: str = "Vyper_Spinner",
     player_name: str = "Player 1",
+    max_rounds: int = 10,
 ) -> MatchState:
     """Initializes a new match between player robot and chosen automaton."""
     catalog = load_all_cards()
@@ -201,7 +202,7 @@ def create_match(
         CombatLogEntry(
             round=1,
             phase="planning",
-            message=f"Match initialized: {player_robot.name} vs {auto_robot.name} (10 rounds max)",
+            message=f"Match initialized: {player_robot.name} vs {auto_robot.name} ({max_rounds} rounds max)",
         )
     ]
     for smsg in p_spin_logs + a_spin_logs:
@@ -210,6 +211,7 @@ def create_match(
     match = MatchState(
         match_id=str(uuid.uuid4())[:8],
         round=1,
+        max_rounds=max_rounds,
         phase="planning",
         player_robot=player_robot,
         automaton_robot=auto_robot,
@@ -388,7 +390,7 @@ def execute_turn(
         match.winner = "player"
         match.win_reason = f"{a_bot.name} is defeated (no active drive and no way to uninvert to regain drive)!"
         match.phase = "game_over"
-    elif match.round >= 10:
+    elif match.round >= match.max_rounds:
         match.phase = "game_over"
         p_destroyed = sum(1 for c in p_bot.components.values() if c.is_destroyed)
         p_damaged = sum(1 for c in p_bot.components.values() if c.is_damaged and not c.is_destroyed)

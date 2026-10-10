@@ -43,12 +43,13 @@ export class PlaytestApi {
     return res.json();
   }
 
-  static async startNewBattle(playerCsv, automatonName = "Vyper_Spinner", playerName = "Player 1") {
+  static async startNewBattle(playerCsv, automatonName = "Vyper_Spinner", playerName = "Player 1", maxRounds = 10) {
     if (playerCsv && typeof playerCsv === "object") {
       const opts = playerCsv;
       playerCsv = opts.player_csv;
       automatonName = opts.automaton || automatonName;
       playerName = opts.player_name || playerName;
+      maxRounds = opts.max_rounds || opts.playcount || maxRounds;
     }
     const res = await fetch("/api/battle/new", {
       method: "POST",
@@ -57,6 +58,7 @@ export class PlaytestApi {
         player_csv: playerCsv,
         automaton: automatonName,
         player_name: playerName,
+        max_rounds: Number(maxRounds) || 10,
       }),
     });
     if (!res.ok) {
@@ -66,8 +68,8 @@ export class PlaytestApi {
     return res.json();
   }
 
-  static async startNewMatch(optsOrCsv, automatonName = "Vyper_Spinner", playerName = "Player 1") {
-    return this.startNewBattle(optsOrCsv, automatonName, playerName);
+  static async startNewMatch(optsOrCsv, automatonName = "Vyper_Spinner", playerName = "Player 1", maxRounds = 10) {
+    return this.startNewBattle(optsOrCsv, automatonName, playerName, maxRounds);
   }
 
   static async executeTurn(left, right, fixedRoll = null) {

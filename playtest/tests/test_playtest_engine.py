@@ -928,6 +928,31 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(a_bot.pose.x, 215.0)
         self.assertTrue(any("Inertial separation" in entry.message for entry in logs))
 
+    def test_configurable_playcount_in_engine(self):
+        """Tests that the simulator playcount (max rounds) can be configured for dev purposes."""
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        # Initialize match with 3 rounds max
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot", max_rounds=3)
+        self.assertEqual(match.max_rounds, 3)
+        self.assertEqual(match.round, 1)
+        self.assertTrue(any("3 rounds max" in e.message for e in match.log))
+
+        # Round 1 -> Round 2
+        match = execute_turn(match, MoveChoice(0, 0), fixed_automaton_roll=1)
+        self.assertEqual(match.round, 2)
+        self.assertEqual(match.phase, "planning")
+
+        # Round 2 -> Round 3
+        match = execute_turn(match, MoveChoice(0, 0), fixed_automaton_roll=1)
+        self.assertEqual(match.round, 3)
+        self.assertEqual(match.phase, "planning")
+
+        # Round 3 -> Reaches max_rounds=3 -> game_over (Judge's Decision)
+        match = execute_turn(match, MoveChoice(0, 0), fixed_automaton_roll=1)
+        self.assertEqual(match.round, 3)
+        self.assertEqual(match.phase, "game_over")
+        self.assertIn("Judge's Decision", match.win_reason)
+
 
 if __name__ == "__main__":
     unittest.main()

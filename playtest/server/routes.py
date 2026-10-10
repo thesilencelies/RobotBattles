@@ -159,12 +159,19 @@ class Router:
 
         automaton_name = data.get("automaton", "Vyper_flipper")
         player_name = data.get("player_name", "Player 1")
+        try:
+            max_rounds = int(data.get("max_rounds", data.get("playcount", 10)))
+        except (ValueError, TypeError):
+            max_rounds = 10
+        if max_rounds <= 0:
+            max_rounds = 10
 
         try:
             self.current_match = create_match(
                 player_csv=player_csv,
                 automaton_name=automaton_name,
                 player_name=player_name,
+                max_rounds=max_rounds,
             )
         except Exception as exc:
             raise HttpError(400, f"Cannot initialize match: {exc}")

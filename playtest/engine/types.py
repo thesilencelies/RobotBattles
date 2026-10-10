@@ -198,11 +198,12 @@ class RobotState:
 @dataclass
 class MatchState:
     match_id: str
-    round: int  # 1 to 10
+    round: int  # Current round, 1 to max_rounds
     phase: str  # "planning", "movement", "collision", "cleanup", "game_over"
     player_robot: RobotState
     automaton_robot: RobotState
     automaton_type: str
+    max_rounds: int = 10
     player_choice: Optional[MoveChoice] = None
     automaton_choice: Optional[MoveChoice] = None
     automaton_roll: Optional[int] = None
@@ -218,6 +219,7 @@ class MatchState:
         return {
             "match_id": self.match_id,
             "round": self.round,
+            "max_rounds": self.max_rounds,
             "phase": self.phase,
             "player_robot": self.player_robot.to_dict(),
             "automaton_robot": self.automaton_robot.to_dict(),

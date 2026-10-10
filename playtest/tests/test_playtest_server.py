@@ -102,6 +102,28 @@ class TestPlaytestServer(unittest.TestCase):
         self.assertEqual(res_canvas.status, 200)
         self.assertIn("MatCanvas", res_canvas.body.decode("utf-8"))
 
+    def test_battle_new_with_custom_playcount(self):
+        payload = json.dumps({
+            "player_csv": read_saved_robot("Vyper_flipper.csv"),
+            "automaton": "Vyper_Spinner",
+            "max_rounds": 5,
+        }).encode("utf-8")
+        res = self.router.dispatch("POST", "/api/battle/new", {}, payload)
+        self.assertEqual(res.status, 200)
+        match = json.loads(res.body.decode("utf-8"))["match"]
+        self.assertEqual(match["max_rounds"], 5)
+
+        # Test 'playcount' alias
+        payload2 = json.dumps({
+            "player_csv": read_saved_robot("Vyper_flipper.csv"),
+            "automaton": "Vyper_Spinner",
+            "playcount": 3,
+        }).encode("utf-8")
+        res2 = self.router.dispatch("POST", "/api/battle/new", {}, payload2)
+        self.assertEqual(res2.status, 200)
+        match2 = json.loads(res2.body.decode("utf-8"))["match"]
+        self.assertEqual(match2["max_rounds"], 3)
+
 
 if __name__ == "__main__":
     unittest.main()
