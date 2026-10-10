@@ -336,6 +336,80 @@ def create_template_prongs():
     print(f"Created {ICONS_DIR / 'template_prongs.png'}")
 
 
+def create_template_square():
+    # Square chassis boundary template (with forward heading arrow)
+    im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(im)
+
+    cyan = (0, 229, 255, 255)
+    green = (0, 210, 106, 255)
+    dark = (15, 20, 28, 255)
+
+    draw.rounded_rectangle((75, 45, 325, 355), radius=12, fill=dark, outline=cyan, width=14)
+
+    draw.line([(200, 110), (200, 60)], fill=green, width=10)
+    draw.polygon([(185, 75), (200, 52), (215, 75)], fill=green)
+
+    im.save(ICONS_DIR / "template_square.png", "PNG")
+    root_icons = WORKSPACE / "icons"
+    if root_icons.is_dir():
+        im.save(root_icons / "template_square.png", "PNG")
+    print(f"Created {ICONS_DIR / 'template_square.png'}")
+
+
+def create_template_triangle():
+    # Triangle wedge chassis boundary template (with forward apex)
+    im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(im)
+
+    cyan = (0, 229, 255, 255)
+    green = (0, 210, 106, 255)
+    dark = (15, 20, 28, 255)
+
+    points = [
+        (200, 45),   # Front apex
+        (355, 170),  # Right shoulder
+        (355, 355),  # Right rear
+        (45, 355),   # Left rear
+        (45, 170),   # Left shoulder
+    ]
+    draw.polygon(points, fill=dark, outline=cyan)
+    for i in range(len(points)):
+        p1 = points[i]
+        p2 = points[(i + 1) % len(points)]
+        draw.line([p1, p2], fill=cyan, width=14)
+
+    draw.line([(200, 150), (200, 85)], fill=green, width=10)
+    draw.polygon([(185, 100), (200, 75), (215, 100)], fill=green)
+
+    im.save(ICONS_DIR / "template_triangle.png", "PNG")
+    root_icons = WORKSPACE / "icons"
+    if root_icons.is_dir():
+        im.save(root_icons / "template_triangle.png", "PNG")
+    print(f"Created {ICONS_DIR / 'template_triangle.png'}")
+
+
+def create_template_wide():
+    # Wide rectangle chassis boundary template
+    im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(im)
+
+    cyan = (0, 229, 255, 255)
+    green = (0, 210, 106, 255)
+    dark = (15, 20, 28, 255)
+
+    draw.rounded_rectangle((25, 100, 375, 300), radius=12, fill=dark, outline=cyan, width=14)
+
+    draw.line([(200, 170), (200, 115)], fill=green, width=10)
+    draw.polygon([(185, 130), (200, 105), (215, 130)], fill=green)
+
+    im.save(ICONS_DIR / "template_wide.png", "PNG")
+    root_icons = WORKSPACE / "icons"
+    if root_icons.is_dir():
+        im.save(root_icons / "template_wide.png", "PNG")
+    print(f"Created {ICONS_DIR / 'template_wide.png'}")
+
+
 def create_pressure_icon():
     # Pressure gauge / manometer (Resource P)
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
@@ -420,6 +494,9 @@ def main():
     create_template_line()
     create_template_bar()
     create_template_prongs()
+    create_template_square()
+    create_template_triangle()
+    create_template_wide()
     print("Done generating all icons.")
 
 

@@ -1,0 +1,1071 @@
+{
+  "Card": {
+    "1": {
+      "name": "Galaxy 120",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$1\nout:EE\ndurability:5",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Galaxy_120.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "2": {
+      "name": "Galaxy 300 3S",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$2\nout:EEEE\ndurability:6",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Galaxy_300_3S.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "3": {
+      "name": "Galaxy 1000 3S",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$3\nout:6E\ndurability:5",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Galaxy_1000_3S.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "4": {
+      "name": "Tattu 450 4S",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$2\nout:5E\ndurability:5\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Tattu_450_4S.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "5": {
+      "name": "Power Switch Protector",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
+      "gm_notes": "weight:1\ncost:$1\nreq:XE\nout:XE\ndurability:7\nabsorption:4",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Power_Switch_Protector.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "6": {
+      "name": "Wires",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
+      "gm_notes": "req:XE\nout:XE\ndurability:5",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Wires.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "7": {
+      "name": "Heavy Gauge Wire",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
+      "gm_notes": "cost:$1\nreq:XE\nout:XE\ndurability:7\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Heavy_Gauge_Wire.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "8": {
+      "name": "Simple ESC",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
+      "gm_notes": "cost:$1\nreq:EE\nout:EE\ndurability:5\nabsorption:3",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Simple_ESC.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "9": {
+      "name": "Brushless Motor",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$2\nreq:EE\nout:SSS\ndurability:4\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Brushless_Motor.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "10": {
+      "name": "N20 Spark Gearmotor",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$1\nreq:EE\nout:SS\ndurability:5\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/N20_Spark_Gearmotor.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "11": {
+      "name": "22mm Beetle Gearmotor",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$1\nreq:EEE\nout:SSSS\ndurability:5\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/22mm_Beetle_Gearmotor.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "12": {
+      "name": "D2830 Weapon Motor",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$2\nreq:EEE\nout:SS\ndurability:7\nabsorption:3",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/D2830_Weapon_Motor.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "13": {
+      "name": "Repeat 2207 Hubmotor",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$3\nreq:EEE\nout:SSS\ndurability:6\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Repeat_2207_Hubmotor.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "14": {
+      "name": "Micro Servo",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$1\nreq:EE\nout:PP\ndurability:4\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Micro_Servo.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "15": {
+      "name": "15kg Analog Servo",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$2\nreq:EEE\nout:PP\ndurability:6\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/15kg_Analog_Servo.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "16": {
+      "name": "20kg Metal Gear Servo",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$1\nreq:EEEE\nout:PPP\ndurability:6\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/20kg_Metal_Gear_Servo.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "17": {
+      "name": "25kg High Voltage Servo",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$2\nreq:EEEE\nout:PPPP\ndurability:8\nabsorption:3",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/25kg_High_Voltage_Servo.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "18": {
+      "name": "Snap Wheels",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$1\nreq:SS\nout:DD\ndurability:6\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Snap_Wheels.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "19": {
+      "name": "Banebots Compliant Wheels",
+      "description": "",
+      "gm_notes": "weight:1\ncost:$1\nreq:SSS\nout:DDD\ndurability:7\nabsorption:3",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Banebots_Compliant_Wheels.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "20": {
+      "name": "Banebots T81 Heavy Wheels",
+      "description": "Invertible: this component works inverted",
+      "gm_notes": "weight:2\ncost:$1\nreq:SSS\nout:DD\ndurability:7\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Banebots_T81_Heavy_Wheels.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "21": {
+      "name": "High Grip Tires",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$1\nreq:SS\nout:DDD\ndurability:6\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/High_Grip_Tires.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "22": {
+      "name": "Aluminum Plate",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$1\ndurability:8\nabsorption:3",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Aluminum_Plate.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "23": {
+      "name": "TPU Plate",
+      "description": "",
+      "gm_notes": "weight:1\ndurability:6\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/TPU_Plate.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "24": {
+      "name": "Titanium Top Plate",
+      "description": "",
+      "gm_notes": "weight:2\ncost:$2\ndurability:8\nabsorption:2\ncovers the top",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Titanium_Top_Plate.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "25": {
+      "name": "UHMW Wraparound Armor",
+      "description": "",
+      "gm_notes": "weight:3\ncost:$2\ndurability:7\nabsorption:2\ncovers a whole side",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/UHMW_Wraparound_Armor.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "26": {
+      "name": "Titanium Wedge",
+      "description": "Wedge: if this component is hit this robot is not thrown",
+      "gm_notes": "weight:4\ncost:$3\ndurability:9\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Titanium_Wedge.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "27": {
+      "name": "Steel Wedge",
+      "description": "Wedge: if this component is hit this robot is not thrown",
+      "gm_notes": "weight:5\ncost:$3\ndurability:7\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Steel_Wedge.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "28": {
+      "name": "AR500 Wedge",
+      "description": "Wedge: if this component is hit this robot is not thrown",
+      "gm_notes": "weight:5\ncost:$4\ndurability:10\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/AR500_Wedge.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "29": {
+      "name": "Forks",
+      "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
+      "gm_notes": "weight:1\ncost:$1\ndurability:4",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Forks.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "30": {
+      "name": "Titanium Horns",
+      "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
+      "gm_notes": "weight:2\ncost:$3\ndurability:8",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Titanium_Horns.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "31": {
+      "name": "Timing Belt",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
+      "gm_notes": "cost:$1\nreq:XS\nout:XS\ndurability:5\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Timing_Belt.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "32": {
+      "name": "Timing Pulley",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
+      "gm_notes": "cost:$1\nreq:SS\nout:SSS\ndurability:5\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Timing_Pulley.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "33": {
+      "name": "Self righting arm",
+      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it",
+      "gm_notes": "weight:1\ncost:$1\nreq:PP\ndurability:6",
+      "tags": {
+        "1": "Card",
+        "2": "Component"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Self_righting_arm.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "34": {
+      "name": "Horizontal Spinner",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nInvertible: this component works inverted",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Circle\nreq:SS\nout:2XW\ndurability:10\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Horizontal_Spinner.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "35": {
+      "name": "Bloodsport Bar",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
+      "gm_notes": "weight:5\ncost:$3\ntemplate:Large Circle\nreq:SSSS\nout:2XW\ndurability:12\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Large Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Bloodsport_Bar.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "36": {
+      "name": "Titanium Spinner Blade",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nInvertible: this component works inverted",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSS\nout:2XWW\ndurability:14\nabsorption:2",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Titanium_Spinner_Blade.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "37": {
+      "name": "Vertical Spinner",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
+      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SS\nout:2XWW\ndurability:7\nabsorption:1\nDouble the throw strength",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Vertical_Spinner.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "38": {
+      "name": "Single Tooth Disc",
+      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it",
+      "gm_notes": "weight:2\ncost:$2\ntemplate:Line\nreq:SS\nout:WWWW\ndurability:8\nabsorption:2\nDouble the throw strength",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Single_Tooth_Disc.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "39": {
+      "name": "NightWing AR500 Disc",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
+      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSS\nout:2XW\ndurability:9\nabsorption:1\nDouble the throw strength",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/NightWing_AR500_Disc.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "40": {
+      "name": "Beater Bar",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWWW\ndurability:9\nabsorption:1\nDouble the throw strength",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Bar"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Beater_Bar.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "41": {
+      "name": "Cronos Scythe",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSS\nout:XWWW\ndurability:7\nabsorption:1\nDouble the throw strength",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Prongs"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Cronos_Scythe.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "42": {
+      "name": "Chonk Key Blade",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
+      "gm_notes": "weight:6\ncost:$3\ntemplate:Circle\nreq:SSSS\nout:XXW\ndurability:8\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Chonk_Key_Blade.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "43": {
+      "name": "Four-Bar Lifter",
+      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it\nWedge: if this component is hit this robot is not thrown",
+      "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:8W\ndurability:9\nabsorption:1\nDeals no damage only throws",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Four-Bar_Lifter.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "44": {
+      "name": "Claw Forks",
+      "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
+      "gm_notes": "weight:3\ncost:$2\ntemplate:Prongs\nreq:PP\nout:WWW\ndurability:8\nabsorption:2\nDeals no damage. Always inverts.",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Prongs"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Claw_Forks.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "45": {
+      "name": "Lifter Arms",
+      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it",
+      "gm_notes": "weight:3\ncost:$3\ntemplate:Bar\nreq:PPPP\nout:5W\ndurability:7\nabsorption:3\nDeals no damage. Always inverts.",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Bar"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Lifter_Arms.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "46": {
+      "name": "Viper Wedge Chassis",
+      "description": "",
+      "gm_notes": "weight:3\ncost:$2\nflip:5\ntemplate:Square",
+      "tags": {
+        "1": "Card",
+        "2": "Chassis",
+        "3": "Square"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Viper_Wedge_Chassis.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/chassis_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "47": {
+      "name": "SSP 2.0 Billet Chassis",
+      "description": "",
+      "gm_notes": "weight:3\ncost:$2\nflip:4\ntemplate:Triangle",
+      "tags": {
+        "1": "Card",
+        "2": "Chassis",
+        "3": "Triangle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/SSP_2.0_Billet_Chassis.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/chassis_back.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "48": {
+      "name": "Nautiloid Drum Chassis",
+      "description": "",
+      "gm_notes": "weight:3\ncost:$2\nflip:4\ntemplate:Wide",
+      "tags": {
+        "1": "Card",
+        "2": "Chassis",
+        "3": "Wide"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Nautiloid_Drum_Chassis.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/chassis_back.png",
+      "type": "0",
+      "sideways": "false"
+    }
+  },
+  "Tile": {
+    "1": {
+      "name": "Viper Wedge Chassis",
+      "description": "Square template chassis (flip strength 5)",
+      "gm_notes": "weight:3\ncost:$2\nflip:5\ntemplate:Square",
+      "tags": {
+        "1": "Tile",
+        "2": "Chassis",
+        "3": "Square"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/kits_and_chassis/viper-combat-robot-kit-base.jpg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_square.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "2": {
+      "name": "SSP 2.0 Billet Chassis",
+      "description": "Triangle template chassis (flip strength 4)",
+      "gm_notes": "weight:3\ncost:$2\nflip:4\ntemplate:Triangle",
+      "tags": {
+        "1": "Tile",
+        "2": "Chassis",
+        "3": "Triangle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/kits_and_chassis/just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit.jpg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_triangle.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "3": {
+      "name": "Nautiloid Drum Chassis",
+      "description": "Wide template chassis (flip strength 4)",
+      "gm_notes": "weight:3\ncost:$2\nflip:4\ntemplate:Wide",
+      "tags": {
+        "1": "Tile",
+        "2": "Chassis",
+        "3": "Wide"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/kits_and_chassis/baby-nautiloid-combat-robot-radio-ready.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_wide.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "4": {
+      "name": "Square Chassis Template",
+      "description": "Square chassis boundary template (220mm x 256mm)",
+      "gm_notes": "template:Square\nbounds:220x256mm",
+      "tags": {
+        "1": "Tile",
+        "2": "Template",
+        "3": "Chassis",
+        "4": "Square"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_square.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_square.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "5": {
+      "name": "Triangle Chassis Template",
+      "description": "Triangle wedge chassis boundary template (340mm x 256mm)",
+      "gm_notes": "template:Triangle\nbounds:340x256mm",
+      "tags": {
+        "1": "Tile",
+        "2": "Template",
+        "3": "Chassis",
+        "4": "Triangle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_triangle.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_triangle.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "6": {
+      "name": "Wide Chassis Template",
+      "description": "Wide chassis boundary template (396mm x 170mm)",
+      "gm_notes": "template:Wide\nbounds:396x170mm",
+      "tags": {
+        "1": "Tile",
+        "2": "Template",
+        "3": "Chassis",
+        "4": "Wide"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_wide.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_wide.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "7": {
+      "name": "Circle Weapon Template",
+      "description": "Circle weapon active area template: 360-degree radial contact",
+      "gm_notes": "template:Circle\nactive_area:360-degree radial contact\nweapons:Horizontal Spinner, Titanium Spinner Blade, Chonk Key Blade",
+      "tags": {
+        "1": "Tile",
+        "2": "Template",
+        "3": "Weapon",
+        "4": "Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
+      "type": "2",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "8": {
+      "name": "Large Circle Weapon Template",
+      "description": "Large circle weapon active area template: expanded 360-degree radial reach",
+      "gm_notes": "template:Large Circle\nactive_area:expanded 360-degree radial reach\nweapons:Bloodsport Bar",
+      "tags": {
+        "1": "Tile",
+        "2": "Template",
+        "3": "Weapon",
+        "4": "Large Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_large_circle.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_large_circle.png",
+      "type": "2",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "9": {
+      "name": "Line Weapon Template",
+      "description": "Line weapon active area template: narrow frontal line contact",
+      "gm_notes": "template:Line\nactive_area:narrow frontal line contact\nweapons:Vertical Spinner, Single Tooth Disc, NightWing AR500 Disc, Four-Bar Lifter",
+      "tags": {
+        "1": "Tile",
+        "2": "Template",
+        "3": "Weapon",
+        "4": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "10": {
+      "name": "Bar Weapon Template",
+      "description": "Bar weapon active area template: wide frontal bar contact",
+      "gm_notes": "template:Bar\nactive_area:wide frontal bar contact\nweapons:Beater Bar, Lifter Arms",
+      "tags": {
+        "1": "Tile",
+        "2": "Template",
+        "3": "Weapon",
+        "4": "Bar"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_bar.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_bar.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "11": {
+      "name": "Prongs Weapon Template",
+      "description": "Prongs weapon active area template: dual forward prongs contact",
+      "gm_notes": "template:Prongs\nactive_area:dual forward prongs contact\nweapons:Cronos Scythe, Claw Forks",
+      "tags": {
+        "1": "Tile",
+        "2": "Template",
+        "3": "Weapon",
+        "4": "Prongs"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "12": {
+      "name": "Horizontal Spinner (Circle)",
+      "description": "Circle active area weapon marker",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Circle\nreq:SS\nout:2XW\ndurability:10\nabsorption:1",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/kits_and_chassis/viper-horizontal-spinner.jpeg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
+      "type": "2",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "13": {
+      "name": "Bloodsport Bar (Large Circle)",
+      "description": "Large Circle active area weapon marker",
+      "gm_notes": "weight:5\ncost:$3\ntemplate:Large Circle\nreq:SSSS\nout:2XW\ndurability:12\nabsorption:1",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Large Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/bloodsport-bar.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_large_circle.png",
+      "type": "2",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "14": {
+      "name": "Titanium Spinner Blade (Circle)",
+      "description": "Circle active area weapon marker",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSS\nout:2XWW\ndurability:14\nabsorption:2",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/viper-horizontal-spinner-titanium-blade.jpg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
+      "type": "2",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "15": {
+      "name": "Vertical Spinner (Line)",
+      "description": "Line active area weapon marker",
+      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SS\nout:2XWW\ndurability:7\nabsorption:1\nDouble the throw strength",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/viper-vertical-spinner-clamping-drum.jpeg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "16": {
+      "name": "Single Tooth Disc (Line)",
+      "description": "Line active area weapon marker",
+      "gm_notes": "weight:2\ncost:$2\ntemplate:Line\nreq:SS\nout:WWWW\ndurability:8\nabsorption:2\nDouble the throw strength",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/baby-nautiloid-weapon-disc-single-tooth-ar500.jpeg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "17": {
+      "name": "NightWing AR500 Disc (Line)",
+      "description": "Line active area weapon marker",
+      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSS\nout:2XW\ndurability:9\nabsorption:1\nDouble the throw strength",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/fingertech-nightwing-ar500-weapon-disc-10in.jpg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "18": {
+      "name": "Beater Bar (Bar)",
+      "description": "Bar active area weapon marker",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWWW\ndurability:9\nabsorption:1\nDouble the throw strength",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Bar"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/1lb-beater-bar.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_bar.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "19": {
+      "name": "Cronos Scythe (Prongs)",
+      "description": "Prongs active area weapon marker",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSS\nout:XWWW\ndurability:7\nabsorption:1\nDouble the throw strength",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Prongs"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/cronos-scythe.jpg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "20": {
+      "name": "Chonk Key Blade (Circle)",
+      "description": "Circle active area weapon marker",
+      "gm_notes": "weight:6\ncost:$3\ntemplate:Circle\nreq:SSSS\nout:XXW\ndurability:8\nabsorption:1",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Circle"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/just-cuz-robotics-chonk-key-blade.jpg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
+      "type": "2",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "21": {
+      "name": "Four-Bar Lifter (Line)",
+      "description": "Line active area weapon marker",
+      "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:8W\ndurability:9\nabsorption:1\nDeals no damage only throws",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/viper-lifter-weapon.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "22": {
+      "name": "Claw Forks (Prongs)",
+      "description": "Prongs active area weapon marker",
+      "gm_notes": "weight:3\ncost:$2\ntemplate:Prongs\nreq:PP\nout:WWW\ndurability:8\nabsorption:2\nDeals no damage. Always inverts.",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Prongs"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-claw-forks.jpg",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    },
+    "23": {
+      "name": "Lifter Arms (Bar)",
+      "description": "Bar active area weapon marker",
+      "gm_notes": "weight:3\ncost:$3\ntemplate:Bar\nreq:PPPP\nout:5W\ndurability:7\nabsorption:3\nDeals no damage. Always inverts.",
+      "tags": {
+        "1": "Tile",
+        "2": "Weapon",
+        "3": "Bar"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/mechanicals_and_armor/ft-viper-lifter-arms.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_bar.png",
+      "type": "0",
+      "thickness": "0.5",
+      "stackable": "true"
+    }
+  },
+  "Token": {},
+  "Figurine": {}
+}
