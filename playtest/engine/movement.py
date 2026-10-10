@@ -157,9 +157,9 @@ def generate_trajectory(
         return points
 
     # Case 3: Pure Spin-on-the-spot (L == -R)
-    # Circle template: 45 deg per 1 drive unit
+    # Circle template: 90 deg per 1 drive unit (4 units = 360 deg)
     if abs(l_val + r_val) < 1e-6:
-        delta_deg = l_val * 45.0  # Positive L spins clockwise
+        delta_deg = l_val * 90.0  # Positive L spins clockwise
         for i in range(num_steps + 1):
             t = i / float(num_steps)
             curr_theta = (start_pose.theta + t * delta_deg) % 360.0
@@ -167,10 +167,10 @@ def generate_trajectory(
         return points
 
     # Case 4: Pivot on one wheel (one side is 0)
-    # Semicircle template: sectors are 22.5 deg per 1 unit
+    # Fan template: 45 deg per 1 unit (4 units = 180 deg)
     if abs(r_val) < 1e-6:
         # Left wheel driving, pivoting around right wheel (turning right / clockwise)
-        turn_angle_deg = l_val * 22.5
+        turn_angle_deg = l_val * 45.0
         pivot_offset = WHEELBASE_MM / 2.0
         # Pivot point is to the right of center: (x_0 + pivot_offset * r_x, y_0 + pivot_offset * r_y)
         pv_x = x_0 + pivot_offset * r_x
@@ -198,7 +198,7 @@ def generate_trajectory(
 
     if abs(l_val) < 1e-6:
         # Right wheel driving, pivoting around left wheel (turning left / counter-clockwise)
-        turn_angle_deg = -r_val * 22.5
+        turn_angle_deg = -r_val * 45.0
         pivot_offset = WHEELBASE_MM / 2.0
         pv_x = x_0 - pivot_offset * r_x
         pv_y = y_0 - pivot_offset * r_y
@@ -221,23 +221,23 @@ def generate_trajectory(
         return points
 
     # Case 5: Curved Arc Template (L != R, both non-zero)
-    # Calibrated to the curve tracks: (2, 1) -> 30 deg, (3, 1), (4, 2), (5, 3) -> 55 deg
+    # Calibrated to 45 deg per (L - R) unit: (2, 1) -> 45 deg, (3, 1), (4, 2), (5, 3) -> 90 deg
     pair_angles = {
-        (2, 1): 30.0,
-        (3, 1): 55.0,
-        (4, 2): 55.0,
-        (5, 3): 55.0,
-        (1, 2): -30.0,
-        (1, 3): -55.0,
-        (2, 4): -55.0,
-        (3, 5): -55.0,
+        (2, 1): 45.0,
+        (3, 1): 90.0,
+        (4, 2): 90.0,
+        (5, 3): 90.0,
+        (1, 2): -45.0,
+        (1, 3): -90.0,
+        (2, 4): -90.0,
+        (3, 5): -90.0,
     }
     int_pair = (int(round(l_val)), int(round(r_val)))
     if int_pair in pair_angles:
         total_angle_deg = pair_angles[int_pair]
     else:
-        # Fallback proportional formula
-        total_angle_deg = ((l_val - r_val) / WHEELBASE_MM) * DRIVE_UNIT_MM * (180.0 / math.pi)
+        # Proportional rate: 45 degrees per (L - R) differential unit
+        total_angle_deg = (l_val - r_val) * 45.0
 
     avg_dist = ((l_val + r_val) / 2.0) * DRIVE_UNIT_MM
     total_angle_rad = math.radians(total_angle_deg)

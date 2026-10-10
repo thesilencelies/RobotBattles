@@ -91,21 +91,34 @@ def map_permutation_to_template(
     (c_l, c_r), flipped, at_rear = best_cand
 
     # Categorize canonical pair
+    remainder_note = ""
     if c_l == c_r:
         cat = "straight"
         t_id = "straight"
         name = "Straight Template"
+        target_line = f"L{c_l} R{c_r}"
     elif c_l == -c_r:
         cat = "spin"
         t_id = "spin"
         name = "Spin Disc Template"
+        if c_l > 4:
+            rem = c_l - 4
+            target_line = f"L4 R-4 + L{rem} R-{rem}"
+            remainder_note = f"Move to end of Spin Disc (L4 R-4, 360°), then place template again for remainder (L{rem} R-{rem}, {rem*90}°). Total: {c_l*90}°."
+        else:
+            target_line = f"L{c_l} R{c_r}"
     elif c_r == 0:
         cat = "pivot"
         t_id = "pivot"
         name = "Pivot Fan Template"
+        if c_l > 4:
+            rem = c_l - 4
+            target_line = f"L4 R0 + L{rem} R0"
+            remainder_note = f"Move to end of Pivot Fan (L4 R0, 180°), then place template again for remainder (L{rem} R0, {rem*45}°). Total: {c_l*45}°."
+        else:
+            target_line = f"L{c_l} R{c_r}"
     elif c_r > 0:
         cat = "curve_forward"
-        # Ratio of speeds
         frac = Fraction(c_l, c_r)
         if frac == Fraction(2, 1):
             t_id = "curve_ratio_2_1"
@@ -113,6 +126,7 @@ def map_permutation_to_template(
         else:
             t_id = f"curve_L{c_l}_R{c_r}"
             name = f"Curve Template ({c_l}, {c_r})"
+        target_line = f"L{c_l} R{c_r}"
     else:  # c_r < 0
         cat = "curve_tight"
         frac = Fraction(c_l, -c_r)
@@ -122,6 +136,7 @@ def map_permutation_to_template(
         else:
             t_id = f"tight_L{c_l}_Rm{-c_r}"
             name = f"Tight Turn Template ({c_l}, {c_r})"
+        target_line = f"L{c_l} R{c_r}"
 
     return {
         "template_id": t_id,
@@ -130,7 +145,8 @@ def map_permutation_to_template(
         "right": right,
         "canonical_left": c_l,
         "canonical_right": c_r,
-        "target_line_label": f"L{c_l} R{c_r}",
+        "target_line_label": target_line,
+        "remainder_note": remainder_note,
         "flipped": flipped,
         "at_rear": at_rear,
         "category": cat,
@@ -176,20 +192,29 @@ class MovementTemplate:
             max_l = max(p[0] for p in self.pairs)
             return (self.wheelbase + 30.0, max_l * self.drive_unit + 40.0)
         elif self.category == "spin":
-            return (self.wheelbase + 30.0, self.wheelbase + 30.0)
+            radius = DEFAULT_MINIATURE_RADIUS
+            return (radius * 2.0 + 80.0, radius * 2.0 + 70.0)
         elif self.category == "pivot":
-            return (self.wheelbase * 1.5 + 20.0, self.wheelbase * 1.5 + 20.0)
+            radius = self.wheelbase
+            return (radius * 2.0 + 50.0, radius + 55.0)
         elif self.category == "curve_forward":
             max_l = max(p[0] for p in self.pairs)
             max_r = max(p[1] for p in self.pairs)
             diff = max_l - max_r
             r_out = self.wheelbase * max_l / diff
-            d_theta = diff * self.drive_unit / self.wheelbase
-            span_x = r_out * (1.0 - math.cos(d_theta)) + self.wheelbase
-            span_y = r_out * math.sin(d_theta) + 40.0
-            return (max(self.wheelbase + 30.0, span_x + 30.0), span_y + 30.0)
+            d_theta = diff * (math.pi / 4.0)
+            span_x = r_out * (1.0 - math.cos(min(d_theta, math.pi))) + self.wheelbase
+            span_y = r_out * math.sin(min(d_theta, math.pi / 2.0)) + 40.0
+            return (max(self.wheelbase + 40.0, span_x + 40.0), span_y + 40.0)
         else:  # curve_tight
-            return (self.wheelbase * 2.0 + 30.0, self.wheelbase * 2.0 + 30.0)
+            max_l = max(p[0] for p in self.pairs)
+            min_r = min(p[1] for p in self.pairs)
+            diff = max_l - min_r
+            r_out = self.wheelbase * max_l / diff
+            d_theta = diff * (math.pi / 4.0)
+            span_x = r_out * (1.0 - math.cos(min(d_theta, math.pi))) + self.wheelbase
+            span_y = r_out * math.sin(min(d_theta, math.pi / 2.0)) + 40.0
+            return (max(self.wheelbase * 2.0 + 40.0, span_x + 40.0), span_y + 40.0)
 
     def render_svg_content(self, offset_x: float = 20.0, offset_y: float = 20.0) -> str:
         """Renders the SVG markup for this template piece."""
@@ -247,17 +272,17 @@ class MovementTemplate:
             )
 
         elif self.category == "spin":
-            # Spin on spot disc
+            # Spin on spot disc: 90 deg increments per 1 drive unit (4 units = 360 deg)
             radius = DEFAULT_MINIATURE_RADIUS
-            cx = offset_x + radius + 10.0
-            cy = offset_y + radius + 10.0
+            cx = offset_x + radius + 35.0
+            cy = offset_y + radius + 25.0
 
             # Disc circle
             svg_parts.append(
                 f'<circle cx="{cx}" cy="{cy}" r="{radius}" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />'
             )
             # Center pin
-            svg_parts.append(f'<circle cx="{cx}" cy="{cy}" r="2" fill="#0f172a" />')
+            svg_parts.append(f'<circle cx="{cx}" cy="{cy}" r="3" fill="#0f172a" />')
 
             # Baseline at angle 0 (North: dx=0, dy=-radius)
             svg_parts.append(
@@ -265,95 +290,126 @@ class MovementTemplate:
                 f'stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />'
             )
             svg_parts.append(
-                f'<text x="{cx}" y="{cy - radius - 4}" font-family="sans-serif" font-size="7" '
-                f'font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>'
+                f'<text x="{cx}" y="{cy - radius - 6}" font-family="sans-serif" font-size="7.5" '
+                f'font-weight="bold" fill="#0f172a" text-anchor="middle">START (0°)</text>'
             )
 
             # Markings for each spin unit (L, -L)
             for l, r in self.pairs:
-                d_theta = 2.0 * l * u / w
+                d_theta = l * (math.pi / 2.0)
                 px = cx + radius * math.sin(d_theta)
                 py = cy - radius * math.cos(d_theta)
-                svg_parts.append(
-                    f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="#2563eb" stroke-width="2.2" />'
-                )
-                tx = cx + (radius + 8) * math.sin(d_theta)
-                ty = cy - (radius + 8) * math.cos(d_theta) + 3
-                svg_parts.append(
-                    f'<text x="{tx}" y="{ty}" font-family="sans-serif" font-size="7" '
-                    f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L{l} R{r}</text>'
-                )
+                if l < 4:
+                    svg_parts.append(
+                        f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="#2563eb" stroke-width="2.4" />'
+                    )
+                if l == 1:
+                    svg_parts.append(
+                        f'<text x="{px + 6}" y="{py + 3}" font-family="sans-serif" font-size="7.5" '
+                        f'font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>'
+                    )
+                elif l == 2:
+                    svg_parts.append(
+                        f'<text x="{px}" y="{py + 12}" font-family="sans-serif" font-size="7.5" '
+                        f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>'
+                    )
+                elif l == 3:
+                    svg_parts.append(
+                        f'<text x="{px - 6}" y="{py + 3}" font-family="sans-serif" font-size="7.5" '
+                        f'font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>'
+                    )
+                elif l == 4:
+                    svg_parts.append(
+                        f'<text x="{cx}" y="{cy - radius - 15}" font-family="sans-serif" font-size="7.5" '
+                        f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360° Full)</text>'
+                    )
+
+            # Circular clockwise guide arrow
+            arc_r = radius * 0.55
+            svg_parts.append(
+                f'<path d="M {cx + arc_r} {cy} A {arc_r} {arc_r} 0 0 1 {cx} {cy + arc_r}" '
+                f'fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />'
+            )
 
             svg_parts.append(
-                f'<text x="{cx}" y="{cy + radius + 14}" font-family="sans-serif" font-size="7" '
-                f'fill="#64748b" text-anchor="middle">SPIN DISC | Flip for CCW</text>'
+                f'<text x="{cx}" y="{cy + radius + 25}" font-family="sans-serif" font-size="6.5" '
+                f'fill="#64748b" text-anchor="middle">SPIN DISC | 90° / unit | Flip for CCW</text>'
+            )
+            svg_parts.append(
+                f'<text x="{cx}" y="{cy + radius + 34}" font-family="sans-serif" font-size="5.8" '
+                f'fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R-4, 360°) + Remainder</text>'
             )
 
         elif self.category == "pivot":
-            # Pivot around right wheel
-            max_l = max(p[0] for p in self.pairs)
-            diff = max_l
-            d_theta_max = diff * u / w
+            # Pivot around right wheel: 45 deg per 1 drive unit (hits 180 deg at 4, 0)
             radius = w
-
-            cx = offset_x + radius + 15.0
+            cx = offset_x + radius + 25.0
             cy = offset_y + radius + 15.0
 
             x_start = cx - radius
             y_start = cy
+            x_end = cx + radius
+            y_end = cy
 
-            x_end = cx - radius * math.cos(d_theta_max)
-            y_end = cy - radius * math.sin(d_theta_max)
-
-            large_arc = 1 if d_theta_max > math.pi else 0
-            path_d = f"M {cx} {cy} L {x_start} {y_start} A {radius} {radius} 0 {large_arc} 1 {x_end} {y_end} Z"
-
+            # Semicircle contour
+            path_d = f"M {cx} {cy} L {x_start} {y_start} A {radius} {radius} 0 0 1 {x_end} {y_end} Z"
             svg_parts.append(
                 f'<path d="{path_d}" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />'
             )
-            svg_parts.append(f'<circle cx="{cx}" cy="{cy}" r="3" fill="#ef4444" />')
+            svg_parts.append(f'<circle cx="{cx}" cy="{cy}" r="3.5" fill="#ef4444" />')
             svg_parts.append(
-                f'<text x="{cx + 5}" y="{cy + 10}" font-family="sans-serif" font-size="6.5" '
-                f'font-weight="bold" fill="#ef4444">PIVOT WHEEL</text>'
+                f'<text x="{cx}" y="{cy + 13}" font-family="sans-serif" font-size="6.5" '
+                f'font-weight="bold" fill="#ef4444" text-anchor="middle">PIVOT WHEEL</text>'
             )
 
-            # Start line
+            # Start line along baseline left: (cx - radius, cy) to (cx, cy)
             svg_parts.append(
                 f'<line x1="{x_start}" y1="{y_start}" x2="{cx}" y2="{cy}" '
-                f'stroke="#0f172a" stroke-width="3.5" stroke-linecap="square" />'
+                f'stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />'
             )
             svg_parts.append(
-                f'<text x="{x_start + radius/2}" y="{y_start + 11}" font-family="sans-serif" '
+                f'<text x="{x_start + radius/2}" y="{cy + 12}" font-family="sans-serif" '
                 f'font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>'
             )
 
             for l, r in self.pairs:
-                d_th = l * u / w
+                d_th = l * (math.pi / 4.0)
                 px = cx - radius * math.cos(d_th)
                 py = cy - radius * math.sin(d_th)
                 svg_parts.append(
-                    f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="#2563eb" stroke-width="2.2" />'
+                    f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />'
                 )
-                label_x = cx - (radius * 0.6) * math.cos(d_th)
-                label_y = cy - (radius * 0.6) * math.sin(d_th)
-                svg_parts.append(
-                    f'<text x="{label_x}" y="{label_y}" font-family="sans-serif" font-size="7.5" '
-                    f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L{l} R0</text>'
-                )
+                label_x = cx - (radius * 0.65) * math.cos(d_th)
+                label_y = cy - (radius * 0.65) * math.sin(d_th)
+                if l == 4:
+                    svg_parts.append(
+                        f'<text x="{cx + radius/2}" y="{cy + 12}" font-family="sans-serif" font-size="7.5" '
+                        f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0 (180°)</text>'
+                    )
+                else:
+                    deg_val = l * 45
+                    svg_parts.append(
+                        f'<text x="{label_x}" y="{label_y - 2}" font-family="sans-serif" font-size="7.5" '
+                        f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L{l} R0 ({deg_val}°)</text>'
+                    )
 
             svg_parts.append(
-                f'<text x="{cx - radius/2}" y="{offset_y + 10}" font-family="sans-serif" font-size="6.5" '
-                f'fill="#64748b" text-anchor="middle">PIVOT | Flip for (0, L) | Back for Reverse</text>'
+                f'<text x="{cx}" y="{cy + 25}" font-family="sans-serif" font-size="6.5" '
+                f'fill="#64748b" text-anchor="middle">PIVOT FAN | 45° / unit | 4 units = 180° | Flip for (0, L) | Back for Reverse</text>'
+            )
+            svg_parts.append(
+                f'<text x="{cx}" y="{cy + 34}" font-family="sans-serif" font-size="5.8" '
+                f'fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R0, 180°) + Remainder</text>'
             )
 
         elif self.category == "curve_forward":
-            # Forward curved arc
+            # Forward curved arc: 45 deg per 1 unit differential
             max_l = max(p[0] for p in self.pairs)
             max_r = max(p[1] for p in self.pairs)
             diff = max_l - max_r
             r_in = w * max_r / diff
             r_out = w * max_l / diff
-            d_theta_max = diff * u / w
+            d_theta_max = diff * (math.pi / 4.0)
 
             cx = offset_x + r_out
             cy = offset_y + r_out * math.sin(min(d_theta_max, math.pi / 2)) + 20.0
@@ -400,7 +456,7 @@ class MovementTemplate:
             )
 
             for l, r in self.pairs:
-                d_th = (l - r) * u / w
+                d_th = (l - r) * (math.pi / 4.0)
                 p_out = (cx - r_out * math.cos(d_th), cy - r_out * math.sin(d_th))
                 p_in = (cx - r_in * math.cos(d_th), cy - r_in * math.sin(d_th))
                 svg_parts.append(
@@ -420,11 +476,11 @@ class MovementTemplate:
             )
 
         elif self.category == "curve_tight":
-            # Counter-drive tight curve
+            # Counter-drive tight curve: 45 deg per 1 unit differential
             max_l = max(p[0] for p in self.pairs)
             min_r = min(p[1] for p in self.pairs)
             diff = max_l - min_r
-            d_theta_max = diff * u / w
+            d_theta_max = diff * (math.pi / 4.0)
 
             r_out = w * max_l / diff
             r_in = math.fabs(w * min_r / diff)
@@ -461,7 +517,7 @@ class MovementTemplate:
             )
 
             for l, r in self.pairs:
-                d_th = (l - r) * u / w
+                d_th = (l - r) * (math.pi / 4.0)
                 p_out = (cx - r_out * math.cos(d_th), cy - r_out * math.sin(d_th))
                 p_in = (cx + r_in * math.cos(d_th), cy + r_in * math.sin(d_th))
                 svg_parts.append(
@@ -523,25 +579,25 @@ def build_all_movement_templates(
         )
     )
 
-    # 2. Spin Disc Template: (1, -1) to (5, -5)
+    # 2. Spin Disc Template: (1, -1) to (4, -4) [4 units = 360° full rotation]
     templates.append(
         MovementTemplate(
             template_id="spin",
             name="Spin Disc Template",
             category="spin",
-            pairs=[(1, -1), (2, -2), (3, -3), (4, -4), (5, -5)],
+            pairs=[(1, -1), (2, -2), (3, -3), (4, -4)],
             wheelbase=wheelbase,
             drive_unit=drive_unit,
         )
     )
 
-    # 3. Pivot Fan Template: (1, 0) to (5, 0)
+    # 3. Pivot Fan Template: (1, 0) to (4, 0) [4 units = 180° semicircle]
     templates.append(
         MovementTemplate(
             template_id="pivot",
             name="Pivot Fan Template",
             category="pivot",
-            pairs=[(1, 0), (2, 0), (3, 0), (4, 0), (5, 0)],
+            pairs=[(1, 0), (2, 0), (3, 0), (4, 0)],
             wheelbase=wheelbase,
             drive_unit=drive_unit,
         )
@@ -865,72 +921,77 @@ def main():
                 ax.text(150, 842, "Place at rear for Reverse (-1 to -5)", fontsize=10, ha="center", color="#475569")
 
                 # 2. Curve template (Top Right)
-                arc_wedge = patches.Wedge((640, 420), 320, 180, 252, width=150, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
+                arc_wedge = patches.Wedge((640, 420), 320, 180, 270, width=150, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
                 ax.add_patch(arc_wedge)
 
                 ax.plot([320, 470], [420, 420], color="#0f172a", linewidth=4.5)
                 ax.text(395, 442, "START FRONT", fontsize=8.5, fontweight="bold", ha="center", color="#0f172a")
 
-                th1 = np.radians(180 + 35.3)
+                th1 = np.radians(180 + 45.0)
                 p1_out = (640 + 320 * np.cos(th1), 420 + 320 * np.sin(th1))
                 p1_in = (640 + 170 * np.cos(th1), 420 + 170 * np.sin(th1))
                 ax.plot([p1_out[0], p1_in[0]], [p1_out[1], p1_in[1]], color="#2563eb", linewidth=2.5)
-                ax.text((p1_out[0]+p1_in[0])/2 - 20, (p1_out[1]+p1_in[1])/2 + 25, "L2 R1", fontsize=12, fontweight="bold", color="#1e293b", ha="center")
+                ax.text((p1_out[0]+p1_in[0])/2 - 20, (p1_out[1]+p1_in[1])/2 + 25, "L2 R1 (45°)", fontsize=11, fontweight="bold", color="#1e293b", ha="center")
 
-                th2 = np.radians(180 + 70.5)
+                th2 = np.radians(180 + 90.0)
                 p2_out = (640 + 320 * np.cos(th2), 420 + 320 * np.sin(th2))
                 p2_in = (640 + 170 * np.cos(th2), 420 + 170 * np.sin(th2))
                 ax.plot([p2_out[0], p2_in[0]], [p2_out[1], p2_in[1]], color="#2563eb", linewidth=2.5)
-                ax.text((p2_out[0]+p2_in[0])/2 - 20, (p2_out[1]+p2_in[1])/2 + 25, "L4 R2", fontsize=12, fontweight="bold", color="#1e293b", ha="center")
+                ax.text((p2_out[0]+p2_in[0])/2 - 20, (p2_out[1]+p2_in[1])/2 + 25, "L4 R2 (90°)", fontsize=11, fontweight="bold", color="#1e293b", ha="center")
 
                 ax.text(640, 460, "CURVE (Ratio 2:1)", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
                 ax.text(640, 482, "Flip for Left Turn | Place at rear for Reverse", fontsize=10, ha="center", color="#475569")
 
                 # 3. Spin disc (Bottom Center)
-                cx_s, cy_s = 360, 680
-                r_s = 75
+                cx_s, cy_s = 350, 680
+                r_s = 70
                 spin_circ = patches.Circle((cx_s, cy_s), r_s, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
                 ax.add_patch(spin_circ)
                 ax.plot(cx_s, cy_s, "ko", markersize=4)
 
                 ax.plot([cx_s, cx_s], [cy_s, cy_s - r_s], color="#0f172a", linewidth=4)
-                ax.text(cx_s, cy_s - r_s - 8, "START", fontsize=8.5, fontweight="bold", ha="center", color="#0f172a")
+                ax.text(cx_s, cy_s - r_s - 8, "START / L4 R-4 (360°)", fontsize=7.5, fontweight="bold", ha="center", color="#0f172a")
 
-                for k in [1, 2]:
-                    ang = np.radians(k * 70.5 - 90)
+                for k, lbl in [(1, "L1 R-1 (90°)"), (2, "L2 R-2 (180°)"), (3, "L3 R-3 (270°)")]:
+                    ang = np.radians(k * 90.0 - 90.0)
                     px = cx_s + r_s * np.cos(ang)
                     py = cy_s + r_s * np.sin(ang)
                     ax.plot([cx_s, px], [cy_s, py], color="#2563eb", linewidth=2.2)
-                    tx = cx_s + (r_s * 0.6) * np.cos(ang) + (10 if np.cos(ang) > 0 else -10)
-                    ty = cy_s + (r_s * 0.6) * np.sin(ang)
-                    ax.text(tx, ty, f"L{k} R-{k}", fontsize=9, fontweight="bold", color="#1e293b", ha="center")
+                    tx = cx_s + (r_s * 0.6) * np.cos(ang) + (10 if np.cos(ang) > 0 else (-10 if np.cos(ang) < 0 else 0))
+                    ty = cy_s + (r_s * 0.6) * np.sin(ang) + (12 if np.sin(ang) > 0 else (-6 if np.sin(ang) < 0 else 0))
+                    ax.text(tx, ty, lbl, fontsize=8, fontweight="bold", color="#1e293b", ha="center")
 
-                ax.text(cx_s, 785, "SPIN DISC", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
-                ax.text(cx_s, 807, "Rotate around center", fontsize=10, ha="center", color="#475569")
-                ax.text(cx_s, 825, "Flip for CCW", fontsize=9.5, ha="center", color="#64748b")
+                ax.text(cx_s, 785, "SPIN DISC (90° / unit)", fontsize=12, fontweight="bold", ha="center", color="#0f172a")
+                ax.text(cx_s, 807, "Rotate on center | Flip for CCW", fontsize=9.5, ha="center", color="#475569")
+                ax.text(cx_s, 825, ">4: L4 R-4 (360°) + Remainder", fontsize=8.5, ha="center", color="#64748b")
 
                 # 4. Pivot fan (Bottom Right)
-                cx_p, cy_p = 750, 720
-                r_p = 160
-                piv_wedge = patches.Wedge((cx_p, cy_p), r_p, 180, 270, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
+                cx_p, cy_p = 720, 680
+                r_p = 140
+                piv_wedge = patches.Wedge((cx_p, cy_p), r_p, 180, 360, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
                 ax.add_patch(piv_wedge)
                 ax.plot(cx_p, cy_p, "ro", markersize=7)
-                ax.text(cx_p + 8, cy_p + 15, "PIVOT WHEEL", fontsize=8, fontweight="bold", color="#ef4444")
+                ax.text(cx_p, cy_p + 15, "PIVOT WHEEL", fontsize=8, fontweight="bold", color="#ef4444", ha="center")
 
                 ax.plot([cx_p - r_p, cx_p], [cy_p, cy_p], color="#0f172a", linewidth=4)
-                ax.text(cx_p - r_p/2, cy_p + 16, "START FRONT", fontsize=8.5, fontweight="bold", ha="center", color="#0f172a")
+                ax.text(cx_p - r_p/2, cy_p + 16, "START FRONT", fontsize=8, fontweight="bold", ha="center", color="#0f172a")
 
                 for k in [1, 2, 3, 4]:
-                    th_p = np.radians(180 + k * 22.5)
+                    th_p = np.radians(180 + k * 45.0)
                     px = cx_p + r_p * np.cos(th_p)
                     py = cy_p + r_p * np.sin(th_p)
                     ax.plot([cx_p, px], [cy_p, py], color="#2563eb", linewidth=2.2)
-                    tx = cx_p + (r_p * 0.65) * np.cos(th_p)
-                    ty = cy_p + (r_p * 0.65) * np.sin(th_p)
-                    ax.text(tx, ty, f"L{k} R0", fontsize=9.5, fontweight="bold", color="#1e293b", ha="center", rotation=(k*22.5 - 45))
+                    if k == 4:
+                        ax.text(cx_p + r_p/2, cy_p + 16, "L4 R0 (180°)", fontsize=8.5, fontweight="bold", color="#1d4ed8", ha="center")
+                    else:
+                        deg_lbl = k * 45
+                        tx = cx_p + (r_p * 0.65) * np.cos(th_p)
+                        ty = cy_p + (r_p * 0.65) * np.sin(th_p)
+                        ax.text(tx, ty, f"L{k} R0 ({deg_lbl}°)", fontsize=8, fontweight="bold", color="#1e293b", ha="center")
 
-                ax.text(cx_p - r_p/2, 815, "PIVOT FAN", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
-                ax.text(cx_p - r_p/2, 837, "Flip for (0, L) | Back for Reverse", fontsize=10, ha="center", color="#475569")
+                ax.text(cx_p, 815, "PIVOT FAN (45° / unit, 4 = 180°)", fontsize=12, fontweight="bold", ha="center", color="#0f172a")
+                ax.text(cx_p, 835, "Flip for (0, L) | Back for Reverse", fontsize=9.5, ha="center", color="#475569")
+                ax.text(cx_p, 852, ">4: L4 R0 (180°) + Remainder", fontsize=8.5, ha="center", color="#64748b")
 
                 plt.tight_layout()
                 fig.savefig(str(args.rules_image), dpi=100)

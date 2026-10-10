@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 181.6 192.6" width="181.6mm" height="192.6mm">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 235.0 210.0" width="235.0mm" height="210.0mm">
   <defs>
     <style>
       text { user-select: none; }
@@ -6,14 +6,14 @@
   </defs>
   <rect width="100%" height="100%" fill="#ffffff" />
 <g id="template_curve_ratio_2_1">
-<path d="M 15.0 157.55693177096936 A 130.0 130.0 0 0 1 101.64335720000963 34.999999999999986 L 123.32167860000482 96.27846588548468 A 65.0 65.0 0 0 0 80.0 157.55693177096936 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 47.5 157.55693177096936 A 97.5 97.5 0 0 1 112.48251790000722 65.63923294274232" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="15.0" y1="157.55693177096936" x2="80.0" y2="157.55693177096936" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="47.5" y="168.55693177096936" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="38.848307681886794" y1="82.51149075020763" x2="91.9241538409434" y2="120.03421126058849" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="65.3862307614151" y="98.27285100539805" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R1</text>
-<line x1="101.64335720000963" y1="34.999999999999986" x2="123.32167860000482" y2="96.27846588548468" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="112.48251790000722" y="62.639232942742325" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
+<path d="M 15.0 165.0 A 130.0 130.0 0 0 1 145.0 35.0 L 145.0 100.0 A 65.0 65.0 0 0 0 80.0 165.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 47.5 165.0 A 97.5 97.5 0 0 1 145.0 67.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="15.0" y1="165.0" x2="80.0" y2="165.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
+<text x="47.5" y="176.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
+<line x1="53.07611844574882" y1="73.07611844574883" x2="99.03805922287441" y2="119.03805922287441" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="76.05708883431161" y="93.05708883431163" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R1</text>
+<line x1="145.0" y1="35.0" x2="145.0" y2="100.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="145.0" y="64.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
 <text x="20.0" y="27.0" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
 </g>
 </svg>

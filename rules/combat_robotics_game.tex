@@ -202,7 +202,7 @@ Components produce, require, and consume various resource types. The primary res
   \inlineIcon{\resourceM} & \textbf{Drive}    & \texttt{M} & Motive force delivered to wheels or tracks for arena mobility. \\
   \inlineIcon{\resourceW} & \textbf{Damage}   & \texttt{W} & Destructive impact force dealt to opposing components during active contact. \\
   \bottomrule
-\end{tabularx}}
+\end{tabularx}
 \end{center}
 
 \subsection{Resource Notation}
@@ -231,7 +231,7 @@ Components may have keywords that define specific mechanical rules and interacti
   \keywordbadge{kw_invertible}{Invertible} & This component works inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & If a turn ends without contact and this robot is inverted, invert it. \\
   \bottomrule
-\end{tabularx}}
+\end{tabularx}
 \end{center}
 
 \begin{summarybox}{Keywords Quick Summary}
@@ -317,7 +317,7 @@ Combat takes place inside a hazard-filled enclosed arena.
 % ==============================================================================
 
 \section{Battle Rules}
-\enlargethispage{2\baselineskip}
+\enlargethispage{2.5\baselineskip}
 
 \subsection{Match Length \& Win Conditions}
 
@@ -327,7 +327,7 @@ If neither robot is immobilized by the end of round 10, the winner is decided by
 
 \subsection{Round Structure}
 
-Each round follows a strict sequence of four phases:
+Each round follows a sequence of four phases:
 
 \noindent
 {\small\begin{tabularx}{\textwidth}{l p{12.5cm}}
@@ -340,6 +340,7 @@ Each round follows a strict sequence of four phases:
   \textbf{4. Cleanup}  & Reset temporary states, verify active drive, and proceed to the next round. \\
   \bottomrule
 \end{tabularx}}
+
 \subsection{Movement Execution}
 
 Movement units are found on the straight movement template. Where an effect says a robot moves that amount, move them along that template without changing facing.
@@ -348,29 +349,99 @@ Movement units are found on the straight movement template. Where an effect says
   \centering
   \begin{minipage}[c]{0.32\textwidth}
     \centering
-    \includegraphics[height=4.6cm]{images/movement_templates.png}
-    \caption{Movement Templates}
+    \includegraphics[height=4.3cm]{images/movement_templates.png}
+    \caption{Core Templates}
     \label{fig:movement_templates}
   \end{minipage}
   \hfill
-  \begin{minipage}[c]{0.66\textwidth}
-    \begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=1pt]
-      \item In the planning step, each player chooses for each side a number with absolute value less than or equal to their active drive count for that side. \texttt{0/0} means no movement.
-      \item Then the choices are revealed and both robots are moved along the template corresponding to their chosen number pair.
-      \item \textbf{Forward Movement:} The robot starts with its front at the black baseline on the template and ends with its front in line with the corresponding line.
-      \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right-turning maneuvers ($L \ge R$). If a chosen move turns left ($R > L$), flip the template over face-down.
-      \item \textbf{Forwards/Backwards (Reverse Placement):} For reverse moves where drive is negative, place the template's black baseline against the \textbf{back} (rear) of the robot instead of the front, and move the robot backward along the template to the corresponding line.
-      \item \textbf{Rotations \& Pivots:} In-place spins ($L = -R$) rotate around the center spin disc template. Single-wheel pivots ($R = 0$ or $L = 0$) swing around the stationary wheel along the pivot fan template.
+  \begin{minipage}[c]{0.65\textwidth}
+    \begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=0.5pt]
+      \item In planning, players secretly choose drive settings with absolute value $\le$ active drive count on each side (\texttt{0/0} is stationary). Choices are revealed simultaneously.
+      \item Both robots advance along the template corresponding to their chosen drive pair.
+      \item \textbf{Forward Alignment:} Front bumper starts flush at black baseline and ends at target line.
+      \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns ($L \ge R$). If turning left ($R > L$), flip the template face-down.
+      \item \textbf{Reverse Maneuvers (Rear Placement):} If drive is negative, place the template baseline against the \textbf{back} (rear) of the robot; move backward to the target line.
+      \item \textbf{Rotations \& Pivots:} In-place spins ($L = -R$) use the center spin disc in $90^\circ$ increments per unit ($4/-4 = 360^\circ$). Pivots on a locked wheel ($R = 0$ or $L = 0$) use the pivot fan in $45^\circ$ increments per unit ($4/0 = 180^\circ$ semicircle).
+      \item \textbf{Movements Beyond the Template:} If drive exceeds markings (e.g., $5/0$, $5/-5$, or boosted drive), move to the template end, then place another template for the remainder.
+      \item \textbf{Path Overlap \& Collision Check:} Overlapping paths cause collisions at contact.
     \end{enumerate}
-    \vspace{0.2em}
-    \textbf{Path Overlap \& Collision Check:}\\
-    If the paths overlap then there is a collision at that point, and there is a collision if the robot would end up placed inside or in contact with something else.
   \end{minipage}
 \end{figure}
 
-\begin{summarybox}{Movement Planning Summary}
-Drive values chosen in the Planning phase directly determine robot displacement and turning trajectory. A player with 3 active drive on the left and 2 on the right may choose any pair within $[-3, +3]$ and $[-2, +2]$. Templates cover all permutations with minimal physical pieces: flipping handles left/right turns, placing at the rear handles reverse maneuvers, and shared track lines cover multiple drive magnitudes.
+\vspace{-0.5em}
+\begin{summarybox}{Movement Rules Summary}
+Drive values chosen in Planning directly determine robot displacement and turning trajectory. Templates cover all 121 permutations with minimal physical pieces: flipping handles left/right turns, placing at the rear handles reverse maneuvers, in-place discs/fans handle rotations, and remainder chaining handles values exceeding template markings.
 \end{summarybox}
+
+\clearpage
+
+% ==============================================================================
+% PAGE 6: COMPREHENSIVE MOVEMENT EXAMPLES & REFERENCE GUIDE
+% ==============================================================================
+
+\subsection{Movement Examples}
+\enlargethispage{2.5\baselineskip}
+
+To clarify template usage, physical alignment, and maneuver execution during play, review the following detailed examples:
+
+\vspace{0.2em}
+\noindent\textbf{1. Straight Driving and Reverse Maneuvers (\texttt{3/3} vs \texttt{-2/-2})}
+\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+  \item \textbf{Forward Drive (\texttt{3/3}):} Align Straight Template baseline flush against the \textbf{front bumper}. Advance straight forward until the front bumper aligns with the blue \textbf{L3 R3} line. Heading is unchanged.
+  \item \textbf{Reverse Maneuver (\texttt{-2/-2}):} Negative drive moves backward. Align baseline flush against the \textbf{rear bumper} pointing backward. Reverse until the rear bumper aligns with \textbf{L2 R2}. Heading is unchanged.
+\end{itemize}
+
+\vspace{0.2em}
+\noindent\textbf{2. Curved Arcs and Left/Right Flipping (\texttt{2/1} vs \texttt{1/2})}
+\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+  \item \textbf{Right Turn Arc (\texttt{2/1}):} Place the 2:1 Curve Template face-up with baseline at the front bumper. Advance along the curve to line \textbf{L2 R1}, sweeping $45^\circ$ clockwise to the right ($\Delta\theta = (2 - 1) \times 45^\circ$).
+  \item \textbf{Left Turn Arc (\texttt{1/2}):} Right track is faster ($R > L$), turning left. Take the \textbf{exact same} 2:1 Curve Template and \textbf{flip it face-down}. Advance along the arc to \textbf{L2 R1}, sweeping $45^\circ$ counter-clockwise.
+  \item \textbf{Reverse Curve (\texttt{-2/-1}):} Placed face-up against the rear bumper; robot backs up along the curved track.
+\end{itemize}
+
+\vspace{0.2em}
+\noindent\textbf{3. Pivot Fan vs. Spin Disc Rotations (\texttt{2/0} vs \texttt{2/-2})}
+\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+  \item \textbf{Pivot on Stationary Wheel (\texttt{2/0}):} Right wheel is locked. Place Pivot Fan red marker on the \textbf{right wheel}. Robot swings clockwise around that wheel by $90^\circ$ ($2 \times 45^\circ$) to line \textbf{L2 R0}.
+  \item \textbf{Spin-on-the-Spot (\texttt{2/-2}):} Tracks counter-rotate equally. Center the Spin Disc under the chassis. Robot rotates $180^\circ$ clockwise ($2 \times 90^\circ$) to \textbf{L2 R-2} on the spot with zero displacement.
+\end{itemize}
+
+\vspace{0.2em}
+\noindent\textbf{4. Movements Beyond the Template (Remainder Chaining: \texttt{5/0}, \texttt{5/-5}, \texttt{6/6})}
+\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+  \item \textbf{Extended Pivot (\texttt{5/0}):} Pivot Fan markings end at \textbf{L4 R0} ($180^\circ$ semicircle). Pivot to template end at \textbf{L4 R0} ($180^\circ$), then from this new position place the template again for remainder ($5 - 4 = 1$), pivoting an additional $1$ unit (\textbf{L1 R0}, $45^\circ$) for total rotation of $180^\circ + 45^\circ = \mathbf{225^\circ}$.
+  \item \textbf{Whirlwind Spin (\texttt{5/-5}):} Spin Disc marks end at \textbf{L4 R-4} ($360^\circ$). Spin $360^\circ$ to template end, then apply remainder ($1$ unit, \textbf{L1 R-1}) to rotate an additional $90^\circ$, completing a total spin of $\mathbf{450^\circ}$.
+  \item \textbf{Overdrive Straight (\texttt{6/6}):} Boosted drive past 5 advances to \textbf{L5 R5} at template end, then places template again for remainder \textbf{L1 R1}.
+\end{itemize}
+
+\vspace{0.2em}
+\noindent\textbf{5. Counter-Drive Tight Turns (\texttt{3/-1})}
+\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+  \item \textbf{Tight Hook Turn (\texttt{3/-1}):} Track 1 drives forward 3 units while opposing track reverses 1 unit. Uses Tight Turn Template (3:-1 ratio). Counter-rotation with unequal speeds swings robot $180^\circ$ while translating slightly forward.
+\end{itemize}
+
+\vspace{0.2em}
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{l c c X}
+  \toprule
+  \textbf{Drive Pair} & \textbf{Category} & \textbf{Template Used} & \textbf{Physical Placement \& Execution Rule} \\
+  \midrule
+  $L = R > 0$ & Straight & Straight (1--5) & Front baseline. Move forward with fixed heading. \\
+  $L = R < 0$ & Reverse & Straight (1--5) & Rear baseline. Reverse backward with fixed heading. \\
+  $L > R > 0$ & Curve (Right) & Curve Arc & Front baseline, face-up. Turn right by $(L - R)\times 45^\circ$. \\
+  $R > L > 0$ & Curve (Left) & Curve Arc & Front baseline, \textbf{flip face-down}. Turn left by $(R - L)\times 45^\circ$. \\
+  $L > 0, R = 0$ & Pivot (Right) & Pivot Fan & Red pin on right wheel. Pivot CW by $L \times 45^\circ$ (4 = $180^\circ$). \\
+  $L = 0, R > 0$ & Pivot (Left) & Pivot Fan & \textbf{Flip face-down}, pin on left wheel. Pivot CCW by $R \times 45^\circ$. \\
+  $L = -R$ & Spin Disc & Spin Disc & Centered under chassis. Spin on spot by $L \times 90^\circ$ (4 = $360^\circ$). \\
+  $L > 4$ or $|R| > 4$ & Chaining & Same Template & Move to template end, then apply template again for remainder. \\
+  \bottomrule
+\end{tabularx}
+\caption{Differential Drive Permutation Reference Guide}
+\label{tab:drive_ref}
+\end{table}
 
 \clearpage
 

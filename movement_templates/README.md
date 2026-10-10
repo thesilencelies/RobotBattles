@@ -9,12 +9,12 @@ This table details all **121 combinations** of Left and Right drive settings, th
 | -5 | -3 | Curve Template (5, 3) | `L5 R3` | No | **Back (Rear)** | curve_forward |
 | -5 | -2 | Curve Template (5, 2) | `L5 R2` | No | **Back (Rear)** | curve_forward |
 | -5 | -1 | Curve Template (5, 1) | `L5 R1` | No | **Back (Rear)** | curve_forward |
-| -5 | +0 | Pivot Fan Template | `L5 R0` | No | **Back (Rear)** | pivot |
+| -5 | +0 | Pivot Fan Template | `L4 R0 + L1 R0` | No | **Back (Rear)** | pivot |
 | -5 | +1 | Tight Turn Template (5, -1) | `L5 R-1` | No | **Back (Rear)** | curve_tight |
 | -5 | +2 | Tight Turn Template (5, -2) | `L5 R-2` | No | **Back (Rear)** | curve_tight |
 | -5 | +3 | Tight Turn Template (5, -3) | `L5 R-3` | No | **Back (Rear)** | curve_tight |
 | -5 | +4 | Tight Turn Template (5, -4) | `L5 R-4` | No | **Back (Rear)** | curve_tight |
-| -5 | +5 | Spin Disc Template | `L5 R-5` | **YES (Face-down)** | Front | spin |
+| -5 | +5 | Spin Disc Template | `L4 R-4 + L1 R-1` | **YES (Face-down)** | Front | spin |
 | -4 | -5 | Curve Template (5, 4) | `L5 R4` | **YES (Face-down)** | **Back (Rear)** | curve_forward |
 | -4 | -4 | Straight Template | `L4 R4` | No | **Back (Rear)** | straight |
 | -4 | -3 | Curve Template (4, 3) | `L4 R3` | No | **Back (Rear)** | curve_forward |
@@ -59,7 +59,7 @@ This table details all **121 combinations** of Left and Right drive settings, th
 | -1 | +3 | Tight Turn Template (3, -1) | `L3 R-1` | **YES (Face-down)** | Front | curve_tight |
 | -1 | +4 | Tight Turn Template (4, -1) | `L4 R-1` | **YES (Face-down)** | Front | curve_tight |
 | -1 | +5 | Tight Turn Template (5, -1) | `L5 R-1` | **YES (Face-down)** | Front | curve_tight |
-| +0 | -5 | Pivot Fan Template | `L5 R0` | **YES (Face-down)** | **Back (Rear)** | pivot |
+| +0 | -5 | Pivot Fan Template | `L4 R0 + L1 R0` | **YES (Face-down)** | **Back (Rear)** | pivot |
 | +0 | -4 | Pivot Fan Template | `L4 R0` | **YES (Face-down)** | **Back (Rear)** | pivot |
 | +0 | -3 | Pivot Fan Template | `L3 R0` | **YES (Face-down)** | **Back (Rear)** | pivot |
 | +0 | -2 | Pivot Fan Template | `L2 R0` | **YES (Face-down)** | **Back (Rear)** | pivot |
@@ -69,7 +69,7 @@ This table details all **121 combinations** of Left and Right drive settings, th
 | +0 | +2 | Pivot Fan Template | `L2 R0` | **YES (Face-down)** | Front | pivot |
 | +0 | +3 | Pivot Fan Template | `L3 R0` | **YES (Face-down)** | Front | pivot |
 | +0 | +4 | Pivot Fan Template | `L4 R0` | **YES (Face-down)** | Front | pivot |
-| +0 | +5 | Pivot Fan Template | `L5 R0` | **YES (Face-down)** | Front | pivot |
+| +0 | +5 | Pivot Fan Template | `L4 R0 + L1 R0` | **YES (Face-down)** | Front | pivot |
 | +1 | -5 | Tight Turn Template (5, -1) | `L5 R-1` | **YES (Face-down)** | **Back (Rear)** | curve_tight |
 | +1 | -4 | Tight Turn Template (4, -1) | `L4 R-1` | **YES (Face-down)** | **Back (Rear)** | curve_tight |
 | +1 | -3 | Tight Turn Template (3, -1) | `L3 R-1` | **YES (Face-down)** | **Back (Rear)** | curve_tight |
@@ -114,12 +114,12 @@ This table details all **121 combinations** of Left and Right drive settings, th
 | +4 | +3 | Curve Template (4, 3) | `L4 R3` | No | Front | curve_forward |
 | +4 | +4 | Straight Template | `L4 R4` | No | Front | straight |
 | +4 | +5 | Curve Template (5, 4) | `L5 R4` | **YES (Face-down)** | Front | curve_forward |
-| +5 | -5 | Spin Disc Template | `L5 R-5` | No | Front | spin |
+| +5 | -5 | Spin Disc Template | `L4 R-4 + L1 R-1` | No | Front | spin |
 | +5 | -4 | Tight Turn Template (5, -4) | `L5 R-4` | No | Front | curve_tight |
 | +5 | -3 | Tight Turn Template (5, -3) | `L5 R-3` | No | Front | curve_tight |
 | +5 | -2 | Tight Turn Template (5, -2) | `L5 R-2` | No | Front | curve_tight |
 | +5 | -1 | Tight Turn Template (5, -1) | `L5 R-1` | No | Front | curve_tight |
-| +5 | +0 | Pivot Fan Template | `L5 R0` | No | Front | pivot |
+| +5 | +0 | Pivot Fan Template | `L4 R0 + L1 R0` | No | Front | pivot |
 | +5 | +1 | Curve Template (5, 1) | `L5 R1` | No | Front | curve_forward |
 | +5 | +2 | Curve Template (5, 2) | `L5 R2` | No | Front | curve_forward |
 | +5 | +3 | Curve Template (5, 3) | `L5 R3` | No | Front | curve_forward |

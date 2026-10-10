@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 95.0 95.0" width="95.0mm" height="95.0mm">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.0 140.0" width="150.0mm" height="140.0mm">
   <defs>
     <style>
       text { user-select: none; }
@@ -6,20 +6,19 @@
   </defs>
   <rect width="100%" height="100%" fill="#ffffff" />
 <g id="template_spin">
-<circle cx="60.0" cy="60.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="60.0" cy="60.0" r="2" fill="#0f172a" />
-<line x1="60.0" y1="60.0" x2="60.0" y2="25.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
-<text x="60.0" y="21.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="60.0" y1="60.0" x2="92.99609701526099" y2="48.327057707694905" stroke="#2563eb" stroke-width="2.2" />
-<text x="100.53806204732064" y="48.65895661231088" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R-1</text>
-<line x1="60.0" y1="60.0" x2="82.00923064745382" y2="87.21385247088658" stroke="#2563eb" stroke-width="2.2" />
-<text x="87.0399119383004" y="96.43416160708922" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2</text>
-<line x1="60.0" y1="60.0" x2="41.684616084496795" y2="89.82526968910301" stroke="#2563eb" stroke-width="2.2" />
-<text x="37.498242618096064" y="99.64247418946941" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-3</text>
-<line x1="60.0" y1="60.0" x2="25.773945380712924" y2="52.68035621101833" stroke="#2563eb" stroke-width="2.2" />
-<text x="17.95084718201874" y="54.0072947735368" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4</text>
-<line x1="60.0" y1="60.0" x2="55.4857404604049" y2="25.29234290809628" stroke="#2563eb" stroke-width="2.2" />
-<text x="54.45390970849745" y="20.359164144232572" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-5</text>
-<text x="60.0" y="109.0" font-family="sans-serif" font-size="7" fill="#64748b" text-anchor="middle">SPIN DISC | Flip for CCW</text>
+<circle cx="85.0" cy="75.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="85.0" cy="75.0" r="3" fill="#0f172a" />
+<line x1="85.0" y1="75.0" x2="85.0" y2="40.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+<text x="85.0" y="34.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START (0°)</text>
+<line x1="85.0" y1="75.0" x2="120.0" y2="75.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="126.0" y="78.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>
+<line x1="85.0" y1="75.0" x2="85.0" y2="110.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="85.0" y="122.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>
+<line x1="85.0" y1="75.0" x2="50.0" y2="75.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="44.0" y="78.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
+<text x="85.0" y="25.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360° Full)</text>
+<path d="M 104.25 75.0 A 19.25 19.25 0 0 1 85.0 94.25" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
+<text x="85.0" y="135.0" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">SPIN DISC | 90° / unit | Flip for CCW</text>
+<text x="85.0" y="144.0" font-family="sans-serif" font-size="5.8" fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R-4, 360°) + Remainder</text>
 </g>
 </svg>

@@ -25,14 +25,14 @@
   <!-- Curve Template (Top Right) -->
   <g transform="translate(340, 50) scale(2.2)">
     <g id="template_curve_ratio_2_1">
-<path d="M 0.0 142.55693177096936 A 130.0 130.0 0 0 1 86.64335720000963 19.999999999999986 L 108.32167860000482 81.27846588548468 A 65.0 65.0 0 0 0 65.0 142.55693177096936 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 32.5 142.55693177096936 A 97.5 97.5 0 0 1 97.48251790000722 50.639232942742325" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="0.0" y1="142.55693177096936" x2="65.0" y2="142.55693177096936" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="32.5" y="153.55693177096936" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="23.848307681886794" y1="67.51149075020763" x2="76.9241538409434" y2="105.03421126058849" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="50.3862307614151" y="83.27285100539805" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R1</text>
-<line x1="86.64335720000963" y1="19.999999999999986" x2="108.32167860000482" y2="81.27846588548468" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="97.48251790000722" y="47.63923294274233" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
+<path d="M 0.0 150.0 A 130.0 130.0 0 0 1 130.0 20.0 L 130.0 85.0 A 65.0 65.0 0 0 0 65.0 150.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 32.5 150.0 A 97.5 97.5 0 0 1 130.0 52.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="0.0" y1="150.0" x2="65.0" y2="150.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
+<text x="32.5" y="161.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
+<line x1="38.07611844574882" y1="58.07611844574883" x2="84.03805922287441" y2="104.03805922287441" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="61.057088834311614" y="78.05708883431163" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R1</text>
+<line x1="130.0" y1="20.0" x2="130.0" y2="85.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="130.0" y="49.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
 <text x="5" y="12" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
 </g>
   </g>
@@ -40,43 +40,41 @@
   <!-- Spin Disc Template (Bottom Center) -->
   <g transform="translate(350, 590) scale(2.2)">
     <g id="template_spin">
-<circle cx="45.0" cy="45.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="45.0" cy="45.0" r="2" fill="#0f172a" />
-<line x1="45.0" y1="45.0" x2="45.0" y2="10.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
-<text x="45.0" y="6.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="45.0" y1="45.0" x2="77.99609701526099" y2="33.327057707694905" stroke="#2563eb" stroke-width="2.2" />
-<text x="85.53806204732064" y="33.65895661231088" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R-1</text>
-<line x1="45.0" y1="45.0" x2="67.00923064745382" y2="72.21385247088658" stroke="#2563eb" stroke-width="2.2" />
-<text x="72.0399119383004" y="81.43416160708922" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2</text>
-<line x1="45.0" y1="45.0" x2="26.6846160844968" y2="74.82526968910301" stroke="#2563eb" stroke-width="2.2" />
-<text x="22.498242618096064" y="84.64247418946941" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-3</text>
-<line x1="45.0" y1="45.0" x2="10.773945380712924" y2="37.68035621101833" stroke="#2563eb" stroke-width="2.2" />
-<text x="2.950847182018741" y="39.0072947735368" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4</text>
-<line x1="45.0" y1="45.0" x2="40.4857404604049" y2="10.29234290809628" stroke="#2563eb" stroke-width="2.2" />
-<text x="39.45390970849745" y="5.359164144232572" font-family="sans-serif" font-size="7" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-5</text>
-<text x="45.0" y="94.0" font-family="sans-serif" font-size="7" fill="#64748b" text-anchor="middle">SPIN DISC | Flip for CCW</text>
+<circle cx="70.0" cy="60.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="70.0" cy="60.0" r="3" fill="#0f172a" />
+<line x1="70.0" y1="60.0" x2="70.0" y2="25.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+<text x="70.0" y="19.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START (0°)</text>
+<line x1="70.0" y1="60.0" x2="105.0" y2="60.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="111.0" y="63.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>
+<line x1="70.0" y1="60.0" x2="70.0" y2="95.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="70.0" y="107.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>
+<line x1="70.0" y1="60.0" x2="35.0" y2="60.00000000000001" stroke="#2563eb" stroke-width="2.4" />
+<text x="29.0" y="63.00000000000001" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
+<text x="70.0" y="10.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360° Full)</text>
+<path d="M 89.25 60.0 A 19.25 19.25 0 0 1 70.0 79.25" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
+<text x="70.0" y="120.0" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">SPIN DISC | 90° / unit | Flip for CCW</text>
+<text x="70.0" y="129.0" font-family="sans-serif" font-size="5.8" fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R-4, 360°) + Remainder</text>
 </g>
   </g>
 
   <!-- Pivot Fan Template (Bottom Right) -->
   <g transform="translate(560, 560) scale(2.2)">
     <g id="template_pivot">
-<path d="M 80.0 80.0 L 15.0 80.0 A 65.0 65.0 0 0 1 144.86412735351306 75.79940686721034 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="80.0" cy="80.0" r="3" fill="#ef4444" />
-<text x="85.0" y="90.0" font-family="sans-serif" font-size="6.5" font-weight="bold" fill="#ef4444">PIVOT WHEEL</text>
-<line x1="15.0" y1="80.0" x2="80.0" y2="80.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="square" />
-<text x="47.5" y="91.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="80.0" y1="80.0" x2="26.924153840943397" y2="42.477279489619136" stroke="#2563eb" stroke-width="2.2" />
-<text x="48.15449230456604" y="57.486367693771484" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R0</text>
-<line x1="80.0" y1="80.0" x2="58.321678600004816" y2="18.721534114515315" stroke="#2563eb" stroke-width="2.2" />
-<text x="66.99300716000289" y="43.23292046870919" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R0</text>
-<line x1="80.0" y1="80.0" x2="97.67291534020342" y2="17.448676565735212" stroke="#2563eb" stroke-width="2.2" />
-<text x="90.60374920412205" y="42.469205939441125" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R0</text>
-<line x1="80.0" y1="80.0" x2="130.5400117316465" y2="39.12571451187147" stroke="#2563eb" stroke-width="2.2" />
-<text x="110.3240070389879" y="55.47542870712289" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0</text>
-<line x1="80.0" y1="80.0" x2="144.86412735351306" y2="75.79940686721034" stroke="#2563eb" stroke-width="2.2" />
-<text x="118.91847641210784" y="77.4796441203262" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R0</text>
-<text x="47.5" y="10" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">PIVOT | Flip for (0, L) | Back for Reverse</text>
+<path d="M 90.0 80.0 L 25.0 80.0 A 65.0 65.0 0 0 1 155.0 80.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="90.0" cy="80.0" r="3.5" fill="#ef4444" />
+<text x="90.0" y="93.0" font-family="sans-serif" font-size="6.5" font-weight="bold" fill="#ef4444" text-anchor="middle">PIVOT WHEEL</text>
+<line x1="25.0" y1="80.0" x2="90.0" y2="80.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
+<text x="57.5" y="92.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
+<line x1="90.0" y1="80.0" x2="44.03805922287441" y2="34.038059222874416" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
+<text x="60.12473849486837" y="48.12473849486837" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R0 (45°)</text>
+<line x1="90.0" y1="80.0" x2="90.0" y2="15.0" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
+<text x="90.0" y="35.75" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R0 (90°)</text>
+<line x1="90.0" y1="80.0" x2="135.9619407771256" y2="34.03805922287441" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
+<text x="119.87526150513163" y="48.12473849486837" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R0 (135°)</text>
+<line x1="90.0" y1="80.0" x2="155.0" y2="79.99999999999999" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
+<text x="122.5" y="92.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0 (180°)</text>
+<text x="90.0" y="105.0" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">PIVOT FAN | 45° / unit | 4 units = 180° | Flip for (0, L) | Back for Reverse</text>
+<text x="90.0" y="114.0" font-family="sans-serif" font-size="5.8" fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R0, 180°) + Remainder</text>
 </g>
   </g>
 

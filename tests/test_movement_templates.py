@@ -153,5 +153,48 @@ class TestMovementTemplates(unittest.TestCase):
         self.assertIn("Curve (Ratio 2:1)", preview_svg)
 
 
+    def test_spin_and_pivot_rates_and_remainders(self):
+        """Verify 90° spin increments, 45° pivot increments hitting 180° at (4,0), and remainder chaining."""
+        templates = {t.template_id: t for t in build_all_movement_templates()}
+
+        # Spin template has 4 increments (1 to 4), where 4 = 360°
+        spin_t = templates["spin"]
+        self.assertEqual(spin_t.pairs, [(1, -1), (2, -2), (3, -3), (4, -4)])
+        spin_svg = spin_t.to_svg()
+        self.assertIn("90°", spin_svg)
+        self.assertIn("180°", spin_svg)
+        self.assertIn("270°", spin_svg)
+        self.assertIn("360°", spin_svg)
+
+        # Pivot template has 4 increments (1 to 4), where 4 = 180° (semicircle)
+        pivot_t = templates["pivot"]
+        self.assertEqual(pivot_t.pairs, [(1, 0), (2, 0), (3, 0), (4, 0)])
+        pivot_svg = pivot_t.to_svg()
+        self.assertIn("45°", pivot_svg)
+        self.assertIn("90°", pivot_svg)
+        self.assertIn("135°", pivot_svg)
+        self.assertIn("180°", pivot_svg)
+
+        # Chaining for values > 4
+        # (5, -5) -> L4 R-4 + L1 R-1
+        p_spin5 = map_permutation_to_template(5, -5)
+        self.assertEqual(p_spin5["template_id"], "spin")
+        self.assertEqual(p_spin5["target_line_label"], "L4 R-4 + L1 R-1")
+        self.assertIn("360°", p_spin5["remainder_note"])
+        self.assertIn("90°", p_spin5["remainder_note"])
+
+        # (5, 0) -> L4 R0 + L1 R0
+        p_piv5 = map_permutation_to_template(5, 0)
+        self.assertEqual(p_piv5["template_id"], "pivot")
+        self.assertEqual(p_piv5["target_line_label"], "L4 R0 + L1 R0")
+        self.assertIn("180°", p_piv5["remainder_note"])
+        self.assertIn("45°", p_piv5["remainder_note"])
+
+        # Flipped remainder: (0, 5) -> flipped + L4 R0 + L1 R0
+        p_piv_l5 = map_permutation_to_template(0, 5)
+        self.assertTrue(p_piv_l5["flipped"])
+        self.assertEqual(p_piv_l5["target_line_label"], "L4 R0 + L1 R0")
+
+
 if __name__ == "__main__":
     unittest.main()
