@@ -153,6 +153,33 @@ class CombatLogEntry:
 
 
 @dataclass
+class DamageTrainStep:
+    phase: str  # "damage", "recoil_feedback", "shock_feedback", "push_feedback", "wall_feedback"
+    robot_id: str  # "player" or "automaton"
+    target_cid: str
+    from_cid: Optional[str] = None
+    amount: int = 0
+    absorbed: int = 0
+    excess: int = 0
+    new_status: str = "UNDAMAGED"  # "UNDAMAGED", "DAMAGED", "DESTROYED"
+    message: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "phase": self.phase,
+            "robot_id": self.robot_id,
+            "target_cid": self.target_cid,
+            "from_cid": self.from_cid,
+            "amount": self.amount,
+            "absorbed": self.absorbed,
+            "excess": self.excess,
+            "new_status": self.new_status,
+            "message": self.message,
+        }
+
+
+
+@dataclass
 class RobotState:
     id: str
     name: str
@@ -210,6 +237,9 @@ class MatchState:
     automaton_action: Optional[str] = None
     player_trajectory: List[TrajectoryPoint] = field(default_factory=list)
     automaton_trajectory: List[TrajectoryPoint] = field(default_factory=list)
+    player_template: Optional[Dict[str, Any]] = None
+    automaton_template: Optional[Dict[str, Any]] = None
+    damage_steps: List[DamageTrainStep] = field(default_factory=list)
     last_collision: Optional[CollisionEvent] = None
     log: List[CombatLogEntry] = field(default_factory=list)
     winner: Optional[str] = None  # "player", "automaton", "draw", None
@@ -236,8 +266,12 @@ class MatchState:
                 {"x": p.x, "y": p.y, "theta": p.theta, "t": p.t}
                 for p in self.automaton_trajectory
             ],
+            "player_template": self.player_template,
+            "automaton_template": self.automaton_template,
+            "damage_steps": [s.to_dict() for s in self.damage_steps],
             "last_collision": self.last_collision.to_dict() if self.last_collision else None,
             "log": [entry.to_dict() for entry in self.log],
             "winner": self.winner,
             "win_reason": self.win_reason,
         }
+

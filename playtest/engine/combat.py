@@ -21,7 +21,14 @@ from .field import (
 )
 from .collision import check_robots_in_contact
 from .movement import DRIVE_UNIT_MM, MINIATURE_RADIUS
-from .types import CollisionEvent, CombatLogEntry, ComponentHealth, Pose, RobotState
+from .types import (
+    CollisionEvent,
+    CombatLogEntry,
+    ComponentHealth,
+    DamageTrainStep,
+    Pose,
+    RobotState,
+)
 
 
 def parse_weapon_spin_and_damage(outputs: str, keywords: str, text: str) -> Tuple[int, int, Dict[int, int], str]:
@@ -144,6 +151,7 @@ def resolve_inward_damage_progression(
     initial_target_id: str,
     damage: int,
     is_weapon_damage: bool = True,
+    steps: Optional[List[DamageTrainStep]] = None,
 ) -> List[str]:
     """
     Propagates integer damage from the initial contacted component inwards.
@@ -156,7 +164,20 @@ def resolve_inward_damage_progression(
 
     target = robot.components[initial_target_id]
     status, absorbed, excess = apply_damage_to_component(target, damage, is_weapon_damage)
-    logs.append(f"{target.name} (#{target.id}) takes {damage} dmg -> {status} (absorbed {absorbed}, excess {excess})")
+    msg = f"{target.name} (#{target.id}) takes {damage} dmg -> {status} (absorbed {absorbed}, excess {excess})"
+    logs.append(msg)
+    if steps is not None:
+        steps.append(DamageTrainStep(
+            phase="damage",
+            robot_id=robot.id,
+            target_cid=target.id,
+            from_cid=None,
+            amount=damage,
+            absorbed=absorbed,
+            excess=excess,
+            new_status=status,
+            message=msg,
+        ))
 
     visited: Set[str] = {initial_target_id}
     current_front: List[Tuple[str, int]] = [(initial_target_id, excess)]
@@ -187,7 +208,20 @@ def resolve_inward_damage_progression(
                 visited.add(nid)
                 ncomp = robot.components[nid]
                 nstatus, nabsorbed, nexcess = apply_damage_to_component(ncomp, split_dmg, is_weapon_damage)
-                logs.append(f"{ncomp.name} (#{ncomp.id}) takes {split_dmg} excess dmg -> {nstatus} (absorbed {nabsorbed})")
+                nmsg = f"{ncomp.name} (#{ncomp.id}) takes {split_dmg} excess dmg -> {nstatus} (absorbed {nabsorbed})"
+                logs.append(nmsg)
+                if steps is not None:
+                    steps.append(DamageTrainStep(
+                        phase="damage",
+                        robot_id=robot.id,
+                        target_cid=ncomp.id,
+                        from_cid=src_id,
+                        amount=split_dmg,
+                        absorbed=nabsorbed,
+                        excess=nexcess,
+                        new_status=nstatus,
+                        message=nmsg,
+                    ))
                 if nexcess > 0:
                     next_front.append((nid, nexcess))
 
@@ -200,6 +234,8 @@ def resolve_feedback_propagation(
     robot: RobotState,
     source_id: str,
     feedback_amount: int,
+    phase: str = "recoil_feedback",
+    steps: Optional[List[DamageTrainStep]] = None,
 ) -> List[str]:
     """
     Propagates feedback backwards along the supply graph
@@ -213,7 +249,20 @@ def resolve_feedback_propagation(
 
     src_comp = robot.components[source_id]
     status, absorbed, excess = apply_damage_to_component(src_comp, feedback_amount, is_weapon_damage=False)
-    logs.append(f"Feedback on {src_comp.name} (#{src_comp.id}): {feedback_amount} -> {status} (absorbed {absorbed})")
+    msg = f"Feedback on {src_comp.name} (#{src_comp.id}): {feedback_amount} -> {status} (absorbed {absorbed})"
+    logs.append(msg)
+    if steps is not None:
+        steps.append(DamageTrainStep(
+            phase=phase,
+            robot_id=robot.id,
+            target_cid=src_comp.id,
+            from_cid=None,
+            amount=feedback_amount,
+            absorbed=absorbed,
+            excess=excess,
+            new_status=status,
+            message=msg,
+        ))
 
     current_layer: List[Tuple[str, int]] = [(source_id, excess)]
     visited = {source_id}
@@ -236,13 +285,27 @@ def resolve_feedback_propagation(
                 visited.add(sid)
                 scomp = robot.components[sid]
                 sstatus, sabsorbed, sexcess = apply_damage_to_component(scomp, split_dmg, is_weapon_damage=False)
-                logs.append(f"Feedback passed to supplier {scomp.name} (#{scomp.id}): {split_dmg} -> {sstatus}")
+                smsg = f"Feedback passed to supplier {scomp.name} (#{scomp.id}): {split_dmg} -> {sstatus}"
+                logs.append(smsg)
+                if steps is not None:
+                    steps.append(DamageTrainStep(
+                        phase=phase,
+                        robot_id=robot.id,
+                        target_cid=scomp.id,
+                        from_cid=cid,
+                        amount=split_dmg,
+                        absorbed=sabsorbed,
+                        excess=sexcess,
+                        new_status=sstatus,
+                        message=smsg,
+                    ))
                 if sexcess > 0:
                     next_layer.append((sid, sexcess))
 
         current_layer = next_layer
 
     return logs
+
 
 
 def simulate_dropping_card(robot: RobotState) -> Optional[str]:
@@ -651,6 +714,7 @@ def resolve_inert_contact(
     r2: RobotState,
     round_num: int,
     rotate_at_end: bool = False,
+    steps: Optional[List[DamageTrainStep]] = None,
 ) -> List[CombatLogEntry]:
     """
     Executes inert contact (pushing match) resolution adhering to combat_robotics_game.tex:
@@ -713,7 +777,7 @@ def resolve_inert_contact(
             # Resolve throw away from wall and shock feedback
             shock_cid = simulate_dropping_card(pushed_into_wall_robot)
             if shock_cid:
-                resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str)
+                resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str, phase="wall_feedback", steps=steps)
 
     # Drive feedback: each robot takes feedback shared equally between active drive equal to opponent remaining distance
     opp_rem_1 = int(round(col.r2_remaining_dist / DRIVE_UNIT_MM))  # What R2 had before contact
@@ -734,7 +798,8 @@ def resolve_inert_contact(
             ))
             if fb_per_drive > 0:
                 for dcomp in active_drives:
-                    resolve_feedback_propagation(robot, dcomp.id, fb_per_drive)
+                    resolve_feedback_propagation(robot, dcomp.id, fb_per_drive, phase="push_feedback", steps=steps)
+
 
     # If requested, both robots are rotated a random amount at the end
     if rotate_at_end:
@@ -794,6 +859,7 @@ def resolve_collision_combat(
     r1: RobotState,
     r2: RobotState,
     round_num: int,
+    steps: Optional[List[DamageTrainStep]] = None,
 ) -> List[CombatLogEntry]:
     """
     Executes combat resolution adhering strictly to combat_robotics_game.tex.
@@ -866,7 +932,7 @@ def resolve_collision_combat(
             ))
 
             target2_id = col.robot2_components[0] if col.robot2_components else list(r2.components.keys())[0]
-            dmg_logs = resolve_inward_damage_progression(r2, target2_id, float(dmg1), is_weapon_damage=True)
+            dmg_logs = resolve_inward_damage_progression(r2, target2_id, float(dmg1), is_weapon_damage=True, steps=steps)
             for dl in dmg_logs:
                 logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {dl}"))
 
@@ -896,7 +962,7 @@ def resolve_collision_combat(
             ))
 
             target1_id = col.robot1_components[0] if col.robot1_components else list(r1.components.keys())[0]
-            dmg_logs = resolve_inward_damage_progression(r1, target1_id, float(dmg2), is_weapon_damage=True)
+            dmg_logs = resolve_inward_damage_progression(r1, target1_id, float(dmg2), is_weapon_damage=True, steps=steps)
             for dl in dmg_logs:
                 logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {dl}"))
 
@@ -917,11 +983,11 @@ def resolve_collision_combat(
         if total_contact_atk > 0:
             recoil_fb = total_contact_atk // 2
             if w1_comp and recoil_fb > 0:
-                fb_logs = resolve_feedback_propagation(r1, w1_comp.id, recoil_fb)
+                fb_logs = resolve_feedback_propagation(r1, w1_comp.id, recoil_fb, phase="recoil_feedback", steps=steps)
                 for fl in fb_logs:
                     logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
             if w2_comp and recoil_fb > 0:
-                fb_logs = resolve_feedback_propagation(r2, w2_comp.id, recoil_fb)
+                fb_logs = resolve_feedback_propagation(r2, w2_comp.id, recoil_fb, phase="recoil_feedback", steps=steps)
                 for fl in fb_logs:
                     logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
 
@@ -1022,7 +1088,7 @@ def resolve_collision_combat(
                         round=round_num, phase="collision",
                         message=f"⚡ Dropping card: throw shock of {throw_dmg} hits {shock_comp.name} (#{shock_comp.id})!",
                     ))
-                    shock_logs = resolve_feedback_propagation(robot, shock_cid, throw_dmg)
+                    shock_logs = resolve_feedback_propagation(robot, shock_cid, throw_dmg, phase="shock_feedback", steps=steps)
                     for sl in shock_logs:
                         logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Shock Feedback] {sl}"))
 
@@ -1042,13 +1108,14 @@ def resolve_collision_combat(
                     round=round_num, phase="collision",
                     message="⚡ Robots are still in contact after active clash — proceeding with inertial contact!",
                 ))
-                inert_logs = resolve_inert_contact(col, r1, r2, round_num, rotate_at_end=True)
+                inert_logs = resolve_inert_contact(col, r1, r2, round_num, rotate_at_end=True, steps=steps)
                 logs.extend(inert_logs)
 
     else:
         # Standard inert pushing contact
-        inert_logs = resolve_inert_contact(col, r1, r2, round_num, rotate_at_end=False)
+        inert_logs = resolve_inert_contact(col, r1, r2, round_num, rotate_at_end=False, steps=steps)
         logs.extend(inert_logs)
+
 
     # After contact, robots are pushed or thrown apart -> clear raised status
     r1.is_raised = False

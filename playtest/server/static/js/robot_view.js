@@ -81,6 +81,11 @@ export class RobotViewRenderer {
       ? "Raised (Outputs Halved)"
       : (robot.left_drive_max > 0 || robot.right_drive_max > 0 ? "Operational" : "Disabled");
 
+    const hasDamageReplay = robot.last_damage_steps && robot.last_damage_steps.length > 0;
+    const replayBtnHtml = hasDamageReplay
+      ? `<button class="btn btn-secondary btn-sm btn-replay-train" id="btn-replay-${containerId}" title="Replay damage & feedback train step-by-step">🔁 Replay Damage Train</button>`
+      : "";
+
     container.innerHTML = `
       <div class="robot-state-card robot-view-card" data-container-id="${containerId}">
         <!-- Header -->
@@ -97,6 +102,7 @@ export class RobotViewRenderer {
           <div class="status-badge-group">
             ${statusBadges.join(" ")}
             ${spinCounters}
+            ${replayBtnHtml}
           </div>
         </div>
 
@@ -174,6 +180,9 @@ export class RobotViewRenderer {
             </div>
           </div>
 
+          <!-- Damage & Feedback Train Live HUD Slot -->
+          <div class="damage-train-hud-slot" id="damage-train-hud-slot-${containerId}"></div>
+
           <!-- SVG Layout Stage -->
           <div class="robot-layout-viewport" id="viewport-${containerId}">
             <svg class="robot-layout-svg" id="svg-${containerId}" viewBox="0 0 420 297" preserveAspectRatio="xMidYMid meet">
@@ -209,6 +218,9 @@ export class RobotViewRenderer {
               <g class="layer-placed-cards">
                 ${comps.map(c => this._renderCardNode(c, robot, state.selectedCardId === c.id)).join("")}
               </g>
+
+              <!-- Damage & Feedback Train Overlay Layer -->
+              <g class="layer-damage-train" id="train-layer-${containerId}"></g>
             </svg>
           </div>
 
@@ -348,7 +360,7 @@ export class RobotViewRenderer {
       <g class="layout-card-node ${isSelected ? 'selected' : ''}" data-cid="${comp.id}" transform="translate(${x}, ${y})" style="cursor: pointer;">
         ${selectionHighlight}
         <!-- Card Rect -->
-        <rect width="${w}" height="${h}" rx="3.5"
+        <rect class="card-body-rect" width="${w}" height="${h}" rx="3.5"
               fill="${fillColor}"
               stroke="${statusColor}"
               stroke-width="${isSelected ? '2.5' : '1.8'}"
@@ -357,8 +369,8 @@ export class RobotViewRenderer {
 
         <!-- Card Top Icon & Status Pill -->
         <text x="5" y="11" font-size="9">${icon}</text>
-        <rect x="${w - 26}" y="3" width="23" height="8" rx="2" fill="${statusColor}" opacity="0.9"/>
-        <text x="${w - 14.5}" y="9" fill="#000000" font-size="5" font-weight="900" text-anchor="middle">
+        <rect class="status-pill-rect" x="${w - 26}" y="3" width="23" height="8" rx="2" fill="${statusColor}" opacity="0.9"/>
+        <text class="status-pill-text" x="${w - 14.5}" y="9" fill="#000000" font-size="5" font-weight="900" text-anchor="middle">
           ${statusText === "DESTROYED" ? "DEAD" : statusText === "INACTIVE" ? "NO PWR" : statusText}
         </text>
 
@@ -626,6 +638,255 @@ export class RobotViewRenderer {
     };
     svg.addEventListener("pointerup", endDrag);
     svg.addEventListener("pointercancel", endDrag);
+
+    // Replay Damage Train button
+    const replayBtn = container.querySelector(`#btn-replay-${containerId}`);
+    if (replayBtn && robot.last_damage_steps && robot.last_damage_steps.length > 0) {
+      replayBtn.addEventListener("click", () => {
+        RobotViewRenderer.animateDamageTrain(container, robot.last_damage_steps);
+      });
+    }
+  }
+
+  /**
+   * Animated step-by-step Damage & Feedback Train runner
+   * @param {HTMLElement} container The robot view container element
+   * @param {Array} steps Array of DamageTrainStep objects
+   * @param {Function} onComplete Callback invoked when animation finishes or skips
+   */
+  static animateDamageTrain(container, steps, onComplete) {
+    if (!container || !steps || steps.length === 0) {
+      if (onComplete) onComplete();
+      return;
+    }
+
+    const cardEl = container.querySelector(".robot-view-card");
+    const containerId = cardEl ? cardEl.dataset.containerId : (container.id || "view");
+    const hudSlot = container.querySelector(`#damage-train-hud-slot-${containerId}`);
+    const trainLayer = container.querySelector(`#train-layer-${containerId}`);
+    const svg = container.querySelector(`#svg-${containerId}`);
+
+    if (!trainLayer || !svg) {
+      if (onComplete) onComplete();
+      return;
+    }
+
+    let currentIndex = 0;
+    let isPaused = false;
+    let timerId = null;
+    let isFinished = false;
+
+    const cleanup = () => {
+      isFinished = true;
+      if (timerId) {
+        clearTimeout(timerId);
+        timerId = null;
+      }
+      svg.querySelectorAll(".pulse-damage-node, .pulse-feedback-node").forEach(node => {
+        node.classList.remove("pulse-damage-node", "pulse-feedback-node");
+      });
+      trainLayer.innerHTML = "";
+      if (hudSlot) hudSlot.innerHTML = "";
+    };
+
+    const finish = () => {
+      cleanup();
+      if (onComplete) onComplete();
+    };
+
+    const renderHud = (step, idx) => {
+      if (!hudSlot) return;
+
+      let phaseClass = "";
+      let badgeClass = "phase-damage";
+      let phaseTitle = "Inward Damage";
+
+      if (step.phase === "recoil_feedback" || step.phase === "push_stall" || step.phase === "feedback") {
+        phaseClass = "feedback-phase";
+        badgeClass = "phase-feedback";
+        phaseTitle = step.phase === "push_stall" ? "Drive Stall" : "Recoil Feedback";
+      } else if (step.phase === "throw_shock") {
+        phaseClass = "shock-phase";
+        badgeClass = "phase-shock";
+        phaseTitle = "Throw Shock";
+      }
+
+      hudSlot.innerHTML = `
+        <div class="damage-train-hud ${phaseClass}">
+          <div class="train-hud-title">
+            <span class="train-phase-badge ${badgeClass}">${phaseTitle}</span>
+            <span class="train-step-counter">Step ${idx + 1} of ${steps.length}</span>
+          </div>
+          <div class="train-step-msg">${step.message || "Applying damage train step..."}</div>
+          <div class="train-hud-controls">
+            <button class="btn btn-sm btn-ghost btn-train-pause" title="Pause / Resume">${isPaused ? "▶ Resume" : "⏸ Pause"}</button>
+            <button class="btn btn-sm btn-ghost btn-train-next" title="Next Step">Next ❯</button>
+            <button class="btn btn-sm btn-ghost btn-train-skip" title="Skip All">Skip ⏭</button>
+          </div>
+        </div>
+      `;
+
+      // Bind HUD controls
+      const pauseBtn = hudSlot.querySelector(".btn-train-pause");
+      if (pauseBtn) {
+        pauseBtn.addEventListener("click", () => {
+          isPaused = !isPaused;
+          pauseBtn.textContent = isPaused ? "▶ Resume" : "⏸ Pause";
+          if (!isPaused) {
+            scheduleNext(600);
+          } else if (timerId) {
+            clearTimeout(timerId);
+            timerId = null;
+          }
+        });
+      }
+
+      const nextBtn = hudSlot.querySelector(".btn-train-next");
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          if (timerId) clearTimeout(timerId);
+          advanceStep();
+        });
+      }
+
+      const skipBtn = hudSlot.querySelector(".btn-train-skip");
+      if (skipBtn) {
+        skipBtn.addEventListener("click", () => {
+          finish();
+        });
+      }
+    };
+
+    const getCardCenter = (cardNode) => {
+      if (!cardNode) return null;
+      const rect = cardNode.querySelector("rect.card-body-rect") || cardNode.querySelector("rect");
+      const w = rect ? parseFloat(rect.getAttribute("width")) : 44.0;
+      const h = rect ? parseFloat(rect.getAttribute("height")) : 64.0;
+      const m = cardNode.getAttribute("transform")?.match(/translate\(([\d.-]+),\s*([\d.-]+)\)/);
+      const x = m ? parseFloat(m[1]) : 0;
+      const y = m ? parseFloat(m[2]) : 0;
+      return { cx: x + w / 2, cy: y + h / 2, x, y, w, h };
+    };
+
+    const playStep = (idx) => {
+      if (isFinished || idx >= steps.length) {
+        timerId = setTimeout(() => {
+          finish();
+        }, 900);
+        return;
+      }
+
+      const step = steps[idx];
+      renderHud(step, idx);
+
+      // Clear previous overlay lines/pulses
+      trainLayer.innerHTML = "";
+      svg.querySelectorAll(".pulse-damage-node, .pulse-feedback-node").forEach(node => {
+        node.classList.remove("pulse-damage-node", "pulse-feedback-node");
+      });
+
+      const targetNode = svg.querySelector(`.layout-card-node[data-cid="${step.target_cid}"]`);
+      const fromNode = step.from_cid ? svg.querySelector(`.layout-card-node[data-cid="${step.from_cid}"]`) : null;
+
+      const isFeedback = step.phase === "recoil_feedback" || step.phase === "push_stall" || step.phase === "feedback";
+      const isShock = step.phase === "throw_shock";
+      const pulseClass = isFeedback ? "pulse-feedback-node" : "pulse-damage-node";
+      const beamColor = isFeedback ? "#38bdf8" : isShock ? "#f59e0b" : "#ef4444";
+
+      // Select target card in inspector panel and health grid
+      if (targetNode) {
+        targetNode.classList.add(pulseClass);
+        const cid = step.target_cid;
+        container.querySelectorAll(".comp-health-card").forEach(c => {
+          c.classList.toggle("active-selected", c.dataset.cid === cid);
+        });
+      }
+
+      const targetGeom = getCardCenter(targetNode);
+      const fromGeom = getCardCenter(fromNode);
+
+      let overlaySvg = "";
+
+      // Connecting flow beam from previous node if fromNode exists
+      if (fromGeom && targetGeom) {
+        if (fromNode) fromNode.classList.add(pulseClass);
+        overlaySvg += `
+          <line x1="${fromGeom.cx}" y1="${fromGeom.cy}" x2="${targetGeom.cx}" y2="${targetGeom.cy}"
+                stroke="${beamColor}" stroke-width="3" stroke-linecap="round" class="train-flow-beam" />
+          <circle cx="${fromGeom.cx}" cy="${fromGeom.cy}" r="4" fill="${beamColor}" />
+        `;
+      }
+
+      // Floating Badge at target node
+      if (targetGeom) {
+        let badgeLabel = "";
+        if (step.amount > 0) {
+          badgeLabel = isFeedback ? `⚡ ${step.amount} RECOIL` : isShock ? `⚠️ ${step.amount} SHOCK` : `💥 -${step.amount} DMG`;
+        } else if (step.absorbed > 0) {
+          badgeLabel = `🛡️ Absorbed ${step.absorbed}`;
+        } else {
+          badgeLabel = `🎯 ${step.new_status}`;
+        }
+
+        if (step.new_status === "DESTROYED") {
+          badgeLabel += " (DEAD)";
+        } else if (step.new_status === "DAMAGED") {
+          badgeLabel += " (DAMAGED)";
+        }
+
+        const badgeY = Math.max(16, targetGeom.y - 12);
+        const badgeX = targetGeom.cx;
+
+        overlaySvg += `
+          <g class="floating-train-badge" transform="translate(${badgeX}, ${badgeY})">
+            <rect x="-48" y="-11" width="96" height="22" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="${beamColor}" stroke-width="1.6" filter="drop-shadow(0 2px 6px rgba(0,0,0,0.7))" />
+            <text x="0" y="3.5" fill="#ffffff" font-size="7" font-weight="bold" font-family="sans-serif" text-anchor="middle">
+              ${badgeLabel}
+            </text>
+          </g>
+        `;
+
+        // Live update card node appearance if status changed
+        if (step.new_status === "DAMAGED" || step.new_status === "DESTROYED") {
+          const bodyRect = targetNode.querySelector("rect.card-body-rect") || targetNode.querySelector("rect");
+          if (bodyRect) {
+            bodyRect.setAttribute("stroke", step.new_status === "DESTROYED" ? "#ef4444" : "#f59e0b");
+            bodyRect.setAttribute("fill", step.new_status === "DESTROYED" ? "rgba(239, 68, 68, 0.22)" : "rgba(245, 158, 11, 0.20)");
+          }
+          const pillRect = targetNode.querySelector("rect.status-pill-rect");
+          if (pillRect) {
+            pillRect.setAttribute("fill", step.new_status === "DESTROYED" ? "#ef4444" : "#f59e0b");
+          }
+          const pillText = targetNode.querySelector("text.status-pill-text");
+          if (pillText) {
+            pillText.textContent = step.new_status === "DESTROYED" ? "DEAD" : "DAMAGED";
+          }
+        }
+      }
+
+      trainLayer.innerHTML = overlaySvg;
+
+      if (!isPaused) {
+        scheduleNext(1600);
+      }
+    };
+
+    const advanceStep = () => {
+      currentIndex++;
+      playStep(currentIndex);
+    };
+
+    const scheduleNext = (delayMs) => {
+      if (timerId) clearTimeout(timerId);
+      timerId = setTimeout(() => {
+        if (!isPaused && !isFinished) {
+          advanceStep();
+        }
+      }, delayMs);
+    };
+
+    // Begin sequence
+    playStep(0);
   }
 
   static _renderAutomataTable(robot, lastRoll, lastAction) {

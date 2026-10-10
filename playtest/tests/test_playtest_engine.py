@@ -22,7 +22,7 @@ from playtest.engine.combat import (
     refresh_robot_drive_and_power,
     resolve_collision_combat,
 )
-from playtest.engine.match import create_match, execute_turn
+from playtest.engine.match import build_robot_state, create_match, execute_turn
 from playtest.engine.movement import generate_trajectory
 from playtest.engine.types import (
     CollisionEvent,
@@ -953,8 +953,77 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(match.phase, "game_over")
         self.assertIn("Judge's Decision", match.win_reason)
 
+    def test_movement_template_metadata_in_match(self):
+        """Tests that execute_turn generates template metadata for both player and automaton."""
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot", max_rounds=5)
+
+        # Player chooses straight (2, 2)
+        match = execute_turn(match, MoveChoice(2, 2), fixed_automaton_roll=2)
+        self.assertIsNotNone(match.player_template)
+        self.assertEqual(match.player_template["template_id"], "straight")
+        self.assertEqual(match.player_template["category"], "straight")
+        self.assertEqual(match.player_template["canonical_left"], 2)
+        self.assertEqual(match.player_template["canonical_right"], 2)
+        self.assertIn("pairs", match.player_template)
+        self.assertIn((2, 2), match.player_template["pairs"])
+
+        self.assertIsNotNone(match.automaton_template)
+        self.assertIn("template_id", match.automaton_template)
+        self.assertIn("category", match.automaton_template)
+
+        # MatchState serialization includes template info
+        m_dict = match.to_dict()
+        self.assertIn("player_template", m_dict)
+        self.assertIn("automaton_template", m_dict)
+        self.assertEqual(m_dict["player_template"]["template_id"], "straight")
+
+    def test_damage_steps_recording_in_active_combat(self):
+        """Tests that damage_steps records structured steps during active weapon clash."""
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        p_bot = build_robot_state(csv_text, "player", "Player Bot", (400.0, 420.0, 0.0))
+        a_bot = build_robot_state(csv_text, "automaton", "Auto Bot", (400.0, 380.0, 180.0))
+
+        p_w = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        p_bot.weapon_spin_counters[p_w.id] = 3
+        p_w.spin_counters = 3
+
+        a_cids = list(a_bot.components.keys())
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[p_w.id],
+            robot2_components=[a_cids[0]],
+            contact_type="ACTIVE",
+            description="Active strike on opponent",
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        steps = []
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1, steps=steps)
+        self.assertTrue(len(steps) > 0)
+        # Verify first step is damage on opponent
+        dmg_step = steps[0]
+        self.assertEqual(dmg_step.phase, "damage")
+        self.assertEqual(dmg_step.robot_id, "automaton")
+        self.assertEqual(dmg_step.target_cid, a_cids[0])
+        self.assertIsNone(dmg_step.from_cid)
+        self.assertTrue(dmg_step.amount > 0)
+        self.assertIn(dmg_step.new_status, ("UNDAMAGED", "DAMAGED", "DESTROYED"))
+
+        # Verify recoil feedback step occurred on player weapon
+        recoil_steps = [s for s in steps if s.phase == "recoil_feedback"]
+        self.assertTrue(len(recoil_steps) > 0)
+        self.assertEqual(recoil_steps[0].robot_id, "player")
+        self.assertEqual(recoil_steps[0].target_cid, p_w.id)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 

@@ -283,6 +283,15 @@ class PlaytestApp {
     try {
       const data = await PlaytestApi.getBattleState();
       this.currentMatch = data.match;
+      if (this.currentMatch) {
+        const allDamageSteps = this.currentMatch.damage_steps || [];
+        if (this.currentMatch.player_robot) {
+          this.currentMatch.player_robot.last_damage_steps = allDamageSteps.filter(s => s.robot_id === "player");
+        }
+        if (this.currentMatch.automaton_robot) {
+          this.currentMatch.automaton_robot.last_damage_steps = allDamageSteps.filter(s => s.robot_id === "automaton");
+        }
+      }
       this._updateMatchUi();
     } catch (err) {
       console.warn("Could not load initial battle state:", err);
@@ -305,9 +314,20 @@ class PlaytestApp {
       const data = await PlaytestApi.submitTurn(this.turnLeft, this.turnRight);
       this.currentMatch = data.match;
 
+      const allDamageSteps = this.currentMatch.damage_steps || [];
+      const pSteps = allDamageSteps.filter(s => s.robot_id === "player");
+      const aSteps = allDamageSteps.filter(s => s.robot_id === "automaton");
+
+      if (this.currentMatch.player_robot) {
+        this.currentMatch.player_robot.last_damage_steps = pSteps;
+      }
+      if (this.currentMatch.automaton_robot) {
+        this.currentMatch.automaton_robot.last_damage_steps = aSteps;
+      }
+
       // Animate trajectory movement on arena
       this.arenaRenderer.animateTurn(this.currentMatch, () => {
-        this._updateMatchUi();
+        this._runDamageTrainSequence(pSteps, aSteps, allDamageSteps);
       });
 
     } catch (err) {
@@ -315,6 +335,49 @@ class PlaytestApp {
       this.btnExecuteTurn.disabled = false;
       this.btnExecuteTurn.textContent = "🚀 Lock in Drive & Execute Turn";
     }
+  }
+
+  _runDamageTrainSequence(pSteps, aSteps, allDamageSteps) {
+    if (!allDamageSteps || allDamageSteps.length === 0) {
+      this._updateMatchUi();
+      return;
+    }
+
+    // Determine sequence of tabs based on chronological combat events
+    const firstBot = allDamageSteps[0].robot_id;
+    const sequence = [];
+
+    if (firstBot === "player") {
+      if (pSteps.length > 0) sequence.push({ tab: "player-robot", container: this.playerRobotContainer, steps: pSteps, robot: this.currentMatch.player_robot, isAuto: false });
+      if (aSteps.length > 0) sequence.push({ tab: "automaton-robot", container: this.automatonRobotContainer, steps: aSteps, robot: this.currentMatch.automaton_robot, isAuto: true });
+    } else {
+      if (aSteps.length > 0) sequence.push({ tab: "automaton-robot", container: this.automatonRobotContainer, steps: aSteps, robot: this.currentMatch.automaton_robot, isAuto: true });
+      if (pSteps.length > 0) sequence.push({ tab: "player-robot", container: this.playerRobotContainer, steps: pSteps, robot: this.currentMatch.player_robot, isAuto: false });
+    }
+
+    let seqIndex = 0;
+    const playNext = () => {
+      if (seqIndex >= sequence.length) {
+        this.switchTab("arena");
+        this._updateMatchUi();
+        return;
+      }
+
+      const item = sequence[seqIndex];
+      seqIndex++;
+
+      this.switchTab(item.tab);
+      RobotViewRenderer.renderRobotState(item.container, item.robot, item.isAuto);
+
+      setTimeout(() => {
+        RobotViewRenderer.animateDamageTrain(item.container, item.steps, () => {
+          setTimeout(playNext, 450);
+        });
+      }, 250);
+    };
+
+    // Pause briefly on arena after movement ends before stepping to robot view
+    setTimeout(playNext, 500);
   }
 
   _updateMatchUi() {
@@ -393,5 +456,6 @@ class PlaytestApp {
 document.addEventListener("DOMContentLoaded", () => {
   const app = new PlaytestApp();
   window.app = app;
+  window.RobotViewRenderer = RobotViewRenderer;
   app.init();
 });

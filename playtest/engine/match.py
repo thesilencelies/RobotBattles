@@ -16,6 +16,8 @@ from builder.server.data import (
     read_saved_robot,
 )
 
+from generate_movement_templates import build_all_movement_templates, map_permutation_to_template
+
 from .automata import compute_automaton_drive, get_automaton_action, roll_d6
 from .collision import detect_collision
 from .combat import (
@@ -30,11 +32,24 @@ from .types import (
     CollisionEvent,
     CombatLogEntry,
     ComponentHealth,
+    DamageTrainStep,
     MatchState,
     MoveChoice,
     Pose,
     RobotState,
 )
+
+_CANONICAL_TEMPLATE_PAIRS = {t.template_id: t.pairs for t in build_all_movement_templates()}
+
+
+def get_template_metadata(left: int, right: int) -> Dict[str, Any]:
+    info = map_permutation_to_template(left, right)
+    info["pairs"] = _CANONICAL_TEMPLATE_PAIRS.get(
+        info["template_id"],
+        [(info["canonical_left"], info["canonical_right"])],
+    )
+    return info
+
 
 
 def build_robot_state(
@@ -313,6 +328,13 @@ def execute_turn(
         ),
     ))
 
+    # Clear damage steps from previous turn
+    match.damage_steps = []
+
+    # Movement Template mappings for player and automaton
+    match.player_template = get_template_metadata(p_choice.left, p_choice.right)
+    match.automaton_template = get_template_metadata(a_choice.left, a_choice.right)
+
     # 2. Movement Phase
     p_traj = generate_trajectory(p_bot.pose, p_choice)
     a_traj = generate_trajectory(a_bot.pose, a_choice)
@@ -331,9 +353,10 @@ def execute_turn(
         if col_idx < len(a_traj):
             a_bot.pose = Pose(a_traj[col_idx].x, a_traj[col_idx].y, a_traj[col_idx].theta)
 
-        # Resolve combat
-        c_logs = resolve_collision_combat(col, p_bot, a_bot, r_num)
+        # Resolve combat and record structured damage steps
+        c_logs = resolve_collision_combat(col, p_bot, a_bot, r_num, steps=match.damage_steps)
         match.log.extend(c_logs)
+
 
     else:
         # Both complete motion to t=1.0

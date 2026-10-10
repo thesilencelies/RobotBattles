@@ -28,6 +28,7 @@ export class ArenaRenderer {
   constructor(svgElement) {
     this.svg = svgElement;
     this.layerArena = this.svg.querySelector("#layer-arena");
+    this.layerTemplates = this.svg.querySelector("#layer-templates");
     this.layerGhosts = this.svg.querySelector("#layer-ghosts");
     this.layerRobots = this.svg.querySelector("#layer-robots");
     this.layerEffects = this.svg.querySelector("#layer-effects");
@@ -173,6 +174,8 @@ export class ArenaRenderer {
     const pBot = matchState.player_robot;
     const aBot = matchState.automaton_robot;
 
+    if (this.layerTemplates) this.layerTemplates.innerHTML = "";
+
     // 1. Render Trajectories (Ghosts)
     this._renderTrajectories(matchState.player_trajectory, matchState.automaton_trajectory);
 
@@ -208,6 +211,18 @@ export class ArenaRenderer {
     const pBot = JSON.parse(JSON.stringify(matchState.player_robot));
     const aBot = JSON.parse(JSON.stringify(matchState.automaton_robot));
 
+    // Render physical movement templates docked at start poses
+    if (this.layerTemplates) {
+      this.layerTemplates.innerHTML = "";
+      this.layerTemplates.style.opacity = "1";
+      if (matchState.player_template && matchState.player_template.category !== "stop" && pTraj.length > 0) {
+        this._renderMovementTemplate(pTraj[0], matchState.player_choice, matchState.player_template, "player");
+      }
+      if (matchState.automaton_template && matchState.automaton_template.category !== "stop" && aTraj.length > 0) {
+        this._renderMovementTemplate(aTraj[0], matchState.automaton_choice, matchState.automaton_template, "automaton");
+      }
+    }
+
     // Draw full trajectory ghost lines
     this._renderTrajectories(pTraj, aTraj);
     this.layerEffects.innerHTML = "";
@@ -225,6 +240,19 @@ export class ArenaRenderer {
         this.animFrame = requestAnimationFrame(step);
       } else {
         this.animating = false;
+
+        // Smoothly fade out physical movement templates
+        if (this.layerTemplates) {
+          const tLayer = this.layerTemplates;
+          tLayer.style.transition = "opacity 0.4s ease";
+          tLayer.style.opacity = "0";
+          setTimeout(() => {
+            tLayer.innerHTML = "";
+            tLayer.style.opacity = "1";
+            tLayer.style.transition = "";
+          }, 400);
+        }
+
         this.render(matchState);
         if (onComplete) onComplete();
       }
@@ -232,6 +260,390 @@ export class ArenaRenderer {
 
     this.animFrame = requestAnimationFrame(step);
   }
+
+  _renderMovementTemplate(startPose, choice, templateInfo, role) {
+    if (!startPose || !templateInfo || templateInfo.category === "stop") return;
+
+    const { x, y, theta } = startPose;
+    const isPlayer = role === "player";
+    const primaryColor = isPlayer ? "#00e5ff" : "#f43f5e";
+    const targetColor = isPlayer ? "#38bdf8" : "#fb7185";
+    const acrylicFill = isPlayer ? "rgba(0, 229, 255, 0.16)" : "rgba(244, 63, 94, 0.16)";
+
+    const outerG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    outerG.setAttribute("class", `movement-template-overlay template-${role}`);
+    outerG.setAttribute("transform", `translate(${x}, ${y}) rotate(${theta})`);
+
+    // Inner transform group handling flip & at_rear
+    const innerG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    let innerTransform = "";
+    if (templateInfo.flipped) {
+      innerTransform += "scale(-1, 1) ";
+    }
+    if (templateInfo.at_rear && templateInfo.category !== "straight") {
+      innerTransform += "scale(1, -1) ";
+    }
+    if (innerTransform) {
+      innerG.setAttribute("transform", innerTransform.trim());
+    }
+
+    const cat = templateInfo.category;
+    if (cat === "straight") {
+      this._buildStraightTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill);
+    } else if (cat === "spin") {
+      this._buildSpinTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill);
+    } else if (cat === "pivot") {
+      this._buildPivotTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill);
+    } else if (cat === "curve_forward" || cat === "curve_tight") {
+      this._buildCurveTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill, cat === "curve_tight");
+    }
+
+    outerG.appendChild(innerG);
+
+    // Template Title / Type Badge (not flipped so text stays readable)
+    const badgeG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const badgeY = templateInfo.at_rear ? 65 : -55;
+    badgeG.setAttribute("transform", `translate(0, ${badgeY})`);
+
+    const badgeBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    badgeBg.setAttribute("x", "-70");
+    badgeBg.setAttribute("y", "-9");
+    badgeBg.setAttribute("width", "140");
+    badgeBg.setAttribute("height", "18");
+    badgeBg.setAttribute("rx", "4");
+    badgeBg.setAttribute("fill", "rgba(15, 23, 42, 0.9)");
+    badgeBg.setAttribute("stroke", primaryColor);
+    badgeBg.setAttribute("stroke-width", "1");
+    badgeG.appendChild(badgeBg);
+
+    const badgeText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    badgeText.setAttribute("x", "0");
+    badgeText.setAttribute("y", "3.5");
+    badgeText.setAttribute("fill", "#ffffff");
+    badgeText.setAttribute("font-size", "7.5");
+    badgeText.setAttribute("font-weight", "bold");
+    badgeText.setAttribute("text-anchor", "middle");
+    const flipTag = templateInfo.flipped ? " [FLIP]" : "";
+    const rearTag = templateInfo.at_rear ? " [REAR]" : "";
+    badgeText.textContent = `📐 ${templateInfo.name}${flipTag}${rearTag}`;
+    badgeG.appendChild(badgeText);
+
+    outerG.appendChild(badgeG);
+    this.layerTemplates.appendChild(outerG);
+  }
+
+  _buildStraightTemplate(parentG, templateInfo, primaryColor, targetColor, acrylicFill) {
+    const w = 65.0;
+    const u = 40.0;
+    const r_mini = 35.0;
+    const pairs = templateInfo.pairs || [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]];
+    const max_l = Math.max(...pairs.map(p => p[0]));
+    const totalH = max_l * u;
+    const atRear = templateInfo.at_rear;
+
+    const startY = atRear ? r_mini : -r_mini;
+    const endY = atRear ? (r_mini + totalH) : (-r_mini - totalH);
+    const rectY = atRear ? r_mini : (-r_mini - totalH);
+
+    // Acrylic Contour
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", `${-w / 2}`);
+    rect.setAttribute("y", `${rectY}`);
+    rect.setAttribute("width", `${w}`);
+    rect.setAttribute("height", `${totalH}`);
+    rect.setAttribute("rx", "3");
+    rect.setAttribute("fill", acrylicFill);
+    rect.setAttribute("stroke", primaryColor);
+    rect.setAttribute("stroke-width", "2");
+    parentG.appendChild(rect);
+
+    // Centerline
+    const cLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    cLine.setAttribute("x1", "0");
+    cLine.setAttribute("y1", `${startY}`);
+    cLine.setAttribute("x2", "0");
+    cLine.setAttribute("y2", `${endY}`);
+    cLine.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
+    cLine.setAttribute("stroke-width", "1.2");
+    cLine.setAttribute("stroke-dasharray", "4,3");
+    parentG.appendChild(cLine);
+
+    // START line
+    const sLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    sLine.setAttribute("x1", `${-w / 2}`);
+    sLine.setAttribute("y1", `${startY}`);
+    sLine.setAttribute("x2", `${w / 2}`);
+    sLine.setAttribute("y2", `${startY}`);
+    sLine.setAttribute("stroke", "#0f172a");
+    sLine.setAttribute("stroke-width", "3.8");
+    parentG.appendChild(sLine);
+
+    // Stop lines
+    for (const [l, r] of pairs) {
+      const lineY = atRear ? (r_mini + l * u) : (-r_mini - l * u);
+      const isTarget = (l === templateInfo.canonical_left);
+
+      const mark = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      mark.setAttribute("x1", `${-w / 2}`);
+      mark.setAttribute("y1", `${lineY}`);
+      mark.setAttribute("x2", `${w / 2}`);
+      mark.setAttribute("y2", `${lineY}`);
+
+      if (isTarget) {
+        mark.setAttribute("stroke", targetColor);
+        mark.setAttribute("stroke-width", "3.2");
+        parentG.appendChild(mark);
+
+        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lbl.setAttribute("x", "0");
+        lbl.setAttribute("y", `${lineY + (atRear ? 10 : -4)}`);
+        lbl.setAttribute("fill", targetColor);
+        lbl.setAttribute("font-size", "8.5");
+        lbl.setAttribute("font-weight", "900");
+        lbl.setAttribute("text-anchor", "middle");
+        lbl.textContent = `★ ${templateInfo.target_line_label}`;
+        parentG.appendChild(lbl);
+      } else {
+        mark.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
+        mark.setAttribute("stroke-width", "1.5");
+        mark.setAttribute("stroke-dasharray", "4,3");
+        parentG.appendChild(mark);
+
+        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lbl.setAttribute("x", `${w / 2 - 4}`);
+        lbl.setAttribute("y", `${lineY + (atRear ? 8 : -3)}`);
+        lbl.setAttribute("fill", "rgba(148, 163, 184, 0.6)");
+        lbl.setAttribute("font-size", "6");
+        lbl.setAttribute("text-anchor", "end");
+        lbl.textContent = `L${l}`;
+        parentG.appendChild(lbl);
+      }
+    }
+  }
+
+  _buildSpinTemplate(parentG, templateInfo, primaryColor, targetColor, acrylicFill) {
+    const radius = 35.0;
+    const pairs = templateInfo.pairs || [[1, -1], [2, -2], [3, -3], [4, -4]];
+
+    // Acrylic Disc
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", "0");
+    circle.setAttribute("cy", "0");
+    circle.setAttribute("r", `${radius}`);
+    circle.setAttribute("fill", acrylicFill);
+    circle.setAttribute("stroke", primaryColor);
+    circle.setAttribute("stroke-width", "2");
+    parentG.appendChild(circle);
+
+    const pin = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    pin.setAttribute("cx", "0");
+    pin.setAttribute("cy", "0");
+    pin.setAttribute("r", "3.5");
+    pin.setAttribute("fill", "#ffffff");
+    parentG.appendChild(pin);
+
+    // Baseline (0°)
+    const base = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    base.setAttribute("x1", "0");
+    base.setAttribute("y1", "0");
+    base.setAttribute("x2", "0");
+    base.setAttribute("y2", `${-radius}`);
+    base.setAttribute("stroke", "#0f172a");
+    base.setAttribute("stroke-width", "3.5");
+    parentG.appendChild(base);
+
+    for (const [l, r] of pairs) {
+      const d_th = l * (Math.PI / 2.0);
+      const px = radius * Math.sin(d_th);
+      const py = -radius * Math.cos(d_th);
+      const isTarget = (l === templateInfo.canonical_left);
+
+      const radLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      radLine.setAttribute("x1", "0");
+      radLine.setAttribute("y1", "0");
+      radLine.setAttribute("x2", `${px}`);
+      radLine.setAttribute("y2", `${py}`);
+
+      if (isTarget) {
+        radLine.setAttribute("stroke", targetColor);
+        radLine.setAttribute("stroke-width", "3.2");
+        parentG.appendChild(radLine);
+
+        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lbl.setAttribute("x", `${px * 1.25}`);
+        lbl.setAttribute("y", `${py * 1.25 + 3}`);
+        lbl.setAttribute("fill", targetColor);
+        lbl.setAttribute("font-size", "8");
+        lbl.setAttribute("font-weight", "900");
+        lbl.setAttribute("text-anchor", px > 2 ? "start" : px < -2 ? "end" : "middle");
+        lbl.textContent = `★ ${templateInfo.target_line_label} (${l * 90}°)`;
+        parentG.appendChild(lbl);
+      } else {
+        radLine.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
+        radLine.setAttribute("stroke-width", "1.5");
+        radLine.setAttribute("stroke-dasharray", "3,3");
+        parentG.appendChild(radLine);
+      }
+    }
+  }
+
+  _buildPivotTemplate(parentG, templateInfo, primaryColor, targetColor, acrylicFill) {
+    const radius = 65.0; // WHEELBASE_MM
+    const pv_x = 32.5;
+    const pv_y = 0;
+    const pairs = templateInfo.pairs || [[1, 0], [2, 0], [3, 0], [4, 0]];
+
+    // Semicircle contour around pivot wheel (32.5, 0)
+    // Starts at left wheel (-32.5, 0) and sweeps 180° clockwise
+    const pathD = `M ${pv_x} ${pv_y} L -32.5 0 A ${radius} ${radius} 0 0 1 ${pv_x + radius} 0 Z`;
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathD);
+    path.setAttribute("fill", acrylicFill);
+    path.setAttribute("stroke", primaryColor);
+    path.setAttribute("stroke-width", "2");
+    parentG.appendChild(path);
+
+    // Pivot Wheel Center Marker
+    const pin = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    pin.setAttribute("cx", `${pv_x}`);
+    pin.setAttribute("cy", `${pv_y}`);
+    pin.setAttribute("r", "3.5");
+    pin.setAttribute("fill", "#ef4444");
+    parentG.appendChild(pin);
+
+    // Start Line: (-32.5, 0) to (32.5, 0)
+    const startLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    startLine.setAttribute("x1", "-32.5");
+    startLine.setAttribute("y1", "0");
+    startLine.setAttribute("x2", `${pv_x}`);
+    startLine.setAttribute("y2", "0");
+    startLine.setAttribute("stroke", "#0f172a");
+    startLine.setAttribute("stroke-width", "3.5");
+    parentG.appendChild(startLine);
+
+    for (const [l, r] of pairs) {
+      const d_th = l * (Math.PI / 4.0);
+      const px = pv_x - radius * Math.cos(d_th);
+      const py = pv_y - radius * Math.sin(d_th);
+      const isTarget = (l === templateInfo.canonical_left);
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", `${pv_x}`);
+      line.setAttribute("y1", `${pv_y}`);
+      line.setAttribute("x2", `${px}`);
+      line.setAttribute("y2", `${py}`);
+
+      if (isTarget) {
+        line.setAttribute("stroke", targetColor);
+        line.setAttribute("stroke-width", "3.2");
+        parentG.appendChild(line);
+
+        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lbl.setAttribute("x", `${pv_x - (radius * 0.65) * Math.cos(d_th)}`);
+        lbl.setAttribute("y", `${pv_y - (radius * 0.65) * Math.sin(d_th) - 4}`);
+        lbl.setAttribute("fill", targetColor);
+        lbl.setAttribute("font-size", "8");
+        lbl.setAttribute("font-weight", "900");
+        lbl.setAttribute("text-anchor", "middle");
+        lbl.textContent = `★ ${templateInfo.target_line_label} (${l * 45}°)`;
+        parentG.appendChild(lbl);
+      } else {
+        line.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
+        line.setAttribute("stroke-width", "1.5");
+        line.setAttribute("stroke-dasharray", "3,3");
+        parentG.appendChild(line);
+      }
+    }
+  }
+
+  _buildCurveTemplate(parentG, templateInfo, primaryColor, targetColor, acrylicFill, isTight = false) {
+    const w = 65.0;
+    const pairs = templateInfo.pairs || [[templateInfo.canonical_left, templateInfo.canonical_right]];
+    const max_l = Math.max(...pairs.map(p => p[0]));
+    const max_r = Math.max(...pairs.map(p => p[1]));
+    const diff = isTight ? (max_l - Math.min(...pairs.map(p => p[1]))) : (max_l - max_r);
+
+    const r_out = w * max_l / diff;
+    const r_in = isTight ? Math.abs(w * Math.min(...pairs.map(p => p[1])) / diff) : (w * max_r / diff);
+    const cx = isTight ? (-w / 2 + r_out) : (w / 2 + r_in);
+    const cy = 0;
+
+    const d_th_max = diff * (Math.PI / 4.0);
+    const largeArc = d_th_max > Math.PI ? 1 : 0;
+
+    const p_out_start = [-w / 2, 0];
+    const p_in_start = [w / 2, 0];
+    const p_out_end = [cx - r_out * Math.cos(d_th_max), cy - r_out * Math.sin(d_th_max)];
+    const p_in_end = [cx - r_in * Math.cos(d_th_max), cy - r_in * Math.sin(d_th_max)];
+
+    const pathD = `M ${p_out_start[0]} ${p_out_start[1]} ` +
+      `A ${r_out} ${r_out} 0 ${largeArc} 1 ${p_out_end[0]} ${p_out_end[1]} ` +
+      `L ${p_in_end[0]} ${p_in_end[1]} ` +
+      `A ${r_in} ${r_in} 0 ${largeArc} 0 ${p_in_start[0]} ${p_in_start[1]} Z`;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathD);
+    path.setAttribute("fill", acrylicFill);
+    path.setAttribute("stroke", primaryColor);
+    path.setAttribute("stroke-width", "2");
+    parentG.appendChild(path);
+
+    // Centerline
+    const r_mid = (r_in + r_out) / 2.0;
+    const midD = `M 0 0 A ${r_mid} ${r_mid} 0 ${largeArc} 1 ${cx - r_mid * Math.cos(d_th_max)} ${cy - r_mid * Math.sin(d_th_max)}`;
+    const midLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    midLine.setAttribute("d", midD);
+    midLine.setAttribute("fill", "none");
+    midLine.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
+    midLine.setAttribute("stroke-width", "1.2");
+    midLine.setAttribute("stroke-dasharray", "4,3");
+    parentG.appendChild(midLine);
+
+    // Start line
+    const startLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    startLine.setAttribute("x1", `${p_out_start[0]}`);
+    startLine.setAttribute("y1", `${p_out_start[1]}`);
+    startLine.setAttribute("x2", `${p_in_start[0]}`);
+    startLine.setAttribute("y2", `${p_in_start[1]}`);
+    startLine.setAttribute("stroke", "#0f172a");
+    startLine.setAttribute("stroke-width", "3.5");
+    parentG.appendChild(startLine);
+
+    for (const [l, r] of pairs) {
+      const d_th = (l - r) * (Math.PI / 4.0);
+      const po = [cx - r_out * Math.cos(d_th), cy - r_out * Math.sin(d_th)];
+      const pi = [cx - r_in * Math.cos(d_th), cy - r_in * Math.sin(d_th)];
+      const isTarget = (l === templateInfo.canonical_left);
+
+      const mark = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      mark.setAttribute("x1", `${po[0]}`);
+      mark.setAttribute("y1", `${po[1]}`);
+      mark.setAttribute("x2", `${pi[0]}`);
+      mark.setAttribute("y2", `${pi[1]}`);
+
+      if (isTarget) {
+        mark.setAttribute("stroke", targetColor);
+        mark.setAttribute("stroke-width", "3.2");
+        parentG.appendChild(mark);
+
+        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lbl.setAttribute("x", `${(po[0] + pi[0]) / 2}`);
+        lbl.setAttribute("y", `${(po[1] + pi[1]) / 2 - 4}`);
+        lbl.setAttribute("fill", targetColor);
+        lbl.setAttribute("font-size", "8");
+        lbl.setAttribute("font-weight", "900");
+        lbl.setAttribute("text-anchor", "middle");
+        lbl.textContent = `★ ${templateInfo.target_line_label}`;
+        parentG.appendChild(lbl);
+      } else {
+        mark.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
+        mark.setAttribute("stroke-width", "1.5");
+        mark.setAttribute("stroke-dasharray", "3,3");
+        parentG.appendChild(mark);
+      }
+    }
+  }
+
 
   _renderTrajectories(pTraj, aTraj) {
     this.layerGhosts.innerHTML = "";

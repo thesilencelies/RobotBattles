@@ -412,6 +412,74 @@ class TestBrowserUI(unittest.TestCase):
         """)
         self.assertEqual(chassis_res, "Viper Wedge Chassis")
 
+    def test_06_movement_templates_and_damage_train(self):
+        # 1. Switch to arena and test movement template rendering
+        self.js_eval("window.app.switchTab('arena')")
+        tmpl_res = self.js_eval("""
+        (() => {
+          const m = window.app.currentMatch;
+          const pose = m.player_robot.pose;
+          const tmpl = {
+            category: "straight",
+            name: "Straight Template",
+            pairs: [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]],
+            canonical_left: 3,
+            canonical_right: 3,
+            target_line_label: "L3 R3",
+            flipped: false,
+            at_rear: false
+          };
+          window.app.arenaRenderer._renderMovementTemplate(pose, {left: 3, right: 3}, tmpl, "player");
+          return Boolean(window.app.arenaRenderer.layerTemplates.querySelector(".movement-template-overlay"));
+        })()
+        """)
+        self.assertTrue(tmpl_res, "Movement template overlay should be rendered in layer-templates")
+
+        # 2. Test RobotViewRenderer.animateDamageTrain
+        self.js_eval("window.app.switchTab('player-robot')")
+        train_res = self.js_eval("""
+        (() => {
+          const pBot = window.app.currentMatch.player_robot;
+          const cids = Object.keys(pBot.components);
+          const outerCid = cids[0];
+          const innerCid = cids[1] || cids[0];
+          const steps = [
+            {
+              phase: "damage",
+              robot_id: "player",
+              target_cid: outerCid,
+              from_cid: null,
+              amount: 4,
+              absorbed: 1,
+              excess: 3,
+              new_status: "DAMAGED",
+              message: "Armor struck for 4 damage"
+            },
+            {
+              phase: "inward_damage",
+              robot_id: "player",
+              target_cid: innerCid,
+              from_cid: outerCid,
+              amount: 3,
+              absorbed: 0,
+              excess: 3,
+              new_status: "DAMAGED",
+              message: "Excess damage penetrates inward"
+            }
+          ];
+          pBot.last_damage_steps = steps;
+          const Renderer = window.RobotViewRenderer;
+          Renderer.renderRobotState(window.app.playerRobotContainer, pBot, false);
+          Renderer.animateDamageTrain(window.app.playerRobotContainer, steps);
+          return {
+            hasHud: Boolean(document.querySelector('.damage-train-hud')),
+            hasReplay: Boolean(document.querySelector('.btn-replay-train'))
+          };
+        })()
+        """)
+        self.assertTrue(train_res["hasHud"], "Damage train HUD should be visible during animation")
+        self.assertTrue(train_res["hasReplay"], "Replay damage train button should be present on robot view")
+
 
 if __name__ == "__main__":
     unittest.main()
