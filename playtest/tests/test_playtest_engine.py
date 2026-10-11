@@ -21,6 +21,7 @@ from playtest.engine.combat import (
     parse_weapon_spin_and_damage,
     refresh_robot_drive_and_power,
     resolve_collision_combat,
+    start_of_turn_spin_up,
 )
 from playtest.engine.match import build_robot_state, create_match, execute_turn
 from playtest.engine.movement import generate_trajectory
@@ -226,12 +227,12 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(ex3, 2.0)
         self.assertTrue(tire.is_damaged)
 
-    def test_match_completion_10_rounds(self):
+    def test_match_completion_20_rounds(self):
         csv_text = read_saved_robot("Vyper_Spinner.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player")
 
-        # Step 10 rounds of stationary / passive moves
-        for r in range(1, 11):
+        # Step 20 rounds of stationary / passive moves
+        for r in range(1, 21):
             if match.phase == "game_over":
                 break
             execute_turn(match, MoveChoice(0, 0), fixed_automaton_roll=1)
@@ -601,7 +602,7 @@ class TestPlaytestEngine(unittest.TestCase):
         from playtest.engine.types import MoveChoice
         csv_text = read_saved_robot("Vyper_Spinner.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
-        match.round = 10  # simulate final round
+        match.round = match.max_rounds  # simulate final round
 
         # Scenario 1: Player has 0 destroyed, 2 damaged. Automaton has 1 destroyed, 0 damaged.
         # Player must win because fewer cards were destroyed (0 vs 1).
@@ -626,7 +627,7 @@ class TestPlaytestEngine(unittest.TestCase):
         from playtest.engine.types import MoveChoice
         csv_text = read_saved_robot("Vyper_Spinner.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
-        match.round = 10
+        match.round = match.max_rounds
 
         p_comps = list(match.player_robot.components.values())
         a_comps = list(match.automaton_robot.components.values())
@@ -651,7 +652,7 @@ class TestPlaytestEngine(unittest.TestCase):
         from playtest.engine.types import MoveChoice
         csv_text = read_saved_robot("Vyper_Spinner.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
-        match.round = 10
+        match.round = match.max_rounds
 
         p_comps = list(match.player_robot.components.values())
         a_comps = list(match.automaton_robot.components.values())
@@ -1040,6 +1041,56 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(len(recoil_steps) > 0)
         self.assertEqual(recoil_steps[0].robot_id, "player")
         self.assertEqual(recoil_steps[0].target_cid, p_w.id)
+
+    def test_default_turn_count_20_in_engine(self):
+        """Rule: Match length defaults to 20 rounds."""
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        self.assertEqual(match.max_rounds, 20)
+        self.assertEqual(match.round, 1)
+
+    def test_spin_up_counters_removed_when_weapon_becomes_inactive(self):
+        """Rule: If the weapon becomes inactive all counters are removed."""
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        bot = match.player_robot
+
+        # Find spinner weapon
+        spin_weapons = [c for c in bot.components.values() if "spin up" in c.keywords.lower()]
+        self.assertTrue(len(spin_weapons) > 0)
+        weapon = spin_weapons[0]
+
+        # Give the weapon 3 spin counters
+        bot.weapon_spin_counters[weapon.id] = 3
+        weapon.spin_counters = 3
+
+        # Case 1: Weapon is active and powered -> counters preserved
+        refresh_robot_drive_and_power(bot)
+        self.assertTrue(weapon.is_active)
+        self.assertEqual(bot.weapon_spin_counters[weapon.id], 3)
+        self.assertEqual(weapon.spin_counters, 3)
+
+        # Case 2: Upstream power is destroyed -> weapon becomes inactive -> counters removed!
+        suppliers = bot.supply_graph.get(weapon.id, [])
+        for sid in suppliers:
+            bot.components[sid].is_destroyed = True
+
+        refresh_robot_drive_and_power(bot)
+        self.assertFalse(weapon.is_active)
+        self.assertEqual(bot.weapon_spin_counters[weapon.id], 0)
+        self.assertEqual(weapon.spin_counters, 0)
+
+        # Case 3: Start of turn spin up does not add counters to inactive weapon
+        spin_logs = start_of_turn_spin_up(bot)
+        self.assertEqual(len(spin_logs), 0)
+        self.assertEqual(bot.weapon_spin_counters[weapon.id], 0)
+        self.assertEqual(weapon.spin_counters, 0)
+
+        # Case 4: Weapon itself destroyed -> counters removed
+        weapon.is_destroyed = True
+        refresh_robot_drive_and_power(bot)
+        self.assertEqual(bot.weapon_spin_counters[weapon.id], 0)
+        self.assertEqual(weapon.spin_counters, 0)
 
 
 if __name__ == "__main__":

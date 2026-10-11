@@ -661,8 +661,17 @@ def refresh_robot_drive_and_power(robot: RobotState, current_move: Optional[Move
     right_drive = 0
 
     for cid, c in robot.components.items():
-        # Keep spin counter synced on component
-        c.spin_counters = robot.weapon_spin_counters.get(cid, 0)
+        # Spin up keyword: if the weapon becomes inactive (or is destroyed), all counters are removed
+        is_spin_weapon = (c.card_type == "weapon" or cid in robot.weapon_spin_counters or "spin up" in c.keywords.lower())
+        if is_spin_weapon:
+            if not c.is_active or c.is_destroyed:
+                if cid in robot.weapon_spin_counters:
+                    robot.weapon_spin_counters[cid] = 0
+                c.spin_counters = 0
+            else:
+                c.spin_counters = robot.weapon_spin_counters.get(cid, 0)
+        else:
+            c.spin_counters = robot.weapon_spin_counters.get(cid, 0)
 
         if not c.is_active or c.is_destroyed:
             continue
@@ -692,10 +701,14 @@ def start_of_turn_spin_up(robot: RobotState) -> List[str]:
     """
     Executes Spin up (X, Y) keyword at the start of turn:
     Add X spin counters up to max Y.
+    If the weapon becomes inactive, all counters are removed.
     """
     logs: List[str] = []
     for cid, comp in robot.components.items():
         if comp.card_type != "weapon" or comp.is_destroyed or not comp.is_active:
+            if cid in robot.weapon_spin_counters:
+                robot.weapon_spin_counters[cid] = 0
+            comp.spin_counters = 0
             continue
         spin_rate, max_spin, _, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
         if max_spin > 0:
@@ -896,11 +909,13 @@ def resolve_collision_combat(
         w1_attacking = [
             r1.components[cid] for cid in col.robot1_components
             if cid in r1.components and r1.components[cid].card_type == "weapon" and not r1.components[cid].is_destroyed
+            and r1.components[cid].is_active
             and col.r1_active_hit
         ]
         w2_attacking = [
             r2.components[cid] for cid in col.robot2_components
             if cid in r2.components and r2.components[cid].card_type == "weapon" and not r2.components[cid].is_destroyed
+            and r2.components[cid].is_active
             and col.r2_active_hit
         ]
 

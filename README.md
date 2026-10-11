@@ -18,7 +18,7 @@ The core gameplay is split into two main parts:
 
 ### 2. Robot Battling (Arena & Miniatures)
 - **The Arena:** Matches take place on an arena map featuring starting zones, perimeter walls, and hazard/pit zones (where thrown robots exit the arena).
-- **Match Length:** Played for 10 rounds or until a robot is immobilized (has no active drive or cannot unflip).
+- **Match Length:** Played for 20 rounds or until a robot is immobilized (has no active drive or cannot unflip).
 
 ## Game Formats
 

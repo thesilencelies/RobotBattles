@@ -124,6 +124,16 @@ class TestPlaytestServer(unittest.TestCase):
         match2 = json.loads(res2.body.decode("utf-8"))["match"]
         self.assertEqual(match2["max_rounds"], 3)
 
+    def test_battle_new_default_max_rounds(self):
+        payload = json.dumps({
+            "player_csv": read_saved_robot("Vyper_flipper.csv"),
+            "automaton": "Vyper_Spinner",
+        }).encode("utf-8")
+        res = self.router.dispatch("POST", "/api/battle/new", {}, payload)
+        self.assertEqual(res.status, 200)
+        match = json.loads(res.body.decode("utf-8"))["match"]
+        self.assertEqual(match["max_rounds"], 20)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -91,7 +91,7 @@ def is_weapon_at_full_spin(automaton: RobotState) -> bool:
     Returns True if any active spin weapon on the automaton has reached max spin.
     """
     for cid, comp in automaton.components.items():
-        if comp.card_type == "weapon" and not comp.is_destroyed:
+        if comp.card_type == "weapon" and not comp.is_destroyed and comp.is_active:
             _, max_spin, _, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
             if max_spin > 0:
                 current_spin = automaton.weapon_spin_counters.get(cid, 0)

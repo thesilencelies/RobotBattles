@@ -230,7 +230,7 @@ class MatchState:
     player_robot: RobotState
     automaton_robot: RobotState
     automaton_type: str
-    max_rounds: int = 10
+    max_rounds: int = 20
     player_choice: Optional[MoveChoice] = None
     automaton_choice: Optional[MoveChoice] = None
     automaton_roll: Optional[int] = None

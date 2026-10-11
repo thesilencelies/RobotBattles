@@ -209,7 +209,7 @@ class PlaytestApp {
     if (this.playcountSelect) {
       this.playcountSelect.addEventListener("change", (e) => {
         if (e.target.value === "custom") {
-          const val = prompt("Enter max rounds / playcount (1 - 100):", "10");
+          const val = prompt("Enter max rounds / playcount (1 - 100):", "20");
           const num = parseInt(val, 10);
           if (!isNaN(num) && num > 0) {
             let opt = [...this.playcountSelect.options].find(o => o.value === String(num));
@@ -221,7 +221,7 @@ class PlaytestApp {
             }
             this.playcountSelect.value = String(num);
           } else {
-            this.playcountSelect.value = "10";
+            this.playcountSelect.value = "20";
           }
         }
       });
@@ -231,7 +231,7 @@ class PlaytestApp {
     this.btnNewMatch.addEventListener("click", async () => {
       const autoName = this.autoSelect.value;
       const csv = this.builderController ? this.builderController.getRobotCSV() : "";
-      const maxRounds = this.playcountSelect ? (parseInt(this.playcountSelect.value, 10) || 10) : 10;
+      const maxRounds = this.playcountSelect ? (parseInt(this.playcountSelect.value, 10) || 20) : 20;
       try {
         const data = await PlaytestApi.startNewMatch({
           player_csv: csv,
@@ -264,7 +264,7 @@ class PlaytestApp {
   async _deployFromBuilder(csvText, robotName) {
     try {
       const autoName = this.autoSelect ? this.autoSelect.value : "Vyper_flipper";
-      const maxRounds = this.playcountSelect ? (parseInt(this.playcountSelect.value, 10) || 10) : 10;
+      const maxRounds = this.playcountSelect ? (parseInt(this.playcountSelect.value, 10) || 20) : 20;
       const data = await PlaytestApi.startNewMatch({
         player_csv: csvText,
         automaton: autoName,
@@ -388,7 +388,7 @@ class PlaytestApp {
     const aBot = m.automaton_robot;
 
     // HUD Header
-    const maxRounds = m.max_rounds || 10;
+    const maxRounds = m.max_rounds || 20;
     this.hudRound.textContent = `Round ${m.round} / ${maxRounds}`;
 
     if (this.playcountSelect && this.playcountSelect.value !== String(maxRounds)) {

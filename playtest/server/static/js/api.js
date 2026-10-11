@@ -58,7 +58,7 @@ export class PlaytestApi {
         player_csv: playerCsv,
         automaton: automatonName,
         player_name: playerName,
-        max_rounds: Number(maxRounds) || 10,
+        max_rounds: Number(maxRounds) || 20,
       }),
     });
     if (!res.ok) {

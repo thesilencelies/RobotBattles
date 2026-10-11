@@ -180,7 +180,7 @@ def create_match(
     player_csv: str,
     automaton_name: str = "Vyper_Spinner",
     player_name: str = "Player 1",
-    max_rounds: int = 10,
+    max_rounds: int = 20,
 ) -> MatchState:
     """Initializes a new match between player robot and chosen automaton."""
     catalog = load_all_cards()
