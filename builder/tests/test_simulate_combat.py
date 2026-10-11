@@ -218,6 +218,49 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertIn(r"\parbox", out_wwww)
         self.assertEqual(out_wwww.count(r"\resourceW"), 4)
 
+    def test_component_breakpoints_tab(self):
+        from scripts.simulate_combat import (
+            BREAKPOINTS,
+            classify_component_category,
+            generate_component_breakpoints_tab_html,
+            generate_html_report,
+        )
+
+        # 1. Test categorization
+        by_name = {c["name"]: c for c in self.catalog["all"]}
+        self.assertEqual(classify_component_category(by_name["Galaxy 300 3S"]), "Batteries & Power")
+        self.assertEqual(classify_component_category(by_name["Brushless Motor"]), "Motors")
+        self.assertEqual(classify_component_category(by_name["Aluminum Plate"]), "Armor & Structure")
+        self.assertEqual(classify_component_category(by_name["Titanium Wedge"]), "Wedges")
+        self.assertEqual(classify_component_category(by_name["Forks"]), "Forks")
+        self.assertEqual(classify_component_category(by_name["Horizontal Spinner"]), "Weapons")
+        self.assertEqual(classify_component_category(by_name["Simple ESC"]), "Wiring & Electronics")
+        self.assertEqual(classify_component_category(by_name["Timing Belt"]), "Mechanical & Transmission")
+
+        # 2. Test breakpoints
+        self.assertEqual(BREAKPOINTS, [2, 4, 5, 6, 8])
+
+        # 3. Test breakpoint tab HTML generation
+        bp_html = generate_component_breakpoints_tab_html(self.catalog)
+        self.assertIn('id="tab-component_breakpoints"', bp_html)
+        self.assertIn("Component Damage Breakpoint Matrix", bp_html)
+        self.assertIn("Breakpoints Summary & Vulnerability Analysis", bp_html)
+        self.assertIn("Category Breakdown per Damage Breakpoint", bp_html)
+        self.assertIn("All Components vs Breakpoints Matrix (45 Cards)", bp_html)
+        self.assertIn("TOTAL (All 45 Components)", bp_html)
+
+        # Ensure all 45 components appear as rows in the matrix
+        for card in self.catalog["all"]:
+            self.assertIn(card["name"], bp_html)
+
+        # 4. Test inclusion in full HTML report
+        csv_path = REPO_ROOT / "automata" / "Vyper_Spinner.csv"
+        robot = build_robot_model(csv_path, self.catalog)
+        full_html = generate_html_report([robot], self.catalog)
+        self.assertIn("switchTab('component_breakpoints')", full_html)
+        self.assertIn('id="tab-component_breakpoints"', full_html)
+
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,6 +14,7 @@ import math
 import os
 import re
 import sys
+from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -646,6 +647,492 @@ def extract_robot_subsystem_chains(robot: RobotModel, max_fb: int = 20) -> List[
 
 
 # ==============================================================================
+# COMPONENT BREAKPOINTS & CATEGORY ANALYSIS
+# ==============================================================================
+
+BREAKPOINTS = [2, 4, 5, 6, 8]
+BREAKPOINT_THEMES = {
+    2: "Low Spin / Chip Hits",
+    4: "Secondary Impacts / Strain",
+    5: "Direct Weapon Impacts",
+    6: "Heavy Spin Impacts",
+    8: "Maximum Weapon Lethality",
+}
+
+CATEGORY_ORDER = [
+    "Armor & Structure",
+    "Wedges",
+    "Forks",
+    "Weapons",
+    "Wheels & Drive",
+    "Motors",
+    "Servos & Actuators",
+    "Batteries & Power",
+    "Wiring & Electronics",
+    "Mechanical & Transmission",
+]
+
+
+def classify_component_category(card: Dict[str, Any]) -> str:
+    """Classifies a card into its functional hardware category."""
+    ctype = card.get("type", "")
+    if ctype == "weapon":
+        return "Weapons"
+
+    name = card.get("name", "").strip()
+    name_lower = name.lower()
+    pic = card.get("picture", "").lower()
+    kw = card.get("keywords", "").lower()
+
+    if "battery" in pic or "batteries" in pic or "galaxy" in name_lower or "tattu" in name_lower:
+        if "switch" in name_lower:
+            return "Wiring & Electronics"
+        return "Batteries & Power"
+    if "wire" in pic or "connectors" in pic or "switch" in name_lower or "esc" in pic or "esc" in name_lower or "wire" in name_lower:
+        return "Wiring & Electronics"
+    if "motors" in pic or "motor" in name_lower or "gearmotor" in name_lower or "hubmotor" in name_lower:
+        return "Motors"
+    if "servo" in pic or "servo" in name_lower:
+        return "Servos & Actuators"
+    if "wheels" in pic or "wheel" in name_lower or "tires" in name_lower or "tire" in name_lower:
+        return "Wheels & Drive"
+    if "wedge" in kw or "wedge" in name_lower:
+        return "Wedges"
+    if "forks" in kw or "fork" in name_lower or "horn" in name_lower:
+        return "Forks"
+    if "plate" in name_lower or "armor" in name_lower:
+        return "Armor & Structure"
+    if "belt" in name_lower or "pulley" in name_lower or "arm" in name_lower or "right" in name_lower:
+        return "Mechanical & Transmission"
+
+    return "Other Components"
+
+
+def generate_component_breakpoints_tab_html(catalog: Dict[str, Any]) -> str:
+    """Generates the interactive HTML tab evaluating all components against breakpoints (2, 4, 5, 6, 8)."""
+    all_cards = list(catalog.get("all", []))
+
+    def card_sort_key(c: Dict[str, Any]):
+        cat = classify_component_category(c)
+        cat_idx = CATEGORY_ORDER.index(cat) if cat in CATEGORY_ORDER else 99
+        return (cat_idx, c["name"])
+
+    all_cards.sort(key=card_sort_key)
+    total_cards_count = len(all_cards)
+
+    card_results: Dict[str, Dict[str, Any]] = {}
+    summary: Dict[str, Dict[int, Dict[str, Dict[str, int]]]] = {
+        "weapon": {d: defaultdict(lambda: {"safe": 0, "damaged": 0, "destroyed": 0, "total": 0}) for d in BREAKPOINTS},
+        "raw": {d: defaultdict(lambda: {"safe": 0, "damaged": 0, "destroyed": 0, "total": 0}) for d in BREAKPOINTS},
+    }
+
+    for c in all_cards:
+        name = c["name"]
+        cat = classify_component_category(c)
+        kw = c.get("keywords", "")
+        is_fragile = "fragile" in kw.lower()
+        dur = c.get("durability", 0)
+        abs_val = c.get("absorption", 0)
+        ctype = c.get("type", "component")
+
+        card_results[name] = {"card": c, "category": cat, "weapon": {}, "raw": {}}
+
+        for d in BREAKPOINTS:
+            # Mode weapon
+            p_w = PlacedComponent(
+                id="0", name=name, card_type=ctype, durability=dur, absorption=abs_val,
+                requirements="", outputs="", keywords=kw, text="", x=0, y=0, rotation=0, box=(0, 0, 0, 0),
+                is_fragile=is_fragile,
+            )
+            res_w = resolve_single_component_hit(p_w, float(d), is_weapon_damage=True)
+            card_results[name]["weapon"][d] = res_w
+            summary["weapon"][d][cat]["total"] += 1
+            if res_w.status == "DESTROYED":
+                summary["weapon"][d][cat]["destroyed"] += 1
+            elif res_w.status == "DAMAGED":
+                summary["weapon"][d][cat]["damaged"] += 1
+            else:
+                summary["weapon"][d][cat]["safe"] += 1
+
+            # Mode raw
+            p_raw = PlacedComponent(
+                id="0", name=name, card_type=ctype, durability=dur, absorption=abs_val,
+                requirements="", outputs="", keywords=kw, text="", x=0, y=0, rotation=0, box=(0, 0, 0, 0),
+                is_fragile=False,
+            )
+            res_raw = resolve_single_component_hit(p_raw, float(d), is_weapon_damage=False)
+            card_results[name]["raw"][d] = res_raw
+            summary["raw"][d][cat]["total"] += 1
+            if res_raw.status == "DESTROYED":
+                summary["raw"][d][cat]["destroyed"] += 1
+            elif res_raw.status == "DAMAGED":
+                summary["raw"][d][cat]["damaged"] += 1
+            else:
+                summary["raw"][d][cat]["safe"] += 1
+
+    # 1. Breakpoint Cards (5 cards)
+    bp_cards_html = []
+    for d in BREAKPOINTS:
+        w_safe = sum(summary["weapon"][d][cat]["safe"] for cat in CATEGORY_ORDER)
+        w_dmg = sum(summary["weapon"][d][cat]["damaged"] for cat in CATEGORY_ORDER)
+        w_dest = sum(summary["weapon"][d][cat]["destroyed"] for cat in CATEGORY_ORDER)
+
+        r_safe = sum(summary["raw"][d][cat]["safe"] for cat in CATEGORY_ORDER)
+        r_dmg = sum(summary["raw"][d][cat]["damaged"] for cat in CATEGORY_ORDER)
+        r_dest = sum(summary["raw"][d][cat]["destroyed"] for cat in CATEGORY_ORDER)
+
+        w_impacts = []
+        for cat in CATEGORY_ORDER:
+            st = summary["weapon"][d][cat]
+            if st["destroyed"] > 0 or st["damaged"] > 0:
+                parts = []
+                if st["destroyed"] > 0:
+                    parts.append(f"<strong style='color:#f87171;'>{st['destroyed']} Dest</strong>")
+                if st["damaged"] > 0:
+                    parts.append(f"<strong style='color:#fbbf24;'>{st['damaged']} Dmg</strong>")
+                w_impacts.append(f"<div>• {html.escape(cat)}: {', '.join(parts)} ({st['total']} total)</div>")
+        if not w_impacts:
+            w_impacts = ["<div style='color:#34d399;'>• All components completely safe</div>"]
+
+        r_impacts = []
+        for cat in CATEGORY_ORDER:
+            st = summary["raw"][d][cat]
+            if st["destroyed"] > 0 or st["damaged"] > 0:
+                parts = []
+                if st["destroyed"] > 0:
+                    parts.append(f"<strong style='color:#f87171;'>{st['destroyed']} Dest</strong>")
+                if st["damaged"] > 0:
+                    parts.append(f"<strong style='color:#fbbf24;'>{st['damaged']} Dmg</strong>")
+                r_impacts.append(f"<div>• {html.escape(cat)}: {', '.join(parts)} ({st['total']} total)</div>")
+        if not r_impacts:
+            r_impacts = ["<div style='color:#34d399;'>• All components completely safe</div>"]
+
+        bp_cards_html.append(f"""
+        <div class="bp-card">
+          <div class="bp-card-header">
+            <div>
+              <span class="bp-card-title">Damage {d}</span>
+              <div class="bp-card-sub">{BREAKPOINT_THEMES[d]}</div>
+            </div>
+            <span class="badge-role">Breakpoint</span>
+          </div>
+
+          <!-- Weapon Mode Stats -->
+          <div class="bp-stat-mode bp-mode-weapon">
+            <div class="bp-stats-row">
+              <span class="matrix-badge destroy">{w_dest} Dest ({w_dest*100//total_cards_count}%)</span>
+              <span class="matrix-badge damaged">{w_dmg} Dmg ({w_dmg*100//total_cards_count}%)</span>
+              <span class="matrix-badge safe">{w_safe} Safe ({w_safe*100//total_cards_count}%)</span>
+            </div>
+            <div class="bp-cat-list">
+              {''.join(w_impacts)}
+            </div>
+          </div>
+
+          <!-- Raw Durability Mode Stats -->
+          <div class="bp-stat-mode bp-mode-raw" style="display:none;">
+            <div class="bp-stats-row">
+              <span class="matrix-badge destroy">{r_dest} Dest ({r_dest*100//total_cards_count}%)</span>
+              <span class="matrix-badge damaged">{r_dmg} Dmg ({r_dmg*100//total_cards_count}%)</span>
+              <span class="matrix-badge safe">{r_safe} Safe ({r_safe*100//total_cards_count}%)</span>
+            </div>
+            <div class="bp-cat-list">
+              {''.join(r_impacts)}
+            </div>
+          </div>
+        </div>
+        """)
+
+    # 2. Breakpoint Summary Table (Category x Breakpoint)
+    summary_rows_weapon = []
+    summary_rows_raw = []
+
+    for cat in CATEGORY_ORDER:
+        cat_total = len([c for c in all_cards if classify_component_category(c) == cat])
+
+        # Weapon cells
+        cells_w = []
+        for d in BREAKPOINTS:
+            st = summary["weapon"][d][cat]
+            dmg_c = st["damaged"]
+            dest_c = st["destroyed"]
+            if dest_c == 0 and dmg_c == 0:
+                cell_badge = '<span class="badge-mini-safe">0 Dmg · 0 Dest</span>'
+            elif dest_c > 0 and dmg_c > 0:
+                cell_badge = f'<span class="badge-mini-dest">{dest_c} Dest</span> <span class="badge-mini-dmg">{dmg_c} Dmg</span>'
+            elif dest_c > 0:
+                cell_badge = f'<span class="badge-mini-dest">{dest_c} Dest</span>'
+            else:
+                cell_badge = f'<span class="badge-mini-dmg">{dmg_c} Dmg</span>'
+            cells_w.append(f'<td class="stat-col">{cell_badge}</td>')
+
+        summary_rows_weapon.append(f"""
+        <tr>
+          <td><strong>{html.escape(cat)}</strong></td>
+          <td class="stat-col">{cat_total}</td>
+          {''.join(cells_w)}
+        </tr>
+        """)
+
+        # Raw cells
+        cells_r = []
+        for d in BREAKPOINTS:
+            st = summary["raw"][d][cat]
+            dmg_c = st["damaged"]
+            dest_c = st["destroyed"]
+            if dest_c == 0 and dmg_c == 0:
+                cell_badge = '<span class="badge-mini-safe">0 Dmg · 0 Dest</span>'
+            elif dest_c > 0 and dmg_c > 0:
+                cell_badge = f'<span class="badge-mini-dest">{dest_c} Dest</span> <span class="badge-mini-dmg">{dmg_c} Dmg</span>'
+            elif dest_c > 0:
+                cell_badge = f'<span class="badge-mini-dest">{dest_c} Dest</span>'
+            else:
+                cell_badge = f'<span class="badge-mini-dmg">{dmg_c} Dmg</span>'
+            cells_r.append(f'<td class="stat-col">{cell_badge}</td>')
+
+        summary_rows_raw.append(f"""
+        <tr>
+          <td><strong>{html.escape(cat)}</strong></td>
+          <td class="stat-col">{cat_total}</td>
+          {''.join(cells_r)}
+        </tr>
+        """)
+
+    # Totals row for weapon
+    total_cells_w = []
+    for d in BREAKPOINTS:
+        w_dmg = sum(summary["weapon"][d][cat]["damaged"] for cat in CATEGORY_ORDER)
+        w_dest = sum(summary["weapon"][d][cat]["destroyed"] for cat in CATEGORY_ORDER)
+        badge = f'<span class="badge-mini-dest" style="font-size:11.5px;">{w_dest} Dest</span> <span class="badge-mini-dmg" style="font-size:11.5px;">{w_dmg} Dmg</span>'
+        total_cells_w.append(f'<td class="stat-col">{badge}</td>')
+
+    total_row_w = f"""
+    <tr style="background:#131c2e; font-weight:700; border-top:2px solid var(--border);">
+      <td>TOTAL (All 45 Components)</td>
+      <td class="stat-col">{total_cards_count}</td>
+      {''.join(total_cells_w)}
+    </tr>
+    """
+
+    # Totals row for raw
+    total_cells_r = []
+    for d in BREAKPOINTS:
+        r_dmg = sum(summary["raw"][d][cat]["damaged"] for cat in CATEGORY_ORDER)
+        r_dest = sum(summary["raw"][d][cat]["destroyed"] for cat in CATEGORY_ORDER)
+        badge = f'<span class="badge-mini-dest" style="font-size:11.5px;">{r_dest} Dest</span> <span class="badge-mini-dmg" style="font-size:11.5px;">{r_dmg} Dmg</span>'
+        total_cells_r.append(f'<td class="stat-col">{badge}</td>')
+
+    total_row_r = f"""
+    <tr style="background:#131c2e; font-weight:700; border-top:2px solid var(--border);">
+      <td>TOTAL (All 45 Components)</td>
+      <td class="stat-col">{total_cards_count}</td>
+      {''.join(total_cells_r)}
+    </tr>
+    """
+
+    # 3. Individual Component Matrix Table Rows
+    comp_matrix_rows = []
+    for idx, c in enumerate(all_cards, start=1):
+        name = c["name"]
+        cat = classify_component_category(c)
+        ctype = c.get("type", "component").capitalize()
+        dur = c.get("durability", 0)
+        abs_val = c.get("absorption", 0)
+        kw = c.get("keywords", "")
+        is_fragile = "fragile" in kw.lower()
+
+        damage_thresh = abs_val + (dur / 2.0)
+        destroy_thresh = dur
+
+        thresh_label = f"Dmg: &gt;{damage_thresh:.1f} · Dest: &gt;{destroy_thresh}"
+        if is_fragile:
+            thresh_label += " <span class='badge-role' style='color:#f87171; border-color:#ef4444;'>FRAGILE (Dur 1 vs Wpn)</span>"
+
+        traits = []
+        if is_fragile:
+            traits.append("<span class='badge-role' style='color:#f87171;'>Fragile</span>")
+        if "wedge" in kw.lower():
+            traits.append("<span class='badge-role' style='color:#38bdf8;'>Wedge</span>")
+        if "fork" in kw.lower():
+            traits.append("<span class='badge-role' style='color:#38bdf8;'>Forks</span>")
+        if "invertible" in kw.lower():
+            traits.append("<span class='badge-role'>Invertible</span>")
+        if "self-right" in kw.lower() or "self right" in kw.lower():
+            traits.append("<span class='badge-role'>Self-Right</span>")
+        traits_html = " ".join(traits) if traits else "<span style='color:var(--text-muted); font-size:11px;'>—</span>"
+
+        bp_cells = []
+        for d in BREAKPOINTS:
+            res_w = card_results[name]["weapon"][d]
+            res_r = card_results[name]["raw"][d]
+
+            if res_w.status == "DESTROYED":
+                w_badge = '<span class="matrix-badge destroy">DESTROY</span>'
+                w_calc = f"Hits {d} &gt; Dur {res_w.effective_durability}"
+                if is_fragile:
+                    w_calc += " (Fragile: Dur 1)"
+            elif res_w.status == "DAMAGED":
+                w_badge = '<span class="matrix-badge damaged">DAMAGED</span>'
+                w_calc = f"Net {d - abs_val} &gt; {dur/2:.1f}"
+            else:
+                w_badge = '<span class="matrix-badge safe">SAFE</span>'
+                w_calc = f"Net {max(0, d - abs_val)} &le; {dur/2:.1f}"
+
+            if res_r.status == "DESTROYED":
+                r_badge = '<span class="matrix-badge destroy">DESTROY</span>'
+                r_calc = f"Hits {d} &gt; Dur {res_r.effective_durability}"
+            elif res_r.status == "DAMAGED":
+                r_badge = '<span class="matrix-badge damaged">DAMAGED</span>'
+                r_calc = f"Net {d - abs_val} &gt; {dur/2:.1f}"
+            else:
+                r_badge = '<span class="matrix-badge safe">SAFE</span>'
+                r_calc = f"Net {max(0, d - abs_val)} &le; {dur/2:.1f}"
+
+            cell_html = f"""
+            <td class="stat-col">
+              <div class="bp-mode-weapon">
+                {w_badge}
+                <span class="cell-calc">{w_calc}</span>
+              </div>
+              <div class="bp-mode-raw" style="display:none;">
+                {r_badge}
+                <span class="cell-calc">{r_calc}</span>
+              </div>
+            </td>
+            """
+            bp_cells.append(cell_html)
+
+        cat_slug = re.sub(r"[^a-zA-Z0-9]", "_", cat.lower())
+        type_slug = ctype.lower()
+        comp_matrix_rows.append(f"""
+        <tr class="comp-row cat-{cat_slug} type-{type_slug}" data-name="{html.escape(name.lower())}" data-category="{html.escape(cat)}">
+          <td class="stat-col" style="color:var(--text-muted); font-size:11px;">{idx}</td>
+          <td><strong>{html.escape(name)}</strong></td>
+          <td><span class="badge-role">{html.escape(cat)}</span></td>
+          <td class="stat-col">{html.escape(ctype)}</td>
+          <td class="stat-col"><strong>{dur}</strong></td>
+          <td class="stat-col"><strong>{abs_val}</strong></td>
+          <td style="font-size:11px;">{thresh_label}</td>
+          <td>{traits_html}</td>
+          {''.join(bp_cells)}
+        </tr>
+        """)
+
+    return f"""
+    <div id="tab-component_breakpoints" class="tab-content">
+      <div class="robot-header-card">
+        <div class="robot-title-row">
+          <h2>📊 Component Damage Breakpoint Matrix</h2>
+          <div class="mode-toggle-group">
+            <button class="rule-mode-btn active" id="btnModeWeapon" onclick="setFragileMode('weapon')">Weapon Hits (Fragile Rule Active)</button>
+            <button class="rule-mode-btn" id="btnModeRaw" onclick="setFragileMode('raw')">Raw Base Durability (No Fragile)</button>
+          </div>
+        </div>
+        <p class="section-desc" style="margin-bottom:0;">
+          Comparative analysis of all 45 components and weapons across standard damage breakpoints (2, 4, 5, 6, 8).
+          A component is <strong>DAMAGED</strong> when remaining damage after absorption exceeds half its durability (<code>Damage - Abs &gt; Dur/2</code>), and <strong>DESTROYED</strong> when damage exceeds durability (<code>Damage &gt; Dur</code>; Fragile components treat durability as 1 against weapon hits).
+        </p>
+      </div>
+
+      <!-- Section 1: Breakpoint Summary -->
+      <div class="section-container">
+        <div class="section-header-flex">
+          <div>
+            <h3 class="section-title">Breakpoints Summary & Vulnerability Analysis</h3>
+            <p class="section-desc">At-a-glance breakdown of damage scaling and component failure across breakpoints 2, 4, 5, 6, and 8.</p>
+          </div>
+        </div>
+        <div class="bp-cards-grid">
+          {''.join(bp_cards_html)}
+        </div>
+
+        <div class="sub-section-title" style="margin-top:20px;">Category Breakdown per Damage Breakpoint</div>
+        <div class="table-responsive">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Component Category</th>
+                <th class="stat-col">Total Items</th>
+                <th class="stat-col">Damage 2 (Dmg / Dest)</th>
+                <th class="stat-col">Damage 4 (Dmg / Dest)</th>
+                <th class="stat-col">Damage 5 (Dmg / Dest)</th>
+                <th class="stat-col">Damage 6 (Dmg / Dest)</th>
+                <th class="stat-col">Damage 8 (Dmg / Dest)</th>
+              </tr>
+            </thead>
+            <tbody class="bp-mode-weapon">
+              {''.join(summary_rows_weapon)}
+              {total_row_w}
+            </tbody>
+            <tbody class="bp-mode-raw" style="display:none;">
+              {''.join(summary_rows_raw)}
+              {total_row_r}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 2: Complete Matrix -->
+      <div class="section-container">
+        <div class="section-header-flex">
+          <div>
+            <h3 class="section-title">All Components vs Breakpoints Matrix (45 Cards)</h3>
+            <p class="section-desc">Detailed resilience matrix for every individual component and weapon across each damage breakpoint.</p>
+          </div>
+          <div class="legend-box">
+            <span class="matrix-badge safe">SAFE</span>
+            <span class="matrix-badge damaged">DAMAGED</span>
+            <span class="matrix-badge destroy">DESTROYED</span>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="compSearchInput" class="search-input" placeholder="Search components by name..." oninput="filterComponentsBySearch(this.value)">
+          <div class="filter-pills">
+            <button class="filter-btn active" data-cat="all" onclick="filterComponentsByCategory('all', this)">All (45)</button>
+            <button class="filter-btn" data-cat="Armor & Structure" onclick="filterComponentsByCategory('Armor & Structure', this)">Armor (4)</button>
+            <button class="filter-btn" data-cat="Wedges" onclick="filterComponentsByCategory('Wedges', this)">Wedges (3)</button>
+            <button class="filter-btn" data-cat="Forks" onclick="filterComponentsByCategory('Forks', this)">Forks (2)</button>
+            <button class="filter-btn" data-cat="Weapons" onclick="filterComponentsByCategory('Weapons', this)">Weapons (12)</button>
+            <button class="filter-btn" data-cat="Wheels & Drive" onclick="filterComponentsByCategory('Wheels & Drive', this)">Wheels (4)</button>
+            <button class="filter-btn" data-cat="Motors" onclick="filterComponentsByCategory('Motors', this)">Motors (5)</button>
+            <button class="filter-btn" data-cat="Servos & Actuators" onclick="filterComponentsByCategory('Servos & Actuators', this)">Servos (4)</button>
+            <button class="filter-btn" data-cat="Batteries & Power" onclick="filterComponentsByCategory('Batteries & Power', this)">Batteries (4)</button>
+            <button class="filter-btn" data-cat="Wiring & Electronics" onclick="filterComponentsByCategory('Wiring & Electronics', this)">Wiring (4)</button>
+            <button class="filter-btn" data-cat="Mechanical & Transmission" onclick="filterComponentsByCategory('Mechanical & Transmission', this)">Mechanical (3)</button>
+          </div>
+        </div>
+
+        <div class="table-scroll-container">
+          <table class="report-table" id="compMatrixTable">
+            <thead>
+              <tr>
+                <th class="stat-col" style="width:36px;">#</th>
+                <th style="min-width:180px;">Component Name</th>
+                <th>Category</th>
+                <th class="stat-col">Type</th>
+                <th class="stat-col">Dur</th>
+                <th class="stat-col">Abs</th>
+                <th style="min-width:170px;">Thresholds</th>
+                <th>Traits / Keywords</th>
+                <th class="stat-col" style="min-width:90px;">Damage 2</th>
+                <th class="stat-col" style="min-width:90px;">Damage 4</th>
+                <th class="stat-col" style="min-width:90px;">Damage 5</th>
+                <th class="stat-col" style="min-width:90px;">Damage 6</th>
+                <th class="stat-col" style="min-width:90px;">Damage 8</th>
+              </tr>
+            </thead>
+            <tbody>
+              {''.join(comp_matrix_rows)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    """
+
+
+# ==============================================================================
 # HTML REPORT GENERATOR
 # ==============================================================================
 
@@ -1000,6 +1487,12 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
           {''.join(sections)}
         </div>
         """)
+
+    # Component Breakpoints Tab
+    robot_tabs_nav.append(
+        '<button class="tab-btn" onclick="switchTab(\'component_breakpoints\')">Component Breakpoints</button>'
+    )
+    robot_tabs_content.append(generate_component_breakpoints_tab_html(catalog))
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1495,6 +1988,187 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       font-weight: 700;
       color: #fff;
     }}
+
+    /* Component Breakpoints Tab Styles */
+    .bp-cards-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }}
+
+    .bp-card {{
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }}
+
+    .bp-card-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(38, 53, 74, 0.5);
+      padding-bottom: 8px;
+    }}
+
+    .bp-card-title {{
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      display: block;
+    }}
+
+    .bp-card-sub {{
+      font-size: 11.5px;
+      color: var(--primary);
+      margin-top: 2px;
+    }}
+
+    .bp-stats-row {{
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+      text-align: center;
+    }}
+
+    .bp-cat-list {{
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      border-top: 1px dashed rgba(38, 53, 74, 0.4);
+      padding-top: 8px;
+      max-height: 140px;
+      overflow-y: auto;
+    }}
+
+    .badge-mini-safe {{
+      background: var(--success-bg);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+      display: inline-block;
+    }}
+
+    .badge-mini-dmg {{
+      background: var(--warning-bg);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+      display: inline-block;
+    }}
+
+    .badge-mini-dest {{
+      background: var(--danger-bg);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      display: inline-block;
+    }}
+
+    .filter-bar {{
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      background: var(--surface-card);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }}
+
+    .filter-pills {{
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+    }}
+
+    .filter-btn {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }}
+
+    .filter-btn:hover {{
+      background: var(--surface-hover);
+      color: var(--text);
+    }}
+
+    .filter-btn.active {{
+      background: var(--primary);
+      color: #0b0f17;
+      border-color: var(--primary);
+    }}
+
+    .search-input {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      min-width: 220px;
+      outline: none;
+    }}
+
+    .search-input:focus {{
+      border-color: var(--primary);
+    }}
+
+    .mode-toggle-group {{
+      display: flex;
+      gap: 4px;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+    }}
+
+    .rule-mode-btn {{
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }}
+
+    .rule-mode-btn.active {{
+      background: var(--surface-hover);
+      color: #38bdf8;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }}
+
+    .cell-calc {{
+      display: block;
+      font-size: 9.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }}
   </style>
 </head>
 <body>
@@ -1517,7 +2191,46 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       const target = document.getElementById('tab-' + slug);
       if (target) target.classList.add('active');
-      event.target.classList.add('active');
+      if (window.event && window.event.currentTarget) {{
+        window.event.currentTarget.classList.add('active');
+      }} else if (window.event && window.event.target) {{
+        window.event.target.classList.add('active');
+      }}
+    }}
+
+    function setFragileMode(mode) {{
+      const isWeapon = mode === 'weapon';
+      const btnW = document.getElementById('btnModeWeapon');
+      const btnR = document.getElementById('btnModeRaw');
+      if (btnW) btnW.classList.toggle('active', isWeapon);
+      if (btnR) btnR.classList.toggle('active', !isWeapon);
+
+      document.querySelectorAll('.bp-mode-weapon').forEach(el => el.style.display = isWeapon ? '' : 'none');
+      document.querySelectorAll('.bp-mode-raw').forEach(el => el.style.display = isWeapon ? 'none' : '');
+    }}
+
+    function filterComponentsByCategory(cat, btn) {{
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const searchEl = document.getElementById('compSearchInput');
+      const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+      applyFilters(cat, query);
+    }}
+
+    function filterComponentsBySearch(query) {{
+      const activeBtn = document.querySelector('.filter-btn.active');
+      const cat = activeBtn ? activeBtn.getAttribute('data-cat') : 'all';
+      applyFilters(cat, (query || '').toLowerCase().trim());
+    }}
+
+    function applyFilters(cat, query) {{
+      document.querySelectorAll('.comp-row').forEach(row => {{
+        const rowName = row.getAttribute('data-name') || '';
+        const rowCat = row.getAttribute('data-category') || '';
+        const matchesCat = (cat === 'all') || (rowCat === cat);
+        const matchesQuery = (!query) || rowName.includes(query);
+        row.style.display = (matchesCat && matchesQuery) ? '' : 'none';
+      }});
     }}
   </script>
 </body>
