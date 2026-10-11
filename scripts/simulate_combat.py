@@ -309,7 +309,7 @@ def resolve_single_component_hit(
         net_after_abs = max(0.0, damage - comp.absorption)
         half_dur = eff_dur / 2.0
 
-        if net_after_abs > half_dur:
+        if net_after_abs >= half_dur:
             if already_damaged:
                 status = "DESTROYED"
                 absorbed = float(eff_dur)
@@ -944,7 +944,7 @@ def generate_component_breakpoints_tab_html(catalog: Dict[str, Any]) -> str:
         damage_thresh = abs_val + (dur / 2.0)
         destroy_thresh = dur
 
-        thresh_label = f"Dmg: &gt;{damage_thresh:.1f} · Dest: &ge;{destroy_thresh}"
+        thresh_label = f"Dmg: &ge;{damage_thresh:.1f} · Dest: &ge;{destroy_thresh}"
         if is_fragile:
             thresh_label += " <span class='badge-role' style='color:#f87171; border-color:#ef4444;'>FRAGILE (Dur 1 vs Wpn)</span>"
 
@@ -973,20 +973,20 @@ def generate_component_breakpoints_tab_html(catalog: Dict[str, Any]) -> str:
                     w_calc += " (Fragile: Dur 1)"
             elif res_w.status == "DAMAGED":
                 w_badge = '<span class="matrix-badge damaged">DAMAGED</span>'
-                w_calc = f"Net {d - abs_val} &gt; {dur/2:.1f}"
+                w_calc = f"Net {d - abs_val} &ge; {dur/2:.1f}"
             else:
                 w_badge = '<span class="matrix-badge safe">SAFE</span>'
-                w_calc = f"Net {max(0, d - abs_val)} &le; {dur/2:.1f}"
+                w_calc = f"Net {max(0, d - abs_val)} &lt; {dur/2:.1f}"
 
             if res_r.status == "DESTROYED":
                 r_badge = '<span class="matrix-badge destroy">DESTROY</span>'
                 r_calc = f"Hits {d} &ge; Dur {res_r.effective_durability}"
             elif res_r.status == "DAMAGED":
                 r_badge = '<span class="matrix-badge damaged">DAMAGED</span>'
-                r_calc = f"Net {d - abs_val} &gt; {dur/2:.1f}"
+                r_calc = f"Net {d - abs_val} &ge; {dur/2:.1f}"
             else:
                 r_badge = '<span class="matrix-badge safe">SAFE</span>'
-                r_calc = f"Net {max(0, d - abs_val)} &le; {dur/2:.1f}"
+                r_calc = f"Net {max(0, d - abs_val)} &lt; {dur/2:.1f}"
 
             cell_html = f"""
             <td class="stat-col">
@@ -1031,7 +1031,7 @@ def generate_component_breakpoints_tab_html(catalog: Dict[str, Any]) -> str:
         <p class="section-desc" style="margin-bottom:0;">
           Comparative analysis of all 45 components and weapons across standard damage breakpoints (2, 4, 5, 6, 8).
           A component is <strong>DESTROYED</strong> if damage is equal to or greater than durability (<code>Damage &ge; Dur</code>; Fragile components treat durability as 1 against weapon hits; absorption is not considered for destruction).
-          A component is <strong>DAMAGED</strong> if incoming damage minus absorption exceeds half its durability (<code>Damage - Abs &gt; Dur/2</code>).
+          A component is <strong>DAMAGED</strong> if incoming damage minus absorption is equal to or greater than half its durability (<code>Damage - Abs &ge; Dur/2</code>).
         </p>
       </div>
 

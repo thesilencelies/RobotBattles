@@ -206,6 +206,26 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(abs_dmg, 9.0)
         self.assertEqual(excess, 1.0)
 
+        # Boundary test: net damage == half durability -> DAMAGED
+        tire = ComponentHealth(
+            id="2", name="High Grip Tires", card_type="component", max_durability=6,
+            current_durability=6, absorption=1, requirements="", outputs="", keywords="",
+            text="", x=0, y=0, rotation=0, box=(0, 0, 44, 64)
+        )
+        # Incoming 3: net = 2 < 6/2 (3.0) -> UNDAMAGED
+        st3, abs3, ex3 = apply_damage_to_component(tire, 3.0, is_weapon_damage=True)
+        self.assertEqual(st3, "UNDAMAGED")
+        self.assertEqual(abs3, 1.0)
+        self.assertEqual(ex3, 2.0)
+        self.assertFalse(tire.is_damaged)
+
+        # Incoming 4: net = 3 == 6/2 (3.0) -> DAMAGED (>= rule)
+        st4, abs4, ex4 = apply_damage_to_component(tire, 4.0, is_weapon_damage=True)
+        self.assertEqual(st4, "DAMAGED")
+        self.assertEqual(abs4, 1.0)
+        self.assertEqual(ex4, 3.0)
+        self.assertTrue(tire.is_damaged)
+
     def test_match_completion_10_rounds(self):
         csv_text = read_saved_robot("Vyper_Spinner.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player")
