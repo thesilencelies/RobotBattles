@@ -301,7 +301,7 @@ def resolve_single_component_hit(
     if comp.is_fragile and is_weapon_damage:
         eff_dur = 1
 
-    if damage > eff_dur:
+    if damage >= eff_dur:
         status = "DESTROYED"
         absorbed = float(eff_dur)
         excess = max(0.0, damage - absorbed)
@@ -944,7 +944,7 @@ def generate_component_breakpoints_tab_html(catalog: Dict[str, Any]) -> str:
         damage_thresh = abs_val + (dur / 2.0)
         destroy_thresh = dur
 
-        thresh_label = f"Dmg: &gt;{damage_thresh:.1f} · Dest: &gt;{destroy_thresh}"
+        thresh_label = f"Dmg: &gt;{damage_thresh:.1f} · Dest: &ge;{destroy_thresh}"
         if is_fragile:
             thresh_label += " <span class='badge-role' style='color:#f87171; border-color:#ef4444;'>FRAGILE (Dur 1 vs Wpn)</span>"
 
@@ -968,7 +968,7 @@ def generate_component_breakpoints_tab_html(catalog: Dict[str, Any]) -> str:
 
             if res_w.status == "DESTROYED":
                 w_badge = '<span class="matrix-badge destroy">DESTROY</span>'
-                w_calc = f"Hits {d} &gt; Dur {res_w.effective_durability}"
+                w_calc = f"Hits {d} &ge; Dur {res_w.effective_durability}"
                 if is_fragile:
                     w_calc += " (Fragile: Dur 1)"
             elif res_w.status == "DAMAGED":
@@ -980,7 +980,7 @@ def generate_component_breakpoints_tab_html(catalog: Dict[str, Any]) -> str:
 
             if res_r.status == "DESTROYED":
                 r_badge = '<span class="matrix-badge destroy">DESTROY</span>'
-                r_calc = f"Hits {d} &gt; Dur {res_r.effective_durability}"
+                r_calc = f"Hits {d} &ge; Dur {res_r.effective_durability}"
             elif res_r.status == "DAMAGED":
                 r_badge = '<span class="matrix-badge damaged">DAMAGED</span>'
                 r_calc = f"Net {d - abs_val} &gt; {dur/2:.1f}"
@@ -1030,7 +1030,8 @@ def generate_component_breakpoints_tab_html(catalog: Dict[str, Any]) -> str:
         </div>
         <p class="section-desc" style="margin-bottom:0;">
           Comparative analysis of all 45 components and weapons across standard damage breakpoints (2, 4, 5, 6, 8).
-          A component is <strong>DAMAGED</strong> when remaining damage after absorption exceeds half its durability (<code>Damage - Abs &gt; Dur/2</code>), and <strong>DESTROYED</strong> when damage exceeds durability (<code>Damage &gt; Dur</code>; Fragile components treat durability as 1 against weapon hits).
+          A component is <strong>DESTROYED</strong> if damage is equal to or greater than durability (<code>Damage &ge; Dur</code>; Fragile components treat durability as 1 against weapon hits; absorption is not considered for destruction).
+          A component is <strong>DAMAGED</strong> if incoming damage minus absorption exceeds half its durability (<code>Damage - Abs &gt; Dur/2</code>).
         </p>
       </div>
 

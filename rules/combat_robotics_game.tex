@@ -516,7 +516,7 @@ Component is chosen randomly by dropping a card on it.
 Damage progresses from the outermost component inwards, applying absorption at each step until all the damage is absorbed:
 
 \begin{itemize}
-  \item \textbf{Component Destroyed:} A component is destroyed if the remaining damage level that hits it exceeds its durability.
+  \item \textbf{Component Destroyed:} A component is destroyed if the damage level that hits it is equal to or greater than its durability. This check does not consider absorption.
   \item \textbf{Component Damaged:} A component is damaged if the remaining damage level minus that component's absorption is greater than half its durability.
   \item \textbf{Repeated Damage:} If a damaged component would be damaged again, it is instead destroyed.
   \item \textbf{Absorption on Destruction:} If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
@@ -540,7 +540,7 @@ to each component that supplies it, shared equally if there are multiple compone
 \begin{itemize}[leftmargin=*]
   \item \textbf{Integer Damage:} All damage numbers are integers; when sharing or dividing, round down.
   \item \textbf{Damage Inward Progression:} Attack Damage $\rightarrow$ Absorbed by outermost layer $\rightarrow$ Excess damage hits next connected internal component.
-  \item \textbf{Damage Conditions:} Exceeds durability $\implies$ \textbf{Destroyed}. Exceeds $\frac{1}{2}$ durability after absorption $\implies$ \textbf{Damaged}. Damaged again $\implies$ \textbf{Destroyed}.
+  \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed} (ignoring absorption). Exceeds $\frac{1}{2}$ durability after absorption $\implies$ \textbf{Damaged}. Damaged again $\implies$ \textbf{Destroyed}.
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
   \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact, at the end of which both robots are rotated a random amount.
   \item \textbf{Inertial Separation:} After any inertial contact, separate the robots by moving them both away from each other 1 step if possible.

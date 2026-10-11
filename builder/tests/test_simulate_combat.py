@@ -97,10 +97,31 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(res8.status, "UNDAMAGED")
         self.assertEqual(res8.excess_damage, 4.0)
 
-        # Hit with 10 damage: net = 6 > 5 -> DAMAGED, excess = 6
+        # Hit with 8 damage on Dur 10, Abs 2: net = 6 > 5 -> DAMAGED, excess = 6
+        comp_d10_a2 = PlacedComponent(
+            id="2",
+            name="Test Armor 2",
+            card_type="component",
+            durability=10,
+            absorption=2,
+            requirements="",
+            outputs="",
+            keywords="",
+            text="",
+            x=0,
+            y=0,
+            rotation=0,
+            box=(0, 0, 44, 64),
+        )
+        res_dmg = resolve_single_component_hit(comp_d10_a2, 8.0)
+        self.assertEqual(res_dmg.status, "DAMAGED")
+        self.assertEqual(res_dmg.excess_damage, 6.0)
+
+        # Hit with 10 damage: damage == durability -> DESTROYED, absorbs 10, excess = 0
         res10 = resolve_single_component_hit(comp, 10.0)
-        self.assertEqual(res10.status, "DAMAGED")
-        self.assertEqual(res10.excess_damage, 6.0)
+        self.assertEqual(res10.status, "DESTROYED")
+        self.assertEqual(res10.absorbed_damage, 10.0)
+        self.assertEqual(res10.excess_damage, 0.0)
 
         # Hit with 12 damage: 12 > 10 durability -> DESTROYED, absorbs 10, excess = 2
         res12 = resolve_single_component_hit(comp, 12.0)

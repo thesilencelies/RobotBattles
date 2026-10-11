@@ -105,7 +105,7 @@ def apply_damage_to_component(
     """
     Applies incoming integer damage according to the canonical rules:
     - All damage numbers are integers; when sharing or dividing, round down.
-    - Exceeds durability -> Destroyed, absorbs durability, excess continues.
+    - Equal to or greater than durability (ignoring absorption) -> Destroyed, absorbs durability, excess continues.
     - Exceeds 1/2 durability after absorption -> Damaged (or destroyed if already damaged).
     - Otherwise -> absorbs absorption, excess continues.
     Returns (status, absorbed_amount, excess_amount).
@@ -115,7 +115,7 @@ def apply_damage_to_component(
     if comp.is_fragile and is_weapon_damage:
         eff_dur = 1
 
-    if incoming > eff_dur:
+    if incoming >= eff_dur:
         comp.is_destroyed = True
         comp.current_durability = 0
         comp.is_active = False
