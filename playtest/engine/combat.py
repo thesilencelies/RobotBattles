@@ -123,10 +123,10 @@ def apply_damage_to_component(
         excess = max(0, incoming - absorbed)
         return "DESTROYED", absorbed, excess
 
-    net_after_abs = max(0, incoming - comp.absorption)
     half_dur = eff_dur / 2.0
+    net_after_abs = max(0, incoming - comp.absorption)
 
-    if net_after_abs >= half_dur:
+    if incoming >= half_dur:
         if comp.is_damaged:
             comp.is_destroyed = True
             comp.current_durability = 0

@@ -92,15 +92,23 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(res3.status, "UNDAMAGED")
         self.assertEqual(res3.excess_damage, 0.0)
 
-        # Hit with 8 damage: net = 4. 4 < 10/2 (5) -> UNDAMAGED, excess = 4
-        res8 = resolve_single_component_hit(comp, 8.0)
-        self.assertEqual(res8.status, "UNDAMAGED")
-        self.assertEqual(res8.excess_damage, 4.0)
+        # Hit with 4 damage: 4 < 10/2 (5) -> UNDAMAGED, absorbs 4, excess = 0
+        res4 = resolve_single_component_hit(comp, 4.0)
+        self.assertEqual(res4.status, "UNDAMAGED")
+        self.assertEqual(res4.absorbed_damage, 4.0)
+        self.assertEqual(res4.excess_damage, 0.0)
 
-        # Hit with 9 damage: net = 5. 5 >= 10/2 (5) -> DAMAGED, excess = 5
-        res9 = resolve_single_component_hit(comp, 9.0)
-        self.assertEqual(res9.status, "DAMAGED")
-        self.assertEqual(res9.excess_damage, 5.0)
+        # Hit with 5 damage: 5 >= 10/2 (5) -> DAMAGED, absorbs 4, excess = 1
+        res5 = resolve_single_component_hit(comp, 5.0)
+        self.assertEqual(res5.status, "DAMAGED")
+        self.assertEqual(res5.absorbed_damage, 4.0)
+        self.assertEqual(res5.excess_damage, 1.0)
+
+        # Hit with 8 damage: 8 >= 10/2 (5) -> DAMAGED, absorbs 4, excess = 4
+        res8 = resolve_single_component_hit(comp, 8.0)
+        self.assertEqual(res8.status, "DAMAGED")
+        self.assertEqual(res8.absorbed_damage, 4.0)
+        self.assertEqual(res8.excess_damage, 4.0)
 
         # Hit with 8 damage on Dur 10, Abs 2: net = 6 >= 5 -> DAMAGED, excess = 6
         comp_d10_a2 = PlacedComponent(
