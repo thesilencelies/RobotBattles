@@ -189,53 +189,40 @@ def find_contacted_components_on_mat(
     Maps world contact point onto the A3 chassis sheet to determine which
     outermost card(s) were contacted.
     """
-    results: List[str] = []
     if active_cid and active_cid in robot.components and not robot.components[active_cid].is_destroyed:
-        results.append(active_cid)
+        return [active_cid]
 
     lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], robot_x, robot_y, robot_theta)
     mx, my = local_miniature_to_mat_point(lx, ly)
 
-    # Find components whose card box contains or is closest to (mx, my)
     active_comps = [c for c in robot.components.values() if not c.is_destroyed]
     if not active_comps:
-        return results
+        return []
 
-    best_cid = None
-    best_dist = float("inf")
+    def dist_point_to_box(px: float, py: float, box: Tuple[float, float, float, float]) -> float:
+        clamped_x = max(box[0], min(box[2], px))
+        clamped_y = max(box[1], min(box[3], py))
+        return math.hypot(px - clamped_x, py - clamped_y)
 
-    for comp in active_comps:
-        if comp.id in results:
-            continue
-        b = comp.box
-        # Check if inside card box
-        if b[0] <= mx <= b[2] and b[1] <= my <= b[3]:
-            results.append(comp.id)
-            return results
+    # 1. Exact inside-box check
+    inside_comps = [
+        c for c in active_comps
+        if c.box[0] <= mx <= c.box[2] and c.box[1] <= my <= c.box[3]
+    ]
+    if inside_comps:
+        # If multiple overlap, pick the one with center closest to (mx, my)
+        best = min(
+            inside_comps,
+            key=lambda c: math.hypot(
+                mx - (c.box[0] + c.box[2]) / 2.0,
+                my - (c.box[1] + c.box[3]) / 2.0,
+            ),
+        )
+        return [best.id]
 
-        # Distance to card center
-        cx = (b[0] + b[2]) / 2.0
-        cy = (b[1] + b[3]) / 2.0
-        d = math.hypot(mx - cx, my - cy)
-        if d < best_dist:
-            best_dist = d
-            best_cid = comp.id
-
-    if best_cid and best_cid not in results:
-        results.append(best_cid)
-
-    # Fallback to octant search if empty
-    if not results:
-        for comp in active_comps:
-            ccx = (comp.box[0] + comp.box[2]) / 2.0
-            ccy = (comp.box[1] + comp.box[3]) / 2.0
-            coct = get_octant(MAT_CENTER_X, MAT_CENTER_Y, ccx, ccy, heading_deg=0.0)
-            if coct == octant:
-                results.append(comp.id)
-        if not results:
-            results.append(active_comps[0].id)
-
-    return results
+    # 2. Outside all boxes: find the active card whose box boundary is closest to (mx, my)
+    best = min(active_comps, key=lambda c: dist_point_to_box(mx, my, c.box))
+    return [best.id]
 
 
 def detect_collision(

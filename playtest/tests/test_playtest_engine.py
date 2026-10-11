@@ -1092,6 +1092,83 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(bot.weapon_spin_counters[weapon.id], 0)
         self.assertEqual(weapon.spin_counters, 0)
 
+    def test_wedge_only_hit_if_component_being_hit(self):
+        """Rule: A wedge is only hit if it is the component being hit (taking damage)."""
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        p_bot.pose = Pose(x=400.0, y=410.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+
+        w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        w_comp.outputs = "5W"
+        w_comp.text = ""
+
+        wedge_cids = [cid for cid, c in a_bot.components.items() if c.is_wedge]
+        non_wedge_cids = [cid for cid, c in a_bot.components.items() if not c.is_wedge and "wheel" in c.name.lower()]
+        self.assertTrue(len(wedge_cids) > 0)
+        self.assertTrue(len(non_wedge_cids) > 0)
+
+        wedge_id = wedge_cids[0]
+        wheel_id = non_wedge_cids[0]
+
+        # Case 1: Contact list on opponent includes both wheel and wedge on that side,
+        # but the wheel is the component taking damage.
+        # The wedge must NOT trigger: robot IS thrown!
+        col1 = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[wheel_id, wedge_id],
+            contact_type="ACTIVE",
+            description="Active strike into wheel",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(0.0, -10.0),
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        orig_a_y = a_bot.pose.y
+        logs1 = resolve_collision_combat(col1, p_bot, a_bot, round_num=1)
+        log_msgs1 = [l.message for l in logs1]
+        self.assertFalse(any("Wedge was hit —" in m for m in log_msgs1))
+        self.assertTrue(any("THROWN" in m for m in log_msgs1))
+        self.assertNotEqual(a_bot.pose.y, orig_a_y)
+
+        # Reset opponent pose and player weapon spin
+        a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+        p_bot.weapon_spin_counters[w_comp.id] = 1
+        w_comp.spin_counters = 1
+
+        # Case 2: Contact is directly on the wedge itself (wedge takes the damage).
+        # Wedge effect applies: robot is NOT thrown!
+        col2 = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[wedge_id],
+            contact_type="ACTIVE",
+            description="Active strike into wedge",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(0.0, -10.0),
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        logs2 = resolve_collision_combat(col2, p_bot, a_bot, round_num=1)
+        log_msgs2 = [l.message for l in logs2]
+        self.assertTrue(any("Wedge was hit —" in m for m in log_msgs2))
+        self.assertFalse(any("THROWN" in m for m in log_msgs2))
+        self.assertTrue(any("Inertial separation" in m for m in log_msgs2))
+
 
 if __name__ == "__main__":
     unittest.main()

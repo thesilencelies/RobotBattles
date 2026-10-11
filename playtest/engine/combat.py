@@ -938,6 +938,7 @@ def resolve_collision_combat(
 
         # 1. Apply Weapon 1 damage to Robot 2
         throw_str_2 = 0
+        target2_id = None
         if w1_comp:
             spin1 = r1.weapon_spin_counters.get(w1_comp.id, 0)
             dmg1 = 0 if "deals no damage" in w1_comp.text.lower() else atk_str_1
@@ -968,6 +969,7 @@ def resolve_collision_combat(
 
         # 2. Apply Weapon 2 damage to Robot 1
         throw_str_1 = 0
+        target1_id = None
         if w2_comp:
             spin2 = r2.weapon_spin_counters.get(w2_comp.id, 0)
             dmg2 = 0 if "deals no damage" in w2_comp.text.lower() else atk_str_2
@@ -1008,8 +1010,9 @@ def resolve_collision_combat(
 
         # 4. Check Wedge keyword: If this component is hit this robot is not thrown.
         # This effect does not apply if the robot is raised.
-        r1_wedge = any(r1.components[cid].is_wedge for cid in col.robot1_components if cid in r1.components)
-        r2_wedge = any(r2.components[cid].is_wedge for cid in col.robot2_components if cid in r2.components)
+        # A wedge is only hit if it is the component being hit (the component taking the damage).
+        r1_wedge = bool(target1_id and target1_id in r1.components and r1.components[target1_id].is_wedge)
+        r2_wedge = bool(target2_id and target2_id in r2.components and r2.components[target2_id].is_wedge)
         if r1_wedge and throw_str_1 > 0:
             if not r1.is_raised:
                 throw_str_1 = 0
