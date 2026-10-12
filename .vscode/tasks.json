@@ -1,0 +1,37 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Regenerate All Data",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/scripts/regenerate_all_data.py"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Regenerate All Data (Quick)",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/scripts/regenerate_all_data.py",
+                "--quick"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
