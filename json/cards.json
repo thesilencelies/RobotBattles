@@ -129,7 +129,7 @@
     "10": {
       "name": "N20 Spark Gearmotor",
       "description": "",
-      "gm_notes": "weight:2\ncost:$1\nreq:EE\nout:SS\ndurability:5\nabsorption:2",
+      "gm_notes": "weight:2\ncost:$1\nreq:EE\nout:SS\ndurability:6\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -143,7 +143,7 @@
     "11": {
       "name": "22mm Beetle Gearmotor",
       "description": "",
-      "gm_notes": "weight:1\ncost:$1\nreq:EEEE\nout:SSSS\ndurability:6\nabsorption:1",
+      "gm_notes": "weight:1\ncost:$1\nreq:EEEE\nout:SSSS\ndurability:7\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -157,7 +157,7 @@
     "12": {
       "name": "D2830 Weapon Motor",
       "description": "",
-      "gm_notes": "weight:2\ncost:$2\nreq:EEEEEE\nout:SSSSSS\ndurability:9\nabsorption:3",
+      "gm_notes": "weight:2\ncost:$2\nreq:EEEEEE\nout:SSSSSS\ndurability:10\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -227,7 +227,7 @@
     "17": {
       "name": "25kg High Voltage Servo",
       "description": "",
-      "gm_notes": "weight:2\ncost:$2\nreq:EEEE\nout:PPPP\ndurability:8\nabsorption:3",
+      "gm_notes": "weight:3\ncost:$2\nreq:EEEE\nout:PPPP\ndurability:8\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -325,7 +325,7 @@
     "24": {
       "name": "Titanium Top Plate",
       "description": "",
-      "gm_notes": "weight:2\ncost:$2\ndurability:10\nabsorption:2\ncovers the top",
+      "gm_notes": "weight:3\ncost:$2\ndurability:10\nabsorption:2\ncovers the top",
       "tags": {
         "1": "Card",
         "2": "Component"
