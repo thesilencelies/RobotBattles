@@ -202,14 +202,14 @@ def create_drive_icon():
 
 
 def create_durability_icon():
-    # Red rectangle with white jagged fracture line
+    # Red rectangle with white jagged fracture line with sharp mitered corners
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
     red = (185, 0, 0, 255)
     draw.rectangle((60, 20, 340, 380), fill=red)
 
-    crack = [
+    crack_points = [
         (60, 250),
         (130, 210),
         (170, 260),
@@ -217,10 +217,42 @@ def create_durability_icon():
         (270, 240),
         (340, 180),
     ]
-    draw.line(crack, fill=(255, 255, 255, 255), width=28, joint="miter")
+    half_w = 14
+    left_pts = []
+    right_pts = []
+    normals = []
+    for i in range(len(crack_points) - 1):
+        dx = crack_points[i + 1][0] - crack_points[i][0]
+        dy = crack_points[i + 1][1] - crack_points[i][1]
+        length = math.hypot(dx, dy)
+        normals.append((-dy / length, dx / length))
 
-    im.save(ICONS_DIR / "durability.png", "PNG")
-    print(f"Created {ICONS_DIR / 'durability.png'}")
+    left_pts.append((crack_points[0][0] + normals[0][0] * half_w, crack_points[0][1] + normals[0][1] * half_w))
+    right_pts.append((crack_points[0][0] - normals[0][0] * half_w, crack_points[0][1] - normals[0][1] * half_w))
+
+    for i in range(1, len(crack_points) - 1):
+        n1 = normals[i - 1]
+        n2 = normals[i]
+        miter = (n1[0] + n2[0], n1[1] + n2[1])
+        m_len = math.hypot(miter[0], miter[1])
+        miter = (miter[0] / m_len, miter[1] / m_len)
+        dot = n1[0] * miter[0] + n1[1] * miter[1]
+        miter_scale = half_w / dot
+        left_pts.append((crack_points[i][0] + miter[0] * miter_scale, crack_points[i][1] + miter[1] * miter_scale))
+        right_pts.append((crack_points[i][0] - miter[0] * miter_scale, crack_points[i][1] - miter[1] * miter_scale))
+
+    left_pts.append((crack_points[-1][0] + normals[-1][0] * half_w, crack_points[-1][1] + normals[-1][1] * half_w))
+    right_pts.append((crack_points[-1][0] - normals[-1][0] * half_w, crack_points[-1][1] - normals[-1][1] * half_w))
+
+    crack_poly = left_pts + right_pts[::-1]
+    draw.polygon(crack_poly, fill=(255, 255, 255, 255))
+
+    out_path = ICONS_DIR / "durability.png"
+    im.save(out_path, "PNG")
+    root_icons = WORKSPACE / "icons"
+    if root_icons.is_dir():
+        im.save(root_icons / "durability.png", "PNG")
+    print(f"Created {out_path}")
 
 
 def create_absorption_icon():

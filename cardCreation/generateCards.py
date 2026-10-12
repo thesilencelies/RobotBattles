@@ -253,6 +253,7 @@ def create_macros(extra_colors: dict = None):
 \RequirePackage[export]{adjustbox}
 \RequirePackage{tikz}
 \RequirePackage[none]{hyphenat}
+\RequirePackage[sfdefault]{roboto}
 
 % Color definitions
 \definecolor{chevronpurple}{RGB}{40, 0, 70}
@@ -366,7 +367,7 @@ def generate_card_tex(card: dict) -> str:
             row1 = r"\$" * top_count
             row2 = r"\$" * bot_count
             lines.append(
-                rf"    \node [anchor=center] at (5.70, 8.20) {{\textcolor{{costgreen}}{{\sffamily\bfseries\Large\begin{{tabular}}{{@{{}}c@{{}}}}{row1}\\[-5pt]{row2}\end{{tabular}}}}}};"
+                rf"    \node [anchor=center] at (5.70, 8.20) {{\textcolor{{costgreen}}{{\sffamily\bfseries\LARGE\begin{{tabular}}{{@{{}}c@{{}}}}{row1}\\[-6pt]{row2}\end{{tabular}}}}}};"
             )
 
     # Template Icon (below cost, if weapon card)
@@ -390,10 +391,10 @@ def generate_card_tex(card: dict) -> str:
 
     # --- MIDDLE BAND: Left/Right Pointy Chevrons & Resource Flow ---
     lines.append(
-        r"    \fill [chevronpurple] (0.00, 5.50) -- (0.85, 4.60) -- (0.00, 3.70) -- cycle;"
+        r"    \fill [chevronpurple] (0.00, 5.50) -- (0.85, 4.60) -- (0.00, 3.70) -- (0.00, 4.06) -- (0.51, 4.60) -- (0.00, 5.14) -- cycle;"
     )
     lines.append(
-        r"    \fill [chevronpurple] (5.55, 5.50) -- (6.40, 4.60) -- (5.55, 3.70) -- cycle;"
+        r"    \fill [chevronpurple] (5.55, 5.50) -- (6.40, 4.60) -- (5.55, 3.70) -- (5.55, 4.06) -- (6.06, 4.60) -- (5.55, 5.14) -- cycle;"
     )
 
     if req_markup:
