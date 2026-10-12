@@ -283,7 +283,7 @@ def create_macros(extra_colors: dict = None):
 % Card stat icon commands
 \newcommand{\durabilityicon}{\includegraphics[height=0.85cm,keepaspectratio]{pictures/icons/durability.png}}
 \newcommand{\absorptionicon}{\includegraphics[height=0.85cm,keepaspectratio]{pictures/icons/absorption.png}}
-\newcommand{\weighticon}{\includegraphics[height=0.92cm,keepaspectratio]{pictures/icons/weight.png}}
+\newcommand{\weighticon}[1][0.92cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/weight.png}}
 """)
     print(f"Wrote {macros_file}")
 
@@ -328,11 +328,24 @@ def generate_card_tex(card: dict) -> str:
     lines.append(rf"  \begin{{scope}}[shift={{({BLEED_OFFSET_X:.3f}, {BLEED_OFFSET_Y:.3f})}}]")
 
     # --- TOP ROW: Weights, Title, Cost, Template ---
-    # Stacked Weight Icons (top-left)
+    # Stacked Weight Icons (top-left: 1 column if weight <= 3, 2 columns if weight > 3)
     if weight > 0:
-        for w_idx in range(min(weight, 3)):
-            wy = 8.15 - (w_idx * 0.95)
-            lines.append(rf"    \node [anchor=center] at (0.65, {wy:.2f}) {{\weighticon}};")
+        if weight <= 3:
+            for w_idx in range(weight):
+                wy = 8.15 - (w_idx * 0.95)
+                lines.append(rf"    \node [anchor=center] at (0.65, {wy:.2f}) {{\weighticon}};")
+        else:
+            col1_count = (weight + 1) // 2
+            col2_count = weight - col1_count
+            x1, x2 = 0.40, 1.05
+            y_start = 8.18
+            y_spacing = 0.76
+            for i in range(col1_count):
+                wy = y_start - (i * y_spacing)
+                lines.append(rf"    \node [anchor=center] at ({x1:.2f}, {wy:.2f}) {{\weighticon[0.65cm]}};")
+            for i in range(col2_count):
+                wy = y_start - (i * y_spacing)
+                lines.append(rf"    \node [anchor=center] at ({x2:.2f}, {wy:.2f}) {{\weighticon[0.65cm]}};")
 
     # Card Title (top-center)
     esc_name = escape_latex(name)
