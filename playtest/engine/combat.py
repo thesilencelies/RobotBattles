@@ -935,9 +935,23 @@ def resolve_collision_combat(
             ))
 
             target2_id = col.robot2_components[0] if col.robot2_components else list(r2.components.keys())[0]
-            dmg_logs = resolve_inward_damage_progression(r2, target2_id, float(dmg1), is_weapon_damage=True, steps=steps)
-            for dl in dmg_logs:
-                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {dl}"))
+            if dmg1 > 0 and target2_id in r2.components:
+                t2_comp = r2.components[target2_id]
+                status, absorbed, excess = apply_damage_to_component(t2_comp, dmg1, is_weapon_damage=True)
+                msg = f"{t2_comp.name} (#{t2_comp.id}) takes {dmg1} dmg -> {status} (absorbed {absorbed}, excess {excess})"
+                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {msg}"))
+                if steps is not None:
+                    steps.append(DamageTrainStep(
+                        phase="damage",
+                        robot_id=r2.id,
+                        target_cid=t2_comp.id,
+                        from_cid=None,
+                        amount=dmg1,
+                        absorbed=absorbed,
+                        excess=excess,
+                        new_status=status,
+                        message=msg,
+                    ))
 
             # Remove spin counters after attack
             r1.weapon_spin_counters[w1_comp.id] = 0
@@ -945,8 +959,8 @@ def resolve_collision_combat(
 
             # Base throw strength
             throw_str_2 = atk_str_1
-            if "double the throw strength" in w1_comp.text.lower():
-                throw_str_2 *= 2
+            if "increases throw strength by 2" in w1_comp.text.lower() or "double the throw strength" in w1_comp.text.lower():
+                throw_str_2 += 2
             if "always inverts" in w1_comp.text.lower():
                 r2.is_inverted = not r2.is_inverted
                 logs.append(CombatLogEntry(
@@ -966,16 +980,30 @@ def resolve_collision_combat(
             ))
 
             target1_id = col.robot1_components[0] if col.robot1_components else list(r1.components.keys())[0]
-            dmg_logs = resolve_inward_damage_progression(r1, target1_id, float(dmg2), is_weapon_damage=True, steps=steps)
-            for dl in dmg_logs:
-                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {dl}"))
+            if dmg2 > 0 and target1_id in r1.components:
+                t1_comp = r1.components[target1_id]
+                status, absorbed, excess = apply_damage_to_component(t1_comp, dmg2, is_weapon_damage=True)
+                msg = f"{t1_comp.name} (#{t1_comp.id}) takes {dmg2} dmg -> {status} (absorbed {absorbed}, excess {excess})"
+                logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {msg}"))
+                if steps is not None:
+                    steps.append(DamageTrainStep(
+                        phase="damage",
+                        robot_id=r1.id,
+                        target_cid=t1_comp.id,
+                        from_cid=None,
+                        amount=dmg2,
+                        absorbed=absorbed,
+                        excess=excess,
+                        new_status=status,
+                        message=msg,
+                    ))
 
             r2.weapon_spin_counters[w2_comp.id] = 0
             w2_comp.spin_counters = 0
 
             throw_str_1 = atk_str_2
-            if "double the throw strength" in w2_comp.text.lower():
-                throw_str_1 *= 2
+            if "increases throw strength by 2" in w2_comp.text.lower() or "double the throw strength" in w2_comp.text.lower():
+                throw_str_1 += 2
             if "always inverts" in w2_comp.text.lower():
                 r1.is_inverted = not r1.is_inverted
                 logs.append(CombatLogEntry(

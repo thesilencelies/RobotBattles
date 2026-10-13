@@ -629,9 +629,9 @@ class TestPlaytestEngine(unittest.TestCase):
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
         match.round = match.max_rounds
 
-        # Pick non-vital components (armor/wedges) so drive is intact for judge's decision
-        p_comps = [c for c in match.player_robot.components.values() if not c.outputs]
-        a_comps = [c for c in match.automaton_robot.components.values() if not c.outputs]
+        # Pick non-vital components (wedges, armor, weapons, servos) so drive and power remain intact
+        p_comps = [c for c in match.player_robot.components.values() if not any(k in c.name.lower() for k in ("wheel", "motor", "galaxy", "tattu", "gnb", "battery"))]
+        a_comps = [c for c in match.automaton_robot.components.values() if not any(k in c.name.lower() for k in ("wheel", "motor", "galaxy", "tattu", "gnb", "battery"))]
 
         # Tied on destroyed (1 each), but automaton has more damaged (2 vs 1)
         p_comps[0].is_destroyed = True
@@ -655,8 +655,8 @@ class TestPlaytestEngine(unittest.TestCase):
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
         match.round = match.max_rounds
 
-        p_comps = [c for c in match.player_robot.components.values() if not c.outputs]
-        a_comps = [c for c in match.automaton_robot.components.values() if not c.outputs]
+        p_comps = [c for c in match.player_robot.components.values() if not any(k in c.name.lower() for k in ("wheel", "motor", "galaxy", "tattu", "gnb", "battery"))]
+        a_comps = [c for c in match.automaton_robot.components.values() if not any(k in c.name.lower() for k in ("wheel", "motor", "galaxy", "tattu", "gnb", "battery"))]
 
         p_comps[0].is_destroyed = True
         p_comps[1].is_damaged = True
@@ -1169,6 +1169,109 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("Wedge was hit —" in m for m in log_msgs2))
         self.assertFalse(any("THROWN" in m for m in log_msgs2))
         self.assertTrue(any("Inertial separation" in m for m in log_msgs2))
+
+    def test_weapon_damage_applies_only_to_contacted_component(self):
+        """Rule: Weapon strike damage applies to just the one contacted component, while recoil feedback uses the chain."""
+        from playtest.engine.types import DamageTrainStep
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        p_bot.pose = Pose(x=400.0, y=410.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+
+        # Target on player: TPU Plate (connected to other components)
+        plate_cids = [cid for cid, c in p_bot.components.items() if "plate" in c.name.lower() and len(p_bot.connections.get(cid, [])) > 0]
+        self.assertTrue(len(plate_cids) > 0)
+        target_armor_id = plate_cids[0]
+        connected_to_armor = p_bot.connections.get(target_armor_id, [])
+        self.assertTrue(len(connected_to_armor) > 0)
+
+        # Configure automaton weapon with 20 attack strength
+        a_w_comp = [c for c in a_bot.components.values() if c.card_type == "weapon"][0]
+        a_w_comp.outputs = "20W"
+        a_w_comp.keywords = "Spin up (2)"
+        a_w_comp.text = ""
+        a_bot.weapon_spin_counters[a_w_comp.id] = 1
+
+        steps: list[DamageTrainStep] = []
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Rear",
+            robot2_octant="Front",
+            robot1_components=[target_armor_id],
+            robot2_components=[a_w_comp.id],
+            contact_type="ACTIVE",
+            description="Active strike into armor",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(0.0, -10.0),
+            r1_active_hit=False,
+            r2_active_hit=True,
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1, steps=steps)
+
+        # 1. Target armor takes damage and is destroyed
+        armor_comp = p_bot.components[target_armor_id]
+        self.assertTrue(armor_comp.is_destroyed)
+
+        # 2. Connected internal components do NOT take excess weapon damage
+        for nid in connected_to_armor:
+            ncomp = p_bot.components[nid]
+            self.assertFalse(ncomp.is_destroyed, f"{ncomp.name} should not be destroyed by weapon damage")
+            self.assertFalse(ncomp.is_damaged, f"{ncomp.name} should not be damaged by weapon damage")
+
+        # 3. Only 1 damage step for player (no inward damage steps)
+        p_damage_steps = [s for s in steps if s.robot_id == p_bot.id and s.phase == "damage"]
+        self.assertEqual(len(p_damage_steps), 1)
+        self.assertEqual(p_damage_steps[0].target_cid, target_armor_id)
+
+        # 4. Attacking weapon took recoil feedback via supply chain (half of 20 = 10)
+        recoil_steps = [s for s in steps if s.robot_id == a_bot.id and s.phase == "recoil_feedback"]
+        self.assertGreater(len(recoil_steps), 0)
+
+    def test_increases_throw_strength_by_2(self):
+        """Rule: Weapon text 'Increases throw strength by 2' adds +2 to throw strength, not x2."""
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        p_bot.pose = Pose(x=400.0, y=410.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+
+        # Configure player weapon with 4 attack strength and 'Increases throw strength by 2'
+        w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        w_comp.outputs = "4W"
+        w_comp.keywords = "Spin up (2)"
+        w_comp.text = "Increases throw strength by 2"
+        p_bot.weapon_spin_counters[w_comp.id] = 1
+
+        non_wedge = [cid for cid, c in a_bot.components.items() if not c.is_wedge and "wheel" in c.name.lower()][0]
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[non_wedge],
+            contact_type="ACTIVE",
+            description="Active strike into wheel",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(0.0, -10.0),
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        log_msgs = [l.message for l in logs]
+        # Base 4 + 2 = 6 throw strength (not 4 * 2 = 8)
+        self.assertTrue(any("THROWN! (Strength 6" in m for m in log_msgs))
 
 
 if __name__ == "__main__":

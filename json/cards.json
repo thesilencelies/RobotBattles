@@ -510,7 +510,7 @@
     "37": {
       "name": "Vertical Spinner",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
-      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SS\nout:2XWW\ndurability:7\nabsorption:1\nDouble the throw strength",
+      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SS\nout:2XWW\ndurability:7\nabsorption:1\nIncreases throw strength by 2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -525,7 +525,7 @@
     "38": {
       "name": "Single Tooth Disc",
       "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SSS\nout:WWWW\ndurability:8\nabsorption:2\nDouble the throw strength",
+      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SSS\nout:WWWW\ndurability:8\nabsorption:2\nIncreases throw strength by 2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -540,7 +540,7 @@
     "39": {
       "name": "NightWing AR500 Disc",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
-      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSS\nout:2XWW\ndurability:9\nabsorption:1\nDouble the throw strength",
+      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSS\nout:2XWW\ndurability:9\nabsorption:1\nIncreases throw strength by 2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -555,7 +555,7 @@
     "40": {
       "name": "Beater Bar",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nDouble the throw strength",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nIncreases throw strength by 2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -570,7 +570,7 @@
     "41": {
       "name": "Cronos Scythe",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSS\nout:XWWW\ndurability:7\nabsorption:1\nDouble the throw strength",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSS\nout:XWWW\ndurability:7\nabsorption:1\nIncreases throw strength by 2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -909,7 +909,7 @@
     "15": {
       "name": "Vertical Spinner (Line)",
       "description": "Line active area weapon marker",
-      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SS\nout:2XWW\ndurability:7\nabsorption:1\nDouble the throw strength",
+      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SS\nout:2XWW\ndurability:7\nabsorption:1\nIncreases throw strength by 2",
       "tags": {
         "1": "Tile",
         "2": "Weapon",
@@ -925,7 +925,7 @@
     "16": {
       "name": "Single Tooth Disc (Line)",
       "description": "Line active area weapon marker",
-      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SSS\nout:WWWW\ndurability:8\nabsorption:2\nDouble the throw strength",
+      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SSS\nout:WWWW\ndurability:8\nabsorption:2\nIncreases throw strength by 2",
       "tags": {
         "1": "Tile",
         "2": "Weapon",
@@ -941,7 +941,7 @@
     "17": {
       "name": "NightWing AR500 Disc (Line)",
       "description": "Line active area weapon marker",
-      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSS\nout:2XWW\ndurability:9\nabsorption:1\nDouble the throw strength",
+      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSS\nout:2XWW\ndurability:9\nabsorption:1\nIncreases throw strength by 2",
       "tags": {
         "1": "Tile",
         "2": "Weapon",
@@ -957,7 +957,7 @@
     "18": {
       "name": "Beater Bar (Bar)",
       "description": "Bar active area weapon marker",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nDouble the throw strength",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nIncreases throw strength by 2",
       "tags": {
         "1": "Tile",
         "2": "Weapon",
@@ -973,7 +973,7 @@
     "19": {
       "name": "Cronos Scythe (Prongs)",
       "description": "Prongs active area weapon marker",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSS\nout:XWWW\ndurability:7\nabsorption:1\nDouble the throw strength",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSS\nout:XWWW\ndurability:7\nabsorption:1\nIncreases throw strength by 2",
       "tags": {
         "1": "Tile",
         "2": "Weapon",

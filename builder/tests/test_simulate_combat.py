@@ -35,11 +35,11 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(d_map[3], 6)
         self.assertEqual(d_map[4], 8)
 
-        # Bloodsport Bar: 2XW, max spin 4
+        # Bloodsport Bar: 2XWW, max spin 4 -> 2*4 + 1 = 9
         bb = by_name["Bloodsport Bar"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(bb)
         self.assertEqual(max_s, 4)
-        self.assertEqual(d_map[4], 8)
+        self.assertEqual(d_map[4], 9)
 
         # Beater Bar: XWW -> X*W + W = X + 1
         beater = by_name["Beater Bar"]
@@ -271,7 +271,7 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(classify_component_category(by_name["Forks"]), "Forks")
         self.assertEqual(classify_component_category(by_name["Horizontal Spinner"]), "Weapons")
         self.assertEqual(classify_component_category(by_name["Simple ESC"]), "Wiring & Electronics")
-        self.assertEqual(classify_component_category(by_name["Timing Belt"]), "Mechanical & Transmission")
+        self.assertEqual(classify_component_category(by_name["Belt"]), "Mechanical & Transmission")
 
         # 2. Test breakpoints
         self.assertEqual(BREAKPOINTS, [2, 4, 5, 6, 8])
