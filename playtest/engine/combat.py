@@ -726,7 +726,6 @@ def resolve_inert_contact(
     r1: RobotState,
     r2: RobotState,
     round_num: int,
-    rotate_at_end: bool = False,
     steps: Optional[List[DamageTrainStep]] = None,
 ) -> List[CombatLogEntry]:
     """
@@ -734,7 +733,7 @@ def resolve_inert_contact(
     - Pair moves along the line drawn between centers by net remaining motion.
     - Wall collision causes throw and shock feedback.
     - Active drive absorbs feedback equal to opponent's remaining momentum distance.
-    - If rotate_at_end is True, both robots are rotated a random amount at the end.
+    - After any inertial contact, separate the robots by moving them both away from each other 1 step if possible.
     """
     logs: List[CombatLogEntry] = []
     logs.append(CombatLogEntry(
@@ -812,18 +811,6 @@ def resolve_inert_contact(
             if fb_per_drive > 0:
                 for dcomp in active_drives:
                     resolve_feedback_propagation(robot, dcomp.id, fb_per_drive, phase="push_feedback", steps=steps)
-
-
-    # If requested, both robots are rotated a random amount at the end
-    if rotate_at_end:
-        rot1 = random.choice([45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0])
-        rot2 = random.choice([45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0])
-        r1.pose.theta = (r1.pose.theta + rot1) % 360.0
-        r2.pose.theta = (r2.pose.theta + rot2) % 360.0
-        logs.append(CombatLogEntry(
-            round=round_num, phase="collision",
-            message=f"🔄 End of inertial contact: both robots are rotated a random amount ({r1.name}: +{rot1:.0f}°, {r2.name}: +{rot2:.0f}°).",
-        ))
 
     # Separation rule: After any inertial contact, separate the robots by moving them both away from each other 1 step if possible
     d_sep = math.hypot(r2.pose.x - r1.pose.x, r2.pose.y - r1.pose.y)
@@ -1118,20 +1105,20 @@ def resolve_collision_combat(
                     message=f"☠️ {robot.name} fell into the HAZARD PIT / out of the arena! ELIMINATED!",
                 ))
 
-        # Extra rule: if after active contact the robots are still in contact,
-        # then proceed with inertial contact, at the end of which both robots are rotated a random amount.
+        # Rule: if after active contact the robots are still in contact,
+        # then proceed with inertial contact.
         if not r1.is_eliminated and not r2.is_eliminated:
             if check_robots_in_contact(r1, r2):
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
                     message="⚡ Robots are still in contact after active clash — proceeding with inertial contact!",
                 ))
-                inert_logs = resolve_inert_contact(col, r1, r2, round_num, rotate_at_end=True, steps=steps)
+                inert_logs = resolve_inert_contact(col, r1, r2, round_num, steps=steps)
                 logs.extend(inert_logs)
 
     else:
         # Standard inert pushing contact
-        inert_logs = resolve_inert_contact(col, r1, r2, round_num, rotate_at_end=False, steps=steps)
+        inert_logs = resolve_inert_contact(col, r1, r2, round_num, steps=steps)
         logs.extend(inert_logs)
 
 

@@ -629,8 +629,9 @@ class TestPlaytestEngine(unittest.TestCase):
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
         match.round = match.max_rounds
 
-        p_comps = list(match.player_robot.components.values())
-        a_comps = list(match.automaton_robot.components.values())
+        # Pick non-vital components (armor/wedges) so drive is intact for judge's decision
+        p_comps = [c for c in match.player_robot.components.values() if not c.outputs]
+        a_comps = [c for c in match.automaton_robot.components.values() if not c.outputs]
 
         # Tied on destroyed (1 each), but automaton has more damaged (2 vs 1)
         p_comps[0].is_destroyed = True
@@ -654,8 +655,8 @@ class TestPlaytestEngine(unittest.TestCase):
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
         match.round = match.max_rounds
 
-        p_comps = list(match.player_robot.components.values())
-        a_comps = list(match.automaton_robot.components.values())
+        p_comps = [c for c in match.player_robot.components.values() if not c.outputs]
+        a_comps = [c for c in match.automaton_robot.components.values() if not c.outputs]
 
         p_comps[0].is_destroyed = True
         p_comps[1].is_damaged = True
@@ -813,7 +814,7 @@ class TestPlaytestEngine(unittest.TestCase):
             wall_logs = [l.message for l in logs_wall if "THROWN into a WALL" in l.message]
             self.assertTrue(any("takes full throw damage 5" in msg for msg in wall_logs))
 
-    def test_active_contact_still_in_contact_proceeds_to_inertial_and_rotates(self):
+    def test_active_contact_still_in_contact_proceeds_to_inertial(self):
         from playtest.engine.combat import resolve_collision_combat
         from playtest.engine.types import CollisionEvent
         csv_text = read_saved_robot("Vyper_Spinner.csv")
@@ -864,12 +865,12 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("proceeding with inertial contact" in msg for msg in log_messages))
         # 4. Pushing match occurred
         self.assertTrue(any("PUSHING MATCH" in msg for msg in log_messages))
-        # 5. At the end of inertial contact, both robots rotated a random amount
-        self.assertTrue(any("End of inertial contact: both robots are rotated a random amount" in msg for msg in log_messages))
+        # 5. Random rotation after inertial contact was removed
+        self.assertFalse(any("rotated a random amount" in msg for msg in log_messages))
+        self.assertEqual(p_bot.pose.theta, orig_p_theta)
+        self.assertEqual(a_bot.pose.theta, orig_a_theta)
         # 6. Inertial separation occurred
         self.assertTrue(any("Inertial separation" in msg for msg in log_messages))
-        self.assertNotEqual(p_bot.pose.theta, orig_p_theta)
-        self.assertNotEqual(a_bot.pose.theta, orig_a_theta)
 
     def test_active_contact_thrown_clear_does_not_proceed_to_inertial(self):
         from playtest.engine.combat import resolve_collision_combat

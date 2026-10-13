@@ -41,28 +41,30 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(max_s, 4)
         self.assertEqual(d_map[4], 8)
 
-        # Beater Bar: XWWW -> X*W + 2W = X + 2
+        # Beater Bar: XWW -> X*W + W = X + 1
         beater = by_name["Beater Bar"]
         max_s, d_map, desc = parse_weapon_spin_and_damage(beater)
+        self.assertEqual(max_s, 3)
+        self.assertEqual(d_map[1], 2)
+        self.assertEqual(d_map[2], 3)
+        self.assertEqual(d_map[3], 4)
+
+        # Cronos Scythe: XWWW -> X*W + 2W = X + 2
+        scythe = by_name["Cronos Scythe"]
+        max_s, d_map, desc = parse_weapon_spin_and_damage(scythe)
         self.assertEqual(max_s, 3)
         self.assertEqual(d_map[1], 3)
         self.assertEqual(d_map[2], 4)
         self.assertEqual(d_map[3], 5)
 
-        # Cronos Scythe: XWWW -> X*W + 2W = X + 2
-        scythe = by_name["Cronos Scythe"]
-        max_s, d_map, desc = parse_weapon_spin_and_damage(scythe)
-        self.assertEqual(max_s, 2)
-        self.assertEqual(d_map[1], 3)
-        self.assertEqual(d_map[2], 4)
-
         # Chonk Key Blade: XXW -> X^2 * W = X^2
         chonk = by_name["Chonk Key Blade"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(chonk)
-        self.assertEqual(max_s, 3)
+        self.assertEqual(max_s, 4)
         self.assertEqual(d_map[1], 1)
         self.assertEqual(d_map[2], 4)
         self.assertEqual(d_map[3], 9)
+        self.assertEqual(d_map[4], 16)
 
         # Four-Bar Lifter: 10W, deals 0 direct damage
         lifter = by_name["Four-Bar Lifter"]

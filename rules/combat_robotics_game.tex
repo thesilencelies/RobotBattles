@@ -476,14 +476,14 @@ When weapons collide with an opponent's chassis or components:
   \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the other robot to the components contacted.
   \item Then both robots are thrown away from the contact. The base throw strength is equal to the attack strength received.
   \item Weapons receive feedback equal to half the total attack strength in the contact.
-  \item If after active contact the robots are still in contact, then proceed with inertial contact, at the end of which both robots are rotated a random amount.
+  \item If after active contact the robots are still in contact, then proceed with inertial contact.
 \end{itemize}
 
 \begin{summarybox}{Contact Classification Quick Reference}
 \begin{tabularx}{\textwidth}{l X}
   \textbf{Contact Type} & \textbf{Resolution Mechanism} \\
   \midrule
-  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage level $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. If robots are still in contact, proceed with inertial contact (rotating both robots a random amount at the end). \\
+  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage level $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. If robots are still in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
   \textbf{Inert Contact} & Pushing match along line between centers $\rightarrow$ Move sum of remaining motion in that direction $\rightarrow$ Wall collision causes throw $\rightarrow$ Drive takes feedback equal to opponent's remaining distance $\rightarrow$ Separate robots by moving both away from each other 1 step if possible. \\
 \end{tabularx}
@@ -536,7 +536,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Damage Inward Progression:} Attack Damage $\rightarrow$ Absorbed by outermost layer $\rightarrow$ Excess damage hits next connected internal component.
   \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged} (both ignore absorption). Damaged again $\implies$ \textbf{Destroyed}.
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
-  \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact, at the end of which both robots are rotated a random amount.
+  \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact.
   \item \textbf{Inertial Separation:} After any inertial contact, separate the robots by moving them both away from each other 1 step if possible.
   \item \textbf{Wedge Immunity:} A component with the Wedge keyword prevents the robot from being thrown when hit; this effect does not apply if the robot is raised.
   \item \textbf{Durability in Play:} Total durability is not recorded anywhere in gameplay.
