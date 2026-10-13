@@ -29,6 +29,6 @@ Steel Wedge,5,3,,,11,2,wedge,,components/mechanicals_and_armor/vertical-spinner-
 AR500 Wedge,5,4,,,17,2,wedge,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg,itgresa.com
 Forks,1,1,,,7,0,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg,itgresa.com
 Titanium Horns,2,3,,,11,2,forks,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg,itgresa.com
-Timing Belt,0,1,XS,XS,5,2,fragile,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg,itgresa.com
-Timing Pulley,0,1,SS,SSS,5,2,fragile,,components/mechanicals_and_armor/fingertech-pulley.jpg,itgresa.com
+Belt,0,0,XS,XS,5,2,fragile,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg,itgresa.com
+Timing Pulley,1,1,SS,SSS,5,2,fragile,,components/mechanicals_and_armor/fingertech-pulley.jpg,itgresa.com
 Self righting arm,1,1,PP,,9,0,Self-right,,,itgresa.com
