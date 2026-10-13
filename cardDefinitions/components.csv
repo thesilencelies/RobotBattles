@@ -1,8 +1,8 @@
 Name,Weight,Cost,Requirements,Outputs,Durability,Absorption,Keywords,Text,Picture,Artist
 Galaxy 120,1,1,,EE,5,0,,,components/batteries_and_power/galaxy-120mah-2s-lipoly-pack.jpeg,itgresa.com
-Galaxy 300 3S,2,2,,EEEE,6,0,,,components/batteries_and_power/galaxy-300mah-3s-lipoly-pack-xt30.jpg,itgresa.com
-Galaxy 1000 3S,3,4,,EEEEEE,7,0,,,components/batteries_and_power/galaxy-1000mah-3s-lipoly-pack.jpeg,itgresa.com
-Tattu 450 4S,2,3,,EEEEE,8,0,,,components/batteries_and_power/gens-ace-tattu-450mah-4s-lipoly-pack.jpeg,itgresa.com
+Galaxy 300 3S,1,2,,EEEE,6,0,,,components/batteries_and_power/galaxy-300mah-3s-lipoly-pack-xt30.jpg,itgresa.com
+Galaxy 1000 3S,2,4,,EEEEEE,8,0,,,components/batteries_and_power/galaxy-1000mah-3s-lipoly-pack.jpeg,itgresa.com
+Tattu 450 4S,2,3,,EEEEE,9,0,,,components/batteries_and_power/gens-ace-tattu-450mah-4s-lipoly-pack.jpeg,itgresa.com
 Power Switch Protector,0,1,XE,XE,11,4,fragile,,components/batteries_and_power/power-supply-protector-small.jpeg,itgresa.com
 Wires,0,0,XE,XE,5,0,fragile,,components/connectors_and_wiring/saifu-3-antweight-combat-robot-wire-harness.jpg,itgresa.com
 Heavy Gauge Wire,0,1,XE,XE,7,2,fragile,,components/connectors_and_wiring/silicone-wire-14awg-red-and-black.jpeg,itgresa.com
@@ -19,16 +19,16 @@ Micro Servo,1,1,EE,PP,4,2,,,components/servos_and_actuators/turnabot-startabot-m
 Snap Wheels,1,1,SS,DD,6,2,invertible,,components/wheels_and_drive/snap-wheels.jpg,itgresa.com
 Banebots Compliant Wheels,1,2,SSS,DDD,7,3,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg,itgresa.com
 Banebots T81 Heavy Wheels,2,2,SSSS,DDDD,7,2,invertible,,components/wheels_and_drive/banebots-t81-wheels.jpeg,itgresa.com
-High Grip Tires,2,3,SS,DDD,6,1,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg,itgresa.com
+High Grip Tires,2,3,SSS,DDDD,6,1,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg,itgresa.com
 Aluminum Plate,2,1,,,8,3,,,components/mechanicals_and_armor/viper-horizontal-spinner-armor-panels.jpeg,itgresa.com
 TPU Plate,1,0,,,6,2,,,components/mechanicals_and_armor/repeat-robotics-scalar-tpu-chassis.jpg,itgresa.com
 Titanium Top Plate,3,3,,,10,2,,covers the top,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-titanium-lid.jpg,itgresa.com
 UHMW Wraparound Armor,3,2,,,8,2,,covers a whole side,components/mechanicals_and_armor/saifu-wraparound-armor.jpg,itgresa.com
-Titanium Wedge,4,5,,,12,1,wedge,,components/mechanicals_and_armor/baby-nautiloid-titanium-wedge.jpeg,itgresa.com
-Steel Wedge,5,3,,,10,2,wedge,,components/mechanicals_and_armor/vertical-spinner-bent-steel-wedge.jpeg,itgresa.com
-AR500 Wedge,5,4,,,14,2,wedge,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg,itgresa.com
+Titanium Wedge,4,5,,,13,1,wedge,,components/mechanicals_and_armor/baby-nautiloid-titanium-wedge.jpeg,itgresa.com
+Steel Wedge,5,3,,,11,2,wedge,,components/mechanicals_and_armor/vertical-spinner-bent-steel-wedge.jpeg,itgresa.com
+AR500 Wedge,5,4,,,17,2,wedge,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg,itgresa.com
 Forks,1,1,,,7,0,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg,itgresa.com
-Titanium Horns,2,3,,,10,0,forks,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg,itgresa.com
+Titanium Horns,2,3,,,11,2,forks,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg,itgresa.com
 Timing Belt,0,1,XS,XS,5,2,fragile,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg,itgresa.com
 Timing Pulley,0,1,SS,SSS,5,2,fragile,,components/mechanicals_and_armor/fingertech-pulley.jpg,itgresa.com
 Self righting arm,1,1,PP,,9,0,Self-right,,,itgresa.com
