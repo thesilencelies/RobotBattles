@@ -17,8 +17,8 @@ Micro Servo,1,1,EE,PP,4,2,,,components/servos_and_actuators/turnabot-startabot-m
 20kg Metal Gear Servo,3,2,EEEE,PPPP,7,2,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg,itgresa.com
 25kg High Voltage Servo,4,2,EEEEE,PPPPPP,9,3,,,components/servos_and_actuators/25kg-9v-digital-servo-ccw.png,itgresa.com
 Snap Wheels,1,1,SS,D,6,2,invertible,,components/wheels_and_drive/snap-wheels.jpg,itgresa.com
-Banebots Compliant Wheels,1,2,SSS,DD,7,3,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg,itgresa.com
-Banebots T81 Heavy Wheels,2,2,SSSS,DDD,7,2,invertible,,components/wheels_and_drive/banebots-t81-wheels.jpeg,itgresa.com
+Banebots Compliant Wheels,2,2,SSS,DD,7,3,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg,itgresa.com
+Banebots T81 Heavy Wheels,3,2,SSSS,DDD,7,2,invertible,,components/wheels_and_drive/banebots-t81-wheels.jpeg,itgresa.com
 High Grip Tires,2,3,SSSS,DDDD,6,1,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg,itgresa.com
 Aluminum Plate,2,1,,,8,3,,,components/mechanicals_and_armor/viper-horizontal-spinner-armor-panels.jpeg,itgresa.com
 TPU Plate,1,0,,,6,2,,,components/mechanicals_and_armor/repeat-robotics-scalar-tpu-chassis.jpg,itgresa.com

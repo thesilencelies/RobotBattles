@@ -24,7 +24,7 @@ Components may
 | Wedge | If this component is hit this robot is not thrown. |
 | Invertible | This component works inverted |
 | Self-right | If a turn ends without contact and this robot is inverted, invert it.|
-
+| Reset | This weapon is inactive the turn after it is used. (this does not cause the robot to be considered stuck if it is also a self righter) |
 
 # Todo in the future;
 - Big wheels
