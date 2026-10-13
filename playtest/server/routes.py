@@ -187,10 +187,18 @@ class Router:
             left = int(data.get("left", 0))
             right = int(data.get("right", 0))
             fixed_roll = int(data["fixed_roll"]) if "fixed_roll" in data else None
+            chosen_components = data.get("chosen_components", data.get("supplied_components"))
+            if chosen_components is not None and not isinstance(chosen_components, list):
+                chosen_components = None
         except Exception:
             raise HttpError(400, "Invalid turn parameters (left, right required as integers)")
 
-        execute_turn(self.current_match, MoveChoice(left=left, right=right), fixed_automaton_roll=fixed_roll)
+        execute_turn(
+            self.current_match,
+            MoveChoice(left=left, right=right),
+            fixed_automaton_roll=fixed_roll,
+            player_supplied_components=chosen_components,
+        )
         return Response.json({"match": self.current_match.to_dict()})
 
     def _api_battle_reset(self, query: Mapping[str, str], body: bytes) -> Response:

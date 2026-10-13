@@ -6,7 +6,7 @@ import collections
 import math
 import random
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Collection, Dict, List, Optional, Set, Tuple
 
 from .field import (
     ARENA_HEIGHT,
@@ -383,7 +383,7 @@ def parse_resource_counts(res_str: str) -> Dict[str, int]:
 
 def _get_downstream_endpoints(cid: str, robot: RobotState) -> Set[str]:
     """
-    Returns the set of endpoint categories ('left_drive', 'right_drive', 'weapon', 'other')
+    Returns the set of endpoint categories ('left_drive', 'right_drive', 'weapon', 'self_right', 'other')
     reachable downstream from component cid.
     """
     endpoints: Set[str] = set()
@@ -397,6 +397,9 @@ def _get_downstream_endpoints(cid: str, robot: RobotState) -> Set[str]:
         comp = robot.components.get(curr_id)
         if not comp:
             continue
+
+        if "self-right" in comp.keywords.lower():
+            endpoints.add("self_right")
 
         out = comp.outputs.upper()
         if "D" in out or "M" in out:
@@ -416,6 +419,19 @@ def _get_downstream_endpoints(cid: str, robot: RobotState) -> Set[str]:
     if not endpoints:
         endpoints.add("other")
     return endpoints
+
+
+def _get_downstream_cids(cid: str, robot: RobotState) -> Set[str]:
+    """Returns the set of all component IDs reachable downstream from cid in the supply graph."""
+    descendants: Set[str] = set()
+    queue = [cid]
+    while queue:
+        curr = queue.pop(0)
+        for other_id, c_suppliers in robot.supply_graph.items():
+            if curr in c_suppliers and other_id not in descendants:
+                descendants.add(other_id)
+                queue.append(other_id)
+    return descendants
 
 
 def _edmonds_karp(
@@ -469,20 +485,20 @@ def _edmonds_karp(
     return total_flow, flow
 
 
-def refresh_robot_drive_and_power(robot: RobotState, current_move: Optional[MoveChoice] = None) -> None:
+def refresh_robot_drive_and_power(
+    robot: RobotState,
+    current_move: Optional[MoveChoice] = None,
+    chosen_components: Optional[Collection[str]] = None,
+    is_automaton: bool = False,
+) -> None:
     """
     Recomputes active components and left/right drive max counts based on current health,
     enforcing resource supply and split supply rules:
     - A component is only active if its requirements are supplied by connected components.
-    - Supply is resolved on a best-effort basis across connected components:
-      if a component is able to be supplied, then it is supplied unless that would mean
-      a higher priority component would become inactive.
-    - Where supply is insufficient to power all connected components, priority is given
-      based on their connected endpoint: drive first, then weapons, unless the robot
-      chose not to use that side's drive this turn (drive = 0).
-    - Within the same category, it supplies from the largest requirement going down.
-    - If multiple components supply multiple components, sum up and distribute available
-      supply according to the best-effort and priority rules above.
+    - If multiple components supply multiple components, sum up and distribute available supply across connected components.
+    - When supply is insufficient to power all connected components:
+      - The player can choose which components get supplied during planning phase each turn.
+      - The automaton chooses in order: self-righting if it is inverted, then weapons then drive.
     """
     left_drive_active = current_move is None or current_move.left != 0
     right_drive_active = current_move is None or current_move.right != 0
@@ -552,26 +568,34 @@ def refresh_robot_drive_and_power(robot: RobotState, current_move: Optional[Move
                 continue
 
             # 3. Sort candidates according to canonical rules:
-            # - Drive first (unless that side's drive is 0 this turn)
-            # - Weapons second
-            # - Other / unused drive third
+            # - Player explicit choice if provided
+            # - Automaton (or default fallback): self-righting (if inverted), then weapons, then drive
             # - Within same category, largest requirement first
             # - Stable tie-breaker by cid
             def consumer_sort_key(cid: str):
                 c = robot.components[cid]
                 endpoints = _get_downstream_endpoints(cid, robot)
-                is_active_drive = (
-                    ("left_drive" in endpoints and left_drive_active) or
-                    ("right_drive" in endpoints and right_drive_active)
-                )
-                is_weapon = "weapon" in endpoints
 
-                if is_active_drive:
-                    cat_pri = 0
-                elif is_weapon:
-                    cat_pri = 1
+                if chosen_components is not None:
+                    desc = _get_downstream_cids(cid, robot)
+                    is_chosen = (cid in chosen_components) or any(d in chosen_components for d in desc)
+                    cat_pri = 0 if is_chosen else 10
                 else:
-                    cat_pri = 2
+                    is_self_right = "self_right" in endpoints
+                    is_weapon = "weapon" in endpoints
+                    is_drive = (
+                        ("left_drive" in endpoints and left_drive_active) or
+                        ("right_drive" in endpoints and right_drive_active)
+                    )
+
+                    if robot.is_inverted and is_self_right:
+                        cat_pri = 0
+                    elif is_weapon:
+                        cat_pri = 1
+                    elif is_drive:
+                        cat_pri = 2
+                    else:
+                        cat_pri = 3
 
                 req_counts = parse_resource_counts(c.requirements)
                 req_val = req_counts.get(res_type, 0)

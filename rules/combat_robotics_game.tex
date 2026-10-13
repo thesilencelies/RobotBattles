@@ -272,7 +272,7 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
 
 \subsection{Resource Supply and Split Supply}
 
-A component is only active if its requirements are supplied by connected components. If multiple components supply multiple components, sum up and distribute available supply across connected components. When there is not enough supply to power all connected components, the player can choose which components get supplied each turn.
+A component is only active if its requirements are supplied by connected components. If multiple components supply multiple components, sum up and distribute available supply across connected components. When there is not enough supply to power all connected components, the player chooses which components get supplied during the planning phase each turn.
 
 \vspace{0.8em}
 
@@ -326,7 +326,7 @@ Each round follows a sequence of four phases:
   \toprule
   \textbf{Phase} & \textbf{Summary} \\
   \midrule
-  \textbf{1. Planning} & Players secretly select drive settings for each side (absolute value $\le$ active drive count). \\
+  \textbf{1. Planning} & Players secretly select drive settings for each side (absolute value $\le$ active drive count). If supply is insufficient to power all components, players also choose which components to supply. \\
   \textbf{2. Movement} & Choices are simultaneously revealed; robots advance along the movement templates. \\
   \textbf{3. Collision} & Collisions and contacts (active weapon hits or inert pushes) are resolved. \\
   \textbf{4. Cleanup}  & Reset temporary states, verify active drive, and proceed to the next round. \\
@@ -348,7 +348,7 @@ Movement units are found on the straight movement template. Where an effect says
   \hfill
   \begin{minipage}[c]{0.65\textwidth}
     \begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=0.5pt]
-      \item In planning, players secretly choose drive settings with absolute value $\le$ active drive count on each side (\texttt{0/0} is stationary). Choices are revealed simultaneously.
+      \item In planning, players secretly choose drive settings with absolute value $\le$ active drive count on each side (\texttt{0/0} is stationary), and choose which components to supply if supply is insufficient. Choices are revealed simultaneously.
       \item Both robots advance along the template corresponding to their chosen drive pair.
       \item \textbf{Forward Alignment:} Front bumper starts flush at black baseline and ends at target line.
       \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns ($L \ge R$). If turning left ($R > L$), flip the template face-down.
@@ -593,6 +593,11 @@ The possible actions are as follows:
 \end{itemize}
 From this you can calculate the drive values that they will choose (for each they consider the current position of their opponent). 
 Roll this after deciding your own drive values.
+
+\vspace{0.5em}
+\noindent\textbf{Automaton Power Allocation:}\\
+If an automaton robot has insufficient supply to power all connected components, it chooses which components to supply in order: self-righting mechanisms (if it is inverted), then weapons, then drive.
+
 
 
 \end{document}

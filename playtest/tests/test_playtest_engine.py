@@ -408,10 +408,10 @@ class TestPlaytestEngine(unittest.TestCase):
 
     def test_split_supply_distribution(self):
         """
-        Verify the canonical rule:
-        - If a supplier can supply all downstream components, they are all supplied.
-        - If not, priority is: drive first, then weapons, unless drive side is 0 this turn.
-        - Within same category: largest requirement going down.
+        Verify the rule:
+        - When supply is insufficient to power all connected components:
+          - The player can choose which components get supplied each turn during the planning phase.
+          - Automaton chooses in order: self-righting (if inverted), then weapons, then drive.
         """
         # Battery output 2E
         battery = ComponentHealth(
@@ -444,25 +444,49 @@ class TestPlaytestEngine(unittest.TestCase):
             reverse_supply={"bat": ["m_left", "wep"], "m_left": [], "wep": []},
         )
 
-        # 1. Normal state: drive is used by default (current_move=None)
-        # 2E total supply: drive takes priority over weapon!
-        refresh_robot_drive_and_power(robot)
+        # 1. Player choice: Player chooses drive
+        refresh_robot_drive_and_power(robot, chosen_components=["m_left"])
         self.assertTrue(robot.components["bat"].is_active)
-        self.assertTrue(robot.components["m_left"].is_active, "Drive should be supplied first")
+        self.assertTrue(robot.components["m_left"].is_active, "Drive should be supplied when chosen by player")
         self.assertFalse(robot.components["wep"].is_active, "Weapon should be unpowered due to 2E supply limit")
         self.assertEqual(robot.left_drive_max, 1)
 
-        # 2. Divert power: Robot chooses not to use left drive this turn (left = 0)
-        refresh_robot_drive_and_power(robot, current_move=MoveChoice(left=0, right=0))
+        # 2. Player choice: Player chooses weapon
+        refresh_robot_drive_and_power(robot, chosen_components=["wep"])
         self.assertTrue(robot.components["bat"].is_active)
-        self.assertFalse(robot.components["m_left"].is_active, "Drive not used this turn, so power is freed")
-        self.assertTrue(robot.components["wep"].is_active, "Weapon should receive freed power")
+        self.assertFalse(robot.components["m_left"].is_active, "Drive should be unpowered")
+        self.assertTrue(robot.components["wep"].is_active, "Weapon should be powered when chosen by player")
+        self.assertEqual(robot.left_drive_max, 0)
 
-        # 3. Sufficient power: Battery upgraded to 4E -> both are supplied
-        battery.outputs = "4E"
+        # 3. Automaton order (when upright): weapons then drive
+        refresh_robot_drive_and_power(robot, is_automaton=True)
+        self.assertTrue(robot.components["bat"].is_active)
+        self.assertTrue(robot.components["wep"].is_active, "Automaton prioritizes weapons over drive when upright")
+        self.assertFalse(robot.components["m_left"].is_active, "Drive should be unpowered for automaton")
+
+        # 4. Automaton order (when inverted with self-righting): self-righting first
+        sr_arm = ComponentHealth(
+            id="sr", name="Self Righting Arm", card_type="component",
+            max_durability=3, current_durability=3, absorption=0,
+            requirements="2E", outputs="", keywords="Self-right", text="",
+            x=200, y=300, rotation=0, box=(200, 300, 244, 364)
+        )
+        robot.components["sr"] = sr_arm
+        robot.supply_graph["sr"] = ["bat"]
+        robot.reverse_supply["bat"].append("sr")
+        robot.is_inverted = True
+
+        refresh_robot_drive_and_power(robot, is_automaton=True)
+        self.assertTrue(robot.components["sr"].is_active, "Automaton prioritizes self-righting when inverted")
+        self.assertFalse(robot.components["wep"].is_active, "Weapon unpowered because self-righting took the 2E")
+        self.assertFalse(robot.components["m_left"].is_active, "Drive unpowered")
+
+        # 5. Sufficient power: Battery upgraded to 6E -> all are supplied
+        battery.outputs = "6E"
         refresh_robot_drive_and_power(robot)
         self.assertTrue(robot.components["m_left"].is_active)
         self.assertTrue(robot.components["wep"].is_active)
+        self.assertTrue(robot.components["sr"].is_active)
 
     def test_best_effort_split_supply_overlapping_batteries(self):
         """
@@ -540,7 +564,8 @@ class TestPlaytestEngine(unittest.TestCase):
     def test_best_effort_split_supply_priority_preservation(self):
         """
         When supply is constrained (2E + 2E = 4E total, but 3 motors require 6E):
-        - If m3 is drive and m1, m2 are weapons, m3 (drive) must stay active.
+        - Player can choose m3 (drive) and m1 (weapon) to stay active.
+        - Automaton prioritizes weapons (m1, m2) over drive (m3).
         """
         bat1 = ComponentHealth(
             id="bat1", name="Battery 2E #1", card_type="component",
@@ -554,7 +579,7 @@ class TestPlaytestEngine(unittest.TestCase):
             requirements="", outputs="2E", keywords="", text="",
             x=300, y=100, rotation=0, box=(300, 100, 344, 164)
         )
-        # m1 and m2 are weapon motors (cat_pri = 1)
+        # m1 and m2 are weapon motors
         m1 = ComponentHealth(
             id="m1", name="Weapon Motor 1", card_type="component",
             max_durability=3, current_durability=3, absorption=0,
@@ -567,7 +592,7 @@ class TestPlaytestEngine(unittest.TestCase):
             requirements="2E", outputs="4W", keywords="", text="",
             x=150, y=200, rotation=0, box=(150, 200, 194, 264)
         )
-        # m3 is drive motor (cat_pri = 0)
+        # m3 is drive motor
         m3 = ComponentHealth(
             id="m3", name="Drive Motor 3", card_type="component",
             max_durability=3, current_durability=3, absorption=0,
@@ -590,12 +615,17 @@ class TestPlaytestEngine(unittest.TestCase):
             reverse_supply={},
         )
 
-        refresh_robot_drive_and_power(robot)
-        # Drive (m3) has higher priority than weapon motors (m1, m2), so m3 must be active!
-        self.assertTrue(robot.components["m3"].is_active, "Drive motor m3 must be prioritized")
-        # One weapon motor gets remaining 2E from bat1, the other is unpowered
-        active_weapons = [cid for cid in ["m1", "m2"] if robot.components[cid].is_active]
-        self.assertEqual(len(active_weapons), 1, "Exactly one of m1 or m2 should be active")
+        # 1. Player explicitly chooses m3 (drive) and m1 (weapon)
+        refresh_robot_drive_and_power(robot, chosen_components=["m3", "m1"])
+        self.assertTrue(robot.components["m3"].is_active, "Drive motor m3 must be active when chosen")
+        self.assertTrue(robot.components["m1"].is_active, "Weapon motor m1 must be active when chosen")
+        self.assertFalse(robot.components["m2"].is_active, "Weapon motor m2 must be unpowered")
+
+        # 2. Automaton prioritizes weapons (m1, m2) over drive (m3)
+        refresh_robot_drive_and_power(robot, is_automaton=True)
+        self.assertTrue(robot.components["m1"].is_active, "Automaton prioritizes weapons")
+        self.assertTrue(robot.components["m2"].is_active, "Automaton prioritizes weapons")
+        self.assertFalse(robot.components["m3"].is_active, "Drive motor m3 unpowered for automaton")
 
     def test_judges_decision_destroyed_and_damaged_counts(self):
         from playtest.engine.match import execute_turn

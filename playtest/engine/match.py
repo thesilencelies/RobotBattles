@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Collection, Dict, List, Optional, Tuple
 
 from builder.server.data import (
     CARD_HEIGHT_MM,
@@ -286,6 +286,7 @@ def execute_turn(
     match: MatchState,
     player_choice: MoveChoice,
     fixed_automaton_roll: Optional[int] = None,
+    player_supplied_components: Optional[Collection[str]] = None,
 ) -> MatchState:
     """
     Executes a complete 4-phase combat turn:
@@ -315,9 +316,9 @@ def execute_turn(
     match.automaton_action = auto_action
     match.automaton_choice = a_choice
 
-    # Refresh active components taking into account movement choices (e.g. drive = 0 frees up power for weapons/other drive)
-    refresh_robot_drive_and_power(p_bot, p_choice)
-    refresh_robot_drive_and_power(a_bot, a_choice)
+    # Refresh active components taking into account movement and power choices
+    refresh_robot_drive_and_power(p_bot, p_choice, chosen_components=player_supplied_components)
+    refresh_robot_drive_and_power(a_bot, a_choice, is_automaton=True)
 
     match.log.append(CombatLogEntry(
         round=r_num,
@@ -382,8 +383,8 @@ def execute_turn(
                     ))
 
     # Refresh active drive and power
-    refresh_robot_drive_and_power(p_bot)
-    refresh_robot_drive_and_power(a_bot)
+    refresh_robot_drive_and_power(p_bot, chosen_components=player_supplied_components)
+    refresh_robot_drive_and_power(a_bot, is_automaton=True)
 
     # Win Condition Evaluation
     p_defeated = is_robot_defeated(p_bot)
