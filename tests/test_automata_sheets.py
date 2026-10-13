@@ -70,6 +70,7 @@ class TestAutomataSheets(unittest.TestCase):
         self.assertIn("Full Rush Action Table", tex)
         self.assertIn("Retreat", tex)
         self.assertIn("Face", tex)
+        self.assertIn("Evade", tex)
         self.assertIn("Rush", tex)
 
     def test_zero_overlap_all_automata(self):

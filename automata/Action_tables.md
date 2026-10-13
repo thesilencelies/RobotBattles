@@ -13,7 +13,7 @@ No flow chart - always same table
 | 1 | Retreat |
 | 2 | Face |
 | 3 | Evade |
-| 3-6 | Rush  |
+| 4-6 | Rush  |
 
 ## Spin up
 If there are 2 or more spin counters on the weapon:
@@ -25,7 +25,7 @@ else:
 | Roll | Action |
 | 1-2 | Retreat |
 | 3 | Face |
-| 4 | Evade |
+| 4-5 | Evade |
 | 6 | Rush  |
 
 ## Balanced

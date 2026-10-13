@@ -213,7 +213,7 @@
     "16": {
       "name": "20kg Metal Gear Servo",
       "description": "",
-      "gm_notes": "weight:3\ncost:$2\nreq:EEEE\nout:PPPP\ndurability:6\nabsorption:1",
+      "gm_notes": "weight:3\ncost:$2\nreq:EEEE\nout:PPPP\ndurability:7\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -227,7 +227,7 @@
     "17": {
       "name": "25kg High Voltage Servo",
       "description": "",
-      "gm_notes": "weight:4\ncost:$2\nreq:EEEEE\nout:PPPPPP\ndurability:8\nabsorption:3",
+      "gm_notes": "weight:4\ncost:$2\nreq:EEEEE\nout:PPPPPP\ndurability:9\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -600,7 +600,7 @@
     "43": {
       "name": "Four-Bar Lifter",
       "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it\nWedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:8W\ndurability:9\nabsorption:1\nDeals no damage only throws",
+      "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:WWWWWW\ndurability:9\nabsorption:1\nDeals no damage only throws",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -1005,7 +1005,7 @@
     "21": {
       "name": "Four-Bar Lifter (Line)",
       "description": "Line active area weapon marker",
-      "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:8W\ndurability:9\nabsorption:1\nDeals no damage only throws",
+      "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:WWWWWW\ndurability:9\nabsorption:1\nDeals no damage only throws",
       "tags": {
         "1": "Tile",
         "2": "Weapon",

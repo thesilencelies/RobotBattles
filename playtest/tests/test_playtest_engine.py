@@ -90,33 +90,42 @@ class TestPlaytestEngine(unittest.TestCase):
             weapon_spin_counters={"w": 2},  # Charged
         )
 
-        # Charged Vyper_Spinner: 1 = Retreat, 2 = Face, 3..6 = Rush
-        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 1), "Retreat")
-        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 2), "Face")
-        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 4), "Rush")
+        # Charged Vyper_Spinner: 1 = Face, 2 = Evade, 3..6 = Rush
+        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 1), "Face")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 2), "Evade")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 3), "Rush")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 6), "Rush")
 
         # Uncharged Vyper_Spinner: spin counters < 2
         robot.weapon_spin_counters["w"] = 0
         self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 1), "Retreat")
-        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 3), "Retreat")
-        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 4), "Face")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 2), "Retreat")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 3), "Face")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 4), "Evade")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 5), "Evade")
         self.assertEqual(get_automaton_action("Vyper_Spinner", robot, 6), "Rush")
 
-        # Vyper_flipper (Full Rush): 1 = Retreat, 2 = Face, 3..6 = Rush
+        # Vyper_flipper (Full Rush): 1 = Retreat, 2 = Face, 3 = Evade, 4..6 = Rush
         self.assertEqual(get_automaton_action("Vyper_flipper", robot, 1), "Retreat")
         self.assertEqual(get_automaton_action("Vyper_flipper", robot, 2), "Face")
-        self.assertEqual(get_automaton_action("Vyper_flipper", robot, 5), "Rush")
+        self.assertEqual(get_automaton_action("Vyper_flipper", robot, 3), "Evade")
+        self.assertEqual(get_automaton_action("Vyper_flipper", robot, 4), "Rush")
+        self.assertEqual(get_automaton_action("Vyper_flipper", robot, 6), "Rush")
 
         # Chonk (Spin Up):
         # Charged (>= 2)
         robot.weapon_spin_counters["w"] = 2
-        self.assertEqual(get_automaton_action("Chonk", robot, 1), "Retreat")
-        self.assertEqual(get_automaton_action("Chonk", robot, 2), "Face")
-        self.assertEqual(get_automaton_action("Chonk", robot, 5), "Rush")
+        self.assertEqual(get_automaton_action("Chonk", robot, 1), "Face")
+        self.assertEqual(get_automaton_action("Chonk", robot, 2), "Evade")
+        self.assertEqual(get_automaton_action("Chonk", robot, 3), "Rush")
+        self.assertEqual(get_automaton_action("Chonk", robot, 6), "Rush")
         # Uncharged (< 2)
         robot.weapon_spin_counters["w"] = 1
+        self.assertEqual(get_automaton_action("Chonk", robot, 1), "Retreat")
         self.assertEqual(get_automaton_action("Chonk", robot, 2), "Retreat")
-        self.assertEqual(get_automaton_action("Chonk", robot, 5), "Face")
+        self.assertEqual(get_automaton_action("Chonk", robot, 3), "Face")
+        self.assertEqual(get_automaton_action("Chonk", robot, 4), "Evade")
+        self.assertEqual(get_automaton_action("Chonk", robot, 5), "Evade")
         self.assertEqual(get_automaton_action("Chonk", robot, 6), "Rush")
 
         # Beater_wide / Nightwing_wide (Balanced):
@@ -129,26 +138,27 @@ class TestPlaytestEngine(unittest.TestCase):
         )
         robot.components = {"16": beater_comp}
 
-        # Sub-spin (< 3): 1..2 = Retreat, 3..4 = Face, 5..6 = Rush
+        # Sub-spin (< 3): 1 = Retreat, 2..3 = Evade, 4 = Face, 5..6 = Rush
         robot.weapon_spin_counters = {"16": 1}
         self.assertEqual(get_automaton_action("Beater_wide", robot, 1), "Retreat")
-        self.assertEqual(get_automaton_action("Beater_wide", robot, 2), "Retreat")
-        self.assertEqual(get_automaton_action("Beater_wide", robot, 3), "Face")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 2), "Evade")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 3), "Evade")
         self.assertEqual(get_automaton_action("Beater_wide", robot, 4), "Face")
         self.assertEqual(get_automaton_action("Beater_wide", robot, 5), "Rush")
         self.assertEqual(get_automaton_action("Beater_wide", robot, 6), "Rush")
 
-        # Full-spin (>= 3): 1 = Retreat, 2..3 = Face, 4..6 = Rush
+        # Full-spin (>= 3): 1 = Retreat, 2 = Face, 3 = Evade, 4..6 = Rush
         robot.weapon_spin_counters = {"16": 3}
         self.assertEqual(get_automaton_action("Beater_wide", robot, 1), "Retreat")
         self.assertEqual(get_automaton_action("Beater_wide", robot, 2), "Face")
-        self.assertEqual(get_automaton_action("Beater_wide", robot, 3), "Face")
+        self.assertEqual(get_automaton_action("Beater_wide", robot, 3), "Evade")
         self.assertEqual(get_automaton_action("Beater_wide", robot, 4), "Rush")
         self.assertEqual(get_automaton_action("Beater_wide", robot, 6), "Rush")
 
         # Nightwing_wide behaves identically under Balanced archetype
         self.assertEqual(get_automaton_action("Nightwing_wide", robot, 2), "Face")
-        self.assertEqual(get_automaton_action("Nightwing_wide", robot, 4), "Rush")
+        self.assertEqual(get_automaton_action("Nightwing_wide", robot, 3), "Evade")
+        self.assertEqual(get_automaton_action("Nightwing_wide", robot, 5), "Rush")
 
     def test_automata_drive_calculation(self):
         player = RobotState(
@@ -172,6 +182,27 @@ class TestPlaytestEngine(unittest.TestCase):
         drive_retreat = compute_automaton_drive(automaton, player, "Retreat")
         self.assertEqual(drive_retreat.left, -1)
         self.assertEqual(drive_retreat.right, -1)
+
+        # Evade when already facing perpendicular (facing East = 90 deg)
+        automaton_east = RobotState(
+            id="a", name="Auto", chassis_name="", chassis_template="Triangle",
+            flip_strength=5, pose=Pose(400, 200, 90), components={}, connections={},
+            supply_graph={}, reverse_supply={}, left_drive_max=3, right_drive_max=3
+        )
+        drive_evade = compute_automaton_drive(automaton_east, player, "Evade", evade_direction="left")
+        # Moving straight forward along the perpendicular heading (East)
+        self.assertEqual(drive_evade.left, 3)
+        self.assertEqual(drive_evade.right, 3)
+
+        # Evade against left wall (x = 140, near WALL_LEFT=100) -> must evade right (East)
+        automaton_near_left = RobotState(
+            id="a", name="Auto", chassis_name="", chassis_template="Triangle",
+            flip_strength=5, pose=Pose(140, 200, 90), components={}, connections={},
+            supply_graph={}, reverse_supply={}, left_drive_max=3, right_drive_max=3
+        )
+        drive_evade_wall = compute_automaton_drive(automaton_near_left, player, "Evade")
+        self.assertEqual(drive_evade_wall.left, 3)
+        self.assertEqual(drive_evade_wall.right, 3)
 
     def test_full_match_initialization_and_turn(self):
         csv_text = read_saved_robot("Vyper_Spinner.csv")

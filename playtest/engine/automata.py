@@ -8,7 +8,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .collision import normalize_angle_deg
 from .combat import parse_weapon_spin_and_damage
-from .movement import generate_trajectory, list_template_options
+from .field import WALL_BOTTOM, WALL_LEFT, WALL_RIGHT, WALL_TOP
+from .movement import MINIATURE_RADIUS, generate_trajectory, list_template_options
 from .types import MoveChoice, Pose, RobotState
 
 # Archetype tables defined in automata/Action_tables.md
@@ -17,30 +18,34 @@ ARCHETYPE_TABLES: Dict[str, Dict[str, List[Dict[str, Any]]]] = {
         "default": [
             {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
             {"roll_min": 2, "roll_max": 2, "action": "Face"},
-            {"roll_min": 3, "roll_max": 6, "action": "Rush"},
+            {"roll_min": 3, "roll_max": 3, "action": "Evade"},
+            {"roll_min": 4, "roll_max": 6, "action": "Rush"},
         ],
     },
     "Spin Up": {
         "charged": [  # Spin counters >= 2
-            {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
-            {"roll_min": 2, "roll_max": 2, "action": "Face"},
+            {"roll_min": 1, "roll_max": 1, "action": "Face"},
+            {"roll_min": 2, "roll_max": 2, "action": "Evade"},
             {"roll_min": 3, "roll_max": 6, "action": "Rush"},
         ],
         "uncharged": [  # Spin counters < 2
-            {"roll_min": 1, "roll_max": 3, "action": "Retreat"},
-            {"roll_min": 4, "roll_max": 5, "action": "Face"},
+            {"roll_min": 1, "roll_max": 2, "action": "Retreat"},
+            {"roll_min": 3, "roll_max": 3, "action": "Face"},
+            {"roll_min": 4, "roll_max": 5, "action": "Evade"},
             {"roll_min": 6, "roll_max": 6, "action": "Rush"},
         ],
     },
     "Balanced": {
         "full_spin": [  # Weapon is at full spin
             {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
-            {"roll_min": 2, "roll_max": 3, "action": "Face"},
+            {"roll_min": 2, "roll_max": 2, "action": "Face"},
+            {"roll_min": 3, "roll_max": 3, "action": "Evade"},
             {"roll_min": 4, "roll_max": 6, "action": "Rush"},
         ],
         "sub_spin": [  # Weapon is not at full spin
-            {"roll_min": 1, "roll_max": 2, "action": "Retreat"},
-            {"roll_min": 3, "roll_max": 4, "action": "Face"},
+            {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
+            {"roll_min": 2, "roll_max": 3, "action": "Evade"},
+            {"roll_min": 4, "roll_max": 4, "action": "Face"},
             {"roll_min": 5, "roll_max": 6, "action": "Rush"},
         ],
     },
@@ -138,14 +143,46 @@ def get_automaton_action(
     return "Rush"
 
 
+def _compute_direction_clearance(x: float, y: float, heading_deg: float) -> float:
+    """Calculates clearance distance (in mm) from (x, y) along heading_deg to the arena walls."""
+    rad = math.radians(heading_deg)
+    vx = math.sin(rad)
+    vy = -math.cos(rad)
+
+    min_dist = float("inf")
+    left_bound = WALL_LEFT + MINIATURE_RADIUS
+    if vx < -1e-6:
+        d = (left_bound - x) / vx
+        if d > 0:
+            min_dist = min(min_dist, d)
+    right_bound = WALL_RIGHT - MINIATURE_RADIUS
+    if vx > 1e-6:
+        d = (right_bound - x) / vx
+        if d > 0:
+            min_dist = min(min_dist, d)
+    top_bound = WALL_TOP + MINIATURE_RADIUS
+    if vy < -1e-6:
+        d = (top_bound - y) / vy
+        if d > 0:
+            min_dist = min(min_dist, d)
+    bottom_bound = WALL_BOTTOM - MINIATURE_RADIUS
+    if vy > 1e-6:
+        d = (bottom_bound - y) / vy
+        if d > 0:
+            min_dist = min(min_dist, d)
+
+    return min_dist
+
+
 def compute_automaton_drive(
     automaton: RobotState,
     player: RobotState,
     action: str,
+    evade_direction: Optional[str] = None,
 ) -> MoveChoice:
     """
     Evaluates available movement template options to execute the chosen action
-    (Rush, Face, Retreat) considering the opponent's current position.
+    (Rush, Face, Retreat, Evade) considering the opponent's current position.
     """
     d_l = automaton.left_drive_max
     d_r = automaton.right_drive_max
@@ -249,5 +286,73 @@ def compute_automaton_drive(
                     min_bearing = diff
                     best_opt = opt
             return MoveChoice(best_opt["left"], best_opt["right"])
+
+    elif action == "Evade":
+        # Move forwards and perpendicular to the line between the robots
+        # If both ways are clear choose at random
+        perp_right_deg = normalize_angle_deg(target_heading_deg + 90.0)  # Right of line to opponent
+        perp_left_deg = normalize_angle_deg(target_heading_deg - 90.0)   # Left of line to opponent
+
+        clearance_threshold = 80.0  # 2 drive units
+        dist_right = _compute_direction_clearance(automaton.pose.x, automaton.pose.y, perp_right_deg)
+        dist_left = _compute_direction_clearance(automaton.pose.x, automaton.pose.y, perp_left_deg)
+
+        both_clear = (dist_right >= clearance_threshold and dist_left >= clearance_threshold)
+        if both_clear:
+            if evade_direction == "left":
+                chosen_heading_deg = perp_left_deg
+            elif evade_direction == "right":
+                chosen_heading_deg = perp_right_deg
+            else:
+                chosen_heading_deg = random.choice([perp_left_deg, perp_right_deg])
+        elif dist_left >= clearance_threshold:
+            chosen_heading_deg = perp_left_deg
+        elif dist_right >= clearance_threshold:
+            chosen_heading_deg = perp_right_deg
+        else:
+            chosen_heading_deg = perp_left_deg if dist_left >= dist_right else perp_right_deg
+
+        chosen_bearing = abs(normalize_angle_deg(chosen_heading_deg - automaton.pose.theta))
+
+        if chosen_bearing > 45.0:
+            # Turn towards chosen perpendicular heading
+            turn_opts = [o for o in options if o["category"] in ("curve", "pivot", "spin")]
+            if not turn_opts:
+                turn_opts = options
+            best_opt = turn_opts[0]
+            min_bearing_diff = float("inf")
+            for opt in turn_opts:
+                choice = MoveChoice(opt["left"], opt["right"])
+                traj = generate_trajectory(automaton.pose, choice, num_steps=5, clamp_to_walls=True)
+                end_bearing = abs(normalize_angle_deg(chosen_heading_deg - traj[-1].theta))
+                if end_bearing < min_bearing_diff:
+                    min_bearing_diff = end_bearing
+                    best_opt = opt
+            return MoveChoice(best_opt["left"], best_opt["right"])
+
+        # Forward along chosen perpendicular heading
+        forward_opts = [o for o in options if o["category"] in ("straight", "curve") and o["left"] > 0 and o["right"] > 0]
+        if not forward_opts:
+            forward_opts = [o for o in options if o["left"] > 0 or o["right"] > 0]
+        if not forward_opts:
+            return MoveChoice(0, 0)
+
+        best_opt = forward_opts[0]
+        max_progress = -float("inf")
+        rad_tgt = math.radians(chosen_heading_deg)
+        nx = math.sin(rad_tgt)
+        ny = -math.cos(rad_tgt)
+
+        for opt in forward_opts:
+            choice = MoveChoice(opt["left"], opt["right"])
+            traj = generate_trajectory(automaton.pose, choice, num_steps=5, clamp_to_walls=True)
+            dx_move = traj[-1].x - automaton.pose.x
+            dy_move = traj[-1].y - automaton.pose.y
+            progress = dx_move * nx + dy_move * ny
+            if progress > max_progress:
+                max_progress = progress
+                best_opt = opt
+
+        return MoveChoice(best_opt["left"], best_opt["right"])
 
     return MoveChoice(0, 0)

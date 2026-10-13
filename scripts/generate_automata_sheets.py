@@ -89,7 +89,8 @@ ARCHETYPE_TABLES: Dict[str, Dict[str, Any]] = {
                 "rows": [
                     ("1", "Retreat"),
                     ("2", "Face"),
-                    ("3--6", "Rush"),
+                    ("3", "Evade"),
+                    ("4--6", "Rush"),
                 ],
             }
         ],
@@ -100,16 +101,17 @@ ARCHETYPE_TABLES: Dict[str, Dict[str, Any]] = {
             {
                 "condition": "If 2+ spin counters on weapon:",
                 "rows": [
-                    ("1", "Retreat"),
-                    ("2", "Face"),
+                    ("1", "Face"),
+                    ("2", "Evade"),
                     ("3--6", "Rush"),
                 ],
             },
             {
                 "condition": "Otherwise (< 2 spin counters):",
                 "rows": [
-                    ("1--3", "Retreat"),
-                    ("4--5", "Face"),
+                    ("1--2", "Retreat"),
+                    ("3", "Face"),
+                    ("4--5", "Evade"),
                     ("6", "Rush"),
                 ],
             },
@@ -122,15 +124,17 @@ ARCHETYPE_TABLES: Dict[str, Dict[str, Any]] = {
                 "condition": "If weapon is at full spin:",
                 "rows": [
                     ("1", "Retreat"),
-                    ("2--3", "Face"),
+                    ("2", "Face"),
+                    ("3", "Evade"),
                     ("4--6", "Rush"),
                 ],
             },
             {
                 "condition": "Otherwise (spinning up):",
                 "rows": [
-                    ("1--2", "Retreat"),
-                    ("3--4", "Face"),
+                    ("1", "Retreat"),
+                    ("2--3", "Evade"),
+                    ("4", "Face"),
                     ("5--6", "Rush"),
                 ],
             },

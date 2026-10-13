@@ -910,15 +910,16 @@ export class RobotViewRenderer {
       if (spinCount >= 2) {
         tableNote = `Spin Up (Charged: Spin counters >= 2, Currently ${spinCount})`;
         rows = [
-          { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
-          { roll: "2", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "1", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "2", action: "Evade", desc: "Move forwards perpendicular to opponent" },
           { roll: "3–6", action: "Rush", desc: "Drive at opponent at full speed" },
         ];
       } else {
         tableNote = `Spin Up (Uncharged: Spin counters < 2, Currently ${spinCount})`;
         rows = [
-          { roll: "1–3", action: "Retreat", desc: "Face opponent and move back 1 step" },
-          { roll: "4–5", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "1–2", action: "Retreat", desc: "Face opponent and move back 1 step" },
+          { roll: "3", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "4–5", action: "Evade", desc: "Move forwards perpendicular to opponent" },
           { roll: "6", action: "Rush", desc: "Drive at opponent at full speed" },
         ];
       }
@@ -937,14 +938,16 @@ export class RobotViewRenderer {
         tableNote = `Balanced (Full Spin: ${spinCount}/${maxSpin})`;
         rows = [
           { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
-          { roll: "2–3", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "2", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "3", action: "Evade", desc: "Move forwards perpendicular to opponent" },
           { roll: "4–6", action: "Rush", desc: "Drive at opponent at full speed" },
         ];
       } else {
         tableNote = `Balanced (Spinning Up: ${spinCount}/${maxSpin})`;
         rows = [
-          { roll: "1–2", action: "Retreat", desc: "Face opponent and move back 1 step" },
-          { roll: "3–4", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
+          { roll: "2–3", action: "Evade", desc: "Move forwards perpendicular to opponent" },
+          { roll: "4", action: "Face", desc: "Rotate on spot to face opponent" },
           { roll: "5–6", action: "Rush", desc: "Drive at opponent at full speed" },
         ];
       }
@@ -953,7 +956,8 @@ export class RobotViewRenderer {
       rows = [
         { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
         { roll: "2", action: "Face", desc: "Rotate on spot to face opponent" },
-        { roll: "3–6", action: "Rush", desc: "Drive at opponent at full speed" },
+        { roll: "3", action: "Evade", desc: "Move forwards perpendicular to opponent" },
+        { roll: "4–6", action: "Rush", desc: "Drive at opponent at full speed" },
       ];
     }
 
