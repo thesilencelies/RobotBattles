@@ -91,6 +91,9 @@ def get_weapon_attack_strength(comp: ComponentHealth, spin_level: int) -> int:
         m = re.search(r"(\d+)W", comp.outputs.upper())
         if m:
             return int(m.group(1))
+        w_cnt = comp.outputs.upper().count("W")
+        if w_cnt > 0:
+            return w_cnt
         return 5
 
     _, _, d_map, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
@@ -983,7 +986,10 @@ def resolve_collision_combat(
 
             # Base throw strength
             throw_str_2 = atk_str_1
-            if "increases throw strength by 2" in w1_comp.text.lower() or "double the throw strength" in w1_comp.text.lower():
+            m_throw_1 = re.search(r"increase[s]?\s+throw\s+strength\s+by\s+(\d+)", w1_comp.text, re.IGNORECASE)
+            if m_throw_1:
+                throw_str_2 += int(m_throw_1.group(1))
+            elif "double the throw strength" in w1_comp.text.lower():
                 throw_str_2 += 2
             if "always inverts" in w1_comp.text.lower():
                 r2.is_inverted = not r2.is_inverted
@@ -1026,7 +1032,10 @@ def resolve_collision_combat(
             w2_comp.spin_counters = 0
 
             throw_str_1 = atk_str_2
-            if "increases throw strength by 2" in w2_comp.text.lower() or "double the throw strength" in w2_comp.text.lower():
+            m_throw_2 = re.search(r"increase[s]?\s+throw\s+strength\s+by\s+(\d+)", w2_comp.text, re.IGNORECASE)
+            if m_throw_2:
+                throw_str_1 += int(m_throw_2.group(1))
+            elif "double the throw strength" in w2_comp.text.lower():
                 throw_str_1 += 2
             if "always inverts" in w2_comp.text.lower():
                 r1.is_inverted = not r1.is_inverted

@@ -241,7 +241,7 @@
     "18": {
       "name": "Snap Wheels",
       "description": "Invertible: this component works inverted",
-      "gm_notes": "weight:1\ncost:$1\nreq:SS\nout:DD\ndurability:6\nabsorption:2",
+      "gm_notes": "weight:1\ncost:$1\nreq:SS\nout:D\ndurability:6\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -255,7 +255,7 @@
     "19": {
       "name": "Banebots Compliant Wheels",
       "description": "",
-      "gm_notes": "weight:1\ncost:$2\nreq:SSS\nout:DDD\ndurability:7\nabsorption:3",
+      "gm_notes": "weight:1\ncost:$2\nreq:SSS\nout:DD\ndurability:7\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -269,7 +269,7 @@
     "20": {
       "name": "Banebots T81 Heavy Wheels",
       "description": "Invertible: this component works inverted",
-      "gm_notes": "weight:2\ncost:$2\nreq:SSSS\nout:DDDD\ndurability:7\nabsorption:2",
+      "gm_notes": "weight:2\ncost:$2\nreq:SSSS\nout:DDD\ndurability:7\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -283,7 +283,7 @@
     "21": {
       "name": "High Grip Tires",
       "description": "",
-      "gm_notes": "weight:2\ncost:$3\nreq:SSS\nout:DDDD\ndurability:6\nabsorption:1",
+      "gm_notes": "weight:2\ncost:$3\nreq:SSSS\nout:DDDD\ndurability:6\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -555,7 +555,7 @@
     "40": {
       "name": "Beater Bar",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nIncreases throw strength by 2",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nIncreases throw strength by 3",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -957,7 +957,7 @@
     "18": {
       "name": "Beater Bar (Bar)",
       "description": "Bar active area weapon marker",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nIncreases throw strength by 2",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nIncreases throw strength by 3",
       "tags": {
         "1": "Tile",
         "2": "Weapon",
