@@ -8,6 +8,6 @@ NightWing AR500 Disc,3,4,Line,SSSS,2XWW,9,1,Spin up (3),Increases throw strength
 Beater Bar,4,3,Bar,SSS,XWW,11,2,Spin up (3);Self-right,Increases throw strength by 2,components/weapons/1lb-beater-bar.png,itgresa.com
 Cronos Scythe,4,3,Prongs,SSS,XWWW,7,1,Spin up (3);Self-right,Increases throw strength by 2,components/weapons/cronos-scythe.jpg,itgresa.com
 Chonk Key Blade,6,3,Circle,SSSSSS,XXW,16,1,Spin up (4),,components/weapons/just-cuz-robotics-chonk-key-blade.jpg,itgresa.com
-Four-Bar Lifter,5,4,Line,PPPP,8W,9,1,Self-right;Wedge,Deals no damage only throws,components/weapons/viper-lifter-weapon.png,itgresa.com
+Four-Bar Lifter,5,4,Line,PPPP,WWWWWW,9,1,Self-right;Wedge,Deals no damage only throws,components/weapons/viper-lifter-weapon.png,itgresa.com
 Lifter Claw,3,3,Prongs,PPP,WWW,8,2,Forks,Deals no damage. Always inverts.,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-claw-forks.jpg,itgresa.com
 
