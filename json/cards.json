@@ -17,7 +17,7 @@
     "2": {
       "name": "Galaxy 300 3S",
       "description": "",
-      "gm_notes": "weight:2\ncost:$2\nout:EEEE\ndurability:6",
+      "gm_notes": "weight:1\ncost:$2\nout:EEEE\ndurability:6",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -31,7 +31,7 @@
     "3": {
       "name": "Galaxy 1000 3S",
       "description": "",
-      "gm_notes": "weight:3\ncost:$4\nout:EEEEEE\ndurability:7",
+      "gm_notes": "weight:2\ncost:$4\nout:EEEEEE\ndurability:8",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -45,7 +45,7 @@
     "4": {
       "name": "Tattu 450 4S",
       "description": "",
-      "gm_notes": "weight:2\ncost:$3\nout:EEEEE\ndurability:8",
+      "gm_notes": "weight:2\ncost:$3\nout:EEEEE\ndurability:9",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -283,7 +283,7 @@
     "21": {
       "name": "High Grip Tires",
       "description": "",
-      "gm_notes": "weight:2\ncost:$3\nreq:SS\nout:DDD\ndurability:6\nabsorption:1",
+      "gm_notes": "weight:2\ncost:$3\nreq:SSS\nout:DDDD\ndurability:6\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -353,7 +353,7 @@
     "26": {
       "name": "Titanium Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:4\ncost:$5\ndurability:12\nabsorption:1",
+      "gm_notes": "weight:4\ncost:$5\ndurability:13\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -367,7 +367,7 @@
     "27": {
       "name": "Steel Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:5\ncost:$3\ndurability:10\nabsorption:2",
+      "gm_notes": "weight:5\ncost:$3\ndurability:11\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -381,7 +381,7 @@
     "28": {
       "name": "AR500 Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:5\ncost:$4\ndurability:14\nabsorption:2",
+      "gm_notes": "weight:5\ncost:$4\ndurability:17\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -409,7 +409,7 @@
     "30": {
       "name": "Titanium Horns",
       "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
-      "gm_notes": "weight:2\ncost:$3\ndurability:10",
+      "gm_notes": "weight:2\ncost:$3\ndurability:11\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -480,7 +480,7 @@
     "35": {
       "name": "Bloodsport Bar",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
-      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSSS\nout:2XW\ndurability:12\nabsorption:1",
+      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSS\nout:2XWW\ndurability:12\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -495,7 +495,7 @@
     "36": {
       "name": "Titanium Spinner Blade",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nInvertible: this component works inverted",
-      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:2XWW\ndurability:14\nabsorption:2",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:2XW\ndurability:14\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -585,7 +585,7 @@
     "42": {
       "name": "Chonk Key Blade",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
-      "gm_notes": "weight:6\ncost:$3\ntemplate:Circle\nreq:SSSSS\nout:XXW\ndurability:16\nabsorption:1",
+      "gm_notes": "weight:6\ncost:$3\ntemplate:Circle\nreq:SSSSSS\nout:XXW\ndurability:16\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -645,7 +645,7 @@
     "46": {
       "name": "SSP 2.0 Billet Chassis",
       "description": "",
-      "gm_notes": "weight:3\ncost:$2\nflip:4\ntemplate:Triangle",
+      "gm_notes": "weight:3\ncost:$2\nflip:5\ntemplate:Triangle",
       "tags": {
         "1": "Card",
         "2": "Chassis",
@@ -660,7 +660,7 @@
     "47": {
       "name": "Nautiloid Drum Chassis",
       "description": "",
-      "gm_notes": "weight:3\ncost:$2\nflip:4\ntemplate:Wide",
+      "gm_notes": "weight:2\ncost:$2\nflip:4\ntemplate:Wide",
       "tags": {
         "1": "Card",
         "2": "Chassis",
@@ -692,8 +692,8 @@
     },
     "2": {
       "name": "SSP 2.0 Billet Chassis",
-      "description": "Triangle template chassis (flip strength 4)",
-      "gm_notes": "weight:3\ncost:$2\nflip:4\ntemplate:Triangle",
+      "description": "Triangle template chassis (flip strength 5)",
+      "gm_notes": "weight:3\ncost:$2\nflip:5\ntemplate:Triangle",
       "tags": {
         "1": "Tile",
         "2": "Chassis",
@@ -709,7 +709,7 @@
     "3": {
       "name": "Nautiloid Drum Chassis",
       "description": "Wide template chassis (flip strength 4)",
-      "gm_notes": "weight:3\ncost:$2\nflip:4\ntemplate:Wide",
+      "gm_notes": "weight:2\ncost:$2\nflip:4\ntemplate:Wide",
       "tags": {
         "1": "Tile",
         "2": "Chassis",
@@ -877,7 +877,7 @@
     "13": {
       "name": "Bloodsport Bar (Large Circle)",
       "description": "Large Circle active area weapon marker",
-      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSSS\nout:2XW\ndurability:12\nabsorption:1",
+      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSS\nout:2XWW\ndurability:12\nabsorption:1",
       "tags": {
         "1": "Tile",
         "2": "Weapon",
@@ -893,7 +893,7 @@
     "14": {
       "name": "Titanium Spinner Blade (Circle)",
       "description": "Circle active area weapon marker",
-      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:2XWW\ndurability:14\nabsorption:2",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:2XW\ndurability:14\nabsorption:2",
       "tags": {
         "1": "Tile",
         "2": "Weapon",
@@ -989,7 +989,7 @@
     "20": {
       "name": "Chonk Key Blade (Circle)",
       "description": "Circle active area weapon marker",
-      "gm_notes": "weight:6\ncost:$3\ntemplate:Circle\nreq:SSSSS\nout:XXW\ndurability:16\nabsorption:1",
+      "gm_notes": "weight:6\ncost:$3\ntemplate:Circle\nreq:SSSSSS\nout:XXW\ndurability:16\nabsorption:1",
       "tags": {
         "1": "Tile",
         "2": "Weapon",
