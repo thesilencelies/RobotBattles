@@ -300,23 +300,8 @@ def detect_collision(
             r1_rem_dist = math.hypot(v1_rem_x, v1_rem_y)
             r2_rem_dist = math.hypot(v2_rem_x, v2_rem_y)
 
-            # Line drawn between their two centers through point of contact
-            dx_centers = p2.x - p1.x
-            dy_centers = p2.y - p1.y
-            dist_centers = math.hypot(dx_centers, dy_centers)
-            if dist_centers < 1e-4:
-                u_x, u_y = 1.0, 0.0
-            else:
-                u_x = dx_centers / dist_centers
-                u_y = dy_centers / dist_centers
-
-            # Project remaining motions onto line between centers
-            m1 = v1_rem_x * u_x + v1_rem_y * u_y          # R1 pushing towards R2
-            m2 = -(v2_rem_x * u_x + v2_rem_y * u_y)       # R2 pushing towards R1 (in direction -u)
-
-            # Net motion: R1 pushes R2 along +u if m1 > m2; R2 pushes R1 along -u if m2 > m1
-            net_disp = m1 - m2
-            push_vec = (net_disp * u_x, net_disp * u_y)
+            # The pair of robots move in a straight line created by summing their remaining motion templates
+            push_vec = (v1_rem_x + v2_rem_x, v1_rem_y + v2_rem_y)
 
             desc_parts = []
             if contact_type == "ACTIVE":

@@ -57,7 +57,7 @@ export class RobotViewRenderer {
       statusBadges.push(`<span class="badge badge-success">⬆️ UPRIGHT</span>`);
     }
     if (robot.is_raised) {
-      statusBadges.push(`<span class="badge badge-purple">🔱 RAISED (Half Drive)</span>`);
+      statusBadges.push(`<span class="badge badge-purple">🔱 RAISED (-2 Wpn Dmg, Half Flip)</span>`);
     }
     if (robot.is_eliminated) {
       statusBadges.push(`<span class="badge badge-danger">☠️ ELIMINATED</span>`);
@@ -77,9 +77,7 @@ export class RobotViewRenderer {
       actionTableHtml = this._renderAutomataTable(robot, lastRoll, lastAction);
     }
 
-    const driveStatus = robot.is_raised
-      ? "Raised (Outputs Halved)"
-      : (robot.left_drive_max > 0 || robot.right_drive_max > 0 ? "Operational" : "Disabled");
+    const driveStatus = (robot.left_drive_max > 0 || robot.right_drive_max > 0) ? "Operational" : "Disabled";
 
     const hasDamageReplay = robot.last_damage_steps && robot.last_damage_steps.length > 0;
     const replayBtnHtml = hasDamageReplay

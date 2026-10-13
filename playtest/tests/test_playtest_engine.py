@@ -1533,6 +1533,185 @@ class TestPlaytestEngine(unittest.TestCase):
         lifter.is_destroyed = True
         self.assertTrue(is_robot_defeated(p_bot), "Robot IS defeated when self-righter is destroyed")
 
+    def test_inertial_collision_motion_vector_sum(self):
+        """
+        Rule: 'The pair of robots move in a straight line created by summing their remaining motion templates.'
+        Verify detect_collision computes push_vector as vector sum of remaining motions.
+        """
+        from playtest.engine.collision import detect_collision
+        from playtest.engine.match import create_match
+        from playtest.engine.types import TrajectoryPoint
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        r1 = match.player_robot
+        r2 = match.automaton_robot
+
+        r1.pose.x, r1.pose.y, r1.pose.theta = 400.0, 400.0, 0.0
+        r2.pose.x, r2.pose.y, r2.pose.theta = 400.0, 360.0, 180.0
+
+        r1_traj = [
+            TrajectoryPoint(x=400.0, y=400.0 - 80.0 * (i / 10.0), theta=0.0, t=i / 10.0)
+            for i in range(11)
+        ]
+        r2_traj = [
+            TrajectoryPoint(x=400.0, y=360.0 + 20.0 * (i / 10.0), theta=180.0, t=i / 10.0)
+            for i in range(11)
+        ]
+
+        col = detect_collision(r1, r1_traj, r2, r2_traj)
+        self.assertIsNotNone(col)
+        self.assertEqual(len(col.push_vector), 2)
+        # Vector sum along Y is negative (-54.0) because r1 moved much faster in -Y than r2 in +Y
+        self.assertAlmostEqual(col.push_vector[0], 0.0, delta=1.0)
+        self.assertLess(col.push_vector[1], -20.0)
+
+    def test_inertial_push_feedback_at_each_active_drive(self):
+        """
+        Rule: 'Each robot takes feedback equal to the remaining distance the opponent had
+        before the contact at each of its remaining active drive.'
+        """
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        from playtest.engine.match import create_match
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[list(p_bot.components.keys())[0]],
+            robot2_components=[list(a_bot.components.keys())[0]],
+            contact_type="INERT",
+            description="Pushing match",
+            r1_remaining_dist=80.0,  # 2 drive units
+            r2_remaining_dist=40.0,  # 1 drive unit
+            push_vector=(0.0, 0.0),
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+
+        # R1 (p_bot) takes feedback equal to R2's remaining distance (40mm = 1 unit) at each active drive
+        self.assertTrue(any(
+            "active drive takes 1 feedback from opponent's remaining momentum at each active drive" in entry.message
+            for entry in logs if p_bot.name in entry.message
+        ))
+        # R2 (a_bot) takes feedback equal to R1's remaining distance (80mm = 2 units) at each active drive
+        self.assertTrue(any(
+            "active drive takes 2 feedback from opponent's remaining momentum at each active drive" in entry.message
+            for entry in logs if a_bot.name in entry.message
+        ))
+
+    def test_raised_status_effects(self):
+        """
+        Rule: 'A robot that is raised has its flip strength halved and its weapons deal 2 less damage.
+        The Wedge effect does not apply if the robot is raised.'
+        Also verify drive strength is NOT halved.
+        """
+        from playtest.engine.combat import resolve_collision_combat, refresh_robot_drive_and_power
+        from playtest.engine.types import CollisionEvent
+        from playtest.engine.match import create_match
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # 1. Drive check when raised
+        refresh_robot_drive_and_power(p_bot)
+        normal_left = p_bot.left_drive_max
+        normal_right = p_bot.right_drive_max
+
+        p_bot.is_raised = True
+        refresh_robot_drive_and_power(p_bot)
+        self.assertEqual(p_bot.left_drive_max, normal_left, "Drive is not halved when raised")
+        self.assertEqual(p_bot.right_drive_max, normal_right, "Drive is not halved when raised")
+
+        # 2. Weapon deals 2 less damage when raised
+        wpn = next(c for c in p_bot.components.values() if c.card_type == "weapon")
+        wpn.is_active = True
+        p_bot.weapon_spin_counters[wpn.id] = 3  # attack strength 6
+
+        p_bot.is_raised = False
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[wpn.id],
+            robot2_components=[list(a_bot.components.keys())[0]],
+            contact_type="ACTIVE",
+            description="Active strike",
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs))
+
+        # Now raised: should deal 6 - 2 = 4 damage!
+        p_bot.is_raised = True
+        p_bot.weapon_spin_counters[wpn.id] = 3
+        wpn.was_used_this_turn = False
+        logs_raised = resolve_collision_combat(col, p_bot, a_bot, round_num=2)
+        self.assertTrue(any("dealing 4 dmg" in entry.message and "(-2 from Raised)" in entry.message for entry in logs_raised))
+
+    def test_feedback_propagation_rounding_up(self):
+        """
+        Rule: 'shared equally if there are multiple components (rounding up), down the tree until the damage is all absorbed.'
+        """
+        from playtest.engine.combat import resolve_feedback_propagation
+        from playtest.engine.types import ComponentHealth
+        from playtest.engine.match import create_match
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        bot = match.player_robot
+
+        # Setup component with 2 suppliers
+        c_child = ComponentHealth(
+            id="child", name="Child Device", card_type="weapon", max_durability=4, current_durability=4,
+            absorption=0, requirements="", outputs="", keywords="", text="", x=0, y=0, rotation=0, box=(0, 0, 44, 64)
+        )
+        c_sup1 = ComponentHealth(
+            id="sup1", name="Supplier 1", card_type="motor", max_durability=6, current_durability=6,
+            absorption=0, requirements="", outputs="", keywords="", text="", x=0, y=0, rotation=0, box=(0, 0, 44, 64)
+        )
+        c_sup2 = ComponentHealth(
+            id="sup2", name="Supplier 2", card_type="motor", max_durability=6, current_durability=6,
+            absorption=0, requirements="", outputs="", keywords="", text="", x=0, y=0, rotation=0, box=(0, 0, 44, 64)
+        )
+
+        bot.components["child"] = c_child
+        bot.components["sup1"] = c_sup1
+        bot.components["sup2"] = c_sup2
+        bot.supply_graph["child"] = ["sup1", "sup2"]
+
+        # If child takes 3 feedback, excess is 3.
+        # Shared equally between 2 suppliers rounding up: ceil(3 / 2) = 2 to each supplier!
+        logs = resolve_feedback_propagation(bot, "child", 3, phase="feedback")
+        self.assertTrue(any("Feedback passed to supplier Supplier 1 (#sup1): 2" in msg for msg in logs))
+        self.assertTrue(any("Feedback passed to supplier Supplier 2 (#sup2): 2" in msg for msg in logs))
+
+    def test_dropping_dice_shock_selection(self):
+        """
+        Rule: 'The component is chosen randomly by dropping a dice onto the robot and seeing which component it lands on.'
+        """
+        from playtest.engine.combat import simulate_dropping_card, simulate_dropping_dice
+        from playtest.engine.match import create_match
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        bot = match.player_robot
+
+        hit_cid = simulate_dropping_dice(bot)
+        self.assertIsNotNone(hit_cid)
+        self.assertIn(hit_cid, bot.components)
+
 
 if __name__ == "__main__":
     unittest.main()

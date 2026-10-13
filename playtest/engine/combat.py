@@ -280,7 +280,8 @@ def resolve_feedback_propagation(
             if not suppliers:
                 continue
 
-            split_dmg = rem_dmg // len(suppliers)
+            # Rule: shared equally if there are multiple components (rounding up)
+            split_dmg = (rem_dmg + len(suppliers) - 1) // len(suppliers)
             if split_dmg <= 0:
                 continue
 
@@ -313,22 +314,21 @@ def resolve_feedback_propagation(
 
 def simulate_dropping_card(robot: RobotState) -> Optional[str]:
     """
-    Simulates randomly dropping a card on the A3 chassis sheet
+    Simulates randomly dropping a dice onto the A3 chassis sheet
     to determine which component takes throw shock.
+    (Rule: 'The component is chosen randomly by dropping a dice onto the robot and seeing which component it lands on.')
     """
     active_comps = [c for c in robot.components.values() if not c.is_destroyed]
     if not active_comps:
         return None
 
-    # Drop card at random position on the A3 mat (420 x 297 mm)
+    # Drop dice (standard 16mm x 16mm) at random position on the A3 mat (420 x 297 mm)
     drop_x = random.uniform(80.0, 340.0)
     drop_y = random.uniform(40.0, 260.0)
-    card_w, card_h = 44.0, 64.0
-    if random.choice([True, False]):
-        card_w, card_h = 64.0, 44.0
-    drop_box = (drop_x, drop_y, drop_x + card_w, drop_y + card_h)
+    dice_w, dice_h = 16.0, 16.0
+    drop_box = (drop_x, drop_y, drop_x + dice_w, drop_y + dice_h)
 
-    # Check which placed components overlap the dropped card
+    # Check which placed components overlap the dropped dice
     hit_ids = []
     for comp in active_comps:
         b = comp.box
@@ -344,7 +344,7 @@ def simulate_dropping_card(robot: RobotState) -> Optional[str]:
     if hit_ids:
         return random.choice(hit_ids)
 
-    # If dropped card missed placed cards, pick nearest active component
+    # If dropped dice missed placed components, pick nearest active component
     nearest_cid = min(
         active_comps,
         key=lambda c: math.hypot(
@@ -353,6 +353,9 @@ def simulate_dropping_card(robot: RobotState) -> Optional[str]:
         )
     ).id
     return nearest_cid
+
+
+simulate_dropping_dice = simulate_dropping_card
 
 
 def parse_resource_counts(res_str: str) -> Dict[str, int]:
@@ -721,11 +724,6 @@ def refresh_robot_drive_and_power(
             else:
                 right_drive += count
 
-    # If raised, drive strength is halved
-    if robot.is_raised:
-        left_drive = max(0, left_drive // 2)
-        right_drive = max(0, right_drive // 2)
-
     robot.left_drive_max = left_drive
     robot.right_drive_max = right_drive
 
@@ -808,7 +806,7 @@ def resolve_inert_contact(
 
     logs.append(CombatLogEntry(
         round=round_num, phase="collision",
-        message=f"Robots push together along line between centers: displacement {net_dist / DRIVE_UNIT_MM:.1f} units ({net_dist:.0f}mm).",
+        message=f"Robots push together summing remaining motion templates: displacement {net_dist / DRIVE_UNIT_MM:.1f} units ({net_dist:.0f}mm).",
     ))
 
     # Wall throw check
@@ -824,7 +822,7 @@ def resolve_inert_contact(
             if shock_cid:
                 resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str, phase="wall_feedback", steps=steps)
 
-    # Drive feedback: each robot takes feedback shared equally between active drive equal to opponent remaining distance
+    # Drive feedback: each robot takes feedback equal to opponent remaining distance at each active drive
     opp_rem_1 = int(round(col.r2_remaining_dist / DRIVE_UNIT_MM))  # What R2 had before contact
     opp_rem_2 = int(round(col.r1_remaining_dist / DRIVE_UNIT_MM))  # What R1 had before contact
 
@@ -836,10 +834,10 @@ def resolve_inert_contact(
             if not c.is_destroyed and c.is_active and ("D" in c.outputs.upper() or "M" in c.outputs.upper())
         ]
         if active_drives:
-            fb_per_drive = opp_rem // len(active_drives)
+            fb_per_drive = opp_rem
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"{robot.name}'s active drive absorbs {opp_rem} feedback from opponent's remaining momentum ({fb_per_drive} per drive).",
+                message=f"{robot.name}'s active drive takes {fb_per_drive} feedback from opponent's remaining momentum at each active drive.",
             ))
             if fb_per_drive > 0:
                 for dcomp in active_drives:
@@ -899,6 +897,22 @@ def resolve_collision_combat(
     """
     logs: List[CombatLogEntry] = []
 
+    # Check Ground Game: Forks keyword (applies to both active and inert contact)
+    r1_forks = any(r1.components[cid].is_forks for cid in col.robot1_components if cid in r1.components)
+    r2_forks = any(r2.components[cid].is_forks for cid in col.robot2_components if cid in r2.components)
+    if r1_forks and not r2_forks:
+        r2.is_raised = True
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: flip strength halved, weapons deal 2 less damage)",
+        ))
+    elif r2_forks and not r1_forks:
+        r1.is_raised = True
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: flip strength halved, weapons deal 2 less damage)",
+        ))
+
     if col.contact_type == "ACTIVE":
         # ======================================================================
         # ACTIVE WEAPON CONTACT
@@ -908,22 +922,6 @@ def resolve_collision_combat(
             phase="collision",
             message=f"⚔️ ACTIVE WEAPON HIT: {col.description}",
         ))
-
-        # Check Ground Game: Forks keyword
-        r1_forks = any(r1.components[cid].is_forks for cid in col.robot1_components if cid in r1.components)
-        r2_forks = any(r2.components[cid].is_forks for cid in col.robot2_components if cid in r2.components)
-        if r1_forks and not r2_forks:
-            r2.is_raised = True
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: drive & flip strength halved)",
-            ))
-        elif r2_forks and not r1_forks:
-            r1.is_raised = True
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: drive & flip strength halved)",
-            ))
 
         # Identify attacking weapons involved
         w1_attacking = [
@@ -963,9 +961,12 @@ def resolve_collision_combat(
             w1_comp.was_used_this_turn = True
             spin1 = r1.weapon_spin_counters.get(w1_comp.id, 0)
             dmg1 = 0 if "deals no damage" in w1_comp.text.lower() else atk_str_1
+            if r1.is_raised:
+                dmg1 = max(0, dmg1 - 2)
+            raised_note = " (-2 from Raised)" if r1.is_raised else ""
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"💥 {r1.name} attacks with {w1_comp.name} at Spin {spin1} dealing {dmg1} dmg (Attack Strength {atk_str_1})!",
+                message=f"💥 {r1.name} attacks with {w1_comp.name} at Spin {spin1} dealing {dmg1} dmg (Attack Strength {atk_str_1}{raised_note})!",
             ))
 
             target2_id = col.robot2_components[0] if col.robot2_components else list(r2.components.keys())[0]
@@ -1012,9 +1013,12 @@ def resolve_collision_combat(
             w2_comp.was_used_this_turn = True
             spin2 = r2.weapon_spin_counters.get(w2_comp.id, 0)
             dmg2 = 0 if "deals no damage" in w2_comp.text.lower() else atk_str_2
+            if r2.is_raised:
+                dmg2 = max(0, dmg2 - 2)
+            raised_note = " (-2 from Raised)" if r2.is_raised else ""
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"💥 {r2.name} attacks with {w2_comp.name} at Spin {spin2} dealing {dmg2} dmg (Attack Strength {atk_str_2})!",
+                message=f"💥 {r2.name} attacks with {w2_comp.name} at Spin {spin2} dealing {dmg2} dmg (Attack Strength {atk_str_2}{raised_note})!",
             ))
 
             target1_id = col.robot1_components[0] if col.robot1_components else list(r1.components.keys())[0]
