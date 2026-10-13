@@ -3,7 +3,7 @@ The actions available to the automata are:
 - Rush - Drive at the opponent at full speed
 - Face - Rotate on the spot to face their opponent
 - Retreat - Move away from opponent while facing them
-
+- Evade - move forwards and perpendicular to the line between the robots - if both ways are clear choose at random
 
 There are several archetypes, from which automata normally choose:
 
@@ -12,30 +12,34 @@ No flow chart - always same table
 | Roll | Action |
 | 1 | Retreat |
 | 2 | Face |
+| 3 | Evade |
 | 3-6 | Rush  |
 
 ## Spin up
 If there are 2 or more spin counters on the weapon:
 | Roll | Action |
-| 1 | Retreat |
-| 2 | Face |
+| 1 | Face |
+| 2 | Evade |
 | 3-6 | Rush  |
 else:
 | Roll | Action |
-| 1-3 | Retreat |
-| 4-5 | Face |
+| 1-2 | Retreat |
+| 3 | Face |
+| 4 | Evade |
 | 6 | Rush  |
 
 ## Balanced
 If weapon is at full spin
 | Roll | Action |
 | 1 | Retreat |
-| 2-3 | Face |
+| 2 | Face |
+| 3 | Evade |
 | 4-6 | Rush  |
 else
 | Roll | Action |
-| 1-2 | Retreat |
-| 3-4 | Face |
+| 1 | Retreat |
+| 2-3 | Evade |
+| 4 | Face |
 | 5-6 | Rush  |
 
 
