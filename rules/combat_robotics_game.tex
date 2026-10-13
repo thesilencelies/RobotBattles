@@ -272,11 +272,7 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
 
 \subsection{Resource Supply and Split Supply}
 
-A component is only active if its requirements are supplied by connected components. Supply is resolved on a best-effort basis across connected components: if a component is able to be supplied then it is supplied unless that would mean a higher priority component would become inactive.
-
-Where supply is insufficient to power all connected components, priority is given based on their connected endpoint: drive first, then weapons, unless the robot chose to not use that side's drive this turn (drive = 0). Within the same category it supplies from the largest requirement going down.
-
-If multiple components supply multiple components, sum up and distribute available supply according to the best-effort and priority rules above.
+A component is only active if its requirements are supplied by connected components. If multiple components supply multiple components, sum up and distribute available supply across connected components. When there is not enough supply to power all connected components, the player can choose which components get supplied each turn.
 
 \vspace{0.8em}
 
