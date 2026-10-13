@@ -455,10 +455,9 @@ For a collision, first determine which octant of each robot makes contact with t
 
 Essentially a pushing match between colliding chassis surfaces:
 \begin{itemize}
-  \item The pair of robots move in the line drawn between their two centers through the point of contact.
-  \item The distance they move is the sum of their remaining motion in that direction: all other distance is lost.
+  \item The pair of robots move in a straight line created by summing their remaining motion templates.
   \item If a robot is pushed into a wall, it is thrown with a throw strength equal to the amount it would have moved if the wall wasn't there.
-  \item Each robot takes feedback shared equally between its remaining active drive equal to the remaining distance the opponent had before the contact.
+  \item Each robot takes feedback equal to the remaining distance the opponent had before the contact at each of its remaining active drive.
   \item After any inertial contact, separate the robots by moving them both away from each other one step if possible.
 \end{itemize}
 
@@ -533,8 +532,6 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
   \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact.
   \item \textbf{Inertial Separation:} After any inertial contact, separate the robots by moving them both away from each other 1 step if possible.
-  \item \textbf{Wedge Immunity:} A component with the Wedge keyword prevents the robot from being thrown when hit; this effect does not apply if the robot is raised.
-  \item \textbf{Durability in Play:} Total durability is not recorded anywhere in gameplay.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
 \end{itemize}
 \end{summarybox}
@@ -546,11 +543,13 @@ to each component that supplies it, shared equally if there are multiple compone
 % ==============================================================================
 
 \section{Game Formats}
+\subsection{Robot Weight Limits}
+The default weight limit is 40. Feel free to set a different weight limit for your own play, but that is the number used for the automata.
 
 \subsection{Preconstructed}
 
 \begin{itemize}
-  \item Each player brings a build deck up to the budget chosen (we recommend \$25).
+  \item Each player brings a build deck up to the budget chosen (we recommend \$40).
   \item Then you each build a robot from that up to the weight limit and fight with those.
 \end{itemize}
 
@@ -560,7 +559,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item There is a pool in the middle of cards, split into basic and special.
   \item You can grab anything from the basic pile.
   \item For special cards, there is a market of 9 face-up cards you can take from, after which you must reveal the next card. You cannot return any card you have taken to the supply once you have taken it.
-  \item You cannot take more total cost than your budget (\$25 recommended).
+  \item You cannot take more total cost than your budget (\$40 recommended).
   \item From this pool, you build your robot to fight with. You are considered to have an infinite supply of all free components.
 \end{itemize}
 
@@ -597,6 +596,6 @@ Roll this after deciding your own drive values.
 \noindent\textbf{Automaton Power Allocation:}\\
 If an automaton robot has insufficient supply to power all connected components, it chooses which components to supply in order: self-righting mechanisms (if it is inverted), then weapons, then drive.
 
-
+\
 
 \end{document}
