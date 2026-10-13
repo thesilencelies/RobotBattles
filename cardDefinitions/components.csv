@@ -14,8 +14,8 @@ D2830 Weapon Motor,4,4,EEEEEE,SSSSSS,10,3,,,components/motors/d2830evo-brushless
 Repeat 2207 Hubmotor,3,3,EEE,SSSS,8,2,,,components/motors/repeat-2207-hubmotor-1200kv.jpg,itgresa.com
 Micro Servo,1,1,EE,PP,4,2,,,components/servos_and_actuators/turnabot-startabot-micro-servo.jpg,itgresa.com
 15kg Analog Servo,2,2,EEE,PPP,6,2,,,components/servos_and_actuators/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg,itgresa.com
-20kg Metal Gear Servo,3,2,EEEE,PPPP,6,1,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg,itgresa.com
-25kg High Voltage Servo,4,2,EEEEE,PPPPPP,8,3,,,components/servos_and_actuators/25kg-9v-digital-servo-ccw.png,itgresa.com
+20kg Metal Gear Servo,3,2,EEEE,PPPP,7,2,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg,itgresa.com
+25kg High Voltage Servo,4,2,EEEEE,PPPPPP,9,3,,,components/servos_and_actuators/25kg-9v-digital-servo-ccw.png,itgresa.com
 Snap Wheels,1,1,SS,DD,6,2,invertible,,components/wheels_and_drive/snap-wheels.jpg,itgresa.com
 Banebots Compliant Wheels,1,2,SSS,DDD,7,3,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg,itgresa.com
 Banebots T81 Heavy Wheels,2,2,SSSS,DDDD,7,2,invertible,,components/wheels_and_drive/banebots-t81-wheels.jpeg,itgresa.com
