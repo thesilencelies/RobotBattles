@@ -313,6 +313,10 @@ export class RobotViewRenderer {
       statusColor = "#f59e0b";
       fillColor = "rgba(245, 158, 11, 0.20)";
       statusText = "DAMAGED";
+    } else if (comp.is_resetting) {
+      statusColor = "#d97706";
+      fillColor = "rgba(217, 119, 6, 0.22)";
+      statusText = "RESET";
     } else if (isInactive) {
       statusColor = "#64748b";
       fillColor = "rgba(100, 116, 139, 0.14)";
@@ -371,7 +375,7 @@ export class RobotViewRenderer {
         <text x="5" y="11" font-size="9">${icon}</text>
         <rect class="status-pill-rect" x="${w - 26}" y="3" width="23" height="8" rx="2" fill="${statusColor}" opacity="0.9"/>
         <text class="status-pill-text" x="${w - 14.5}" y="9" fill="#000000" font-size="5" font-weight="900" text-anchor="middle">
-          ${statusText === "DESTROYED" ? "DEAD" : statusText === "INACTIVE" ? "NO PWR" : statusText}
+          ${statusText === "DESTROYED" ? "DEAD" : statusText === "INACTIVE" ? "NO PWR" : statusText === "RESET" ? "RESET" : statusText}
         </text>
 
         <!-- Card Name -->
@@ -406,6 +410,8 @@ export class RobotViewRenderer {
       statusBadge = `<span class="badge badge-danger">🔴 DESTROYED</span>`;
     } else if (isDamaged) {
       statusBadge = `<span class="badge badge-warning">🟡 DAMAGED</span>`;
+    } else if (comp.is_resetting) {
+      statusBadge = `<span class="badge badge-warning" style="background:#d97706;color:#fff;">⏳ RESETTING (${comp.reset_supplied ? 'Supplied' : 'Needs Supply'})</span>`;
     } else if (isInactive) {
       statusBadge = `<span class="badge badge-gray">⚪ INACTIVE (No Power)</span>`;
     }
@@ -497,6 +503,8 @@ export class RobotViewRenderer {
       statusTag = `<span class="badge badge-danger">DESTROYED</span>`;
     } else if (isDamaged) {
       statusTag = `<span class="badge badge-warning">DAMAGED</span>`;
+    } else if (comp.is_resetting) {
+      statusTag = `<span class="badge badge-warning" style="background:#d97706;color:#fff;">⏳ RESETTING</span>`;
     } else if (isInactive) {
       statusTag = `<span class="badge badge-gray">NO POWER</span>`;
     }
@@ -521,7 +529,7 @@ export class RobotViewRenderer {
         <div class="comp-stats-row">
           <span>Durability: <strong>${comp.max_durability}</strong></span>
           <span>Absorption: <strong>${comp.absorption}</strong></span>
-          <span>State: <strong>${isDestroyed ? 'Destroyed' : isDamaged ? 'Damaged' : isInactive ? 'Inactive' : 'Undamaged'}</strong></span>
+          <span>State: <strong>${isDestroyed ? 'Destroyed' : isDamaged ? 'Damaged' : comp.is_resetting ? 'Resetting' : isInactive ? 'Inactive' : 'Undamaged'}</strong></span>
         </div>
         <div class="comp-specs">
           ${comp.requirements ? `<span class="spec-tag req">Req: ${comp.requirements}</span>` : ""}

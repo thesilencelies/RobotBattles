@@ -255,7 +255,7 @@
     "19": {
       "name": "Banebots Compliant Wheels",
       "description": "",
-      "gm_notes": "weight:1\ncost:$2\nreq:SSS\nout:DD\ndurability:7\nabsorption:3",
+      "gm_notes": "weight:2\ncost:$2\nreq:SSS\nout:DD\ndurability:7\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -269,7 +269,7 @@
     "20": {
       "name": "Banebots T81 Heavy Wheels",
       "description": "Invertible: this component works inverted",
-      "gm_notes": "weight:2\ncost:$2\nreq:SSSS\nout:DDD\ndurability:7\nabsorption:2",
+      "gm_notes": "weight:3\ncost:$2\nreq:SSSS\nout:DDD\ndurability:7\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -524,7 +524,7 @@
     },
     "38": {
       "name": "Single Tooth Disc",
-      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it",
+      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it\nReset: this weapon is inactive the turn after it is used. (this does not cause the robot to be considered stuck if it is also a self righter)",
       "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SSS\nout:WWWW\ndurability:8\nabsorption:2\nIncreases throw strength by 2",
       "tags": {
         "1": "Card",
@@ -599,7 +599,7 @@
     },
     "43": {
       "name": "Four-Bar Lifter",
-      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it\nWedge: if this component is hit this robot is not thrown",
+      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it\nWedge: if this component is hit this robot is not thrown\nReset: this weapon is inactive the turn after it is used. (this does not cause the robot to be considered stuck if it is also a self righter)",
       "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:WWWWWW\ndurability:9\nabsorption:1\nDeals no damage only throws",
       "tags": {
         "1": "Card",

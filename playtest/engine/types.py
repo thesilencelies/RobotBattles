@@ -62,6 +62,10 @@ class ComponentHealth:
     is_wedge: bool = False
     is_forks: bool = False
     is_invertible: bool = False
+    is_reset: bool = False
+    is_resetting: bool = False
+    reset_supplied: bool = False
+    was_used_this_turn: bool = False
     template: str = ""
     spin_counters: int = 0
 
@@ -88,6 +92,9 @@ class ComponentHealth:
             "is_wedge": self.is_wedge,
             "is_forks": self.is_forks,
             "is_invertible": self.is_invertible,
+            "is_reset": self.is_reset,
+            "is_resetting": self.is_resetting,
+            "reset_supplied": self.reset_supplied,
             "template": self.template,
             "spin_counters": self.spin_counters,
         }
@@ -192,6 +199,7 @@ class RobotState:
     supply_graph: Dict[str, List[str]]  # comp_id -> list of supplier comp_ids
     reverse_supply: Dict[str, List[str]]
     weapon_spin_counters: Dict[str, int] = field(default_factory=dict)
+    resetting_weapons: List[str] = field(default_factory=list)
     is_inverted: bool = False
     is_raised: bool = False
     is_eliminated: bool = False
@@ -212,6 +220,7 @@ class RobotState:
             "connections": self.connections,
             "supply_graph": self.supply_graph,
             "weapon_spin_counters": self.weapon_spin_counters,
+            "resetting_weapons": list(self.resetting_weapons),
             "is_inverted": self.is_inverted,
             "is_raised": self.is_raised,
             "is_eliminated": self.is_eliminated,

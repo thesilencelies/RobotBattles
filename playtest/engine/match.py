@@ -106,6 +106,10 @@ def build_robot_state(
             is_wedge="wedge" in kw,
             is_forks="forks" in kw,
             is_invertible="invertible" in kw,
+            is_reset="reset" in kw,
+            is_resetting=False,
+            reset_supplied=False,
+            was_used_this_turn=False,
             template=str(cdata.get("template", "")),
             spin_counters=0,
         )
@@ -239,30 +243,56 @@ def create_match(
 def can_robot_uninvert_to_regain_drive(robot: RobotState) -> bool:
     """
     Checks if an inverted robot has a mechanism to uninvert itself
-    (an active, non-destroyed component with the Self-right keyword)
+    (an active or resetting, non-destroyed component with the Self-right keyword)
     and would regain active drive once uninverted.
     """
     if not robot.is_inverted:
         return False
 
-    has_self_right = any(
+    has_active_sr = any(
         "self-right" in c.keywords.lower() and not c.is_destroyed and c.is_active
         for c in robot.components.values()
     )
-    if not has_self_right:
+    has_resetting_sr = any(
+        "self-right" in c.keywords.lower() and not c.is_destroyed and c.is_reset and c.is_resetting
+        for c in robot.components.values()
+    )
+
+    if not has_active_sr and not has_resetting_sr:
         return False
 
     orig_inverted = robot.is_inverted
     orig_left = robot.left_drive_max
     orig_right = robot.right_drive_max
+    orig_states = {cid: (c.is_resetting, c.is_active) for cid, c in robot.components.items()}
+
     try:
+        if has_resetting_sr and not has_active_sr:
+            # Verify that the resetting self-righting component has an intact supply line
+            for c in robot.components.values():
+                if c.is_resetting:
+                    c.is_resetting = False
+            refresh_robot_drive_and_power(robot)
+            can_be_powered = any(
+                "self-right" in c.keywords.lower() and not c.is_destroyed and c.is_active
+                for c in robot.components.values()
+            )
+            if not can_be_powered:
+                return False
+
         robot.is_inverted = False
+        for c in robot.components.values():
+            if c.is_resetting:
+                c.is_resetting = False
         refresh_robot_drive_and_power(robot)
         return (robot.left_drive_max > 0 or robot.right_drive_max > 0)
     finally:
         robot.is_inverted = orig_inverted
         robot.left_drive_max = orig_left
         robot.right_drive_max = orig_right
+        for cid, (was_rst, was_act) in orig_states.items():
+            robot.components[cid].is_resetting = was_rst
+            robot.components[cid].is_active = was_act
 
 
 def is_robot_defeated(robot: RobotState) -> bool:
@@ -369,17 +399,54 @@ def execute_turn(
 
     # 4. Cleanup Phase
     # Self-right check: if round ended without contact and robot is inverted, invert it
+    # Rule: Self-righting requires the component to be active (and non-destroyed)
     if not col:
         for robot in [p_bot, a_bot]:
             if robot.is_inverted:
-                has_self_right = any(
-                    "self-right" in c.keywords.lower() and not c.is_destroyed
-                    for c in robot.components.values()
-                )
-                if has_self_right:
+                sr_comp = next((
+                    c for c in robot.components.values()
+                    if "self-right" in c.keywords.lower() and not c.is_destroyed and c.is_active
+                ), None)
+                if sr_comp:
                     robot.is_inverted = False
                     match.log.append(CombatLogEntry(
-                        round=r_num, phase="cleanup", message=f"🔄 {robot.name} self-rights and is now UPRIGHT!"
+                        round=r_num, phase="cleanup", message=f"🔄 {robot.name} self-rights with {sr_comp.name} and is now UPRIGHT!"
+                    ))
+                    # Triggered by self-righting with it!
+                    sr_comp.was_used_this_turn = True
+
+    # Process Reset transitions for both robots
+    for robot in [p_bot, a_bot]:
+        # A. Components that were resetting during this round:
+        for cid, c in list(robot.components.items()):
+            if c.is_resetting:
+                if c.reset_supplied:
+                    c.is_resetting = False
+                    c.reset_supplied = False
+                    if cid in robot.resetting_weapons:
+                        robot.resetting_weapons.remove(cid)
+                    match.log.append(CombatLogEntry(
+                        round=r_num, phase="cleanup",
+                        message=f"✅ {robot.name}'s {c.name} received supply and finished resetting!",
+                    ))
+                else:
+                    match.log.append(CombatLogEntry(
+                        round=r_num, phase="cleanup",
+                        message=f"⚠️ {robot.name}'s {c.name} was not supplied this round and could not reset (remains inactive).",
+                    ))
+
+        # B. Components with Reset that were used this round (attacking or self-righting):
+        for cid, c in list(robot.components.items()):
+            if c.was_used_this_turn:
+                c.was_used_this_turn = False
+                if c.is_reset and not c.is_resetting:
+                    c.is_resetting = True
+                    c.reset_supplied = False
+                    if cid not in robot.resetting_weapons:
+                        robot.resetting_weapons.append(cid)
+                    match.log.append(CombatLogEntry(
+                        round=r_num, phase="cleanup",
+                        message=f"⏳ {robot.name}'s {c.name} was used and is now resetting (inactive next round until supplied).",
                     ))
 
     # Refresh active drive and power

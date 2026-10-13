@@ -1,5 +1,6 @@
 """Unit tests for the playtest rules engine."""
 
+import random
 import sys
 import unittest
 from unittest.mock import patch
@@ -1273,6 +1274,7 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_active_hit=True,
         )
 
+        random.seed(42)
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1, steps=steps)
 
         # 1. Target armor takes damage and is destroyed
@@ -1333,6 +1335,203 @@ class TestPlaytestEngine(unittest.TestCase):
         log_msgs = [l.message for l in logs]
         # Base 4 + 2 = 6 throw strength (not 4 * 2 = 8)
         self.assertTrue(any("THROWN! (Strength 6" in m for m in log_msgs))
+
+    def test_reset_keyword_attack_and_supply_lifecycle(self):
+        """
+        Verify:
+        1. Attacking triggers Reset.
+        2. In the next turn, weapon is inactive while resetting.
+        3. A component that is resetting needs to be supplied in order to reset.
+        4. Once supplied for that turn, reset completes and weapon is active in the following turn.
+        """
+        from playtest.engine.match import execute_turn, create_match
+        from playtest.engine.types import MoveChoice, CollisionEvent
+        from playtest.engine.combat import resolve_collision_combat
+
+        csv_text = read_saved_robot("Vyper_flipper.csv")
+        match = create_match(csv_text, "Vyper_Spinner", "Player Flipper")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Four-Bar Lifter has Reset keyword
+        lifter = next(c for c in p_bot.components.values() if "four-bar lifter" in c.name.lower())
+        self.assertTrue(lifter.is_reset, "Four-Bar Lifter should have is_reset=True")
+        self.assertFalse(lifter.is_resetting)
+        self.assertTrue(lifter.is_active, "Lifter starts active")
+
+        # 1. Trigger attack in collision
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(200.0, 200.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[lifter.id],
+            robot2_components=[list(a_bot.components.keys())[0]],
+            contact_type="ACTIVE",
+            description="Lifter active strike",
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+        resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        self.assertTrue(lifter.was_used_this_turn, "Attacking triggers used")
+
+        # Execute turn 1 cleanup to transition to turn 2
+        # (simulate execute_turn's cleanup phase on turn 1)
+        execute_turn(match, MoveChoice(0, 0))
+        self.assertTrue(lifter.is_resetting, "Weapon transitions to is_resetting=True for turn after use")
+        self.assertIn(lifter.id, p_bot.resetting_weapons)
+
+        # In turn 2: Lifter is supplied, but is inactive (resetting)
+        self.assertFalse(lifter.is_active, "Weapon is inactive during the turn after it is used")
+        self.assertTrue(lifter.reset_supplied, "Lifter was supplied in turn 2 so it can reset")
+
+        # Execute turn 2: at cleanup, because it received supply, it completes reset
+        execute_turn(match, MoveChoice(0, 0))
+        self.assertFalse(lifter.is_resetting, "Reset finishes after being supplied for the turn")
+        self.assertNotIn(lifter.id, p_bot.resetting_weapons)
+        self.assertTrue(lifter.is_active, "Lifter is now active again in subsequent round")
+
+    def test_reset_keyword_not_supplied_remains_resetting(self):
+        """
+        Verify that a resetting component that is NOT supplied does not finish resetting.
+        """
+        from playtest.engine.match import execute_turn, create_match
+        from playtest.engine.types import MoveChoice
+
+        csv_text = read_saved_robot("Vyper_flipper.csv")
+        match = create_match(csv_text, "Vyper_Spinner", "Player Flipper")
+        p_bot = match.player_robot
+
+        lifter = next(c for c in p_bot.components.values() if "four-bar lifter" in c.name.lower())
+        lifter.is_resetting = True
+        p_bot.resetting_weapons.append(lifter.id)
+
+        # Destroy the servo supplying the lifter with pressure
+        servo = next(c for c in p_bot.components.values() if "servo" in c.name.lower())
+        servo.is_destroyed = True
+
+        execute_turn(match, MoveChoice(0, 0))
+
+        self.assertFalse(lifter.reset_supplied, "Lifter was not supplied because its supplier is destroyed")
+        self.assertTrue(lifter.is_resetting, "Lifter remains resetting because it was not supplied")
+        self.assertFalse(lifter.is_active, "Lifter remains inactive")
+
+    def test_reset_keyword_player_choice_when_insufficient_supply(self):
+        """
+        When supply is insufficient to power all components, player choice determines
+        whether the resetting component receives supply to reset or another component gets it.
+        """
+        from playtest.engine.combat import refresh_robot_drive_and_power
+        from playtest.engine.types import ComponentHealth, RobotState, Pose
+
+        battery = ComponentHealth(
+            id="bat", name="Battery", card_type="component",
+            max_durability=5, current_durability=5, absorption=0,
+            requirements="", outputs="2E", keywords="", text="",
+            x=200, y=200, rotation=0, box=(200, 200, 244, 264)
+        )
+        motor = ComponentHealth(
+            id="m_left", name="Left Motor", card_type="component",
+            max_durability=3, current_durability=3, absorption=0,
+            requirements="2E", outputs="D", keywords="", text="",
+            x=100, y=100, rotation=0, box=(100, 100, 144, 164)
+        )
+        reset_wep = ComponentHealth(
+            id="wep", name="Reset Weapon", card_type="weapon",
+            max_durability=4, current_durability=4, absorption=0,
+            requirements="2E", outputs="4W", keywords="Reset", text="",
+            x=210, y=50, rotation=0, box=(210, 50, 254, 114),
+            is_reset=True, is_resetting=True,
+        )
+        robot = RobotState(
+            id="test_bot", name="Test Bot", chassis_name="Square", chassis_template="Square",
+            flip_strength=3, pose=Pose(400, 400, 0),
+            components={"bat": battery, "m_left": motor, "wep": reset_wep},
+            connections={"bat": ["m_left", "wep"], "m_left": ["bat"], "wep": ["bat"]},
+            supply_graph={"m_left": ["bat"], "wep": ["bat"], "bat": []},
+            reverse_supply={"bat": ["m_left", "wep"], "m_left": [], "wep": []},
+            resetting_weapons=["wep"],
+        )
+
+        # 1. Player chooses to supply drive motor instead of resetting weapon
+        refresh_robot_drive_and_power(robot, chosen_components=["m_left"])
+        self.assertTrue(robot.components["m_left"].is_active, "Drive gets 2E")
+        self.assertFalse(robot.components["wep"].reset_supplied, "Weapon does not get 2E, reset_supplied is False")
+        self.assertFalse(robot.components["wep"].is_active, "Weapon is inactive")
+
+        # 2. Player chooses to supply resetting weapon instead of drive
+        refresh_robot_drive_and_power(robot, chosen_components=["wep"])
+        self.assertFalse(robot.components["m_left"].is_active, "Drive is unpowered")
+        self.assertTrue(robot.components["wep"].reset_supplied, "Weapon gets 2E to reset, reset_supplied is True")
+        self.assertFalse(robot.components["wep"].is_active, "Weapon is still inactive while resetting")
+
+    def test_reset_keyword_self_right_triggers_used_and_requires_active(self):
+        """
+        Verify:
+        1. Self-righting requires weapon to be active.
+        2. Self-righting with Reset weapon triggers used.
+        """
+        from playtest.engine.match import execute_turn, create_match
+        from playtest.engine.types import MoveChoice
+
+        csv_text = read_saved_robot("Vyper_flipper.csv")
+        match = create_match(csv_text, "Vyper_Spinner", "Player Flipper")
+        p_bot = match.player_robot
+
+        lifter = next(c for c in p_bot.components.values() if "four-bar lifter" in c.name.lower())
+        self.assertTrue(lifter.is_active)
+
+        # Invert robot
+        p_bot.is_inverted = True
+
+        # When turn ends without contact, active lifter self-rights the robot
+        execute_turn(match, MoveChoice(0, 0))
+        self.assertFalse(p_bot.is_inverted, "Robot self-righted to upright")
+        self.assertTrue(lifter.is_resetting, "Self-righting with weapon triggered Reset")
+        self.assertFalse(lifter.is_active, "Lifter is now inactive during reset")
+
+        # Now test: if robot is inverted while lifter is resetting (inactive), it CANNOT self-right yet
+        p_bot.is_inverted = True
+        self.assertTrue(lifter.is_resetting)
+        # Execute turn: lifter will be supplied this turn, but cannot self-right this turn
+        execute_turn(match, MoveChoice(0, 0))
+        # During turn cleanup: lifter received supply so it finishes reset, but could not self-right during that turn
+        self.assertFalse(lifter.is_resetting, "Reset finished at end of round")
+        # In next turn, now that it has reset and is active, it can self-right!
+        execute_turn(match, MoveChoice(0, 0))
+        self.assertFalse(p_bot.is_inverted, "Robot self-rights once lifter has completed reset")
+
+    def test_reset_keyword_defeat_exemption_when_inverted(self):
+        """
+        Verify:
+        "This weapon is inactive the turn after it is used.
+        (this does not cause the robot to be considered stuck if it is also a self righter)"
+        """
+        from playtest.engine.match import is_robot_defeated, create_match
+
+        csv_text = read_saved_robot("Vyper_flipper.csv")
+        match = create_match(csv_text, "Vyper_Spinner", "Player Flipper")
+        p_bot = match.player_robot
+
+        lifter = next(c for c in p_bot.components.values() if "four-bar lifter" in c.name.lower())
+
+        # Invert robot and disable all invertible drive so it has 0 drive when inverted
+        p_bot.is_inverted = True
+        for c in p_bot.components.values():
+            c.is_invertible = False
+        p_bot.left_drive_max = 0
+        p_bot.right_drive_max = 0
+
+        # Lifter is resetting (inactive)
+        lifter.is_resetting = True
+        lifter.is_active = False
+
+        # Exemption check: Even though lifter is inactive due to Reset, robot is NOT defeated
+        self.assertFalse(is_robot_defeated(p_bot), "Robot with resetting self-righter is not defeated")
+
+        # But if the lifter itself or its supply source is destroyed:
+        lifter.is_destroyed = True
+        self.assertTrue(is_robot_defeated(p_bot), "Robot IS defeated when self-righter is destroyed")
 
 
 if __name__ == "__main__":

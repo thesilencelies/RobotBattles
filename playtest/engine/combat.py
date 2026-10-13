@@ -509,6 +509,7 @@ def refresh_robot_drive_and_power(
     # Initialize all components to inactive
     for cid, c in robot.components.items():
         c.is_active = False
+        c.reset_supplied = False
 
     # Pass 1: Identify root components (batteries with no requirements)
     active_set: Set[str] = set()
@@ -563,6 +564,7 @@ def refresh_robot_drive_and_power(
                 cid for cid, c in robot.components.items()
                 if not c.is_destroyed
                 and not c.is_active
+                and not (c.is_resetting and c.reset_supplied)
                 and (parse_resource_counts(c.requirements).get(res_type, 0) > 0
                      or parse_resource_counts(c.requirements).get(res_type, 0) == -1)
                 and any(sid in suppliers for sid in robot.supply_graph.get(cid, []))
@@ -671,16 +673,20 @@ def refresh_robot_drive_and_power(
             # 7. Activate selected components and expose their outputs
             for cid in selected_consumers:
                 c = robot.components[cid]
-                c.is_active = True
-                active_set.add(cid)
-
-                out_counts = parse_resource_counts(c.outputs)
-                # Pass-through handling (XE / XS)
-                for r, cnt in out_counts.items():
-                    if cnt == -1:
-                        req_in = parse_resource_counts(c.requirements).get(r, 0)
-                        out_counts[r] = req_in if req_in > 0 else 9999
-                avail_supply[cid] = out_counts
+                if c.is_resetting:
+                    c.reset_supplied = True
+                    c.is_active = False
+                    avail_supply[cid] = {}
+                else:
+                    c.is_active = True
+                    active_set.add(cid)
+                    out_counts = parse_resource_counts(c.outputs)
+                    # Pass-through handling (XE / XS)
+                    for r, cnt in out_counts.items():
+                        if cnt == -1:
+                            req_in = parse_resource_counts(c.requirements).get(r, 0)
+                            out_counts[r] = req_in if req_in > 0 else 9999
+                    avail_supply[cid] = out_counts
                 changed = True
 
     # Count drive outputs on left and right sides
@@ -954,6 +960,7 @@ def resolve_collision_combat(
         throw_str_2 = 0
         target2_id = None
         if w1_comp:
+            w1_comp.was_used_this_turn = True
             spin1 = r1.weapon_spin_counters.get(w1_comp.id, 0)
             dmg1 = 0 if "deals no damage" in w1_comp.text.lower() else atk_str_1
             logs.append(CombatLogEntry(
@@ -1002,6 +1009,7 @@ def resolve_collision_combat(
         throw_str_1 = 0
         target1_id = None
         if w2_comp:
+            w2_comp.was_used_this_turn = True
             spin2 = r2.weapon_spin_counters.get(w2_comp.id, 0)
             dmg2 = 0 if "deals no damage" in w2_comp.text.lower() else atk_str_2
             logs.append(CombatLogEntry(

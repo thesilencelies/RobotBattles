@@ -111,6 +111,10 @@ GLOSSARY: dict[str, tuple[tuple[str, ...], str]] = {
         ("self-right", "self right"),
         "Self-right: if a turn ends without contact and this robot is inverted, invert it",
     ),
+    "Reset": (
+        ("reset",),
+        "Reset: this weapon is inactive the turn after it is used. (this does not cause the robot to be considered stuck if it is also a self righter)",
+    ),
 }
 
 # Weapon template metadata
