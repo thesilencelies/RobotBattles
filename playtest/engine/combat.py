@@ -910,12 +910,12 @@ def resolve_collision_combat(
     logs: List[CombatLogEntry] = []
 
     # Check Ground Game: Forks keyword (applies to both active and inert contact)
-    # Rule: "If the opposing robot is in line with the forks during contact, they become lifted for this contact"
+    # Rule: "If any part of the opposing robot is in line with the forks during contact, they become lifted for this contact"
     r1_forks_in_line = check_robot_forks_in_line(
-        r1, r2, col.contact_point, (r1.pose.x, r1.pose.y, r1.pose.theta), col.robot1_components
+        r1, r2, col.contact_point, (r1.pose.x, r1.pose.y, r1.pose.theta), col.robot1_components, opp_pose=r2.pose
     )
     r2_forks_in_line = check_robot_forks_in_line(
-        r2, r1, col.contact_point, (r2.pose.x, r2.pose.y, r2.pose.theta), col.robot2_components
+        r2, r1, col.contact_point, (r2.pose.x, r2.pose.y, r2.pose.theta), col.robot2_components, opp_pose=r1.pose
     )
     if r1_forks_in_line:
         r2.is_raised = True

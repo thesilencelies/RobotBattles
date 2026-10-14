@@ -1622,24 +1622,50 @@ class TestPlaytestEngine(unittest.TestCase):
         # When opp_bot contacts in front and within x-span of the fork:
         fork_bot.pose = Pose(x=400.0, y=400.0, theta=0.0)
         opp_bot.pose = Pose(x=400.0, y=330.0, theta=180.0)
-        in_line = check_robot_forks_in_line(fork_bot, opp_bot, (400.0, 365.0), fork_bot.pose, ["f1"])
+        in_line = check_robot_forks_in_line(fork_bot, opp_bot, (400.0, 365.0), fork_bot.pose, ["f1"], opp_pose=opp_bot.pose)
         self.assertTrue(in_line)
 
-        # In combat resolution, opp_bot should gain is_raised
+        # Off-center contact: Contact point is OUTSIDE the fork corridor (e.g. at x=425),
+        # but part of opp_bot's chassis extends across and is in line with the fork!
+        opp_bot.pose = Pose(x=415.0, y=330.0, theta=180.0)
+        in_line_offcenter = check_robot_forks_in_line(
+            fork_robot=fork_bot,
+            opp_robot=opp_bot,
+            contact_pt=(425.0, 365.0),
+            fork_pose=fork_bot.pose,
+            contacted_cids=["armour_right"],
+            opp_pose=opp_bot.pose,
+        )
+        self.assertTrue(in_line_offcenter, "Forks trigger when any part of opp robot is in line with fork, even if contact point is outside")
+
+        # Completely offset robot: NO part of opp_bot is in line with the fork
+        opp_bot.pose = Pose(x=470.0, y=330.0, theta=180.0)
+        in_line_far = check_robot_forks_in_line(
+            fork_robot=fork_bot,
+            opp_robot=opp_bot,
+            contact_pt=(470.0, 365.0),
+            fork_pose=fork_bot.pose,
+            contacted_cids=["armour_far_right"],
+            opp_pose=opp_bot.pose,
+        )
+        self.assertFalse(in_line_far, "Forks do not trigger when no part of opp robot is in line with fork")
+
+        # In combat resolution with off-center contact point, opp_bot should still be lifted!
+        opp_bot.pose = Pose(x=415.0, y=330.0, theta=180.0)
         opp_bot.is_raised = False
         col = CollisionEvent(
             time_t=0.5,
-            contact_point=(400.0, 365.0),
-            robot1_octant="Front",
-            robot2_octant="Front",
-            robot1_components=["f1"],
+            contact_point=(425.0, 365.0),
+            robot1_octant="Front-Right",
+            robot2_octant="Front-Left",
+            robot1_components=["armour_right"],
             robot2_components=[list(opp_bot.components.keys())[0]],
             contact_type="INERT",
-            description="Contact with forks",
+            description="Contact with off-center contact point",
             push_vector=(0.0, -10.0),
         )
         resolve_logs = resolve_collision_combat(col, fork_bot, opp_bot, round_num=1)
-        self.assertTrue(any("Forks lift" in entry.message for entry in resolve_logs), "Opponent in line with forks is lifted in collision logs")
+        self.assertTrue(any("Forks lift" in entry.message for entry in resolve_logs), "Opponent in line with forks is lifted even with off-center contact point")
 
     def test_raised_robot_inertial_motion_excluded(self):
         """

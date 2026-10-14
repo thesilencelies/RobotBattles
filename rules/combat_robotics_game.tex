@@ -215,14 +215,14 @@ noted with symbols preceding the math.
 Components may have keywords that define specific mechanical rules and interactions:
 
 \begin{center}
-\renewcommand{\arraystretch}{1.18}
+\renewcommand{\arraystretch}{1.10}
 \begin{tabularx}{\textwidth}{p{3.8cm} X}
   \toprule
   \textbf{Keyword} & \textbf{Summary} \\
   \midrule
   \keywordbadge{kw_fragile}{Fragile} & Destroyed as if durability 1 when taking weapon damage. \\
   \keywordbadge{kw_spin_up}{Spin up (X, Y)} & Add X spin counters at turn start (max Y); cleared on attack or inactive. \\
-  \keywordbadge{kw_forks}{Forks} & Opponent in line with forks during contact becomes raised for this contact. \\
+  \keywordbadge{kw_forks}{Forks} & Opponent in line with forks (any part of robot) raised during contact. \\
   \keywordbadge{kw_wedge}{Wedge} & Hit robot is not thrown (negated if raised). \\
   \keywordbadge{kw_invertible}{Invertible} & Component functions normally while inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & Inverts upright at turn end without contact if active. \\
@@ -232,10 +232,10 @@ Components may have keywords that define specific mechanical rules and interacti
 \end{center}
 
 \subsubsection{Keyword Rules \& Mechanical Details}
-\begin{description}[leftmargin=!, labelwidth=2.5cm, itemsep=1.5pt, parsep=0pt, topsep=1pt, font=\bfseries\color{primaryDark}\small]
+\begin{description}[leftmargin=!, labelwidth=2.5cm, itemsep=1pt, parsep=0pt, topsep=1pt, font=\bfseries\color{primaryDark}\small]
   \item[Fragile:] When this component takes weapon strike damage, it is immediately destroyed as if its durability were 1.
   \item[Spin up (X, Y):] At the start of each turn, add $X$ spin counters (max $Y$). All counters are removed when the weapon attacks or if it becomes inactive.
-  \item[Forks:] If the opposing robot is in line with the forks during contact, they become \textbf{raised} (lifted) for that contact.
+  \item[Forks:] If any part of the opposing robot is in line with the forks during contact, they become \textbf{raised} (lifted) for that contact.
   \item[Wedge:] If this component is hit, this robot is not thrown. This effect does not apply if the robot is raised.
   \item[Invertible:] This component functions inverted. Weapons and drive lacking this keyword do not function while inverted.
   \item[Self-right:] If a turn ends without contact and this robot is inverted, invert it. Requires the component to be active.
@@ -529,8 +529,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons and drive without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Some components (mostly forks) will make the opponent raised if they make contact. A robot that is raised has its flip strength halved, its weapons deal 2 less damage and its motion does not contribute to the motion in inertial contact
-. The Wedge effect does not apply if the robot is raised.
+  \item[Raised:] Some components (mostly forks) will make the opponent raised during contact if any part of the opposing robot is in line with them. A robot that is raised has its flip strength halved, its weapons deal 2 less damage and its motion does not contribute to the motion in inertial contact. The Wedge effect does not apply if the robot is raised.
 \end{description}
 
 \begin{summarybox}{Damage \& Feedback Rules Summary}

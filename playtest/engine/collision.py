@@ -356,13 +356,14 @@ def check_robots_in_contact(r1: RobotState, r2: RobotState) -> bool:
 def check_robot_forks_in_line(
     fork_robot: RobotState,
     opp_robot: RobotState,
-    contact_pt: Tuple[float, float],
-    fork_pose: Any,
-    contacted_cids: List[str],
+    contact_pt: Optional[Tuple[float, float]] = None,
+    fork_pose: Any = None,
+    contacted_cids: Optional[List[str]] = None,
+    opp_pose: Any = None,
 ) -> bool:
     """
-    Checks if the opposing robot is in line with fork_robot's forks during contact.
-    Rule: 'If the opposing robot is in line with the forks during contact, they become lifted for this contact'
+    Checks if any part of the opposing robot is in line with fork_robot's forks during contact.
+    Rule: 'The forks trigger if any part of the opposing robot is in line with the fork, not just the contact point'
     """
     fork_comps = [
         c for c in fork_robot.components.values()
@@ -373,21 +374,65 @@ def check_robot_forks_in_line(
 
     # 1. Direct component contact with forks
     fork_ids = {c.id for c in fork_comps}
-    if any(cid in fork_ids for cid in contacted_cids):
+    if contacted_cids and any(cid in fork_ids for cid in contacted_cids):
         return True
 
-    # 2. Check if contact point is in line with any fork's width along its forward direction
-    if hasattr(fork_pose, "x"):
+    # Resolve fork_robot pose
+    if fork_pose is None:
+        fx, fy, ftheta = fork_robot.pose.x, fork_robot.pose.y, fork_robot.pose.theta
+    elif hasattr(fork_pose, "x"):
         fx, fy, ftheta = fork_pose.x, fork_pose.y, fork_pose.theta
     else:
         fx, fy, ftheta = fork_pose
-    lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], fx, fy, ftheta)
-    mx, my = local_miniature_to_mat_point(lx, ly)
+
+    # Resolve opp_robot pose
+    if opp_pose is None:
+        ox, oy, otheta = opp_robot.pose.x, opp_robot.pose.y, opp_robot.pose.theta
+    elif hasattr(opp_pose, "x"):
+        ox, oy, otheta = opp_pose.x, opp_pose.y, opp_pose.theta
+    else:
+        ox, oy, otheta = opp_pose
+
+    # Opposing robot geometry (all body polygons: chassis + weapons)
+    opp_parts = get_robot_miniature_parts(opp_robot, ox, oy, otheta)
+    opp_polys = list(opp_parts.get("all_body_polygons", []))
+
+    # Also include 12-gon approximation of the 70mm diameter disc base
+    opp_disc = [
+        (ox + 35.0 * math.cos(2.0 * math.pi * i / 12.0), oy + 35.0 * math.sin(2.0 * math.pi * i / 12.0))
+        for i in range(12)
+    ]
+    opp_polys.append(opp_disc)
 
     for fc in fork_comps:
         min_x, min_y, max_x, max_y = fc.box
-        # In line with the forks: within the fork's X span (with slight tolerance) and in front of or at the fork
-        if (min_x - 15.0 <= mx <= max_x + 15.0) and my <= max_y + 15.0:
+
+        # Lateral span in local miniature coordinates (relative to MAT_CENTER_X)
+        lx_left = (min_x - MAT_CENTER_X) * MAT_TO_MINI_SCALE
+        lx_right = (max_x - MAT_CENTER_X) * MAT_TO_MINI_SCALE
+        lx_min = min(lx_left, lx_right) - 2.0
+        lx_max = max(lx_left, lx_right) + 2.0
+
+        # Longitudinal span: extending forward from rear edge of the fork card
+        # Heading 0 is North = -Y (forward)
+        ly_rear = (max_y - MAT_CENTER_Y) * MAT_TO_MINI_SCALE + 2.0
+        ly_front = ly_rear - 150.0  # extends forward across the contact zone
+
+        corridor_local = [
+            (lx_min, ly_front),
+            (lx_max, ly_front),
+            (lx_max, ly_rear),
+            (lx_min, ly_rear),
+        ]
+        corridor_world = transform_polygon(corridor_local, fx, fy, ftheta)
+
+        # Check if ANY part of opposing robot's geometry intersects the fork corridor
+        for poly in opp_polys:
+            if polygons_intersect(corridor_world, poly):
+                return True
+
+        # Check if contact point falls inside the corridor
+        if contact_pt and point_in_polygon(contact_pt[0], contact_pt[1], corridor_world):
             return True
 
     return False
