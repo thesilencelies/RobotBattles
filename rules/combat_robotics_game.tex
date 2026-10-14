@@ -457,7 +457,6 @@ Essentially a pushing match between colliding chassis surfaces:
 \begin{itemize}
   \item The pair of robots move in a straight line created by summing their remaining motion templates.
   \item If a robot is pushed into a wall, it is thrown with a throw strength equal to the amount it would have moved if the wall wasn't there.
-  \item Each robot takes feedback equal to the remaining distance the opponent had before the contact at each of its remaining active drive.
   \item After any inertial contact, separate the robots by moving them both away from each other one step if possible.
 \end{itemize}
 
@@ -521,12 +520,12 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons and drive without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Some components (mostly forks) will make the opponent raised if they make contact. A robot that is raised has its flip strength halved and its weapons deal 2 less damage. The Wedge effect does not apply if the robot is raised.
+  \item[Raised:] Some components (mostly forks) will make the opponent raised if they make contact. A robot that is raised has its flip strength halved, its weapons deal 2 less damage and its motion does not contribute to the motion in inertial contact
+. The Wedge effect does not apply if the robot is raised.
 \end{description}
 
 \begin{summarybox}{Damage \& Feedback Rules Summary}
 \begin{itemize}[leftmargin=*]
-  \item \textbf{Integer Damage:} All damage numbers are integers; when sharing or dividing, round down.
   \item \textbf{Direct Weapon Damage:} Weapon strike damage applies only to the single outermost component hit; excess damage does not penetrate inwards (throw shock covers internals).
   \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged} (both ignore absorption). Damaged again $\implies$ \textbf{Destroyed}.
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
