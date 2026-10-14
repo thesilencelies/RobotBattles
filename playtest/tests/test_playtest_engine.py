@@ -435,6 +435,53 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("Wedge was hit" in entry.message for entry in logs))
         self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
 
+    def test_wedge_does_not_work_when_inverted(self):
+        """Tests that wedges do not prevent throws while inverted unless the component is invertible."""
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Ensure player robot has a non-invertible wedge component hit, and is inverted!
+        wedge_comp = ComponentHealth(
+            id="wedge_1", name="Steel Wedge", card_type="component",
+            max_durability=11, current_durability=11, absorption=2, requirements="",
+            outputs="", keywords="wedge", text="", x=100, y=20, rotation=0,
+            box=(100, 20, 144, 84), is_wedge=True, is_invertible=False,
+        )
+        p_bot.components["wedge_1"] = wedge_comp
+        p_bot.is_inverted = True
+
+        auto_weapon = [c for c in a_bot.components.values() if c.card_type == "weapon"][0]
+        a_bot.weapon_spin_counters[auto_weapon.id] = 4
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["wedge_1"],
+            robot2_components=[auto_weapon.id],
+            contact_type="ACTIVE",
+            description="Active strike hitting inverted wedge",
+            r1_active_hit=False,
+            r2_active_hit=True,
+        )
+        logs = resolve_collision_combat(col, p_bot, a_bot, 1)
+        # Because p_bot is inverted and wedge is not invertible, wedge does NOT prevent throw!
+        self.assertTrue(any("does not function while INVERTED" in entry.message for entry in logs))
+        self.assertTrue(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
+
+        # Now test invertible wedge:
+        wedge_comp.is_invertible = True
+        wedge_comp.keywords = "wedge;invertible"
+        p_bot.is_inverted = True
+        logs2 = resolve_collision_combat(col, p_bot, a_bot, 1)
+        self.assertTrue(any("Wedge was hit" in entry.message for entry in logs2))
+        self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs2))
+
     def test_split_supply_distribution(self):
         """
         Verify the rule:
@@ -1728,6 +1775,58 @@ class TestPlaytestEngine(unittest.TestCase):
         )
         resolve_logs = resolve_collision_combat(col, fork_bot, opp_bot, round_num=1)
         self.assertTrue(any("Forks lift" in entry.message for entry in resolve_logs), "Opponent in line with forks is lifted even with off-center contact point")
+
+    def test_forks_do_not_work_when_inverted(self):
+        """Tests that forks do not lift an opponent when inverted unless the component is invertible."""
+        from playtest.engine.collision import check_robot_forks_in_line
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.match import create_match
+        from playtest.engine.types import CollisionEvent, ComponentHealth
+
+        csv_text = read_saved_robot("Vyper_flipper.csv")
+        match = create_match(csv_text, "Vyper_Spinner", "Player")
+        fork_bot = match.player_robot
+        opp_bot = match.automaton_robot
+
+        # Add a non-invertible fork component to fork_bot
+        fork_comp = ComponentHealth(
+            id="f1", name="Heavy Forks", card_type="armour", max_durability=6, current_durability=6,
+            absorption=0, requirements="", outputs="", keywords="Forks", text="",
+            x=180, y=70, rotation=0, box=(180, 50, 240, 110), is_forks=True, is_invertible=False,
+        )
+        fork_bot.components["f1"] = fork_comp
+        fork_bot.pose = Pose(x=400.0, y=400.0, theta=0.0)
+        opp_bot.pose = Pose(x=400.0, y=330.0, theta=180.0)
+
+        # When fork_bot is upright, forks work
+        self.assertTrue(check_robot_forks_in_line(fork_bot, opp_bot, (400.0, 365.0), fork_bot.pose, ["f1"], opp_pose=opp_bot.pose))
+
+        # When fork_bot is INVERTED, non-invertible forks do NOT work!
+        fork_bot.is_inverted = True
+        self.assertFalse(check_robot_forks_in_line(fork_bot, opp_bot, (400.0, 365.0), fork_bot.pose, ["f1"], opp_pose=opp_bot.pose))
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 365.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["f1"],
+            robot2_components=[list(opp_bot.components.keys())[0]],
+            contact_type="INERT",
+            description="Contact with inverted forks",
+            push_vector=(0.0, -10.0),
+        )
+        resolve_logs = resolve_collision_combat(col, fork_bot, opp_bot, round_num=1)
+        self.assertFalse(any("Forks lift" in entry.message for entry in resolve_logs))
+        self.assertFalse(opp_bot.is_raised)
+
+        # When fork component IS invertible:
+        fork_comp.is_invertible = True
+        fork_comp.keywords = "Forks;Invertible"
+        fork_bot.is_inverted = True
+        self.assertTrue(check_robot_forks_in_line(fork_bot, opp_bot, (400.0, 365.0), fork_bot.pose, ["f1"], opp_pose=opp_bot.pose))
+        resolve_logs2 = resolve_collision_combat(col, fork_bot, opp_bot, round_num=1)
+        self.assertTrue(any("Forks lift" in entry.message for entry in resolve_logs2))
 
     def test_raised_robot_inertial_motion_excluded(self):
         """

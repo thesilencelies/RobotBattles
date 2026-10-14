@@ -185,13 +185,14 @@ The anatomy of each card consists of the following key attributes:
 % ==============================================================================
 
 \section{Terminology \& Keywords}
+\enlargethispage{2.0\baselineskip}
 
 \subsection{Resource Types}
 
 Components produce, require, and consume various resource types. The primary resources used in the game are:
 
 \begin{center}
-\renewcommand{\arraystretch}{1.3}
+\renewcommand{\arraystretch}{1.15}
 \begin{tabularx}{\textwidth}{c l c X}
   \toprule
   \textbf{Icon} & \textbf{Name} & \textbf{Abbreviation} & \textbf{Description} \\
@@ -222,8 +223,8 @@ Components may have keywords that define specific mechanical rules and interacti
   \midrule
   \keywordbadge{kw_fragile}{Fragile} & Destroyed as if durability 1 when taking weapon damage. \\
   \keywordbadge{kw_spin_up}{Spin up (X, Y)} & Add X spin counters at turn start (max Y); cleared on attack or inactive. \\
-  \keywordbadge{kw_forks}{Forks} & Opponent in line with forks (any part of robot) raised during contact. \\
-  \keywordbadge{kw_wedge}{Wedge} & Hit robot is not thrown. \\
+  \keywordbadge{kw_forks}{Forks} & Opponent in line with forks (any part of robot) raised during contact (disabled if inverted unless invertible). \\
+  \keywordbadge{kw_wedge}{Wedge} & Hit robot is not thrown (disabled if inverted unless invertible). \\
   \keywordbadge{kw_invertible}{Invertible} & Component functions normally while inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & Inverts upright at turn end without contact if active. \\
   \keywordbadge{kw_reset}{Reset} & Weapon inactive the turn after use; requires supply to reset. \\
@@ -235,9 +236,9 @@ Components may have keywords that define specific mechanical rules and interacti
 \begin{description}[leftmargin=!, labelwidth=2.5cm, itemsep=1pt, parsep=0pt, topsep=1pt, font=\bfseries\color{primaryDark}\small]
   \item[Fragile:] When this component takes weapon strike damage, it is immediately destroyed as if its durability were 1.
   \item[Spin up (X, Y):] At the start of each turn, add $X$ spin counters (max $Y$). All counters are removed when the weapon attacks or if it becomes inactive.
-  \item[Forks:] If any part of the opposing robot is in line with the forks during contact, they become \textbf{raised} (lifted) for that contact.
-  \item[Wedge:] If this component is hit, this robot is not thrown.
-  \item[Invertible:] This component functions inverted. Weapons and drive lacking this keyword do not function while inverted.
+  \item[Forks:] If any part of the opposing robot is in line with the forks during contact, they become \textbf{raised} (lifted) for that contact. Forks do not function while inverted unless they have the \textit{invertible} keyword.
+  \item[Wedge:] If this component is hit, this robot is not thrown. Wedges do not function while inverted unless they have the \textit{invertible} keyword.
+  \item[Invertible:] This component functions inverted. Components lacking this keyword (including weapons, drive, wedges, and forks) do not function while inverted.
   \item[Self-right:] If a turn ends without contact and this robot is inverted, invert it. Requires the component to be active.
   \item[Reset:] This weapon is inactive the turn after it is used (triggered by attacking or self-righting). A component that is resetting needs to be supplied in order to reset. (Does not cause the robot to be considered stuck if it is also a self-righter.)
 \end{description}
@@ -528,7 +529,7 @@ to each component that supplies it, shared equally if there are multiple compone
 \subsection{Status Effects}
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
-  \item[Inverted:] While a robot is inverted, weapons and drive without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
+  \item[Inverted:] While a robot is inverted, weapons, drive, and component abilities (such as wedges and forks) without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
   \item[Raised:] Some components (mostly forks) will make the opponent raised during contact if any part of the opposing robot is in line with them. A robot that is raised has its flip strength halved, its throw strength reduced by 2, and its motion does not contribute to the motion in inertial contact.
 \end{description}
 

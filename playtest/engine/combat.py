@@ -1109,8 +1109,29 @@ def resolve_collision_combat(
 
         # 4. Check Wedge keyword: If this component is hit this robot is not thrown.
         # A wedge is only hit if it is the component being hit (the component taking the damage).
-        r1_wedge = bool(target1_id and target1_id in r1.components and r1.components[target1_id].is_wedge)
-        r2_wedge = bool(target2_id and target2_id in r2.components and r2.components[target2_id].is_wedge)
+        # Wedges do not function while inverted unless invertible.
+        r1_wedge = bool(
+            target1_id
+            and target1_id in r1.components
+            and r1.components[target1_id].is_wedge
+            and (not r1.is_inverted or r1.components[target1_id].is_invertible)
+        )
+        r2_wedge = bool(
+            target2_id
+            and target2_id in r2.components
+            and r2.components[target2_id].is_wedge
+            and (not r2.is_inverted or r2.components[target2_id].is_invertible)
+        )
+        if target1_id and target1_id in r1.components and r1.components[target1_id].is_wedge and r1.is_inverted and not r1.components[target1_id].is_invertible and throw_str_1 > 0:
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=f"🛡️ {r1.name}'s Wedge was hit, but does not function while INVERTED!",
+            ))
+        if target2_id and target2_id in r2.components and r2.components[target2_id].is_wedge and r2.is_inverted and not r2.components[target2_id].is_invertible and throw_str_2 > 0:
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=f"🛡️ {r2.name}'s Wedge was hit, but does not function while INVERTED!",
+            ))
         if r1_wedge and throw_str_1 > 0:
             throw_str_1 = 0
             logs.append(CombatLogEntry(

@@ -369,6 +369,8 @@ def check_robot_forks_in_line(
         c for c in fork_robot.components.values()
         if (c.is_forks or "FORKS" in c.keywords.upper()) and not c.is_destroyed
     ]
+    if fork_robot.is_inverted:
+        fork_comps = [c for c in fork_comps if c.is_invertible]
     if not fork_comps:
         return False
 
