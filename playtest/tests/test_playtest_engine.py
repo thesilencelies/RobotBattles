@@ -979,6 +979,58 @@ class TestPlaytestEngine(unittest.TestCase):
             # Did NOT proceed to inertial contact
             self.assertFalse(any("proceeding with inertial contact" in msg for msg in log_messages))
 
+    def test_active_contact_still_touching_separates_full_unit(self):
+        """Tests that if robots remain touching after active contact, they separate a full unit."""
+        from playtest.engine.combat import resolve_collision_combat, check_robots_in_contact
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Position touching/overlapping along Y axis: dy = 50mm < 70mm (overlap = 20mm)
+        p_bot.pose = Pose(x=400.0, y=420.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=370.0, theta=180.0)
+
+        # Attacking weapon
+        w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        w_comp.outputs = "8W"
+        w_comp.text = "Deals no damage."
+        w_comp.is_active = True
+
+        # Opponent component is a wedge (negates throw)
+        wedge_cid = [cid for cid, c in a_bot.components.items() if c.is_wedge][0]
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[wedge_cid],
+            contact_type="ACTIVE",
+            description="Active strike into wedge with zero remaining distance",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(0.0, 0.0),
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        log_messages = [l.message for l in logs]
+
+        # Active clash occurred
+        self.assertTrue(any("ACTIVE WEAPON HIT" in msg for msg in log_messages))
+        # Proceeded to inertial contact
+        self.assertTrue(any("proceeding with inertial contact" in msg for msg in log_messages))
+        # Separated back a full unit
+        self.assertTrue(any("moved back a full unit to separate" in msg for msg in log_messages))
+        # Robots are no longer touching
+        self.assertFalse(check_robots_in_contact(p_bot, a_bot))
+        self.assertAlmostEqual(p_bot.pose.y, 470.0, delta=0.5)
+        self.assertAlmostEqual(a_bot.pose.y, 320.0, delta=0.5)
+
     def test_inertial_separation_wall_clamped(self):
         """Tests that inertial separation respects arena boundary walls ('if possible')."""
         from playtest.engine.combat import resolve_collision_combat

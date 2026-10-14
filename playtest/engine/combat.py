@@ -752,6 +752,53 @@ def start_of_turn_spin_up(robot: RobotState) -> List[str]:
     return logs
 
 
+def separate_robots_full_unit(
+    r1: RobotState,
+    r2: RobotState,
+    round_num: int,
+    log_prefix: str = "Inertial separation",
+) -> List[CombatLogEntry]:
+    """
+    Separates two robots that are touching by moving both robots back a full unit
+    (DRIVE_UNIT_MM) away from contact, clamped to arena boundaries.
+    """
+    logs: List[CombatLogEntry] = []
+    if check_robots_in_contact(r1, r2):
+        d_sep = math.hypot(r2.pose.x - r1.pose.x, r2.pose.y - r1.pose.y)
+        if d_sep < 1e-4:
+            nx, ny = 1.0, 0.0
+        else:
+            nx, ny = (r2.pose.x - r1.pose.x) / d_sep, (r2.pose.y - r1.pose.y) / d_sep
+
+        # Move each robot back a full unit away from contact
+        overlap = max(0.0, (2.0 * MINIATURE_RADIUS) - d_sep)
+        step_mm = overlap / 2.0 + DRIVE_UNIT_MM
+
+        target_r1_x = r1.pose.x - nx * step_mm
+        target_r1_y = r1.pose.y - ny * step_mm
+        target_r2_x = r2.pose.x + nx * step_mm
+        target_r2_y = r2.pose.y + ny * step_mm
+
+        new_r1_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r1_x))
+        new_r1_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r1_y))
+        new_r2_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r2_x))
+        new_r2_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r2_y))
+
+        actual_step1 = math.hypot(new_r1_x - r1.pose.x, new_r1_y - r1.pose.y)
+        actual_step2 = math.hypot(new_r2_x - r2.pose.x, new_r2_y - r2.pose.y)
+
+        r1.pose.x = new_r1_x
+        r1.pose.y = new_r1_y
+        r2.pose.x = new_r2_x
+        r2.pose.y = new_r2_y
+
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"↔️ {log_prefix}: robots were touching and both moved back a full unit to separate ({r1.name}: {actual_step1:.0f}mm, {r2.name}: {actual_step2:.0f}mm).",
+        ))
+    return logs
+
+
 def resolve_inert_contact(
     col: CollisionEvent,
     r1: RobotState,
@@ -851,39 +898,8 @@ def resolve_inert_contact(
                 resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str, phase="wall_feedback", steps=steps)
 
     # Separation rule: If the robots are still touching, both robots are moved back a full unit to separate them
-    if check_robots_in_contact(r1, r2):
-        d_sep = math.hypot(r2.pose.x - r1.pose.x, r2.pose.y - r1.pose.y)
-        if d_sep < 1e-4:
-            nx, ny = 1.0, 0.0
-        else:
-            nx, ny = (r2.pose.x - r1.pose.x) / d_sep, (r2.pose.y - r1.pose.y) / d_sep
-
-        # Move each robot back a full unit (20mm each) away from contact
-        overlap = max(0.0, (2.0 * MINIATURE_RADIUS) - d_sep)
-        step_mm = overlap / 2.0 + DRIVE_UNIT_MM
-
-        target_r1_x = r1.pose.x - nx * step_mm
-        target_r1_y = r1.pose.y - ny * step_mm
-        target_r2_x = r2.pose.x + nx * step_mm
-        target_r2_y = r2.pose.y + ny * step_mm
-
-        new_r1_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r1_x))
-        new_r1_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r1_y))
-        new_r2_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r2_x))
-        new_r2_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r2_y))
-
-        actual_step1 = math.hypot(new_r1_x - r1.pose.x, new_r1_y - r1.pose.y)
-        actual_step2 = math.hypot(new_r2_x - r2.pose.x, new_r2_y - r2.pose.y)
-
-        r1.pose.x = new_r1_x
-        r1.pose.y = new_r1_y
-        r2.pose.x = new_r2_x
-        r2.pose.y = new_r2_y
-
-        logs.append(CombatLogEntry(
-            round=round_num, phase="collision",
-            message=f"↔️ Inertial separation: robots were touching and both moved back a full unit to separate ({r1.name}: {actual_step1:.0f}mm, {r2.name}: {actual_step2:.0f}mm).",
-        ))
+    sep_logs = separate_robots_full_unit(r1, r2, round_num, log_prefix="Inertial separation")
+    logs.extend(sep_logs)
 
     # Hazard pit elimination check
     for robot in (r1, r2):
@@ -1189,7 +1205,7 @@ def resolve_collision_combat(
                 ))
 
         # Rule: if after active contact the robots are still in contact,
-        # then proceed with inertial contact.
+        # then proceed with inertial contact. If still touching, both robots are moved back a full unit to separate them.
         if not r1.is_eliminated and not r2.is_eliminated:
             if check_robots_in_contact(r1, r2):
                 logs.append(CombatLogEntry(
@@ -1198,6 +1214,9 @@ def resolve_collision_combat(
                 ))
                 inert_logs = resolve_inert_contact(col, r1, r2, round_num, steps=steps)
                 logs.extend(inert_logs)
+            if check_robots_in_contact(r1, r2):
+                sep_logs = separate_robots_full_unit(r1, r2, round_num, log_prefix="Active contact separation")
+                logs.extend(sep_logs)
 
     else:
         # Standard inert pushing contact

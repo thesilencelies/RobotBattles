@@ -480,14 +480,14 @@ When weapons collide with an opponent's chassis or components:
   \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the single outermost component contacted (damage does not penetrate inwards).
   \item Then both robots are thrown away from the contact. The base throw strength is equal to the attack strength received.
   \item Weapons receive feedback equal to half the total attack strength in the contact.
-  \item If after active contact the robots are still in contact, then proceed with inertial contact.
+  \item If after active contact the robots are still in contact, then proceed with inertial contact. If the robots are still touching after this, both robots are moved back a full unit to separate them.
 \end{itemize}
 
 \begin{summarybox}{Contact Classification Quick Reference}
 \begin{tabularx}{\textwidth}{l X}
   \textbf{Contact Type} & \textbf{Resolution Mechanism} \\
   \midrule
-  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals damage to outermost component contacted $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. If robots are still in contact, proceed with inertial contact. \\
+  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals damage to outermost component contacted $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. If robots are still in contact, proceed with inertial contact; if still touching, both robots are moved back a full unit to separate them. \\
   \addlinespace[3pt]
   \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw $\rightarrow$ If still touching, move both back a full unit to separate them. \\
 \end{tabularx}
@@ -537,7 +537,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Direct Weapon Damage:} Weapon strike damage applies only to the single outermost component hit; excess damage does not penetrate inwards (throw shock covers internals).
   \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged} (both ignore absorption). Damaged again $\implies$ \textbf{Destroyed}.
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
-  \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact.
+  \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact. If still touching, both robots are moved back a full unit to separate them.
   \item \textbf{Inertial Separation:} If robots are still touching after inertial contact, both robots are moved back a full unit to separate them.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
 \end{itemize}
