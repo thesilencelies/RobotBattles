@@ -2004,6 +2004,165 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertIsNotNone(hit_cid)
         self.assertIn(hit_cid, bot.components)
 
+    def test_automata_weapons_down_consider_max_spin(self):
+        """
+        Rule: 'Automata are at full spin unless they have an active weapon with spin up that is not at max spin.'
+        If their weapons are down (destroyed/inactive), they consider themselves at full spin
+        and roll on the charged / full-spin action tables.
+        """
+        from playtest.engine.automata import get_automaton_action, is_automaton_at_full_spin
+        from playtest.engine.match import create_match
+
+        # Test 1: Spin Up archetype (Vyper_Spinner)
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        bot = match.player_robot  # Vyper_Spinner loaded as robot
+
+        # Find the weapon (Horizontal Spinner, id 13)
+        w_comp = next(c for c in bot.components.values() if c.card_type == "weapon")
+        self.assertEqual(w_comp.name, "Horizontal Spinner")
+
+        # Case A: Active weapon with 0 spin counters -> NOT at full spin, uses uncharged table
+        bot.weapon_spin_counters[w_comp.id] = 0
+        w_comp.spin_counters = 0
+        w_comp.is_active = True
+        w_comp.is_destroyed = False
+        self.assertFalse(is_automaton_at_full_spin(bot))
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 1), "Retreat")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 3), "Face")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 4), "Evade")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 6), "Rush")
+
+        # Case B: Weapon is destroyed -> Weapons are down, considered at full spin -> uses charged table!
+        w_comp.is_destroyed = True
+        self.assertTrue(is_automaton_at_full_spin(bot))
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 1), "Face")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 2), "Evade")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 3), "Rush")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 6), "Rush")
+
+        # Case C: Weapon is inactive (unpowered) -> considered at full spin -> uses charged table!
+        w_comp.is_destroyed = False
+        w_comp.is_active = False
+        self.assertTrue(is_automaton_at_full_spin(bot))
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 1), "Face")
+        self.assertEqual(get_automaton_action("Vyper_Spinner", bot, 3), "Rush")
+
+        # Test 2: Balanced archetype (Beater_wide)
+        bw_text = read_saved_robot("Beater_wide.csv")
+        bw_match = create_match(bw_text, "Vyper_flipper", "Player")
+        bw_bot = bw_match.player_robot
+        bw_weapon = next(c for c in bw_bot.components.values() if c.card_type == "weapon")
+        self.assertEqual(bw_weapon.name, "Beater Bar")
+
+        # Sub-spin (active, 1 counter out of 3 max) -> sub_spin table
+        bw_weapon.is_active = True
+        bw_weapon.is_destroyed = False
+        bw_bot.weapon_spin_counters[bw_weapon.id] = 1
+        bw_weapon.spin_counters = 1
+        self.assertFalse(is_automaton_at_full_spin(bw_bot))
+        self.assertEqual(get_automaton_action("Beater_wide", bw_bot, 1), "Retreat")
+        self.assertEqual(get_automaton_action("Beater_wide", bw_bot, 2), "Evade")
+        self.assertEqual(get_automaton_action("Beater_wide", bw_bot, 4), "Face")
+        self.assertEqual(get_automaton_action("Beater_wide", bw_bot, 5), "Rush")
+
+        # Destroyed weapon -> considered at full spin -> full_spin table!
+        bw_weapon.is_destroyed = True
+        self.assertTrue(is_automaton_at_full_spin(bw_bot))
+        self.assertEqual(get_automaton_action("Beater_wide", bw_bot, 1), "Retreat")
+        self.assertEqual(get_automaton_action("Beater_wide", bw_bot, 2), "Face")
+        self.assertEqual(get_automaton_action("Beater_wide", bw_bot, 3), "Evade")
+        self.assertEqual(get_automaton_action("Beater_wide", bw_bot, 4), "Rush")
+
+    def test_weapon_wall_contact_when_pushed_into_wall(self):
+        """
+        Rule: 'When a weapon contacts a wall it should also lose all its spin counters
+        and suffer feedback: (weapon strength + throw strength) // 2.'
+        """
+        from playtest.engine.combat import resolve_inert_contact
+        from playtest.engine.match import create_match
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        spinner = match.player_robot
+        opp = match.automaton_robot
+
+        w_comp = next(c for c in spinner.components.values() if c.card_type == "weapon")
+        w_id = w_comp.id
+
+        # Set 4 spin counters on Horizontal Spinner (attack strength = 2*4 + 1 = 9)
+        spinner.weapon_spin_counters[w_id] = 4
+        w_comp.spin_counters = 4
+
+        # Face West (heading 270) towards WALL_LEFT (x=100)
+        spinner.pose = Pose(x=150.0, y=400.0, theta=270.0)
+        opp.pose = Pose(x=190.0, y=400.0, theta=270.0)
+
+        # Displace towards left wall (push_vector = (-50, 0), pushes spinner into wall)
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(170.0, 400.0),
+            robot1_octant="Back",
+            robot2_octant="Front",
+            robot1_components=[w_id],
+            robot2_components=[list(opp.components.keys())[0]],
+            contact_type="INERT",
+            description="Pushing spinner into left wall",
+            r1_rem_vector=(-50.0, 0.0),
+            r2_rem_vector=(-50.0, 0.0),
+            push_vector=(-50.0, 0.0),
+        )
+        logs = resolve_inert_contact(col, spinner, opp, round_num=1)
+
+        # Horizontal Spinner touches wall:
+        # 1. Lost all spin counters
+        self.assertEqual(spinner.weapon_spin_counters[w_id], 0)
+        self.assertEqual(w_comp.spin_counters, 0)
+
+        # 2. Suffered feedback = (weapon_strength + wall_throw_str) // 2
+        wall_fb_logs = [e.message for e in logs if "contacted the wall" in e.message]
+        self.assertTrue(len(wall_fb_logs) > 0, "Should log weapon contacting the wall")
+        self.assertTrue(any("Lost all spin counters" in msg for msg in wall_fb_logs))
+        self.assertTrue(any("suffered" in msg for msg in wall_fb_logs))
+
+    def test_weapon_wall_contact_when_driving_into_wall(self):
+        """
+        Rule: 'when a weapon contacts a wall it should also lose all its spin counters and suffer feedback.
+        (This happens both if they drive into a wall and if they are pushed into it)'
+        Also: driving into wall stops at the wall (stuck at wall).
+        """
+        from playtest.engine.match import create_match, execute_turn
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        w_comp = next(c for c in p_bot.components.values() if c.card_type == "weapon")
+        w_id = w_comp.id
+
+        # Position player robot near left wall (x=150, y=400) facing West (270)
+        p_bot.pose = Pose(x=150.0, y=400.0, theta=270.0)
+        # Position automaton far away on opposite side so no robot-robot collision occurs
+        a_bot.pose = Pose(x=550.0, y=400.0, theta=90.0)
+
+        # Give player 4 spin counters
+        p_bot.weapon_spin_counters[w_id] = 4
+        w_comp.spin_counters = 4
+
+        # Drive forward into left wall (L=3, R=3 forward along heading 270 = West)
+        # Straight forward 3 units = 75mm west -> from 150 to 75, hitting WALL_LEFT (100)
+        execute_turn(match, MoveChoice(3, 3), fixed_automaton_roll=1)
+
+        # Verify robot stopped at the wall (clamped to WALL_LEFT + MINIATURE_RADIUS = 135)
+        self.assertAlmostEqual(p_bot.pose.x, 135.0, places=1)
+
+        # Verify weapon contacted wall: lost all spin counters and suffered feedback
+        self.assertEqual(p_bot.weapon_spin_counters[w_id], 0)
+        self.assertEqual(w_comp.spin_counters, 0)
+        wall_logs = [e.message for e in match.log if "contacted the wall" in e.message]
+        self.assertTrue(len(wall_logs) > 0, "Driving weapon into wall should log contact and feedback")
+
 
 if __name__ == "__main__":
     unittest.main()

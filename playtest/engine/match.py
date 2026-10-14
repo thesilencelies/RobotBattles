@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 import uuid
 from typing import Any, Collection, Dict, List, Optional, Tuple
@@ -24,10 +25,11 @@ from .combat import (
     parse_weapon_spin_and_damage,
     refresh_robot_drive_and_power,
     resolve_collision_combat,
+    resolve_weapon_wall_contact,
     start_of_turn_spin_up,
 )
 from .field import AUTOMATON_START_POSE, PLAYER_START_POSE
-from .movement import generate_trajectory
+from .movement import DRIVE_UNIT_MM, generate_trajectory
 from .types import (
     CollisionEvent,
     CombatLogEntry,
@@ -394,12 +396,34 @@ def execute_turn(
 
 
     else:
-        # Both complete motion to t=1.0
-        p_bot.pose = Pose(p_traj[-1].x, p_traj[-1].y, p_traj[-1].theta)
-        a_bot.pose = Pose(a_traj[-1].x, a_traj[-1].y, a_traj[-1].theta)
         match.log.append(CombatLogEntry(
             round=r_num, phase="movement", message="Both robots advanced along their template tracks without contact."
         ))
+
+        for bot, choice, traj in [
+            (p_bot, p_choice, p_traj),
+            (a_bot, a_choice, a_traj),
+        ]:
+            # Calculate excess displacement beyond arena walls
+            unclamped = generate_trajectory(bot.pose, choice, clamp_to_walls=False)
+            raw_end = unclamped[-1]
+            clamped_end = traj[-1]
+            excess_dist = math.hypot(raw_end.x - clamped_end.x, raw_end.y - clamped_end.y)
+            drive_throw_str = int(round(excess_dist / DRIVE_UNIT_MM)) if excess_dist > 2.0 else 0
+
+            bot.pose = Pose(clamped_end.x, clamped_end.y, clamped_end.theta)
+
+            if excess_dist > 2.0:
+                match.log.append(CombatLogEntry(
+                    round=r_num, phase="movement",
+                    message=f"🧱 {bot.name} drove into the arena wall and got stuck at the wall (impact strength {drive_throw_str}).",
+                ))
+
+            # Weapon wall contact check: loses all spin counters and takes feedback
+            w_logs = resolve_weapon_wall_contact(
+                bot, throw_strength=drive_throw_str, round_num=r_num, phase="movement", steps=match.damage_steps
+            )
+            match.log.extend(w_logs)
 
     # 4. Cleanup Phase
     # Self-right check: if round ended without contact and robot is inverted, invert it

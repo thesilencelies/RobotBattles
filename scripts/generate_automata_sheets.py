@@ -99,7 +99,7 @@ ARCHETYPE_TABLES: Dict[str, Dict[str, Any]] = {
         "title": "Spin Up Action Table",
         "sections": [
             {
-                "condition": "If 2+ spin counters on weapon:",
+                "condition": "If 2+ spin counters on weapon (or weapons down):",
                 "rows": [
                     ("1", "Face"),
                     ("2", "Evade"),
@@ -121,7 +121,7 @@ ARCHETYPE_TABLES: Dict[str, Dict[str, Any]] = {
         "title": "Balanced Action Table",
         "sections": [
             {
-                "condition": "If weapon is at full spin:",
+                "condition": "If weapon is at full spin (or weapons down):",
                 "rows": [
                     ("1", "Retreat"),
                     ("2", "Face"),

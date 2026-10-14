@@ -10,6 +10,10 @@ from .field import (
     MAT_CENTER_X,
     MAT_CENTER_Y,
     MAT_TO_MINI_SCALE,
+    WALL_BOTTOM,
+    WALL_LEFT,
+    WALL_RIGHT,
+    WALL_TOP,
     card_to_miniature_offset,
     get_chassis_polygon,
     get_weapon_template_geometry,
@@ -17,7 +21,7 @@ from .field import (
     transform_point,
     transform_polygon,
 )
-from .types import CollisionEvent, ComponentHealth, RobotState, TrajectoryPoint
+from .types import CollisionEvent, ComponentHealth, Pose, RobotState, TrajectoryPoint
 
 OCTANT_NAMES = [
     "Front",
@@ -438,3 +442,29 @@ def check_robot_forks_in_line(
             return True
 
     return False
+
+
+def get_weapon_wall_contacts(
+    robot: RobotState,
+    pose: Pose,
+    wall_tol: float = 1.0,
+) -> List[str]:
+    """
+    Returns list of weapon component IDs whose miniature polygons contact
+    or cross the arena perimeter walls.
+    """
+    parts = get_robot_miniature_parts(robot, pose.x, pose.y, pose.theta)
+    contacting_cids: List[str] = []
+    for w_part in parts["weapon_parts"]:
+        cid = w_part["cid"]
+        poly = w_part["polygon"]
+        hits_wall = any(
+            x <= WALL_LEFT + wall_tol
+            or x >= WALL_RIGHT - wall_tol
+            or y <= WALL_TOP + wall_tol
+            or y >= WALL_BOTTOM - wall_tol
+            for x, y in poly
+        )
+        if hits_wall and cid not in contacting_cids:
+            contacting_cids.append(cid)
+    return contacting_cids

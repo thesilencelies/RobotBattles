@@ -91,18 +91,28 @@ def get_automaton_archetype(automaton_name: str) -> str:
     return "Full Rush"
 
 
-def is_weapon_at_full_spin(automaton: RobotState) -> bool:
+def is_automaton_at_full_spin(automaton: RobotState) -> bool:
     """
-    Returns True if any active spin weapon on the automaton has reached max spin.
+    Automata consider themselves at full spin unless they have an active weapon
+    with spin up that is not at max spin.
     """
+    if not automaton.components:
+        total_spin = sum(automaton.weapon_spin_counters.values())
+        return total_spin >= 3
+
     for cid, comp in automaton.components.items():
         if comp.card_type == "weapon" and not comp.is_destroyed and comp.is_active:
+            if automaton.is_inverted and not comp.is_invertible:
+                continue
             _, max_spin, _, _ = parse_weapon_spin_and_damage(comp.outputs, comp.keywords, comp.text)
             if max_spin > 0:
                 current_spin = automaton.weapon_spin_counters.get(cid, 0)
-                if current_spin >= max_spin:
-                    return True
-    return False
+                if current_spin < max_spin:
+                    return False
+    return True
+
+
+is_weapon_at_full_spin = is_automaton_at_full_spin
 
 
 def get_automaton_action(
@@ -112,23 +122,23 @@ def get_automaton_action(
 ) -> str:
     """
     Looks up action based on automaton archetype, weapon spin state, and d6 roll.
+    Automata consider themselves at full spin unless they have an active weapon
+    with spin up that is not at max spin.
     """
     archetype = get_automaton_archetype(automaton_name)
     total_spin = sum(automaton.weapon_spin_counters.values())
+    at_full = is_automaton_at_full_spin(automaton) if automaton.components else (total_spin >= 3)
 
     if archetype == "Full Rush":
         table = ARCHETYPE_TABLES["Full Rush"]["default"]
     elif archetype == "Spin Up":
+        is_charged = (is_automaton_at_full_spin(automaton) if automaton.components else (total_spin >= 2)) or (total_spin >= 2)
         table = (
             ARCHETYPE_TABLES["Spin Up"]["charged"]
-            if total_spin >= 2
+            if is_charged
             else ARCHETYPE_TABLES["Spin Up"]["uncharged"]
         )
     elif archetype == "Balanced":
-        at_full = is_weapon_at_full_spin(automaton)
-        # Fallback if dummy/test state has no components registered
-        if not automaton.components and total_spin >= 3:
-            at_full = True
         table = (
             ARCHETYPE_TABLES["Balanced"]["full_spin"]
             if at_full

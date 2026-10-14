@@ -19,7 +19,7 @@ from .field import (
     WALL_TOP,
     is_in_hazard,
 )
-from .collision import check_robot_forks_in_line, check_robots_in_contact
+from .collision import check_robot_forks_in_line, check_robots_in_contact, get_weapon_wall_contacts
 from .movement import DRIVE_UNIT_MM, MINIATURE_RADIUS
 from .types import (
     CollisionEvent,
@@ -310,6 +310,48 @@ def resolve_feedback_propagation(
 
     return logs
 
+
+def resolve_weapon_wall_contact(
+    robot: RobotState,
+    throw_strength: int = 0,
+    round_num: int = 1,
+    phase: str = "collision",
+    steps: Optional[List[DamageTrainStep]] = None,
+) -> List[CombatLogEntry]:
+    """
+    Checks if any weapon on the robot contacts an arena wall at its current pose.
+    When a weapon contacts a wall:
+    - It loses all spin counters.
+    - Suffers feedback = (weapon attack strength + throw strength) // 2.
+    """
+    logs: List[CombatLogEntry] = []
+    contacting_cids = get_weapon_wall_contacts(robot, robot.pose)
+    for cid in contacting_cids:
+        if cid in robot.components:
+            w_comp = robot.components[cid]
+            spin = robot.weapon_spin_counters.get(cid, 0)
+            w_atk = get_weapon_attack_strength(w_comp, spin)
+            feedback = (w_atk + throw_strength) // 2
+
+            # Reset spin counters
+            robot.weapon_spin_counters[cid] = 0
+            w_comp.spin_counters = 0
+
+            logs.append(CombatLogEntry(
+                round=round_num, phase=phase,
+                message=(
+                    f"💥 {robot.name}'s weapon {w_comp.name} contacted the wall! "
+                    f"Lost all spin counters (was {spin}) and suffered {feedback} feedback "
+                    f"((weapon strength {w_atk} + throw strength {throw_strength}) // 2)."
+                ),
+            ))
+            if feedback > 0:
+                fb_logs = resolve_feedback_propagation(
+                    robot, cid, feedback, phase="wall_feedback", steps=steps
+                )
+                for fl in fb_logs:
+                    logs.append(CombatLogEntry(round=round_num, phase=phase, message=f"  [Wall Feedback] {fl}"))
+    return logs
 
 
 def simulate_dropping_card(robot: RobotState) -> Optional[str]:
@@ -886,6 +928,7 @@ def resolve_inert_contact(
     ))
 
     # Wall throw check: If you hit a wall, throw the robot that hits a wall away from the wall
+    wall_throw_str = 0
     if pushed_into_wall_robot and excess_wall_dist > 5.0:
         wall_throw_str = int(round(excess_wall_dist / DRIVE_UNIT_MM))
         if wall_throw_str > 0:
@@ -896,6 +939,12 @@ def resolve_inert_contact(
             shock_cid = simulate_dropping_card(pushed_into_wall_robot)
             if shock_cid:
                 resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str, phase="wall_feedback", steps=steps)
+
+    # Weapon wall contact check: when a weapon contacts a wall it loses all spin counters and suffers feedback
+    for rob in (r1, r2):
+        t_str = wall_throw_str if (rob == pushed_into_wall_robot) else 0
+        w_logs = resolve_weapon_wall_contact(rob, throw_strength=t_str, round_num=round_num, phase="collision", steps=steps)
+        logs.extend(w_logs)
 
     # Separation rule: If the robots are still touching, both robots are moved back a full unit to separate them
     sep_logs = separate_robots_full_unit(r1, r2, round_num, log_prefix="Inertial separation")
@@ -1188,6 +1237,8 @@ def resolve_collision_combat(
                     round=round_num, phase="collision",
                     message=f"🚀 {robot.name} is THROWN into a WALL! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> hit wall, takes full throw damage {throw_dmg})",
                 ))
+                w_wall_logs = resolve_weapon_wall_contact(robot, throw_strength=throw_str, round_num=round_num, phase="collision", steps=steps)
+                logs.extend(w_wall_logs)
             else:
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",

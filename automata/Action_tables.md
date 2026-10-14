@@ -5,7 +5,9 @@ The actions available to the automata are:
 - Retreat - Move away from opponent while facing them
 - Evade - move forwards and perpendicular to the line between the robots - if both ways are clear choose at random
 
-There are several archetypes, from which automata normally choose:
+There are several archetypes, from which automata normally choose.
+
+*Note on weapon spin:* Automata consider themselves at full spin unless they have an active weapon with spin up that is not at max spin (e.g. if their weapons are down or at max spin, they use the charged / full spin action tables).
 
 ## Full rush
 No flow chart - always same table

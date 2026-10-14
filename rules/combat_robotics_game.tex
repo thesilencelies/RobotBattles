@@ -466,7 +466,7 @@ Essentially a pushing match between colliding chassis surfaces:
   \item Move along templates until contact.
   \item Displace the remainder of robot A's template to the end of robot B's template.
   \item Move both robots along the straight line from the initial contact point to the end of A's displaced template (a raised robot's motion does not contribute).
-  \item If a robot hits a wall, throw the robot that hits a wall away from the wall with a throw strength equal to the distance it would have moved if the wall was not there.
+  \item If a robot hits a wall, throw it away with throw strength equal to the distance it would have moved if the wall was not there. Any weapon contacting a wall loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$.
   \item If the robots are still touching, both robots are moved back a full unit to separate them.
 \end{enumerate}
 
@@ -480,7 +480,7 @@ When weapons collide with an opponent's chassis or components:
 \begin{itemize}
   \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the single outermost component contacted (damage does not penetrate inwards).
   \item Then both robots are thrown away from the contact. The base throw strength is equal to the attack strength received.
-  \item Weapons receive feedback equal to half the total attack strength in the contact.
+  \item Weapons receive feedback equal to half the total attack strength in the contact. A weapon contacting an arena wall loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$.
   \item If after active contact the robots are still in contact, then proceed with inertial contact. If the robots are still touching after this, both robots are moved back a full unit to separate them.
 \end{itemize}
 
@@ -501,6 +501,7 @@ When weapons collide with an opponent's chassis or components:
 % ==============================================================================
 
 \section{Combat Resolution, Damage \& Status Effects}
+\enlargethispage{2.0\baselineskip}
 
 \subsection{Throws \& Inversion}
 
@@ -540,6 +541,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
   \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact. If still touching, both robots are moved back a full unit to separate them.
   \item \textbf{Inertial Separation:} If robots are still touching after inertial contact, both robots are moved back a full unit to separate them.
+  \item \textbf{Weapon Wall Contact:} When a weapon contacts an arena wall (driven or pushed), it loses all spin counters and suffers feedback equal to $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$. Driving into a wall stops the robot without a throw.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
 \end{itemize}
 \end{summarybox}
@@ -551,6 +553,7 @@ to each component that supplies it, shared equally if there are multiple compone
 % ==============================================================================
 
 \section{Game Formats}
+\enlargethispage{2.0\baselineskip}
 \subsection{Robot Weight Limits}
 The default weight limit is 40. Feel free to set a different weight limit for your own play, but that is the number used for the automata.
 
@@ -588,7 +591,7 @@ If you just want to dive right into the action, you can grab one of the automato
 There are some automaton robots which come with a pre-built setup printed on their A3 sheet. You can use dry-erase markers to write on this damage during a fight.
 
 They will take actions according to the table written on the right-hand side of their sheet.
-First check the chart to see which table to roll on based on the current state of the robot.
+First check the chart to see which table to roll on based on the current state of the robot. Automata consider themselves at full spin unless they have an active weapon with spin up that is not at max spin (e.g. if their weapons are down or at max spin, they roll on the full spin / charged table).
 Then roll a d6 to see which action they take.
 The possible actions are as follows:
 \begin{itemize}
