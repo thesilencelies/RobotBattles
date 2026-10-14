@@ -289,10 +289,10 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(geom["radius"], 22.0)
 
     def test_start_of_turn_spin_up(self):
-        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        csv_text = read_saved_robot("Beater_wide.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player")
         # In Round 1 initialization, start_of_turn_spin_up already fired
-        # Horizontal Spinner has Spin up (4), starts at 1 spin counter (0 + 1)
+        # Beater Bar has Spin up (3), starts at 1 spin counter (0 + 1)
         player_bot = match.player_robot
         spin_weapons = [c for c in player_bot.components.values() if "spin up" in c.keywords.lower()]
         self.assertGreater(len(spin_weapons), 0)
@@ -397,7 +397,7 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("Wedge was hit" in entry.message for entry in logs))
         self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
 
-    def test_wedge_keyword_when_raised_does_not_prevent_throw(self):
+    def test_wedge_keyword_when_raised_prevents_throw(self):
         from playtest.engine.combat import resolve_collision_combat
         from playtest.engine.types import CollisionEvent
         csv_text = read_saved_robot("Vyper_Spinner.csv")
@@ -405,7 +405,7 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot = match.player_robot
         a_bot = match.automaton_robot
 
-        # Ensure player robot has a wedge component hit, but is raised!
+        # Ensure player robot has a wedge component hit, and is raised!
         wedge_comp = ComponentHealth(
             id="wedge_1", name="Titanium Wedge", card_type="component",
             max_durability=9, current_durability=9, absorption=1, requirements="",
@@ -431,9 +431,9 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_active_hit=True,
         )
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
-        # Wedge was hit, but p_bot is raised: Wedge effect does NOT apply, so p_bot IS thrown!
-        self.assertTrue(any("Wedge effect does not apply" in entry.message for entry in logs))
-        self.assertTrue(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
+        # Wedge was hit: Wedge effect applies even if raised, so p_bot is NOT thrown!
+        self.assertTrue(any("Wedge was hit" in entry.message for entry in logs))
+        self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
 
     def test_split_supply_distribution(self):
         """
@@ -836,6 +836,7 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp = weapon_comps[0]
         w_comp.outputs = "5W"
         w_comp.text = "Deals no damage."
+        w_comp.is_active = True
 
         # Non-wedge component on opponent (battery)
         non_wedge_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
@@ -868,6 +869,7 @@ class TestPlaytestEngine(unittest.TestCase):
         a_bot.pose = Pose(x=400.0, y=25.0, theta=180.0)
         p_bot.pose = Pose(x=400.0, y=50.0, theta=0.0)
         col.contact_point = (400.0, 45.0)
+        w_comp.is_active = True
         with patch("random.randint", return_value=3): # 3+3 = 6 roll
             logs_wall = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
             wall_logs = [l.message for l in logs_wall if "THROWN into a WALL" in l.message]
@@ -889,6 +891,7 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
         w_comp.outputs = "5W"
         w_comp.text = "Deals no damage."
+        w_comp.is_active = True
 
         # Opponent component contacted is a Wedge! (Titanium Wedge)
         # The wedge keyword prevents the opponent from being thrown!
@@ -945,6 +948,7 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
         w_comp.outputs = "8W"
         w_comp.text = "Deals no damage."
+        w_comp.is_active = True
 
         # Opponent component is NOT a wedge (battery)
         non_wedge_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
@@ -1068,6 +1072,7 @@ class TestPlaytestEngine(unittest.TestCase):
         a_bot = build_robot_state(csv_text, "automaton", "Auto Bot", (400.0, 380.0, 180.0))
 
         p_w = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        p_w.is_active = True
         p_bot.weapon_spin_counters[p_w.id] = 3
         p_w.spin_counters = 3
 
@@ -1113,7 +1118,7 @@ class TestPlaytestEngine(unittest.TestCase):
 
     def test_spin_up_counters_removed_when_weapon_becomes_inactive(self):
         """Rule: If the weapon becomes inactive all counters are removed."""
-        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        csv_text = read_saved_robot("Beater_wide.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
         bot = match.player_robot
 
@@ -1167,6 +1172,9 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
         w_comp.outputs = "5W"
         w_comp.text = ""
+        w_comp.is_active = True
+        p_bot.weapon_spin_counters[w_comp.id] = 1
+        w_comp.spin_counters = 1
 
         wedge_cids = [cid for cid, c in a_bot.components.items() if c.is_wedge]
         non_wedge_cids = [cid for cid, c in a_bot.components.items() if not c.is_wedge and "wheel" in c.name.lower()]
@@ -1204,6 +1212,7 @@ class TestPlaytestEngine(unittest.TestCase):
 
         # Reset opponent pose and player weapon spin
         a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+        w_comp.is_active = True
         p_bot.weapon_spin_counters[w_comp.id] = 1
         w_comp.spin_counters = 1
 
@@ -1310,6 +1319,7 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.outputs = "4W"
         w_comp.keywords = "Spin up (2)"
         w_comp.text = "Increases throw strength by 2"
+        w_comp.is_active = True
         p_bot.weapon_spin_counters[w_comp.id] = 1
 
         non_wedge = [cid for cid, c in a_bot.components.items() if not c.is_wedge and "wheel" in c.name.lower()][0]
@@ -1738,9 +1748,9 @@ class TestPlaytestEngine(unittest.TestCase):
 
     def test_raised_status_effects(self):
         """
-        Rule: 'A robot that is raised has its flip strength halved and its weapons deal 2 less damage.
-        The Wedge effect does not apply if the robot is raised.'
-        Also verify drive strength is NOT halved.
+        Rule: 'A robot that is raised has its flip strength halved, its throw strength reduced by 2,
+        and its motion does not contribute to the motion in inertial contact.'
+        Wedges remain active when raised. Drive strength is NOT halved.
         """
         from playtest.engine.combat import resolve_collision_combat, refresh_robot_drive_and_power
         from playtest.engine.types import CollisionEvent
@@ -1761,7 +1771,7 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(p_bot.left_drive_max, normal_left, "Drive is not halved when raised")
         self.assertEqual(p_bot.right_drive_max, normal_right, "Drive is not halved when raised")
 
-        # 2. Weapon deals 2 less damage when raised
+        # 2. Weapon deals full damage when raised, but throw strength is reduced by 2
         wpn = next(c for c in p_bot.components.values() if c.card_type == "weapon")
         wpn.is_active = True
         p_bot.weapon_spin_counters[wpn.id] = 3  # attack strength 6
@@ -1782,12 +1792,14 @@ class TestPlaytestEngine(unittest.TestCase):
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
         self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs))
 
-        # Now raised: should deal 6 - 2 = 4 damage!
+        # Now raised: damage is still 6, but throw strength reduced by 2 (from 6 to 4)!
         p_bot.is_raised = True
+        wpn.is_active = True
         p_bot.weapon_spin_counters[wpn.id] = 3
         wpn.was_used_this_turn = False
         logs_raised = resolve_collision_combat(col, p_bot, a_bot, round_num=2)
-        self.assertTrue(any("dealing 4 dmg" in entry.message and "(-2 from Raised)" in entry.message for entry in logs_raised))
+        self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs_raised))
+        self.assertTrue(any("[Raised]" in entry.message and "throw strength reduced by 2 (now 4)" in entry.message for entry in logs_raised))
 
     def test_feedback_propagation_rounding_up(self):
         """

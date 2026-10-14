@@ -57,7 +57,7 @@ export class RobotViewRenderer {
       statusBadges.push(`<span class="badge badge-success">⬆️ UPRIGHT</span>`);
     }
     if (robot.is_raised) {
-      statusBadges.push(`<span class="badge badge-purple">🔱 RAISED (-2 Wpn Dmg, Half Flip)</span>`);
+      statusBadges.push(`<span class="badge badge-purple">🔱 RAISED (-2 Throw Str, Half Flip)</span>`);
     }
     if (robot.is_eliminated) {
       statusBadges.push(`<span class="badge badge-danger">☠️ ELIMINATED</span>`);
