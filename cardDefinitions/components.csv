@@ -9,9 +9,9 @@ Heavy Gauge Wire,0,1,XE,XE,7,2,fragile,,components/connectors_and_wiring/silicon
 Simple ESC,1,1,EEE,EEEE,9,3,fragile,,components/electronics_and_escs/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg,itgresa.com
 Brushless Motor,2,2,EE,SSS,4,1,,,components/motors/repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg,itgresa.com
 N20 Spark Gearmotor,2,1,EE,SS,6,2,,,components/motors/fingertech-n20-mini-spark-gearmotor.jpg,itgresa.com
-22mm Beetle Gearmotor,2,1,EEEE,SSSS,7,1,,,components/motors/22mm-beetleweight-gearmotor.png,itgresa.com
+22mm Beetle Gearmotor,3,2,EEE,SSS,7,1,,,components/motors/22mm-beetleweight-gearmotor.png,itgresa.com
 D2830 Weapon Motor,4,4,EEEEEE,SSSSSS,10,3,,,components/motors/d2830evo-brushless-1300kv-motor.jpeg,itgresa.com
-Repeat 2207 Hubmotor,3,3,EEE,SSSS,8,2,,,components/motors/repeat-2207-hubmotor-1200kv.jpg,itgresa.com
+Repeat 2207 Hubmotor,3,3,EEEE,SSSS,8,2,,,components/motors/repeat-2207-hubmotor-1200kv.jpg,itgresa.com
 Micro Servo,1,1,EE,PP,4,2,,,components/servos_and_actuators/turnabot-startabot-micro-servo.jpg,itgresa.com
 15kg Analog Servo,2,2,EEE,PPP,6,2,,,components/servos_and_actuators/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg,itgresa.com
 20kg Metal Gear Servo,3,2,EEEE,PPPP,7,2,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg,itgresa.com
