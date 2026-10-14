@@ -466,7 +466,7 @@ Essentially a pushing match between colliding chassis surfaces:
   \item Displace the remainder of robot A's template to the end of robot B's template.
   \item Move both robots along the straight line from the initial contact point to the end of A's displaced template (a raised robot's motion does not contribute).
   \item If a robot hits a wall, throw the robot that hits a wall away from the wall with a throw strength equal to the distance it would have moved if the wall was not there.
-  \item If the robots are still touching, separate them slightly from each other.
+  \item If the robots are still touching, both robots are moved back a full unit to separate them.
 \end{enumerate}
 
 \begin{draftnotebox}
@@ -489,7 +489,7 @@ When weapons collide with an opponent's chassis or components:
   \midrule
   \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals damage to outermost component contacted $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. If robots are still in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw $\rightarrow$ Separate slightly if still touching. \\
+  \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw $\rightarrow$ If still touching, move both back a full unit to separate them. \\
 \end{tabularx}
 \end{summarybox}
 
@@ -538,7 +538,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged} (both ignore absorption). Damaged again $\implies$ \textbf{Destroyed}.
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
   \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact.
-  \item \textbf{Inertial Separation:} If robots are still touching after inertial contact, separate them slightly from each other.
+  \item \textbf{Inertial Separation:} If robots are still touching after inertial contact, both robots are moved back a full unit to separate them.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
 \end{itemize}
 \end{summarybox}

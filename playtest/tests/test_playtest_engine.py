@@ -1008,12 +1008,12 @@ class TestPlaytestEngine(unittest.TestCase):
 
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
         # Overlap between p_bot (x=145) and a_bot (x=175) is 70 - 30 = 40mm.
-        # Slight separation nudges each robot away by min(12, max(5, overlap/2 + 2)) = 12mm.
-        # p_bot tries to move left (-x) by 12mm: 145 - 12 = 133, clamped to 135 (left boundary)
+        # Both robots move back a full unit (overlap/2 + DRIVE_UNIT_MM 40mm) = 20 + 40 = 60mm away from contact.
+        # p_bot tries to move left (-x) by 60mm: 145 - 60 = 85, clamped to 135 (left boundary)
         self.assertEqual(p_bot.pose.x, 135.0)
-        # a_bot moves right (+x) by 12mm: 175 + 12 = 187 (well within bounds)
-        self.assertEqual(a_bot.pose.x, 187.0)
-        self.assertTrue(any("separated slightly" in entry.message.lower() for entry in logs))
+        # a_bot moves right (+x) by 60mm: 175 + 60 = 235 (well within bounds)
+        self.assertEqual(a_bot.pose.x, 235.0)
+        self.assertTrue(any("moved back a full unit" in entry.message.lower() for entry in logs))
 
     def test_configurable_playcount_in_engine(self):
         """Tests that the simulator playcount (max rounds) can be configured for dev purposes."""
@@ -1710,10 +1710,10 @@ class TestPlaytestEngine(unittest.TestCase):
             push_vector=(0.0, 20.0),
         )
         resolve_inert_contact(col, r1, r2, round_num=1)
-        # Both robots move in r1's direction (-Y) by -30.0, then separate slightly (7mm) since still touching:
-        # r1: 400 - 30 + 7 = 377; r2: 340 - 30 - 7 = 303
-        self.assertAlmostEqual(r1.pose.y, 377.0, delta=2.0)
-        self.assertAlmostEqual(r2.pose.y, 303.0, delta=2.0)
+        # Both robots move in r1's direction (-Y) by -30.0, then both move back a full unit to separate:
+        # r1: 400 - 30 + 45 = 415; r2: 340 - 30 - 45 = 265
+        self.assertAlmostEqual(r1.pose.y, 415.0, delta=2.0)
+        self.assertAlmostEqual(r2.pose.y, 265.0, delta=2.0)
 
     def test_match_export_log_structure(self):
         """

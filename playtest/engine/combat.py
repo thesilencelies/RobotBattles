@@ -766,7 +766,7 @@ def resolve_inert_contact(
     - Move both robots along the straight line from the initial contact point to the end of A's displaced template.
     - If a robot is raised, its motion does not contribute to the inertial displacement.
     - If a robot hits a wall, throw the robot that hits a wall away from the wall.
-    - If the robots are still touching, separate them slightly from each other.
+    - If the robots are still touching, both robots are moved back a full unit to separate them.
     - Inertial drive feedback is removed.
     """
     logs: List[CombatLogEntry] = []
@@ -850,7 +850,7 @@ def resolve_inert_contact(
             if shock_cid:
                 resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str, phase="wall_feedback", steps=steps)
 
-    # Separation rule: If the robots are still touching, separate them slightly from each other
+    # Separation rule: If the robots are still touching, both robots are moved back a full unit to separate them
     if check_robots_in_contact(r1, r2):
         d_sep = math.hypot(r2.pose.x - r1.pose.x, r2.pose.y - r1.pose.y)
         if d_sep < 1e-4:
@@ -858,9 +858,9 @@ def resolve_inert_contact(
         else:
             nx, ny = (r2.pose.x - r1.pose.x) / d_sep, (r2.pose.y - r1.pose.y) / d_sep
 
-        # Separate slightly (just enough to clear contact)
-        overlap = max(4.0, (2.0 * MINIATURE_RADIUS) - d_sep)
-        step_mm = min(12.0, max(5.0, overlap / 2.0 + 2.0))
+        # Move each robot back a full unit (20mm each) away from contact
+        overlap = max(0.0, (2.0 * MINIATURE_RADIUS) - d_sep)
+        step_mm = overlap / 2.0 + DRIVE_UNIT_MM
 
         target_r1_x = r1.pose.x - nx * step_mm
         target_r1_y = r1.pose.y - ny * step_mm
@@ -882,7 +882,7 @@ def resolve_inert_contact(
 
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"↔️ Inertial separation: robots were touching and separated slightly ({r1.name}: {actual_step1:.0f}mm, {r2.name}: {actual_step2:.0f}mm).",
+            message=f"↔️ Inertial separation: robots were touching and both moved back a full unit to separate ({r1.name}: {actual_step1:.0f}mm, {r2.name}: {actual_step2:.0f}mm).",
         ))
 
     # Hazard pit elimination check
