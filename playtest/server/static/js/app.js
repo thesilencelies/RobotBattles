@@ -53,6 +53,8 @@ class PlaytestApp {
     this.hudAutoBanner = document.getElementById("hud-auto-banner");
     this.btnNewMatch = document.getElementById("btn-new-match");
     this.btnResetMatch = document.getElementById("btn-reset-match");
+    this.btnExportLog = document.getElementById("btn-export-log");
+    this.btnExportLogTab = document.getElementById("btn-export-log-tab");
     this.btnToggleTopBar = document.getElementById("btn-toggle-top-bar");
     this.autoSelect = document.getElementById("auto-select");
     this.playcountSelect = document.getElementById("playcount-select");
@@ -253,11 +255,39 @@ class PlaytestApp {
       }
     });
 
+    const handleExport = () => this._exportMatchLog();
+    if (this.btnExportLog) {
+      this.btnExportLog.addEventListener("click", handleExport);
+    }
+    if (this.btnExportLogTab) {
+      this.btnExportLogTab.addEventListener("click", handleExport);
+    }
+
     if (this.btnToggleTopBar && this.viewArena) {
       this.btnToggleTopBar.addEventListener("click", () => {
         const isCollapsed = this.viewArena.classList.toggle("top-bar-collapsed");
         this.btnToggleTopBar.textContent = isCollapsed ? "▼ Show Controls" : "▲ Hide Controls";
       });
+    }
+  }
+
+  async _exportMatchLog() {
+    try {
+      const data = await PlaytestApi.exportMatchLog();
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const mId = data.match_id || "match";
+      const rd = data.round !== undefined ? data.round : 1;
+      a.href = url;
+      a.download = `match_${mId}_round_${rd}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Failed to export match log: " + err.message);
     }
   }
 

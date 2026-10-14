@@ -86,6 +86,7 @@
             </select>
             <button id="btn-new-match" class="btn btn-sm btn-primary" title="Start new match">⚔️ New Match</button>
             <button id="btn-reset-match" class="btn btn-sm btn-ghost" title="Reset match">🔄 Reset</button>
+            <button id="btn-export-log" class="btn btn-sm btn-ghost" title="Save match log for bug reporting">📥 Save Log</button>
           </div>
         </div>
 
@@ -537,9 +538,12 @@
 
       <!-- ==================== TAB 5: COMBAT LOG ==================== -->
       <section class="tab-view" id="view-log">
-        <div class="log-panel-header">
-          <h3>📜 Battle Transcript</h3>
-          <span class="log-subtitle">Chronological record of moves, dice rolls, hits, and status changes.</span>
+        <div class="log-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3>📜 Battle Transcript</h3>
+            <span class="log-subtitle">Chronological record of moves, dice rolls, hits, and status changes.</span>
+          </div>
+          <button id="btn-export-log-tab" class="btn btn-sm btn-ghost" title="Save match log with positions and states for bug reporting">📥 Save Match Log (JSON)</button>
         </div>
         <div id="combat-log-container" class="combat-log-list"></div>
       </section>

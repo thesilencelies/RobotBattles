@@ -215,25 +215,32 @@ noted with symbols preceding the math.
 Components may have keywords that define specific mechanical rules and interactions:
 
 \begin{center}
-\renewcommand{\arraystretch}{1.45}
-\begin{tabularx}{\textwidth}{p{4.0cm} X}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{p{3.8cm} X}
   \toprule
-  \textbf{Keyword} & \textbf{Definition / Effect} \\
+  \textbf{Keyword} & \textbf{Summary} \\
   \midrule
-  \keywordbadge{kw_fragile}{Fragile} & If this component takes weapon damage it is destroyed as if it had a durability of 1. \\
-  \keywordbadge{kw_spin_up}{Spin up X} & At the start of each turn add a spin counters (max X) and remove them all if the weapon attacks. If the weapon becomes inactive all counters are removed. \\
-  \keywordbadge{kw_forks}{Forks} & If component with forks makes contact and the opponents forks do not make contact, the opponent becomes raised. \\
-  \keywordbadge{kw_wedge}{Wedge} & If this component is hit this robot is not thrown. This effect does not apply if the robot is raised. \\
-  \keywordbadge{kw_invertible}{Invertible} & This component works inverted. \\
-  \keywordbadge{kw_self_right}{Self-right} & If a turn ends without contact and this robot is inverted, invert it. Self-righting requires the component to be active. \\
-  \keywordbadge{kw_reset}{Reset} & This weapon is inactive the turn after it is used (triggered by attacking or self-righting). A component that is resetting needs to be supplied in order to reset. (This does not cause the robot to be considered stuck if it is also a self-righter.) \\
+  \keywordbadge{kw_fragile}{Fragile} & Destroyed as if durability 1 when taking weapon damage. \\
+  \keywordbadge{kw_spin_up}{Spin up (X, Y)} & Add X spin counters at turn start (max Y); cleared on attack or inactive. \\
+  \keywordbadge{kw_forks}{Forks} & Opponent in line with forks during contact becomes raised for this contact. \\
+  \keywordbadge{kw_wedge}{Wedge} & Hit robot is not thrown (negated if raised). \\
+  \keywordbadge{kw_invertible}{Invertible} & Component functions normally while inverted. \\
+  \keywordbadge{kw_self_right}{Self-right} & Inverts upright at turn end without contact if active. \\
+  \keywordbadge{kw_reset}{Reset} & Weapon inactive the turn after use; requires supply to reset. \\
   \bottomrule
 \end{tabularx}
 \end{center}
 
-% \begin{summarybox}{Keywords Quick Summary}
-% Keywords provide standardized abilities across components. When evaluating weapon attacks, ground games (forks/wedges), or inversion states, check active component keywords to modify resolution before applying standard damage or throws.
-% \end{summarybox}
+\subsubsection{Keyword Rules \& Mechanical Details}
+\begin{description}[leftmargin=!, labelwidth=2.5cm, itemsep=1.5pt, parsep=0pt, topsep=1pt, font=\bfseries\color{primaryDark}\small]
+  \item[Fragile:] When this component takes weapon strike damage, it is immediately destroyed as if its durability were 1.
+  \item[Spin up (X, Y):] At the start of each turn, add $X$ spin counters (max $Y$). All counters are removed when the weapon attacks or if it becomes inactive.
+  \item[Forks:] If the opposing robot is in line with the forks during contact, they become \textbf{raised} (lifted) for that contact.
+  \item[Wedge:] If this component is hit, this robot is not thrown. This effect does not apply if the robot is raised.
+  \item[Invertible:] This component functions inverted. Weapons and drive lacking this keyword do not function while inverted.
+  \item[Self-right:] If a turn ends without contact and this robot is inverted, invert it. Requires the component to be active.
+  \item[Reset:] This weapon is inactive the turn after it is used (triggered by attacking or self-righting). A component that is resetting needs to be supplied in order to reset. (Does not cause the robot to be considered stuck if it is also a self-righter.)
+\end{description}
 
 \clearpage
 
@@ -454,11 +461,13 @@ For a collision, first determine which octant of each robot makes contact with t
 \subsection{Inert Contact (Pushing Match)}
 
 Essentially a pushing match between colliding chassis surfaces:
-\begin{itemize}
-  \item The pair of robots move in a straight line created by summing their remaining motion templates.
-  \item If a robot is pushed into a wall, it is thrown with a throw strength equal to the amount it would have moved if the wall wasn't there.
-  \item After any inertial contact, separate the robots by moving them both away from each other one step if possible.
-\end{itemize}
+\begin{enumerate}
+  \item Move along templates until contact.
+  \item Displace the remainder of robot A's template to the end of robot B's template.
+  \item Move both robots along the straight line from the initial contact point to the end of A's displaced template (a raised robot's motion does not contribute).
+  \item If a robot hits a wall, throw the robot that hits a wall away from the wall with a throw strength equal to the distance it would have moved if the wall was not there.
+  \item If the robots are still touching, separate them slightly from each other.
+\end{enumerate}
 
 \begin{draftnotebox}
   \textbf{Editor Note:} [Needs a diagram here]
@@ -480,7 +489,7 @@ When weapons collide with an opponent's chassis or components:
   \midrule
   \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals damage to outermost component contacted $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. If robots are still in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match along line between centers $\rightarrow$ Move sum of remaining motion in that direction $\rightarrow$ Wall collision causes throw $\rightarrow$ Drive takes feedback equal to opponent's remaining distance $\rightarrow$ Separate robots by moving both away from each other 1 step if possible. \\
+  \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw $\rightarrow$ Separate slightly if still touching. \\
 \end{tabularx}
 \end{summarybox}
 
@@ -530,7 +539,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged} (both ignore absorption). Damaged again $\implies$ \textbf{Destroyed}.
   \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
   \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact.
-  \item \textbf{Inertial Separation:} After any inertial contact, separate the robots by moving them both away from each other 1 step if possible.
+  \item \textbf{Inertial Separation:} If robots are still touching after inertial contact, separate them slightly from each other.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
 \end{itemize}
 \end{summarybox}

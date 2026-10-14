@@ -321,20 +321,17 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_remaining_dist=40.0,
             push_vector=(0.0, -10.0),
         )
-        p_bot.pose.theta = 0.0
-        a_bot.pose.theta = 180.0
+        # Set poses touching at (400, 400)
+        p_bot.pose = Pose(x=400.0, y=435.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=365.0, theta=180.0)
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
         self.assertGreater(len(logs), 0)
-        # Drive should absorb feedback equal to opponent's remaining momentum
-        self.assertTrue(any("feedback" in entry.message.lower() for entry in logs))
+        # Drive feedback has been removed from inert contact rules
+        self.assertFalse(any("feedback" in entry.message.lower() for entry in logs))
         # Standalone inert contact does NOT rotate robots
         self.assertFalse(any("rotated a random amount" in entry.message for entry in logs))
         self.assertEqual(p_bot.pose.theta, 0.0)
         self.assertEqual(a_bot.pose.theta, 180.0)
-        # Inertial separation moves both robots 1 step away from each other
-        self.assertTrue(any("Inertial separation" in entry.message for entry in logs))
-        self.assertEqual(p_bot.pose.y, 660.0)
-        self.assertEqual(a_bot.pose.y, 135.0)  # Clamped to WALL_TOP + MINIATURE_RADIUS (100 + 35)
 
     def test_flip_inversion_math(self):
         from playtest.engine.combat import resolve_collision_combat
@@ -1006,11 +1003,13 @@ class TestPlaytestEngine(unittest.TestCase):
         )
 
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
-        # p_bot tries to move left (-x) by 40mm: 145 - 40 = 105, clamped to 135 (only 10mm moved)
+        # Overlap between p_bot (x=145) and a_bot (x=175) is 70 - 30 = 40mm.
+        # Slight separation nudges each robot away by min(12, max(5, overlap/2 + 2)) = 12mm.
+        # p_bot tries to move left (-x) by 12mm: 145 - 12 = 133, clamped to 135 (left boundary)
         self.assertEqual(p_bot.pose.x, 135.0)
-        # a_bot moves right (+x) by 40mm: 175 + 40 = 215 (well within bounds)
-        self.assertEqual(a_bot.pose.x, 215.0)
-        self.assertTrue(any("Inertial separation" in entry.message for entry in logs))
+        # a_bot moves right (+x) by 12mm: 175 + 12 = 187 (well within bounds)
+        self.assertEqual(a_bot.pose.x, 187.0)
+        self.assertTrue(any("separated slightly" in entry.message.lower() for entry in logs))
 
     def test_configurable_playcount_in_engine(self):
         """Tests that the simulator playcount (max rounds) can be configured for dev purposes."""
@@ -1566,10 +1565,9 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertAlmostEqual(col.push_vector[0], 0.0, delta=1.0)
         self.assertLess(col.push_vector[1], -20.0)
 
-    def test_inertial_push_feedback_at_each_active_drive(self):
+    def test_inertial_push_no_feedback_at_active_drive(self):
         """
-        Rule: 'Each robot takes feedback equal to the remaining distance the opponent had
-        before the contact at each of its remaining active drive.'
+        Rule: Inertial feedback removed. Pushing matches no longer damage active drive components.
         """
         from playtest.engine.combat import resolve_collision_combat
         from playtest.engine.types import CollisionEvent
@@ -1596,16 +1594,121 @@ class TestPlaytestEngine(unittest.TestCase):
 
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
 
-        # R1 (p_bot) takes feedback equal to R2's remaining distance (40mm = 1 unit) at each active drive
-        self.assertTrue(any(
-            "active drive takes 1 feedback from opponent's remaining momentum at each active drive" in entry.message
-            for entry in logs if p_bot.name in entry.message
-        ))
-        # R2 (a_bot) takes feedback equal to R1's remaining distance (80mm = 2 units) at each active drive
-        self.assertTrue(any(
-            "active drive takes 2 feedback from opponent's remaining momentum at each active drive" in entry.message
-            for entry in logs if a_bot.name in entry.message
-        ))
+        # Drive feedback is NOT applied
+        self.assertFalse(any("feedback from opponent's remaining momentum" in entry.message for entry in logs))
+
+    def test_forks_in_line_detection_and_lifting(self):
+        """
+        Rule: 'If the opposing robot is in line with the forks during contact, they become lifted for this contact.'
+        """
+        from playtest.engine.collision import check_robot_forks_in_line
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.match import create_match
+        from playtest.engine.types import CollisionEvent, ComponentHealth
+
+        csv_text = read_saved_robot("Vyper_flipper.csv")
+        match = create_match(csv_text, "Vyper_Spinner", "Player")
+        fork_bot = match.player_robot
+        opp_bot = match.automaton_robot
+
+        # Add a fork component to fork_bot with mat-centered box
+        fork_comp = ComponentHealth(
+            id="f1", name="Heavy Forks", card_type="armour", max_durability=6, current_durability=6,
+            absorption=0, requirements="", outputs="", keywords="Forks", text="",
+            x=180, y=70, rotation=0, box=(180, 50, 240, 110), is_forks=True,
+        )
+        fork_bot.components["f1"] = fork_comp
+
+        # When opp_bot contacts in front and within x-span of the fork:
+        fork_bot.pose = Pose(x=400.0, y=400.0, theta=0.0)
+        opp_bot.pose = Pose(x=400.0, y=330.0, theta=180.0)
+        in_line = check_robot_forks_in_line(fork_bot, opp_bot, (400.0, 365.0), fork_bot.pose, ["f1"])
+        self.assertTrue(in_line)
+
+        # In combat resolution, opp_bot should gain is_raised
+        opp_bot.is_raised = False
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 365.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["f1"],
+            robot2_components=[list(opp_bot.components.keys())[0]],
+            contact_type="INERT",
+            description="Contact with forks",
+            push_vector=(0.0, -10.0),
+        )
+        resolve_logs = resolve_collision_combat(col, fork_bot, opp_bot, round_num=1)
+        self.assertTrue(any("Forks lift" in entry.message for entry in resolve_logs), "Opponent in line with forks is lifted in collision logs")
+
+    def test_raised_robot_inertial_motion_excluded(self):
+        """
+        Rule: 'A robot that is raised has its motion not contribute in inertial contact.'
+        """
+        from playtest.engine.combat import resolve_inert_contact
+        from playtest.engine.match import create_match
+        from playtest.engine.types import CollisionEvent
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player")
+        r1 = match.player_robot
+        r2 = match.automaton_robot
+
+        r1.pose = Pose(x=400.0, y=400.0, theta=0.0)
+        r2.pose = Pose(x=400.0, y=340.0, theta=180.0)
+
+        # r2 is raised; r1 has remaining vector (0, -30), r2 has (0, 50)
+        # Normally net would be (0, 20), but because r2 is raised, r2's motion does not contribute!
+        r2.is_raised = True
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 370.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[list(r1.components.keys())[0]],
+            robot2_components=[list(r2.components.keys())[0]],
+            contact_type="INERT",
+            description="Push with raised robot",
+            r1_rem_vector=(0.0, -30.0),
+            r2_rem_vector=(0.0, 50.0),
+            push_vector=(0.0, 20.0),
+        )
+        resolve_inert_contact(col, r1, r2, round_num=1)
+        # Both robots move in r1's direction (-Y) by -30.0, then separate slightly (7mm) since still touching:
+        # r1: 400 - 30 + 7 = 377; r2: 340 - 30 - 7 = 303
+        self.assertAlmostEqual(r1.pose.y, 377.0, delta=2.0)
+        self.assertAlmostEqual(r2.pose.y, 303.0, delta=2.0)
+
+    def test_match_export_log_structure(self):
+        """
+        Verifies that match export contains full telemetry including round_history, poses, choices, and components.
+        """
+        from playtest.engine.match import create_match, execute_turn
+        from playtest.engine.types import MoveChoice
+        from playtest.server.routes import Router
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player", max_rounds=5)
+        execute_turn(match, MoveChoice(left=1, right=1))
+
+        router = Router()
+        router.current_match = match
+
+        resp = router.dispatch("GET", "/api/battle/export", {}, b"")
+        self.assertEqual(resp.status, 200)
+        self.assertIn("application/json", resp.content_type)
+        import json
+        data = json.loads(resp.body.decode("utf-8"))
+        self.assertIn("round_history", data)
+        self.assertEqual(len(data["round_history"]), 1)
+        rd1 = data["round_history"][0]
+        self.assertIn("player_start_pose", rd1)
+        self.assertIn("automaton_start_pose", rd1)
+        self.assertIn("player_end_pose", rd1)
+        self.assertIn("automaton_end_pose", rd1)
+        self.assertIn("player_components", rd1)
+        self.assertIn("automaton_components", rd1)
+        self.assertIn("full_log", data)
 
     def test_raised_status_effects(self):
         """

@@ -332,6 +332,10 @@ def execute_turn(
     p_bot = match.player_robot
     a_bot = match.automaton_robot
 
+    # Capture poses at the start of the turn
+    p_start = Pose(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta)
+    a_start = Pose(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta)
+
     # Clamp player choice to active drive capability
     clamped_l = max(-p_bot.left_drive_max, min(p_bot.left_drive_max, player_choice.left))
     clamped_r = max(-p_bot.right_drive_max, min(p_bot.right_drive_max, player_choice.right))
@@ -378,7 +382,7 @@ def execute_turn(
 
     if col:
         # Move both to contact point
-        col_idx = max(1, int(col.time_t * len(p_traj)))
+        col_idx = col.step_index if col.step_index > 0 else max(1, int(col.time_t * len(p_traj)))
         if col_idx < len(p_traj):
             p_bot.pose = Pose(p_traj[col_idx].x, p_traj[col_idx].y, p_traj[col_idx].theta)
         if col_idx < len(a_traj):
@@ -526,5 +530,48 @@ def execute_turn(
             phase="game_over",
             message=f"🏆 MATCH OVER: Winner is {match.winner.upper()}! ({match.win_reason})",
         ))
+
+    # Record complete round snapshot for match log export
+    round_record = {
+        "round": r_num,
+        "player_start_pose": {"x": p_start.x, "y": p_start.y, "theta": p_start.theta},
+        "automaton_start_pose": {"x": a_start.x, "y": a_start.y, "theta": a_start.theta},
+        "player_choice": p_choice.to_dict(),
+        "automaton_roll": auto_roll,
+        "automaton_action": auto_action,
+        "automaton_choice": a_choice.to_dict(),
+        "player_template": match.player_template,
+        "automaton_template": match.automaton_template,
+        "collision": col.to_dict() if col else None,
+        "damage_steps": [s.to_dict() for s in match.damage_steps],
+        "player_end_pose": {"x": p_bot.pose.x, "y": p_bot.pose.y, "theta": p_bot.pose.theta},
+        "automaton_end_pose": {"x": a_bot.pose.x, "y": a_bot.pose.y, "theta": a_bot.pose.theta},
+        "player_components": {
+            cid: {
+                "name": c.name,
+                "current_durability": c.current_durability,
+                "max_durability": c.max_durability,
+                "is_damaged": c.is_damaged,
+                "is_destroyed": c.is_destroyed,
+                "is_active": c.is_active,
+                "is_resetting": c.is_resetting,
+            }
+            for cid, c in p_bot.components.items()
+        },
+        "automaton_components": {
+            cid: {
+                "name": c.name,
+                "current_durability": c.current_durability,
+                "max_durability": c.max_durability,
+                "is_damaged": c.is_damaged,
+                "is_destroyed": c.is_destroyed,
+                "is_active": c.is_active,
+                "is_resetting": c.is_resetting,
+            }
+            for cid, c in a_bot.components.items()
+        },
+        "logs": [entry.to_dict() for entry in match.log if entry.round == r_num],
+    }
+    match.round_history.append(round_record)
 
     return match

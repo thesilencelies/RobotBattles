@@ -100,6 +100,7 @@ class Router:
         self.routes_post["/api/battle/new"] = self._api_battle_new
         self.routes_post["/api/battle/turn"] = self._api_battle_turn
         self.routes_post["/api/battle/reset"] = self._api_battle_reset
+        self.routes_get["/api/battle/export"] = self._api_battle_export
 
     def _api_cards(self, query: Mapping[str, str]) -> Response:
         cards = load_all_cards()
@@ -204,6 +205,26 @@ class Router:
     def _api_battle_reset(self, query: Mapping[str, str], body: bytes) -> Response:
         self.current_match = None
         return Response.json({"success": True})
+
+    def _api_battle_export(self, query: Mapping[str, str]) -> Response:
+        if self.current_match is None:
+            raise HttpError(400, "No active match to export.")
+        export_data = {
+            "version": "1.0",
+            "match_id": self.current_match.match_id,
+            "round": self.current_match.round,
+            "max_rounds": self.current_match.max_rounds,
+            "phase": self.current_match.phase,
+            "winner": self.current_match.winner,
+            "win_reason": self.current_match.win_reason,
+            "player_robot": self.current_match.player_robot.to_dict(),
+            "automaton_robot": self.current_match.automaton_robot.to_dict(),
+            "round_history": self.current_match.round_history,
+            "full_log": [entry.to_dict() for entry in self.current_match.log],
+        }
+        resp = Response.json(export_data)
+        resp.headers["Content-Disposition"] = f"attachment; filename=match_{self.current_match.match_id}_round_{self.current_match.round}.json"
+        return resp
 
     def dispatch(
         self, method: str, path: str, query: Mapping[str, str], body: bytes

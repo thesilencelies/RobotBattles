@@ -122,12 +122,16 @@ class CollisionEvent:
     r1_remaining_dist: float = 0.0
     r2_remaining_dist: float = 0.0
     push_vector: Tuple[float, float] = (0.0, 0.0)
+    r1_rem_vector: Tuple[float, float] = (0.0, 0.0)
+    r2_rem_vector: Tuple[float, float] = (0.0, 0.0)
+    step_index: int = 0
     r1_active_hit: bool = False
     r2_active_hit: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "time_t": self.time_t,
+            "step_index": self.step_index,
             "contact_point": list(self.contact_point),
             "robot1_octant": self.robot1_octant,
             "robot2_octant": self.robot2_octant,
@@ -137,6 +141,8 @@ class CollisionEvent:
             "description": self.description,
             "r1_remaining_dist": self.r1_remaining_dist,
             "r2_remaining_dist": self.r2_remaining_dist,
+            "r1_rem_vector": list(self.r1_rem_vector),
+            "r2_rem_vector": list(self.r2_rem_vector),
             "push_vector": list(self.push_vector),
             "r1_active_hit": self.r1_active_hit,
             "r2_active_hit": self.r2_active_hit,
@@ -253,6 +259,7 @@ class MatchState:
     log: List[CombatLogEntry] = field(default_factory=list)
     winner: Optional[str] = None  # "player", "automaton", "draw", None
     win_reason: Optional[str] = None
+    round_history: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -282,5 +289,6 @@ class MatchState:
             "log": [entry.to_dict() for entry in self.log],
             "winner": self.winner,
             "win_reason": self.win_reason,
+            "round_history": self.round_history,
         }
 

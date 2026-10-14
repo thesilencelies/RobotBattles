@@ -318,6 +318,7 @@ def detect_collision(
 
             return CollisionEvent(
                 time_t=p1.t,
+                step_index=k,
                 contact_point=contact_pt,
                 robot1_octant=oct1,
                 robot2_octant=oct2,
@@ -327,6 +328,8 @@ def detect_collision(
                 description=" ".join(desc_parts),
                 r1_remaining_dist=r1_rem_dist,
                 r2_remaining_dist=r2_rem_dist,
+                r1_rem_vector=(v1_rem_x, v1_rem_y),
+                r2_rem_vector=(v2_rem_x, v2_rem_y),
                 push_vector=push_vec,
                 r1_active_hit=bool(r1_active_cid),
                 r2_active_hit=bool(r2_active_cid),
@@ -347,4 +350,44 @@ def check_robots_in_contact(r1: RobotState, r2: RobotState) -> bool:
         for polyB in parts2["all_body_polygons"]:
             if polygons_intersect(polyA, polyB):
                 return True
+    return False
+
+
+def check_robot_forks_in_line(
+    fork_robot: RobotState,
+    opp_robot: RobotState,
+    contact_pt: Tuple[float, float],
+    fork_pose: Any,
+    contacted_cids: List[str],
+) -> bool:
+    """
+    Checks if the opposing robot is in line with fork_robot's forks during contact.
+    Rule: 'If the opposing robot is in line with the forks during contact, they become lifted for this contact'
+    """
+    fork_comps = [
+        c for c in fork_robot.components.values()
+        if (c.is_forks or "FORKS" in c.keywords.upper()) and not c.is_destroyed
+    ]
+    if not fork_comps:
+        return False
+
+    # 1. Direct component contact with forks
+    fork_ids = {c.id for c in fork_comps}
+    if any(cid in fork_ids for cid in contacted_cids):
+        return True
+
+    # 2. Check if contact point is in line with any fork's width along its forward direction
+    if hasattr(fork_pose, "x"):
+        fx, fy, ftheta = fork_pose.x, fork_pose.y, fork_pose.theta
+    else:
+        fx, fy, ftheta = fork_pose
+    lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], fx, fy, ftheta)
+    mx, my = local_miniature_to_mat_point(lx, ly)
+
+    for fc in fork_comps:
+        min_x, min_y, max_x, max_y = fc.box
+        # In line with the forks: within the fork's X span (with slight tolerance) and in front of or at the fork
+        if (min_x - 15.0 <= mx <= max_x + 15.0) and my <= max_y + 15.0:
+            return True
+
     return False

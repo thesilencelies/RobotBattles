@@ -102,4 +102,13 @@ export class PlaytestApi {
   static async resetMatch() {
     return this.resetBattle();
   }
+
+  static async exportMatchLog() {
+    const res = await fetch("/api/battle/export");
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to export match log");
+    }
+    return res.json();
+  }
 }

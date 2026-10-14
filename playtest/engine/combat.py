@@ -19,7 +19,7 @@ from .field import (
     WALL_TOP,
     is_in_hazard,
 )
-from .collision import check_robots_in_contact
+from .collision import check_robot_forks_in_line, check_robots_in_contact
 from .movement import DRIVE_UNIT_MM, MINIATURE_RADIUS
 from .types import (
     CollisionEvent,
@@ -761,10 +761,13 @@ def resolve_inert_contact(
 ) -> List[CombatLogEntry]:
     """
     Executes inert contact (pushing match) resolution adhering to combat_robotics_game.tex:
-    - Pair moves along the line drawn between centers by net remaining motion.
-    - Wall collision causes throw and shock feedback.
-    - Active drive absorbs feedback equal to opponent's remaining momentum distance.
-    - After any inertial contact, separate the robots by moving them both away from each other 1 step if possible.
+    - Move along templates until contact (already at contact poses).
+    - Displace the remainder of robot A's template to the end of robot B's template.
+    - Move both robots along the straight line from the initial contact point to the end of A's displaced template.
+    - If a robot is raised, its motion does not contribute to the inertial displacement.
+    - If a robot hits a wall, throw the robot that hits a wall away from the wall.
+    - If the robots are still touching, separate them slightly from each other.
+    - Inertial drive feedback is removed.
     """
     logs: List[CombatLogEntry] = []
     logs.append(CombatLogEntry(
@@ -773,16 +776,42 @@ def resolve_inert_contact(
         message=f"🛡️ PUSHING MATCH (Inert Contact): {col.description}",
     ))
 
-    # Pair moves along the line drawn between centers by net remaining motion
-    push_dx, push_dy = col.push_vector
+    # Calculate remaining motion contribution of each robot
+    # Rule: "a raised robot's motion does not contribute in inertial contact"
+    if r1.is_raised:
+        v1_rem_x, v1_rem_y = 0.0, 0.0
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"⬆️ {r1.name} is RAISED — motion does not contribute to inertial pushing!",
+        ))
+    elif col.r1_rem_vector != (0.0, 0.0):
+        v1_rem_x, v1_rem_y = col.r1_rem_vector
+    else:
+        v1_rem_x, v1_rem_y = col.push_vector[0] * 0.5, col.push_vector[1] * 0.5
+
+    if r2.is_raised:
+        v2_rem_x, v2_rem_y = 0.0, 0.0
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"⬆️ {r2.name} is RAISED — motion does not contribute to inertial pushing!",
+        ))
+    elif col.r2_rem_vector != (0.0, 0.0):
+        v2_rem_x, v2_rem_y = col.r2_rem_vector
+    else:
+        v2_rem_x, v2_rem_y = col.push_vector[0] * 0.5, col.push_vector[1] * 0.5
+
+    # Net displacement along the straight line from contact to end of displaced template
+    push_dx = v1_rem_x + v2_rem_x
+    push_dy = v1_rem_y + v2_rem_y
     net_dist = math.hypot(push_dx, push_dy)
 
-    # Check if either robot is pushed into a wall
+    # Displace both robots along the line from initial contact point to end of displaced template
     new_r1_x = r1.pose.x + push_dx
     new_r1_y = r1.pose.y + push_dy
     new_r2_x = r2.pose.x + push_dx
     new_r2_y = r2.pose.y + push_dy
 
+    # Check if either robot is pushed into a wall
     pushed_into_wall_robot = None
     excess_wall_dist = 0.0
 
@@ -796,9 +825,9 @@ def resolve_inert_contact(
         lost_y = abs(new_ry - clamped_y)
         if lost_x > 2.0 or lost_y > 2.0:
             pushed_into_wall_robot = robot_obj
-            excess_wall_dist = math.hypot(lost_x, lost_y)
+            excess_wall_dist = max(excess_wall_dist, math.hypot(lost_x, lost_y))
 
-    # Displace pair
+    # Displace pair (clamped to walls)
     r1.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_r1_x))
     r1.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_r1_y))
     r2.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_r2_x))
@@ -806,10 +835,10 @@ def resolve_inert_contact(
 
     logs.append(CombatLogEntry(
         round=round_num, phase="collision",
-        message=f"Robots push together summing remaining motion templates: displacement {net_dist / DRIVE_UNIT_MM:.1f} units ({net_dist:.0f}mm).",
+        message=f"Robots push together along displaced template line: displacement {net_dist / DRIVE_UNIT_MM:.1f} units ({net_dist:.0f}mm).",
     ))
 
-    # Wall throw check
+    # Wall throw check: If you hit a wall, throw the robot that hits a wall away from the wall
     if pushed_into_wall_robot and excess_wall_dist > 5.0:
         wall_throw_str = int(round(excess_wall_dist / DRIVE_UNIT_MM))
         if wall_throw_str > 0:
@@ -817,61 +846,44 @@ def resolve_inert_contact(
                 round=round_num, phase="collision",
                 message=f"💥 {pushed_into_wall_robot.name} was pushed into the wall! THROWN with throw strength {wall_throw_str}!",
             ))
-            # Resolve throw away from wall and shock feedback
             shock_cid = simulate_dropping_card(pushed_into_wall_robot)
             if shock_cid:
                 resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str, phase="wall_feedback", steps=steps)
 
-    # Drive feedback: each robot takes feedback equal to opponent remaining distance at each active drive
-    opp_rem_1 = int(round(col.r2_remaining_dist / DRIVE_UNIT_MM))  # What R2 had before contact
-    opp_rem_2 = int(round(col.r1_remaining_dist / DRIVE_UNIT_MM))  # What R1 had before contact
+    # Separation rule: If the robots are still touching, separate them slightly from each other
+    if check_robots_in_contact(r1, r2):
+        d_sep = math.hypot(r2.pose.x - r1.pose.x, r2.pose.y - r1.pose.y)
+        if d_sep < 1e-4:
+            nx, ny = 1.0, 0.0
+        else:
+            nx, ny = (r2.pose.x - r1.pose.x) / d_sep, (r2.pose.y - r1.pose.y) / d_sep
 
-    for robot, opp_rem in [(r1, opp_rem_1), (r2, opp_rem_2)]:
-        if opp_rem <= 0:
-            continue
-        active_drives = [
-            c for c in robot.components.values()
-            if not c.is_destroyed and c.is_active and ("D" in c.outputs.upper() or "M" in c.outputs.upper())
-        ]
-        if active_drives:
-            fb_per_drive = opp_rem
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"{robot.name}'s active drive takes {fb_per_drive} feedback from opponent's remaining momentum at each active drive.",
-            ))
-            if fb_per_drive > 0:
-                for dcomp in active_drives:
-                    resolve_feedback_propagation(robot, dcomp.id, fb_per_drive, phase="push_feedback", steps=steps)
+        # Separate slightly (just enough to clear contact)
+        overlap = max(4.0, (2.0 * MINIATURE_RADIUS) - d_sep)
+        step_mm = min(12.0, max(5.0, overlap / 2.0 + 2.0))
 
-    # Separation rule: After any inertial contact, separate the robots by moving them both away from each other 1 step if possible
-    d_sep = math.hypot(r2.pose.x - r1.pose.x, r2.pose.y - r1.pose.y)
-    if d_sep < 1e-4:
-        nx, ny = 1.0, 0.0
-    else:
-        nx, ny = (r2.pose.x - r1.pose.x) / d_sep, (r2.pose.y - r1.pose.y) / d_sep
+        target_r1_x = r1.pose.x - nx * step_mm
+        target_r1_y = r1.pose.y - ny * step_mm
+        target_r2_x = r2.pose.x + nx * step_mm
+        target_r2_y = r2.pose.y + ny * step_mm
 
-    target_r1_x = r1.pose.x - nx * DRIVE_UNIT_MM
-    target_r1_y = r1.pose.y - ny * DRIVE_UNIT_MM
-    target_r2_x = r2.pose.x + nx * DRIVE_UNIT_MM
-    target_r2_y = r2.pose.y + ny * DRIVE_UNIT_MM
+        new_r1_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r1_x))
+        new_r1_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r1_y))
+        new_r2_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r2_x))
+        new_r2_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r2_y))
 
-    new_r1_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r1_x))
-    new_r1_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r1_y))
-    new_r2_x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, target_r2_x))
-    new_r2_y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, target_r2_y))
+        actual_step1 = math.hypot(new_r1_x - r1.pose.x, new_r1_y - r1.pose.y)
+        actual_step2 = math.hypot(new_r2_x - r2.pose.x, new_r2_y - r2.pose.y)
 
-    actual_step1 = math.hypot(new_r1_x - r1.pose.x, new_r1_y - r1.pose.y)
-    actual_step2 = math.hypot(new_r2_x - r2.pose.x, new_r2_y - r2.pose.y)
+        r1.pose.x = new_r1_x
+        r1.pose.y = new_r1_y
+        r2.pose.x = new_r2_x
+        r2.pose.y = new_r2_y
 
-    r1.pose.x = new_r1_x
-    r1.pose.y = new_r1_y
-    r2.pose.x = new_r2_x
-    r2.pose.y = new_r2_y
-
-    logs.append(CombatLogEntry(
-        round=round_num, phase="collision",
-        message=f"↔️ Inertial separation: robots move 1 step away from each other ({r1.name}: {actual_step1:.0f}mm, {r2.name}: {actual_step2:.0f}mm).",
-    ))
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"↔️ Inertial separation: robots were touching and separated slightly ({r1.name}: {actual_step1:.0f}mm, {r2.name}: {actual_step2:.0f}mm).",
+        ))
 
     # Hazard pit elimination check
     for robot in (r1, r2):
@@ -898,19 +910,24 @@ def resolve_collision_combat(
     logs: List[CombatLogEntry] = []
 
     # Check Ground Game: Forks keyword (applies to both active and inert contact)
-    r1_forks = any(r1.components[cid].is_forks for cid in col.robot1_components if cid in r1.components)
-    r2_forks = any(r2.components[cid].is_forks for cid in col.robot2_components if cid in r2.components)
-    if r1_forks and not r2_forks:
+    # Rule: "If the opposing robot is in line with the forks during contact, they become lifted for this contact"
+    r1_forks_in_line = check_robot_forks_in_line(
+        r1, r2, col.contact_point, (r1.pose.x, r1.pose.y, r1.pose.theta), col.robot1_components
+    )
+    r2_forks_in_line = check_robot_forks_in_line(
+        r2, r1, col.contact_point, (r2.pose.x, r2.pose.y, r2.pose.theta), col.robot2_components
+    )
+    if r1_forks_in_line:
         r2.is_raised = True
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: flip strength halved, weapons deal 2 less damage)",
+            message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: flip strength halved, weapons deal 2 less damage, motion does not contribute in inertial contact)",
         ))
-    elif r2_forks and not r1_forks:
+    if r2_forks_in_line:
         r1.is_raised = True
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: flip strength halved, weapons deal 2 less damage)",
+            message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: flip strength halved, weapons deal 2 less damage, motion does not contribute in inertial contact)",
         ))
 
     if col.contact_type == "ACTIVE":
