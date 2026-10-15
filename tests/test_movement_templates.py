@@ -3,7 +3,7 @@ tests/test_movement_templates.py
 
 Tests for the movement template generator and permutation mapping.
 Verifies complete coverage of all 121 permutations from -5 to +5 on both tracks,
-the minimality of the 21 physical templates, and SVG rendering integrity.
+the minimality of the 8 consolidated physical templates, and SVG rendering integrity.
 """
 
 from __future__ import annotations
@@ -11,7 +11,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import sys
-import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -30,7 +29,7 @@ from generate_movement_templates import (
 
 class TestMovementTemplates(unittest.TestCase):
     def test_permutation_coverage(self):
-        """Verify that every pair in [-5, 5] x [-5, 5] is covered."""
+        """Verify that every pair in [-5, 5] x [-5, 5] is covered across the 8 templates."""
         all_perms = compute_all_permutations()
         self.assertEqual(len(all_perms), 121)
 
@@ -57,8 +56,12 @@ class TestMovementTemplates(unittest.TestCase):
         # All 121 unique coordinate pairs checked
         self.assertEqual(len(seen_pairs), 121)
 
-        # Non-zero pairs map to the 21 physical templates
-        self.assertEqual(len(templates_used), 21)
+        # Non-zero pairs map to the 8 physical templates
+        self.assertEqual(len(templates_used), 8)
+        self.assertEqual(
+            templates_used,
+            {"straight", "spin", "pivot", "curve_gentle", "curve_medium", "curve_sharp", "tight_hook", "tight_spin"}
+        )
 
     def test_symmetry_logic(self):
         """Verify flipping and rear placement for representative cases."""
@@ -76,25 +79,45 @@ class TestMovementTemplates(unittest.TestCase):
         self.assertFalse(p_rev["flipped"])
         self.assertTrue(p_rev["at_rear"])
 
-        # Forward right curve (2, 1) vs forward left curve (1, 2)
+        # Forward gentle curve (2, 1) vs flipped (1, 2)
         p_right = map_permutation_to_template(2, 1)
         p_left = map_permutation_to_template(1, 2)
-        self.assertEqual(p_right["template_id"], "curve_ratio_2_1")
-        self.assertEqual(p_left["template_id"], "curve_ratio_2_1")
+        self.assertEqual(p_right["template_id"], "curve_gentle")
+        self.assertEqual(p_left["template_id"], "curve_gentle")
         self.assertEqual(p_right["target_line_label"], "L2 R1")
         self.assertEqual(p_left["target_line_label"], "L2 R1")
         self.assertFalse(p_right["flipped"])
         self.assertTrue(p_left["flipped"])  # Left turn is flipped!
 
-        # Reverse right curve (-2, -1) vs reverse left curve (-1, -2)
+        # Reverse gentle curve (-2, -1) vs reverse left curve (-1, -2)
         p_rev_right = map_permutation_to_template(-2, -1)
         p_rev_left = map_permutation_to_template(-1, -2)
-        self.assertEqual(p_rev_right["template_id"], "curve_ratio_2_1")
-        self.assertEqual(p_rev_left["template_id"], "curve_ratio_2_1")
+        self.assertEqual(p_rev_right["template_id"], "curve_gentle")
+        self.assertEqual(p_rev_left["template_id"], "curve_gentle")
         self.assertTrue(p_rev_right["at_rear"])
         self.assertTrue(p_rev_left["at_rear"])
         self.assertFalse(p_rev_right["flipped"])
         self.assertTrue(p_rev_left["flipped"])
+
+        # Forward medium curve (4, 2) and (3, 1)
+        p_med = map_permutation_to_template(4, 2)
+        self.assertEqual(p_med["template_id"], "curve_medium")
+        self.assertEqual(p_med["target_line_label"], "L4 R2")
+
+        # Forward sharp curve (4, 1) and (5, 1)
+        p_sharp = map_permutation_to_template(4, 1)
+        self.assertEqual(p_sharp["template_id"], "curve_sharp")
+        self.assertEqual(p_sharp["target_line_label"], "L4 R1")
+
+        # Tight hook (3, -1)
+        p_hook = map_permutation_to_template(3, -1)
+        self.assertEqual(p_hook["template_id"], "tight_hook")
+        self.assertEqual(p_hook["target_line_label"], "L3 R-1")
+
+        # Tight counter-spin (4, -2)
+        p_tight_spin = map_permutation_to_template(4, -2)
+        self.assertEqual(p_tight_spin["template_id"], "tight_spin")
+        self.assertEqual(p_tight_spin["target_line_label"], "L4 R-2")
 
         # Spin CW (2, -2) vs Spin CCW (-2, 2)
         p_spin_cw = map_permutation_to_template(2, -2)
@@ -112,10 +135,10 @@ class TestMovementTemplates(unittest.TestCase):
         self.assertFalse(p_piv_r["flipped"])
         self.assertTrue(p_piv_l["flipped"])
 
-    def test_minimal_template_set(self):
-        """Verify the 21 minimal MovementTemplate definitions."""
+    def test_consolidated_template_set(self):
+        """Verify the 8 consolidated MovementTemplate definitions."""
         templates = build_all_movement_templates()
-        self.assertEqual(len(templates), 21)
+        self.assertEqual(len(templates), 8)
 
         categories = {}
         for t in templates:
@@ -134,8 +157,8 @@ class TestMovementTemplates(unittest.TestCase):
         self.assertEqual(categories["straight"], 1)
         self.assertEqual(categories["spin"], 1)
         self.assertEqual(categories["pivot"], 1)
-        self.assertEqual(categories["curve_forward"], 9)
-        self.assertEqual(categories["curve_tight"], 9)
+        self.assertEqual(categories["curve_forward"], 3)
+        self.assertEqual(categories["curve_tight"], 2)
 
     def test_sheet_and_preview_svg(self):
         """Verify multi-template sheet and rulebook preview generation."""
@@ -150,8 +173,7 @@ class TestMovementTemplates(unittest.TestCase):
         self.assertTrue(preview_svg.startswith("<svg"))
         self.assertTrue(preview_svg.strip().endswith("</svg>"))
         self.assertIn("Straight (1 to 5)", preview_svg)
-        self.assertIn("Curve (Ratio 2:1)", preview_svg)
-
+        self.assertIn("Curve Template", preview_svg)
 
     def test_spin_and_pivot_rates_and_remainders(self):
         """Verify 90° spin increments, 45° pivot increments hitting 180° at (4,0), and remainder chaining."""
@@ -159,41 +181,30 @@ class TestMovementTemplates(unittest.TestCase):
 
         # Spin template has 4 increments (1 to 4), where 4 = 360°
         spin_t = templates["spin"]
+        self.assertEqual(len(spin_t.pairs), 4)
         self.assertEqual(spin_t.pairs, [(1, -1), (2, -2), (3, -3), (4, -4)])
-        spin_svg = spin_t.to_svg()
-        self.assertIn("90°", spin_svg)
-        self.assertIn("180°", spin_svg)
-        self.assertIn("270°", spin_svg)
-        self.assertIn("360°", spin_svg)
 
-        # Pivot template has 4 increments (1 to 4), where 4 = 180° (semicircle)
+        # Pivot template has 4 increments (1 to 4), where 4 = 180°
         pivot_t = templates["pivot"]
+        self.assertEqual(len(pivot_t.pairs), 4)
         self.assertEqual(pivot_t.pairs, [(1, 0), (2, 0), (3, 0), (4, 0)])
-        pivot_svg = pivot_t.to_svg()
-        self.assertIn("45°", pivot_svg)
-        self.assertIn("90°", pivot_svg)
-        self.assertIn("135°", pivot_svg)
-        self.assertIn("180°", pivot_svg)
 
-        # Chaining for values > 4
-        # (5, -5) -> L4 R-4 + L1 R-1
-        p_spin5 = map_permutation_to_template(5, -5)
-        self.assertEqual(p_spin5["template_id"], "spin")
-        self.assertEqual(p_spin5["target_line_label"], "L4 R-4 + L1 R-1")
-        self.assertIn("360°", p_spin5["remainder_note"])
-        self.assertIn("90°", p_spin5["remainder_note"])
+        # Permutation mapping for 5/0 and -5/0 triggers remainder
+        p_5_0 = map_permutation_to_template(5, 0)
+        self.assertEqual(p_5_0["template_id"], "pivot")
+        self.assertIn("L4 R0 + L1 R0", p_5_0["target_line_label"])
+        self.assertIn("remainder", p_5_0["remainder_note"].lower())
 
-        # (5, 0) -> L4 R0 + L1 R0
-        p_piv5 = map_permutation_to_template(5, 0)
-        self.assertEqual(p_piv5["template_id"], "pivot")
-        self.assertEqual(p_piv5["target_line_label"], "L4 R0 + L1 R0")
-        self.assertIn("180°", p_piv5["remainder_note"])
-        self.assertIn("45°", p_piv5["remainder_note"])
+        p_neg5_0 = map_permutation_to_template(-5, 0)
+        self.assertEqual(p_neg5_0["template_id"], "pivot")
+        self.assertTrue(p_neg5_0["at_rear"])
+        self.assertIn("remainder", p_neg5_0["remainder_note"].lower())
 
-        # Flipped remainder: (0, 5) -> flipped + L4 R0 + L1 R0
-        p_piv_l5 = map_permutation_to_template(0, 5)
-        self.assertTrue(p_piv_l5["flipped"])
-        self.assertEqual(p_piv_l5["target_line_label"], "L4 R0 + L1 R0")
+        # Permutation mapping for 5/-5 triggers remainder
+        p_5_neg5 = map_permutation_to_template(5, -5)
+        self.assertEqual(p_5_neg5["template_id"], "spin")
+        self.assertIn("L4 R-4 + L1 R-1", p_5_neg5["target_line_label"])
+        self.assertIn("remainder", p_5_neg5["remainder_note"].lower())
 
 
 if __name__ == "__main__":

@@ -1,39 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 890" width="890" height="890">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" width="900" height="900">
   <rect width="100%" height="100%" fill="#ffffff" />
 
   <!-- Straight Template (Left) -->
-  <g transform="translate(60, 45) scale(2.8)">
+  <g transform="translate(60, 50) scale(2.2)">
     <g id="template_straight">
-<rect x="0" y="0" width="65.0" height="200.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />
-<line x1="32.5" y1="200.0" x2="32.5" y2="0" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="0" y1="200.0" x2="65.0" y2="200.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="32.5" y="212.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START (ALIGN FRONT / REAR)</text>
-<line x1="0" y1="160.0" x2="65.0" y2="160.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<rect x="0.0" y="0.0" width="65.0" height="200.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />
+<line x1="32.5" y1="200.0" x2="32.5" y2="0.0" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="0.0" y1="200.0" x2="65.0" y2="200.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="32.5" y="212.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="0.0" y1="160.0" x2="65.0" y2="160.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <text x="32.5" y="156.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R1</text>
-<line x1="0" y1="120.0" x2="65.0" y2="120.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<line x1="0.0" y1="120.0" x2="65.0" y2="120.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <text x="32.5" y="116.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R2</text>
-<line x1="0" y1="80.0" x2="65.0" y2="80.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<line x1="0.0" y1="80.0" x2="65.0" y2="80.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <text x="32.5" y="76.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R3</text>
-<line x1="0" y1="40.0" x2="65.0" y2="40.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<line x1="0.0" y1="40.0" x2="65.0" y2="40.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <text x="32.5" y="36.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R4</text>
-<line x1="0" y1="0.0" x2="65.0" y2="0.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<line x1="0.0" y1="0.0" x2="65.0" y2="0.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <text x="32.5" y="-4.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R5</text>
-<text x="4" y="12" font-family="sans-serif" font-size="6.5" fill="#64748b">STRAIGHT (1 to 5) | Back for -L -R</text>
 </g>
   </g>
 
   <!-- Curve Template (Top Right) -->
   <g transform="translate(340, 50) scale(2.2)">
-    <g id="template_curve_ratio_2_1">
-<path d="M 0.0 150.0 A 130.0 130.0 0 0 1 130.0 20.0 L 130.0 85.0 A 65.0 65.0 0 0 0 65.0 150.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 32.5 150.0 A 97.5 97.5 0 0 1 130.0 52.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="0.0" y1="150.0" x2="65.0" y2="150.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="32.5" y="161.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="38.07611844574882" y1="58.07611844574883" x2="84.03805922287441" y2="104.03805922287441" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="61.057088834311614" y="78.05708883431163" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R1</text>
-<line x1="130.0" y1="20.0" x2="130.0" y2="85.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="130.0" y="49.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
-<text x="5" y="12" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
+    <g id="template_curve_medium">
+<path d="M 0.0 133.9 A 108.9 108.9 0 0 1 172.9 45.8 L 134.7 98.4 A 43.9 43.9 0 0 0 65.0 133.9 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 32.5 133.9 A 76.4 76.4 0 0 1 153.8 72.1" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="0.0" y1="133.9" x2="65.0" y2="133.9" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="32.5" y="145.9" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="70.7" y1="35.2" x2="70.7" y2="100.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="65.7" y="67.7" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R1</text>
+<line x1="108.9" y1="25.0" x2="108.9" y2="90.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="103.9" y="57.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
+<line x1="147.1" y1="35.2" x2="147.1" y2="100.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="142.1" y="67.7" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R3</text>
 </g>
   </g>
 
@@ -43,17 +43,15 @@
 <circle cx="70.0" cy="60.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <circle cx="70.0" cy="60.0" r="3" fill="#0f172a" />
 <line x1="70.0" y1="60.0" x2="70.0" y2="25.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
-<text x="70.0" y="19.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START (0°)</text>
+<text x="70.0" y="19.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
 <line x1="70.0" y1="60.0" x2="105.0" y2="60.0" stroke="#2563eb" stroke-width="2.4" />
 <text x="111.0" y="63.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>
 <line x1="70.0" y1="60.0" x2="70.0" y2="95.0" stroke="#2563eb" stroke-width="2.4" />
 <text x="70.0" y="107.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>
-<line x1="70.0" y1="60.0" x2="35.0" y2="60.00000000000001" stroke="#2563eb" stroke-width="2.4" />
-<text x="29.0" y="63.00000000000001" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
-<text x="70.0" y="10.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360° Full)</text>
-<path d="M 89.25 60.0 A 19.25 19.25 0 0 1 70.0 79.25" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
-<text x="70.0" y="120.0" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">SPIN DISC | 90° / unit | Flip for CCW</text>
-<text x="70.0" y="129.0" font-family="sans-serif" font-size="5.8" fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R-4, 360°) + Remainder</text>
+<line x1="70.0" y1="60.0" x2="35.0" y2="60.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="29.0" y="63.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
+<text x="70.0" y="10.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360°)</text>
+<path d="M 89.2 60.0 A 19.2 19.2 0 0 1 70.0 79.2" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
 </g>
   </g>
 
@@ -62,19 +60,17 @@
     <g id="template_pivot">
 <path d="M 90.0 80.0 L 25.0 80.0 A 65.0 65.0 0 0 1 155.0 80.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <circle cx="90.0" cy="80.0" r="3.5" fill="#ef4444" />
-<text x="90.0" y="93.0" font-family="sans-serif" font-size="6.5" font-weight="bold" fill="#ef4444" text-anchor="middle">PIVOT WHEEL</text>
-<line x1="25.0" y1="80.0" x2="90.0" y2="80.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="57.5" y="92.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="90.0" y1="80.0" x2="44.03805922287441" y2="34.038059222874416" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
-<text x="60.12473849486837" y="48.12473849486837" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R0 (45°)</text>
-<line x1="90.0" y1="80.0" x2="90.0" y2="15.0" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
-<text x="90.0" y="35.75" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R0 (90°)</text>
-<line x1="90.0" y1="80.0" x2="135.9619407771256" y2="34.03805922287441" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
-<text x="119.87526150513163" y="48.12473849486837" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R0 (135°)</text>
-<line x1="90.0" y1="80.0" x2="155.0" y2="79.99999999999999" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
+<text x="90.0" y="93.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle">PIN</text>
+<line x1="25.0" y1="80.0" x2="90.0" y2="80.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="57.5" y="92.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="90.0" y1="80.0" x2="44.0" y2="34.0" stroke="#2563eb" stroke-width="2.6" />
+<text x="58.7" y="45.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R0 (45°)</text>
+<line x1="90.0" y1="80.0" x2="90.0" y2="15.0" stroke="#2563eb" stroke-width="2.6" />
+<text x="90.0" y="32.8" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R0 (90°)</text>
+<line x1="90.0" y1="80.0" x2="136.0" y2="34.0" stroke="#2563eb" stroke-width="2.6" />
+<text x="121.3" y="45.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R0 (135°)</text>
+<line x1="90.0" y1="80.0" x2="155.0" y2="80.0" stroke="#2563eb" stroke-width="2.6" />
 <text x="122.5" y="92.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0 (180°)</text>
-<text x="90.0" y="105.0" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">PIVOT FAN | 45° / unit | 4 units = 180° | Flip for (0, L) | Back for Reverse</text>
-<text x="90.0" y="114.0" font-family="sans-serif" font-size="5.8" fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R0, 180°) + Remainder</text>
 </g>
   </g>
 
@@ -85,16 +81,16 @@
     <text x="60" y="842" font-size="13" fill="#64748b">Place at rear for reverse (-1 to -5)</text>
 
     <!-- Curve notes -->
-    <text x="560" y="440" font-size="16" font-weight="bold">Curve (Ratio 2:1)</text>
-    <text x="560" y="462" font-size="13" fill="#64748b">Flip face-down for Left Turn</text>
-    <text x="560" y="482" font-size="13" fill="#64748b">Place at rear for Reverse</text>
+    <text x="560" y="440" font-size="16" font-weight="bold">Curve Template</text>
+    <text x="560" y="462" font-size="13" fill="#64748b">Align bumper to marked stop line</text>
+    <text x="560" y="482" font-size="13" fill="#64748b">Flip for Left | Back for Reverse</text>
 
     <!-- Spin notes -->
     <text x="350" y="842" font-size="14" font-weight="bold" text-anchor="middle">Spin on Spot</text>
-    <text x="350" y="862" font-size="12" fill="#64748b" text-anchor="middle">Rotate around center</text>
+    <text x="350" y="862" font-size="12" fill="#64748b" text-anchor="middle">Rotate around center (90° / unit)</text>
 
     <!-- Pivot notes -->
     <text x="730" y="842" font-size="14" font-weight="bold" text-anchor="middle">Pivot Fan</text>
-    <text x="730" y="862" font-size="12" fill="#64748b" text-anchor="middle">Pivot on stationary wheel</text>
+    <text x="730" y="862" font-size="12" fill="#64748b" text-anchor="middle">Pivot on locked wheel (45° / unit)</text>
   </g>
 </svg>

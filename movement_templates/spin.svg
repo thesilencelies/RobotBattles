@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.0 140.0" width="150.0mm" height="140.0mm">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.0 130.0" width="150.0mm" height="130.0mm">
   <defs>
     <style>
       text { user-select: none; }
@@ -8,16 +8,14 @@
 <circle cx="85.0" cy="75.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <circle cx="85.0" cy="75.0" r="3" fill="#0f172a" />
 <line x1="85.0" y1="75.0" x2="85.0" y2="40.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
-<text x="85.0" y="34.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START (0°)</text>
+<text x="85.0" y="34.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
 <line x1="85.0" y1="75.0" x2="120.0" y2="75.0" stroke="#2563eb" stroke-width="2.4" />
 <text x="126.0" y="78.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>
 <line x1="85.0" y1="75.0" x2="85.0" y2="110.0" stroke="#2563eb" stroke-width="2.4" />
 <text x="85.0" y="122.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>
 <line x1="85.0" y1="75.0" x2="50.0" y2="75.0" stroke="#2563eb" stroke-width="2.4" />
 <text x="44.0" y="78.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
-<text x="85.0" y="25.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360° Full)</text>
-<path d="M 104.25 75.0 A 19.25 19.25 0 0 1 85.0 94.25" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
-<text x="85.0" y="135.0" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">SPIN DISC | 90° / unit | Flip for CCW</text>
-<text x="85.0" y="144.0" font-family="sans-serif" font-size="5.8" fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R-4, 360°) + Remainder</text>
+<text x="85.0" y="25.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360°)</text>
+<path d="M 104.2 75.0 A 19.2 19.2 0 0 1 85.0 94.2" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
 </g>
 </svg>

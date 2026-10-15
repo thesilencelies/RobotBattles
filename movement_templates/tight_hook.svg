@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 137.5 137.5" width="137.5mm" height="137.5mm">
+  <defs>
+    <style>
+      text { user-select: none; }
+    </style>
+  </defs>
+<g id="template_tight_hook">
+<path d="M 35.0 85.0 A 50.0 50.0 0 1 1 78.0 134.5 L 87.1 70.1 A 15.0 15.0 0 1 0 100.0 85.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="85.0" cy="85.0" r="2.5" fill="#94a3b8" />
+<line x1="35.0" y1="85.0" x2="100.0" y2="85.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="67.5" y="97.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="120.4" y1="49.6" x2="74.4" y2="95.6" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="97.4" y="69.6" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-1</text>
+<line x1="135.0" y1="85.0" x2="70.0" y2="85.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="102.5" y="82.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-1</text>
+<line x1="120.4" y1="120.4" x2="74.4" y2="74.4" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="97.4" y="94.4" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-1</text>
+<line x1="85.0" y1="135.0" x2="85.0" y2="70.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="85.0" y="99.5" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-1</text>
+</g>
+</svg>

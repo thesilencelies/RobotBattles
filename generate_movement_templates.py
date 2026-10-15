@@ -5,19 +5,20 @@ generate_movement_templates.py
 Generates physical movement templates for every permutation of differential drive
 settings from -5 to +5 on each side (121 total permutations).
 
-Minimizes the number of templates required:
+Consolidated to 8 physical templates:
+1. Core (3 Pieces): Straight, Spin Disc, Pivot Fan
+2. Forward Curves (3 Pieces): Gentle Curve (45°), Medium Curve (90°), Sharp Curve (135°-180°)
+3. Counter-Drive Tight Turns (2 Pieces): Tight Hook (R = -1), Tight Counter-Spin (R <= -2)
+
+Symmetries:
 1. Left/Right symmetry: Flipping the template horizontally turns rightward curves
    into leftward curves.
 2. Forwards/Backwards: Placing the template start line at the back (rear) of the
    robot instead of the front executes reverse maneuvers along the exact same path.
-3. Multi-distance & shared curvature: Multiple drive pairs sharing the identical
-   radius of curvature are marked as distinct stop lines on the same physical template piece.
+3. Multi-setting curves with non-orthogonal stop lines: Routes with similar curvature
+   share a physical template piece, with stop lines drawn at the required bumper angle.
 
-Outputs:
-- Individual standalone SVG files for each template.
-- Combined printable sheet(s) (SVG) for physical cutting/printing.
-- Updated rulebook graphic (PNG / SVG).
-- Complete permutation lookup catalog (Markdown / JSON).
+Note: No template titles/names are printed on the physical pieces per game design.
 """
 
 from __future__ import annotations
@@ -90,7 +91,7 @@ def map_permutation_to_template(
     best_cand = max(valid_cands, key=lambda c: (c[0][0], c[0][1]))
     (c_l, c_r), flipped, at_rear = best_cand
 
-    # Categorize canonical pair
+    # Categorize canonical pair across the 8 consolidated templates
     remainder_note = ""
     if c_l == c_r:
         cat = "straight"
@@ -119,23 +120,25 @@ def map_permutation_to_template(
             target_line = f"L{c_l} R{c_r}"
     elif c_r > 0:
         cat = "curve_forward"
-        frac = Fraction(c_l, c_r)
-        if frac == Fraction(2, 1):
-            t_id = "curve_ratio_2_1"
-            name = "Curve Template (2:1 Ratio)"
-        else:
-            t_id = f"curve_L{c_l}_R{c_r}"
-            name = f"Curve Template ({c_l}, {c_r})"
+        diff = c_l - c_r
+        if diff == 1:
+            t_id = "curve_gentle"
+            name = "Gentle Curve Template"
+        elif diff == 2:
+            t_id = "curve_medium"
+            name = "Medium Curve Template"
+        else:  # diff >= 3
+            t_id = "curve_sharp"
+            name = "Sharp Curve Template"
         target_line = f"L{c_l} R{c_r}"
     else:  # c_r < 0
         cat = "curve_tight"
-        frac = Fraction(c_l, -c_r)
-        if frac == Fraction(2, 1):
-            t_id = "tight_ratio_2_1"
-            name = "Tight Turn Template (2:-1 Ratio)"
-        else:
-            t_id = f"tight_L{c_l}_Rm{-c_r}"
-            name = f"Tight Turn Template ({c_l}, {c_r})"
+        if c_r == -1:
+            t_id = "tight_hook"
+            name = "Tight Hook Template"
+        else:  # c_r <= -2
+            t_id = "tight_spin"
+            name = "Tight Counter-Spin Template"
         target_line = f"L{c_l} R{c_r}"
 
     return {
@@ -176,6 +179,9 @@ class MovementTemplate:
         name: str,
         category: str,
         pairs: List[Tuple[int, int]],
+        nominal_rc: float = 100.0,
+        r_out: float = 50.0,
+        r_in: float = 15.0,
         wheelbase: float = DEFAULT_WHEELBASE_MM,
         drive_unit: float = DEFAULT_DRIVE_UNIT_MM,
     ):
@@ -183,41 +189,41 @@ class MovementTemplate:
         self.name = name
         self.category = category
         self.pairs = pairs  # Canonical (L, R) pairs marked on this template
+        self.nominal_rc = nominal_rc
+        self.r_out = r_out
+        self.r_in = r_in
         self.wheelbase = wheelbase
         self.drive_unit = drive_unit
 
     def get_dimensions(self) -> Tuple[float, float]:
         """Returns approximate (width_mm, height_mm) bounding box."""
+        w = self.wheelbase
+        u = self.drive_unit
         if self.category == "straight":
             max_l = max(p[0] for p in self.pairs)
-            return (self.wheelbase + 30.0, max_l * self.drive_unit + 40.0)
+            return (w + 30.0, max_l * u + 40.0)
         elif self.category == "spin":
             radius = DEFAULT_MINIATURE_RADIUS
-            return (radius * 2.0 + 80.0, radius * 2.0 + 70.0)
+            return (radius * 2.0 + 80.0, radius * 2.0 + 60.0)
         elif self.category == "pivot":
-            radius = self.wheelbase
+            radius = w
             return (radius * 2.0 + 50.0, radius + 55.0)
         elif self.category == "curve_forward":
-            max_l = max(p[0] for p in self.pairs)
-            max_r = max(p[1] for p in self.pairs)
-            diff = max_l - max_r
-            r_out = self.wheelbase * max_l / diff
-            d_theta = diff * (math.pi / 4.0)
-            span_x = r_out * (1.0 - math.cos(min(d_theta, math.pi))) + self.wheelbase
-            span_y = r_out * math.sin(min(d_theta, math.pi / 2.0)) + 40.0
-            return (max(self.wheelbase + 40.0, span_x + 40.0), span_y + 40.0)
+            r_out = self.nominal_rc + w / 2.0
+            max_phi = max((l + r) / 2.0 * u / self.nominal_rc for l, r in self.pairs) + math.radians(6.0)
+            span_x = r_out * (1.0 - math.cos(min(max_phi, math.pi))) + w + 30.0
+            span_y = r_out * math.sin(min(max_phi, math.pi / 2.0)) + 40.0
+            return (max(span_x, w + 40.0), span_y + 30.0)
         else:  # curve_tight
-            max_l = max(p[0] for p in self.pairs)
-            min_r = min(p[1] for p in self.pairs)
-            diff = max_l - min_r
-            r_out = self.wheelbase * max_l / diff
-            d_theta = diff * (math.pi / 4.0)
-            span_x = r_out * (1.0 - math.cos(min(d_theta, math.pi))) + self.wheelbase
-            span_y = r_out * math.sin(min(d_theta, math.pi / 2.0)) + 40.0
-            return (max(self.wheelbase * 2.0 + 40.0, span_x + 40.0), span_y + 40.0)
+            span = (self.r_out + self.r_in) * 1.5 + 40.0
+            return (span, span)
 
     def render_svg_content(self, offset_x: float = 20.0, offset_y: float = 20.0) -> str:
-        """Renders the SVG markup for this template piece."""
+        """
+        Renders the SVG markup for this template piece.
+        Note: Per user requirement, template names/titles are not printed on the physical pieces.
+        Only start baselines, stop lines, degree/unit indicators, and drive pair labels are drawn.
+        """
         w = self.wheelbase
         u = self.drive_unit
 
@@ -233,43 +239,37 @@ class MovementTemplate:
 
             # Background contour
             svg_parts.append(
-                f'<rect x="{x0}" y="{offset_y}" width="{w}" height="{total_height}" '
+                f'<rect x="{x0:.1f}" y="{offset_y:.1f}" width="{w:.1f}" height="{total_height:.1f}" '
                 f'fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />'
             )
 
             # Centerline
             svg_parts.append(
-                f'<line x1="{x0 + w/2}" y1="{y_base}" x2="{x0 + w/2}" y2="{offset_y}" '
+                f'<line x1="{x0 + w/2:.1f}" y1="{y_base:.1f}" x2="{x0 + w/2:.1f}" y2="{offset_y:.1f}" '
                 f'stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />'
             )
 
             # Start line (Black baseline at bottom)
             svg_parts.append(
-                f'<line x1="{x0}" y1="{y_base}" x2="{x0 + w}" y2="{y_base}" '
+                f'<line x1="{x0:.1f}" y1="{y_base:.1f}" x2="{x0 + w:.1f}" y2="{y_base:.1f}" '
                 f'stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />'
             )
             svg_parts.append(
-                f'<text x="{x0 + w/2}" y="{y_base + 12}" font-family="sans-serif" font-size="7.5" '
-                f'font-weight="bold" fill="#0f172a" text-anchor="middle">START (ALIGN FRONT / REAR)</text>'
+                f'<text x="{x0 + w/2:.1f}" y="{y_base + 12:.1f}" font-family="sans-serif" font-size="7.5" '
+                f'font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>'
             )
 
             # Stop lines
             for l, r in self.pairs:
                 line_y = y_base - l * u
                 svg_parts.append(
-                    f'<line x1="{x0}" y1="{line_y}" x2="{x0 + w}" y2="{line_y}" '
+                    f'<line x1="{x0:.1f}" y1="{line_y:.1f}" x2="{x0 + w:.1f}" y2="{line_y:.1f}" '
                     f'stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />'
                 )
                 svg_parts.append(
-                    f'<text x="{x0 + w/2}" y="{line_y - 4}" font-family="sans-serif" font-size="9" '
+                    f'<text x="{x0 + w/2:.1f}" y="{line_y - 4:.1f}" font-family="sans-serif" font-size="9" '
                     f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L{l} R{r}</text>'
                 )
-
-            # Instructions label along edge
-            svg_parts.append(
-                f'<text x="{x0 + 4}" y="{offset_y + 12}" font-family="sans-serif" font-size="6.5" '
-                f'fill="#64748b">STRAIGHT (1 to 5) | Back for -L -R</text>'
-            )
 
         elif self.category == "spin":
             # Spin on spot disc: 90 deg increments per 1 drive unit (4 units = 360 deg)
@@ -279,19 +279,19 @@ class MovementTemplate:
 
             # Disc circle
             svg_parts.append(
-                f'<circle cx="{cx}" cy="{cy}" r="{radius}" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />'
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{radius:.1f}" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />'
             )
             # Center pin
-            svg_parts.append(f'<circle cx="{cx}" cy="{cy}" r="3" fill="#0f172a" />')
+            svg_parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3" fill="#0f172a" />')
 
             # Baseline at angle 0 (North: dx=0, dy=-radius)
             svg_parts.append(
-                f'<line x1="{cx}" y1="{cy}" x2="{cx}" y2="{cy - radius}" '
+                f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{cx:.1f}" y2="{cy - radius:.1f}" '
                 f'stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />'
             )
             svg_parts.append(
-                f'<text x="{cx}" y="{cy - radius - 6}" font-family="sans-serif" font-size="7.5" '
-                f'font-weight="bold" fill="#0f172a" text-anchor="middle">START (0°)</text>'
+                f'<text x="{cx:.1f}" y="{cy - radius - 6:.1f}" font-family="sans-serif" font-size="7.5" '
+                f'font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>'
             )
 
             # Markings for each spin unit (L, -L)
@@ -301,43 +301,34 @@ class MovementTemplate:
                 py = cy - radius * math.cos(d_theta)
                 if l < 4:
                     svg_parts.append(
-                        f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="#2563eb" stroke-width="2.4" />'
+                        f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="#2563eb" stroke-width="2.4" />'
                     )
                 if l == 1:
                     svg_parts.append(
-                        f'<text x="{px + 6}" y="{py + 3}" font-family="sans-serif" font-size="7.5" '
+                        f'<text x="{px + 6:.1f}" y="{py + 3:.1f}" font-family="sans-serif" font-size="7.5" '
                         f'font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>'
                     )
                 elif l == 2:
                     svg_parts.append(
-                        f'<text x="{px}" y="{py + 12}" font-family="sans-serif" font-size="7.5" '
+                        f'<text x="{px:.1f}" y="{py + 12:.1f}" font-family="sans-serif" font-size="7.5" '
                         f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>'
                     )
                 elif l == 3:
                     svg_parts.append(
-                        f'<text x="{px - 6}" y="{py + 3}" font-family="sans-serif" font-size="7.5" '
+                        f'<text x="{px - 6:.1f}" y="{py + 3:.1f}" font-family="sans-serif" font-size="7.5" '
                         f'font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>'
                     )
                 elif l == 4:
                     svg_parts.append(
-                        f'<text x="{cx}" y="{cy - radius - 15}" font-family="sans-serif" font-size="7.5" '
-                        f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360° Full)</text>'
+                        f'<text x="{cx:.1f}" y="{cy - radius - 15:.1f}" font-family="sans-serif" font-size="7.5" '
+                        f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360°)</text>'
                     )
 
             # Circular clockwise guide arrow
             arc_r = radius * 0.55
             svg_parts.append(
-                f'<path d="M {cx + arc_r} {cy} A {arc_r} {arc_r} 0 0 1 {cx} {cy + arc_r}" '
+                f'<path d="M {cx + arc_r:.1f} {cy:.1f} A {arc_r:.1f} {arc_r:.1f} 0 0 1 {cx:.1f} {cy + arc_r:.1f}" '
                 f'fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />'
-            )
-
-            svg_parts.append(
-                f'<text x="{cx}" y="{cy + radius + 25}" font-family="sans-serif" font-size="6.5" '
-                f'fill="#64748b" text-anchor="middle">SPIN DISC | 90° / unit | Flip for CCW</text>'
-            )
-            svg_parts.append(
-                f'<text x="{cx}" y="{cy + radius + 34}" font-family="sans-serif" font-size="5.8" '
-                f'fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R-4, 360°) + Remainder</text>'
             )
 
         elif self.category == "pivot":
@@ -352,81 +343,75 @@ class MovementTemplate:
             y_end = cy
 
             # Semicircle contour
-            path_d = f"M {cx} {cy} L {x_start} {y_start} A {radius} {radius} 0 0 1 {x_end} {y_end} Z"
+            path_d = f"M {cx:.1f} {cy:.1f} L {x_start:.1f} {y_start:.1f} A {radius:.1f} {radius:.1f} 0 0 1 {x_end:.1f} {y_end:.1f} Z"
             svg_parts.append(
                 f'<path d="{path_d}" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />'
             )
-            svg_parts.append(f'<circle cx="{cx}" cy="{cy}" r="3.5" fill="#ef4444" />')
+            svg_parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3.5" fill="#ef4444" />')
             svg_parts.append(
-                f'<text x="{cx}" y="{cy + 13}" font-family="sans-serif" font-size="6.5" '
-                f'font-weight="bold" fill="#ef4444" text-anchor="middle">PIVOT WHEEL</text>'
+                f'<text x="{cx:.1f}" y="{cy + 13:.1f}" font-family="sans-serif" font-size="7" '
+                f'font-weight="bold" fill="#ef4444" text-anchor="middle">PIN</text>'
             )
 
-            # Start line along baseline left: (cx - radius, cy) to (cx, cy)
+            # Start line along baseline
             svg_parts.append(
-                f'<line x1="{x_start}" y1="{y_start}" x2="{cx}" y2="{cy}" '
-                f'stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />'
+                f'<line x1="{x_start:.1f}" y1="{y_start:.1f}" x2="{cx:.1f}" y2="{cy:.1f}" '
+                f'stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />'
             )
             svg_parts.append(
-                f'<text x="{x_start + radius/2}" y="{cy + 12}" font-family="sans-serif" '
-                f'font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>'
+                f'<text x="{(x_start + cx)/2:.1f}" y="{cy + 12:.1f}" font-family="sans-serif" font-size="7" '
+                f'font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>'
             )
 
+            # Pivot stop lines: 45, 90, 135, 180 deg
             for l, r in self.pairs:
                 d_th = l * (math.pi / 4.0)
                 px = cx - radius * math.cos(d_th)
                 py = cy - radius * math.sin(d_th)
-                svg_parts.append(
-                    f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />'
-                )
-                label_x = cx - (radius * 0.65) * math.cos(d_th)
-                label_y = cy - (radius * 0.65) * math.sin(d_th)
+                if l < 4:
+                    svg_parts.append(
+                        f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="#2563eb" stroke-width="2.6" />'
+                    )
+                deg_label = l * 45
+                lbl_x = cx - (radius * 0.68) * math.cos(d_th)
+                lbl_y = cy - (radius * 0.68) * math.sin(d_th)
                 if l == 4:
                     svg_parts.append(
-                        f'<text x="{cx + radius/2}" y="{cy + 12}" font-family="sans-serif" font-size="7.5" '
+                        f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{x_end:.1f}" y2="{y_end:.1f}" stroke="#2563eb" stroke-width="2.6" />'
+                    )
+                    svg_parts.append(
+                        f'<text x="{cx + radius/2:.1f}" y="{cy + 12:.1f}" font-family="sans-serif" font-size="7.5" '
                         f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0 (180°)</text>'
                     )
                 else:
-                    deg_val = l * 45
                     svg_parts.append(
-                        f'<text x="{label_x}" y="{label_y - 2}" font-family="sans-serif" font-size="7.5" '
-                        f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L{l} R0 ({deg_val}°)</text>'
+                        f'<text x="{lbl_x:.1f}" y="{lbl_y - 3:.1f}" font-family="sans-serif" font-size="7.5" '
+                        f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L{l} R0 ({deg_label}°)</text>'
                     )
 
-            svg_parts.append(
-                f'<text x="{cx}" y="{cy + 25}" font-family="sans-serif" font-size="6.5" '
-                f'fill="#64748b" text-anchor="middle">PIVOT FAN | 45° / unit | 4 units = 180° | Flip for (0, L) | Back for Reverse</text>'
-            )
-            svg_parts.append(
-                f'<text x="{cx}" y="{cy + 34}" font-family="sans-serif" font-size="5.8" '
-                f'fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R0, 180°) + Remainder</text>'
-            )
-
         elif self.category == "curve_forward":
-            # Forward curved arc: 45 deg per 1 unit differential
-            max_l = max(p[0] for p in self.pairs)
-            max_r = max(p[1] for p in self.pairs)
-            diff = max_l - max_r
-            r_in = w * max_r / diff
-            r_out = w * max_l / diff
-            d_theta_max = diff * (math.pi / 4.0)
+            # Forward curved channel with non-orthogonal bumper stop lines
+            r_in = self.nominal_rc - w / 2.0
+            r_out = self.nominal_rc + w / 2.0
+            max_phi = max((l + r) / 2.0 * u / self.nominal_rc for l, r in self.pairs)
+            max_arc = max_phi + math.radians(6.0)
 
             cx = offset_x + r_out
-            cy = offset_y + r_out * math.sin(min(d_theta_max, math.pi / 2)) + 20.0
+            cy = offset_y + r_out * math.sin(min(max_arc, math.pi / 2.0)) + 25.0
 
             p_out_start = (cx - r_out, cy)
             p_in_start = (cx - r_in, cy)
 
-            p_out_end = (cx - r_out * math.cos(d_theta_max), cy - r_out * math.sin(d_theta_max))
-            p_in_end = (cx - r_in * math.cos(d_theta_max), cy - r_in * math.sin(d_theta_max))
+            p_out_end = (cx - r_out * math.cos(max_arc), cy - r_out * math.sin(max_arc))
+            p_in_end = (cx - r_in * math.cos(max_arc), cy - r_in * math.sin(max_arc))
 
-            large_arc = 1 if d_theta_max > math.pi else 0
+            large_arc = 1 if max_arc > math.pi else 0
 
             path_d = (
-                f"M {p_out_start[0]} {p_out_start[1]} "
-                f"A {r_out} {r_out} 0 {large_arc} 1 {p_out_end[0]} {p_out_end[1]} "
-                f"L {p_in_end[0]} {p_in_end[1]} "
-                f"A {r_in} {r_in} 0 {large_arc} 0 {p_in_start[0]} {p_in_start[1]} Z"
+                f"M {p_out_start[0]:.1f} {p_out_start[1]:.1f} "
+                f"A {r_out:.1f} {r_out:.1f} 0 {large_arc} 1 {p_out_end[0]:.1f} {p_out_end[1]:.1f} "
+                f"L {p_in_end[0]:.1f} {p_in_end[1]:.1f} "
+                f"A {r_in:.1f} {r_in:.1f} 0 {large_arc} 0 {p_in_start[0]:.1f} {p_in_start[1]:.1f} Z"
             )
 
             svg_parts.append(
@@ -434,12 +419,11 @@ class MovementTemplate:
             )
 
             # Centerline
-            r_mid = (r_in + r_out) / 2.0
-            p_mid_start = (cx - r_mid, cy)
-            p_mid_end = (cx - r_mid * math.cos(d_theta_max), cy - r_mid * math.sin(d_theta_max))
+            p_mid_start = (cx - self.nominal_rc, cy)
+            p_mid_end = (cx - self.nominal_rc * math.cos(max_arc), cy - self.nominal_rc * math.sin(max_arc))
             mid_path = (
-                f"M {p_mid_start[0]} {p_mid_start[1]} "
-                f"A {r_mid} {r_mid} 0 {large_arc} 1 {p_mid_end[0]} {p_mid_end[1]}"
+                f"M {p_mid_start[0]:.1f} {p_mid_start[1]:.1f} "
+                f"A {self.nominal_rc:.1f} {self.nominal_rc:.1f} 0 {large_arc} 1 {p_mid_end[0]:.1f} {p_mid_end[1]:.1f}"
             )
             svg_parts.append(
                 f'<path d="{mid_path}" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />'
@@ -447,94 +431,98 @@ class MovementTemplate:
 
             # Start line
             svg_parts.append(
-                f'<line x1="{p_out_start[0]}" y1="{p_out_start[1]}" x2="{p_in_start[0]}" y2="{p_in_start[1]}" '
-                f'stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />'
+                f'<line x1="{p_out_start[0]:.1f}" y1="{p_out_start[1]:.1f}" x2="{p_in_start[0]:.1f}" y2="{p_in_start[1]:.1f}" '
+                f'stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />'
             )
             svg_parts.append(
-                f'<text x="{(p_out_start[0] + p_in_start[0])/2}" y="{cy + 11}" font-family="sans-serif" '
-                f'font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>'
+                f'<text x="{(p_out_start[0] + p_in_start[0])/2:.1f}" y="{cy + 12:.1f}" font-family="sans-serif" '
+                f'font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>'
             )
 
+            # Non-orthogonal bumper stop lines for each pair
             for l, r in self.pairs:
-                d_th = (l - r) * (math.pi / 4.0)
-                p_out = (cx - r_out * math.cos(d_th), cy - r_out * math.sin(d_th))
-                p_in = (cx - r_in * math.cos(d_th), cy - r_in * math.sin(d_th))
+                dist = (l + r) / 2.0 * u
+                phi = dist / self.nominal_rc
+                th = math.radians((l - r) * 45.0)
+
+                pc_x = cx - self.nominal_rc * math.cos(phi)
+                pc_y = cy - self.nominal_rc * math.sin(phi)
+
+                bx = math.cos(th)
+                by = math.sin(th)
+
+                p_left = (pc_x - (w / 2.0) * bx, pc_y - (w / 2.0) * by)
+                p_right = (pc_x + (w / 2.0) * bx, pc_y + (w / 2.0) * by)
+
                 svg_parts.append(
-                    f'<line x1="{p_out[0]}" y1="{p_out[1]}" x2="{p_in[0]}" y2="{p_in[1]}" '
+                    f'<line x1="{p_left[0]:.1f}" y1="{p_left[1]:.1f}" x2="{p_right[0]:.1f}" y2="{p_right[1]:.1f}" '
                     f'stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />'
                 )
-                lbl_x = (p_out[0] + p_in[0]) / 2.0
-                lbl_y = (p_out[1] + p_in[1]) / 2.0
+
+                txt_x = pc_x - 5.0 * math.sin(th)
+                txt_y = pc_y + 5.0 * math.cos(th)
                 svg_parts.append(
-                    f'<text x="{lbl_x}" y="{lbl_y - 3}" font-family="sans-serif" font-size="8" '
+                    f'<text x="{txt_x:.1f}" y="{txt_y:.1f}" font-family="sans-serif" font-size="8" '
                     f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L{l} R{r}</text>'
                 )
 
-            svg_parts.append(
-                f'<text x="{offset_x + 5}" y="{offset_y + 12}" font-family="sans-serif" font-size="6.5" '
-                f'fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>'
-            )
-
         elif self.category == "curve_tight":
-            # Counter-drive tight curve: 45 deg per 1 unit differential
-            max_l = max(p[0] for p in self.pairs)
-            min_r = min(p[1] for p in self.pairs)
-            diff = max_l - min_r
-            d_theta_max = diff * (math.pi / 4.0)
+            # Counter-drive tight curve channel
+            cx = offset_x + self.r_out + 20.0
+            cy = offset_y + self.r_out + 20.0
 
-            r_out = w * max_l / diff
-            r_in = math.fabs(w * min_r / diff)
+            max_deg = max((l - r) * 45.0 for l, r in self.pairs) + 8.0
+            max_rad = math.radians(max_deg)
 
-            cx = offset_x + w + 15.0
-            cy = offset_y + w + 15.0
+            p_out_start = (cx - self.r_out, cy)
+            p_in_start = (cx + self.r_in, cy)
 
-            p_out_start = (cx - r_out, cy)
-            p_in_start = (cx + r_in, cy)
+            p_out_end = (cx - self.r_out * math.cos(max_rad), cy - self.r_out * math.sin(max_rad))
+            p_in_end = (cx + self.r_in * math.cos(max_rad), cy + self.r_in * math.sin(max_rad))
 
-            p_out_end = (cx - r_out * math.cos(d_theta_max), cy - r_out * math.sin(d_theta_max))
-            p_in_end = (cx + r_in * math.cos(d_theta_max), cy + r_in * math.sin(d_theta_max))
-
-            large_arc = 1 if d_theta_max > math.pi else 0
+            large_arc = 1 if max_rad > math.pi else 0
 
             path_d = (
-                f"M {p_out_start[0]} {p_out_start[1]} "
-                f"A {r_out} {r_out} 0 {large_arc} 1 {p_out_end[0]} {p_out_end[1]} "
-                f"L {p_in_end[0]} {p_in_end[1]} "
-                f"A {r_in} {r_in} 0 {large_arc} 0 {p_in_start[0]} {p_in_start[1]} Z"
+                f"M {p_out_start[0]:.1f} {p_out_start[1]:.1f} "
+                f"A {self.r_out:.1f} {self.r_out:.1f} 0 {large_arc} 1 {p_out_end[0]:.1f} {p_out_end[1]:.1f} "
+                f"L {p_in_end[0]:.1f} {p_in_end[1]:.1f} "
+                f"A {self.r_in:.1f} {self.r_in:.1f} 0 {large_arc} 0 {p_in_start[0]:.1f} {p_in_start[1]:.1f} Z"
             )
 
             svg_parts.append(
                 f'<path d="{path_d}" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />'
             )
 
+            # Center rotation pin
+            svg_parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="2.5" fill="#94a3b8" />')
+
+            # Start line
             svg_parts.append(
-                f'<line x1="{p_out_start[0]}" y1="{p_out_start[1]}" x2="{p_in_start[0]}" y2="{p_in_start[1]}" '
-                f'stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />'
+                f'<line x1="{p_out_start[0]:.1f}" y1="{p_out_start[1]:.1f}" x2="{p_in_start[0]:.1f}" y2="{p_in_start[1]:.1f}" '
+                f'stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />'
             )
             svg_parts.append(
-                f'<text x="{(p_out_start[0] + p_in_start[0])/2}" y="{cy + 12}" font-family="sans-serif" '
+                f'<text x="{(p_out_start[0] + p_in_start[0])/2:.1f}" y="{cy + 12:.1f}" font-family="sans-serif" '
                 f'font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>'
             )
 
+            # Stop lines
             for l, r in self.pairs:
                 d_th = (l - r) * (math.pi / 4.0)
-                p_out = (cx - r_out * math.cos(d_th), cy - r_out * math.sin(d_th))
-                p_in = (cx + r_in * math.cos(d_th), cy + r_in * math.sin(d_th))
+                p_out = (cx - self.r_out * math.cos(d_th), cy - self.r_out * math.sin(d_th))
+                p_in = (cx + self.r_in * math.cos(d_th), cy + self.r_in * math.sin(d_th))
+
                 svg_parts.append(
-                    f'<line x1="{p_out[0]}" y1="{p_out[1]}" x2="{p_in[0]}" y2="{p_in[1]}" '
+                    f'<line x1="{p_out[0]:.1f}" y1="{p_out[1]:.1f}" x2="{p_in[0]:.1f}" y2="{p_in[1]:.1f}" '
                     f'stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />'
                 )
+
                 lbl_x = (p_out[0] + p_in[0]) / 2.0
                 lbl_y = (p_out[1] + p_in[1]) / 2.0
                 svg_parts.append(
-                    f'<text x="{lbl_x}" y="{lbl_y - 3}" font-family="sans-serif" font-size="7.5" '
+                    f'<text x="{lbl_x:.1f}" y="{lbl_y - 3:.1f}" font-family="sans-serif" font-size="7.5" '
                     f'font-weight="bold" fill="#1d4ed8" text-anchor="middle">L{l} R{r}</text>'
                 )
-
-            svg_parts.append(
-                f'<text x="{offset_x + 5}" y="{offset_y + 12}" font-family="sans-serif" font-size="6.5" '
-                f'fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>'
-            )
 
         svg_parts.append("</g>")
         return "\n".join(svg_parts)
@@ -563,7 +551,7 @@ def build_all_movement_templates(
     drive_unit: float = DEFAULT_DRIVE_UNIT_MM,
 ) -> List[MovementTemplate]:
     """
-    Constructs the minimal set of 21 physical MovementTemplate instances
+    Constructs the minimal consolidated set of 8 physical MovementTemplate instances
     covering every permutation from -5 to +5 on both tracks.
     """
     templates: List[MovementTemplate] = []
@@ -604,77 +592,72 @@ def build_all_movement_templates(
         )
     )
 
-    # 4. Proportional Forward Curves
-    # Ratio 2:1 shared template: (2, 1) and (4, 2)
+    # 4. Gentle Curve Template: diff = 1 (nominal 45° turns)
     templates.append(
         MovementTemplate(
-            template_id="curve_ratio_2_1",
-            name="Curve Template (2:1 Ratio)",
+            template_id="curve_gentle",
+            name="Gentle Curve Template",
             category="curve_forward",
-            pairs=[(2, 1), (4, 2)],
+            pairs=[(2, 1), (3, 2), (4, 3), (5, 4)],
+            nominal_rc=140.0,
             wheelbase=wheelbase,
             drive_unit=drive_unit,
         )
     )
 
-    # Irreducible forward curves
-    fwd_pairs = [
-        ((3, 1), "curve_L3_R1", "Curve Template (3, 1)"),
-        ((4, 1), "curve_L4_R1", "Curve Template (4, 1)"),
-        ((5, 1), "curve_L5_R1", "Curve Template (5, 1)"),
-        ((3, 2), "curve_L3_R2", "Curve Template (3, 2)"),
-        ((4, 3), "curve_L4_R3", "Curve Template (4, 3)"),
-        ((5, 4), "curve_L5_R4", "Curve Template (5, 4)"),
-        ((5, 2), "curve_L5_R2", "Curve Template (5, 2)"),
-        ((5, 3), "curve_L5_R3", "Curve Template (5, 3)"),
-    ]
-    for p, tid, tname in fwd_pairs:
-        templates.append(
-            MovementTemplate(
-                template_id=tid,
-                name=tname,
-                category="curve_forward",
-                pairs=[p],
-                wheelbase=wheelbase,
-                drive_unit=drive_unit,
-            )
-        )
-
-    # 5. Counter-drive Tight Turns
-    # Ratio -2:1 shared template: (2, -1) and (4, -2)
+    # 5. Medium Curve Template: diff = 2 (nominal 90° turns)
     templates.append(
         MovementTemplate(
-            template_id="tight_ratio_2_1",
-            name="Tight Turn Template (2:-1 Ratio)",
-            category="curve_tight",
-            pairs=[(2, -1), (4, -2)],
+            template_id="curve_medium",
+            name="Medium Curve Template",
+            category="curve_forward",
+            pairs=[(3, 1), (4, 2), (5, 3)],
+            nominal_rc=76.4,
             wheelbase=wheelbase,
             drive_unit=drive_unit,
         )
     )
 
-    # Irreducible counter-drive tight turns
-    tight_pairs = [
-        ((3, -1), "tight_L3_Rm1", "Tight Turn Template (3, -1)"),
-        ((4, -1), "tight_L4_Rm1", "Tight Turn Template (4, -1)"),
-        ((5, -1), "tight_L5_Rm1", "Tight Turn Template (5, -1)"),
-        ((3, -2), "tight_L3_Rm2", "Tight Turn Template (3, -2)"),
-        ((4, -3), "tight_L4_Rm3", "Tight Turn Template (4, -3)"),
-        ((5, -4), "tight_L5_Rm4", "Tight Turn Template (5, -4)"),
-        ((5, -2), "tight_L5_Rm2", "Tight Turn Template (5, -2)"),
-        ((5, -3), "tight_L5_Rm3", "Tight Turn Template (5, -3)"),
-    ]
-    for p, tid, tname in tight_pairs:
-        templates.append(
-            MovementTemplate(
-                template_id=tid,
-                name=tname,
-                category="curve_tight",
-                pairs=[p],
-                wheelbase=wheelbase,
-                drive_unit=drive_unit,
-            )
+    # 6. Sharp Curve Template: diff >= 3 (nominal 135°-180° tight forward hooks)
+    templates.append(
+        MovementTemplate(
+            template_id="curve_sharp",
+            name="Sharp Curve Template",
+            category="curve_forward",
+            pairs=[(4, 1), (5, 2), (5, 1)],
+            nominal_rc=45.0,
+            wheelbase=wheelbase,
+            drive_unit=drive_unit,
         )
+    )
+
+    # 7. Tight Hook Template: Counter-drive with R = -1
+    templates.append(
+        MovementTemplate(
+            template_id="tight_hook",
+            name="Tight Hook Template",
+            category="curve_tight",
+            pairs=[(2, -1), (3, -1), (4, -1), (5, -1)],
+            r_out=50.0,
+            r_in=15.0,
+            wheelbase=wheelbase,
+            drive_unit=drive_unit,
+        )
+    )
+
+    # 8. Tight Counter-Spin Template: Counter-drive with R <= -2
+    templates.append(
+        MovementTemplate(
+            template_id="tight_spin",
+            name="Tight Counter-Spin Template",
+            category="curve_tight",
+            pairs=[(3, -2), (4, -2), (5, -2), (4, -3), (5, -3), (5, -4)],
+            r_out=41.0,
+            r_in=24.0,
+            wheelbase=wheelbase,
+            drive_unit=drive_unit,
+        )
+    )
 
     return templates
 
@@ -685,22 +668,22 @@ def build_all_movement_templates(
 
 def generate_printable_sheet_svg(
     templates: List[MovementTemplate],
-    sheet_width_mm: float = 420.0,  # A3 Landscape
-    sheet_height_mm: float = 297.0,
+    sheet_width_mm: float = 650.0,
+    sheet_height_mm: float = 650.0,
 ) -> str:
-    """Arranges templates onto a printable multi-template sheet."""
+    """Arranges the 8 consolidated templates onto a single printable sheet."""
     svg_parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {sheet_width_mm} {sheet_height_mm}" '
         f'width="{sheet_width_mm}mm" height="{sheet_height_mm}mm">',
         '  <rect width="100%" height="100%" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />',
-        '  <text x="20" y="22" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0f172a">ROBOT BATTLES - MOVEMENT TEMPLATES</text>',
+        '  <text x="20" y="22" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0f172a">ROBOT BATTLES - MOVEMENT TEMPLATES (8 CONSOLIDATED TEMPLATES)</text>',
         '  <text x="20" y="32" font-family="sans-serif" font-size="7.5" fill="#475569">Complete range -5 to +5. Flip face-down for left turns. Place at rear for reverse.</text>',
         '  <!-- 50mm Calibration Scale Bar -->',
-        '  <line x1="320" y1="20" x2="370" y2="20" stroke="#0f172a" stroke-width="2.5" />',
-        '  <text x="345" y="27" font-family="sans-serif" font-size="6" fill="#0f172a" text-anchor="middle">50 mm SCALE BAR</text>',
+        '  <line x1="550" y1="20" x2="600" y2="20" stroke="#0f172a" stroke-width="2.5" />',
+        '  <text x="575" y="27" font-family="sans-serif" font-size="6" fill="#0f172a" text-anchor="middle">50 mm SCALE BAR</text>',
     ]
 
-    # Grid packing for A3 sheet
+    # Clean multi-row grid packing
     x_cursor = 20.0
     y_cursor = 45.0
     max_row_height = 0.0
@@ -709,15 +692,17 @@ def generate_printable_sheet_svg(
         bw, bh = t.get_dimensions()
         if x_cursor + bw > sheet_width_mm - 15.0:
             x_cursor = 20.0
-            y_cursor += max_row_height + 10.0
+            y_cursor += max_row_height + 15.0
             max_row_height = 0.0
 
-        if y_cursor + bh > sheet_height_mm - 15.0:
-            pass
+        svg_parts.append(f'  <!-- Template: {t.name} ({t.template_id}) -->')
+        svg_parts.append(f'  <g transform="translate({x_cursor:.1f}, {y_cursor:.1f})">')
+        svg_parts.append(t.render_svg_content(offset_x=5.0, offset_y=5.0))
+        svg_parts.append('  </g>')
 
-        svg_parts.append(t.render_svg_content(offset_x=x_cursor, offset_y=y_cursor))
-        x_cursor += bw + 8.0
-        max_row_height = max(max_row_height, bh)
+        x_cursor += bw + 15.0
+        if bh > max_row_height:
+            max_row_height = bh
 
     svg_parts.append("</svg>")
     return "\n".join(svg_parts)
@@ -725,17 +710,13 @@ def generate_printable_sheet_svg(
 
 def generate_rulebook_preview_svg(
     templates: List[MovementTemplate],
-    width_px: int = 890,
-    height_px: int = 890,
+    width_px: int = 900,
+    height_px: int = 900,
 ) -> str:
-    """
-    Renders an elegant rulebook preview graphic highlighting the core template
-    families (Straight, Curve, Spin Disc, Pivot Fan) with annotations
-    demonstrating flipping and rear placement.
-    """
+    """Generates the preview illustration for Section 6 of the rulebook."""
     t_map = {t.template_id: t for t in templates}
     t_straight = t_map.get("straight")
-    t_curve = t_map.get("curve_ratio_2_1")
+    t_curve = t_map.get("curve_medium")
     t_spin = t_map.get("spin")
     t_pivot = t_map.get("pivot")
 
@@ -743,7 +724,7 @@ def generate_rulebook_preview_svg(
   <rect width="100%" height="100%" fill="#ffffff" />
 
   <!-- Straight Template (Left) -->
-  <g transform="translate(60, 45) scale(2.8)">
+  <g transform="translate(60, 50) scale(2.2)">
     {t_straight.render_svg_content(offset_x=0, offset_y=0) if t_straight else ''}
   </g>
 
@@ -769,17 +750,17 @@ def generate_rulebook_preview_svg(
     <text x="60" y="842" font-size="13" fill="#64748b">Place at rear for reverse (-1 to -5)</text>
 
     <!-- Curve notes -->
-    <text x="560" y="440" font-size="16" font-weight="bold">Curve (Ratio 2:1)</text>
-    <text x="560" y="462" font-size="13" fill="#64748b">Flip face-down for Left Turn</text>
-    <text x="560" y="482" font-size="13" fill="#64748b">Place at rear for Reverse</text>
+    <text x="560" y="440" font-size="16" font-weight="bold">Curve Template</text>
+    <text x="560" y="462" font-size="13" fill="#64748b">Align bumper to marked stop line</text>
+    <text x="560" y="482" font-size="13" fill="#64748b">Flip for Left | Back for Reverse</text>
 
     <!-- Spin notes -->
     <text x="350" y="842" font-size="14" font-weight="bold" text-anchor="middle">Spin on Spot</text>
-    <text x="350" y="862" font-size="12" fill="#64748b" text-anchor="middle">Rotate around center</text>
+    <text x="350" y="862" font-size="12" fill="#64748b" text-anchor="middle">Rotate around center (90° / unit)</text>
 
     <!-- Pivot notes -->
     <text x="730" y="842" font-size="14" font-weight="bold" text-anchor="middle">Pivot Fan</text>
-    <text x="730" y="862" font-size="12" fill="#64748b" text-anchor="middle">Pivot on stationary wheel</text>
+    <text x="730" y="862" font-size="12" fill="#64748b" text-anchor="middle">Pivot on locked wheel (45° / unit)</text>
   </g>
 </svg>"""
     return svg
@@ -790,8 +771,8 @@ def generate_permutation_markdown(perms: List[Dict[str, Any]]) -> str:
     md = [
         "# Movement Permutation Catalog (-5 to +5)\n\n",
         "This table details all **121 combinations** of Left and Right drive settings, "
-        "the physical template to use, and whether to **flip** the template (for left turns) "
-        "or place it at the **rear** (for reverse).\n\n",
+        "the physical template to use across the **8 consolidated templates**, and whether to **flip** "
+        "the template (for left turns) or place it at the **rear** (for reverse).\n\n",
         "| Left | Right | Template Name | Target Line | Flip? | Position | Category |\n",
         "|:---:|:---:|:---|:---:|:---:|:---:|:---|\n",
     ]
@@ -832,7 +813,7 @@ def export_template_png(svg_str: str, png_path: Path, dpi: int = 300) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate physical movement templates for every permutation from -5 to 5."
+        description="Generate physical movement templates for every permutation from -5 to 5 (8 consolidated templates)."
     )
     parser.add_argument(
         "--output-dir",
@@ -869,9 +850,18 @@ def main():
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Generating movement templates (Wheelbase: {args.wheelbase}mm, Unit: {args.drive_unit}mm)...")
+    print(f"Generating consolidated movement templates (Wheelbase: {args.wheelbase}mm, Unit: {args.drive_unit}mm)...")
     templates = build_all_movement_templates(wheelbase=args.wheelbase, drive_unit=args.drive_unit)
-    print(f"Created {len(templates)} minimal movement templates.")
+    print(f"Created {len(templates)} consolidated movement templates.")
+
+    # Remove any old SVG/PNG files in movement_templates/ that don't belong to the 8 templates
+    valid_ids = {t.template_id for t in templates} | {"movement_templates_sheet"}
+    for old_f in args.output_dir.glob("*.*"):
+        if old_f.stem not in valid_ids and old_f.name != "README.md":
+            try:
+                old_f.unlink()
+            except Exception:
+                pass
 
     # 1. Output individual SVG and transparent PNG templates
     rules_img_dir = Path("rules/images")
@@ -885,18 +875,9 @@ def main():
         export_template_png(svg_content, png_path)
 
         # Also copy key templates for rulebook diagrams into rules/images/
-        if t.template_id in ("straight", "spin", "pivot", "curve_ratio_2_1"):
+        if t.template_id in ("straight", "spin", "pivot", "curve_medium"):
             rulebook_png = rules_img_dir / f"template_{t.template_id}.png"
             export_template_png(svg_content, rulebook_png)
-            if t.template_id == "curve_ratio_2_1":
-                try:
-                    import shutil
-                    import subprocess
-                    convert_bin = shutil.which("magick") or shutil.which("convert")
-                    if convert_bin:
-                        subprocess.run([convert_bin, "-flop", str(rulebook_png), str(rules_img_dir / "template_curve_ratio_2_1_flipped.png")], check=True)
-                except Exception as e:
-                    print(f"Warning: Could not flop curve template: {e}")
     print(f"Saved {len(templates)} individual SVG and transparent PNG templates to {args.output_dir}/")
 
     # 2. Output permutation catalog
@@ -955,7 +936,7 @@ def main():
                         ax.plot([60, 240], [ly, ly], color="#2563eb", linewidth=2.5)
                     ax.text(150, ly + 55, f"L{k} R{k}", fontsize=13, fontweight="bold", ha="center", va="center", color="#1e293b")
 
-                ax.text(150, 820, "STRAIGHT (1 to 5)", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
+                ax.text(150, 820, "Straight (1 to 5)", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
                 ax.text(150, 842, "Place at rear for Reverse (-1 to -5)", fontsize=10, ha="center", color="#475569")
 
                 # 2. Curve template (Top Right)
@@ -969,15 +950,15 @@ def main():
                 p1_out = (640 + 320 * np.cos(th1), 420 + 320 * np.sin(th1))
                 p1_in = (640 + 170 * np.cos(th1), 420 + 170 * np.sin(th1))
                 ax.plot([p1_out[0], p1_in[0]], [p1_out[1], p1_in[1]], color="#2563eb", linewidth=2.5)
-                ax.text((p1_out[0]+p1_in[0])/2 - 20, (p1_out[1]+p1_in[1])/2 + 25, "L2 R1 (45°)", fontsize=11, fontweight="bold", color="#1e293b", ha="center")
+                ax.text((p1_out[0]+p1_in[0])/2 - 20, (p1_out[1]+p1_in[1])/2 + 25, "L3 R1", fontsize=11, fontweight="bold", color="#1e293b", ha="center")
 
                 th2 = np.radians(180 + 90.0)
                 p2_out = (640 + 320 * np.cos(th2), 420 + 320 * np.sin(th2))
                 p2_in = (640 + 170 * np.cos(th2), 420 + 170 * np.sin(th2))
                 ax.plot([p2_out[0], p2_in[0]], [p2_out[1], p2_in[1]], color="#2563eb", linewidth=2.5)
-                ax.text((p2_out[0]+p2_in[0])/2 - 20, (p2_out[1]+p2_in[1])/2 + 25, "L4 R2 (90°)", fontsize=11, fontweight="bold", color="#1e293b", ha="center")
+                ax.text((p2_out[0]+p2_in[0])/2 - 20, (p2_out[1]+p2_in[1])/2 + 25, "L4 R2", fontsize=11, fontweight="bold", color="#1e293b", ha="center")
 
-                ax.text(640, 460, "CURVE (Ratio 2:1)", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
+                ax.text(640, 460, "Curve Template", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
                 ax.text(640, 482, "Flip for Left Turn | Place at rear for Reverse", fontsize=10, ha="center", color="#475569")
 
                 # 3. Spin disc (Bottom Center)
@@ -999,7 +980,7 @@ def main():
                     ty = cy_s + (r_s * 0.6) * np.sin(ang) + (12 if np.sin(ang) > 0 else (-6 if np.sin(ang) < 0 else 0))
                     ax.text(tx, ty, lbl, fontsize=8, fontweight="bold", color="#1e293b", ha="center")
 
-                ax.text(cx_s, 785, "SPIN DISC (90° / unit)", fontsize=12, fontweight="bold", ha="center", color="#0f172a")
+                ax.text(cx_s, 785, "Spin on Spot (90° / unit)", fontsize=12, fontweight="bold", ha="center", color="#0f172a")
                 ax.text(cx_s, 807, "Rotate on center | Flip for CCW", fontsize=9.5, ha="center", color="#475569")
                 ax.text(cx_s, 825, ">4: L4 R-4 (360°) + Remainder", fontsize=8.5, ha="center", color="#64748b")
 
@@ -1027,7 +1008,7 @@ def main():
                         ty = cy_p + (r_p * 0.65) * np.sin(th_p)
                         ax.text(tx, ty, f"L{k} R0 ({deg_lbl}°)", fontsize=8, fontweight="bold", color="#1e293b", ha="center")
 
-                ax.text(cx_p, 815, "PIVOT FAN (45° / unit, 4 = 180°)", fontsize=12, fontweight="bold", ha="center", color="#0f172a")
+                ax.text(cx_p, 815, "Pivot Fan (45° / unit, 4 = 180°)", fontsize=12, fontweight="bold", ha="center", color="#0f172a")
                 ax.text(cx_p, 835, "Flip for (0, L) | Back for Reverse", fontsize=9.5, ha="center", color="#475569")
                 ax.text(cx_p, 852, ">4: L4 R0 (180°) + Remainder", fontsize=8.5, ha="center", color="#64748b")
 

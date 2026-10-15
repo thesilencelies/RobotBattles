@@ -1,215 +1,147 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420.0 297.0" width="420.0mm" height="297.0mm">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650.0 650.0" width="650.0mm" height="650.0mm">
   <rect width="100%" height="100%" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
-  <text x="20" y="22" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0f172a">ROBOT BATTLES - MOVEMENT TEMPLATES</text>
+  <text x="20" y="22" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0f172a">ROBOT BATTLES - MOVEMENT TEMPLATES (8 CONSOLIDATED TEMPLATES)</text>
   <text x="20" y="32" font-family="sans-serif" font-size="7.5" fill="#475569">Complete range -5 to +5. Flip face-down for left turns. Place at rear for reverse.</text>
   <!-- 50mm Calibration Scale Bar -->
-  <line x1="320" y1="20" x2="370" y2="20" stroke="#0f172a" stroke-width="2.5" />
-  <text x="345" y="27" font-family="sans-serif" font-size="6" fill="#0f172a" text-anchor="middle">50 mm SCALE BAR</text>
+  <line x1="550" y1="20" x2="600" y2="20" stroke="#0f172a" stroke-width="2.5" />
+  <text x="575" y="27" font-family="sans-serif" font-size="6" fill="#0f172a" text-anchor="middle">50 mm SCALE BAR</text>
+  <!-- Template: Straight Template (straight) -->
+  <g transform="translate(20.0, 45.0)">
 <g id="template_straight">
-<rect x="20.0" y="45.0" width="65.0" height="200.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />
-<line x1="52.5" y1="245.0" x2="52.5" y2="45.0" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="20.0" y1="245.0" x2="85.0" y2="245.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="52.5" y="257.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START (ALIGN FRONT / REAR)</text>
-<line x1="20.0" y1="205.0" x2="85.0" y2="205.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="52.5" y="201.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R1</text>
-<line x1="20.0" y1="165.0" x2="85.0" y2="165.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="52.5" y="161.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R2</text>
-<line x1="20.0" y1="125.0" x2="85.0" y2="125.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="52.5" y="121.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R3</text>
-<line x1="20.0" y1="85.0" x2="85.0" y2="85.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="52.5" y="81.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R4</text>
-<line x1="20.0" y1="45.0" x2="85.0" y2="45.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="52.5" y="41.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R5</text>
-<text x="24.0" y="57.0" font-family="sans-serif" font-size="6.5" fill="#64748b">STRAIGHT (1 to 5) | Back for -L -R</text>
+<rect x="5.0" y="5.0" width="65.0" height="200.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />
+<line x1="37.5" y1="205.0" x2="37.5" y2="5.0" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="205.0" x2="70.0" y2="205.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="37.5" y="217.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="5.0" y1="165.0" x2="70.0" y2="165.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="37.5" y="161.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R1</text>
+<line x1="5.0" y1="125.0" x2="70.0" y2="125.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="37.5" y="121.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R2</text>
+<line x1="5.0" y1="85.0" x2="70.0" y2="85.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="37.5" y="81.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R3</text>
+<line x1="5.0" y1="45.0" x2="70.0" y2="45.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="37.5" y="41.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R4</text>
+<line x1="5.0" y1="5.0" x2="70.0" y2="5.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="37.5" y="1.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R5</text>
 </g>
+  </g>
+  <!-- Template: Spin Disc Template (spin) -->
+  <g transform="translate(130.0, 45.0)">
 <g id="template_spin">
-<circle cx="193.0" cy="105.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="193.0" cy="105.0" r="3" fill="#0f172a" />
-<line x1="193.0" y1="105.0" x2="193.0" y2="70.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
-<text x="193.0" y="64.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START (0°)</text>
-<line x1="193.0" y1="105.0" x2="228.0" y2="105.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="234.0" y="108.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>
-<line x1="193.0" y1="105.0" x2="193.0" y2="140.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="193.0" y="152.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>
-<line x1="193.0" y1="105.0" x2="158.0" y2="105.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="152.0" y="108.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
-<text x="193.0" y="55.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360° Full)</text>
-<path d="M 212.25 105.0 A 19.25 19.25 0 0 1 193.0 124.25" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
-<text x="193.0" y="165.0" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">SPIN DISC | 90° / unit | Flip for CCW</text>
-<text x="193.0" y="174.0" font-family="sans-serif" font-size="5.8" fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R-4, 360°) + Remainder</text>
+<circle cx="75.0" cy="65.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="75.0" cy="65.0" r="3" fill="#0f172a" />
+<line x1="75.0" y1="65.0" x2="75.0" y2="30.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+<text x="75.0" y="24.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="75.0" y1="65.0" x2="110.0" y2="65.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="116.0" y="68.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>
+<line x1="75.0" y1="65.0" x2="75.0" y2="100.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="75.0" y="112.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>
+<line x1="75.0" y1="65.0" x2="40.0" y2="65.0" stroke="#2563eb" stroke-width="2.4" />
+<text x="34.0" y="68.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
+<text x="75.0" y="15.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360°)</text>
+<path d="M 94.2 65.0 A 19.2 19.2 0 0 1 75.0 84.2" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
 </g>
+  </g>
+  <!-- Template: Pivot Fan Template (pivot) -->
+  <g transform="translate(295.0, 45.0)">
 <g id="template_pivot">
-<path d="M 110.0 375.0 L 45.0 375.0 A 65.0 65.0 0 0 1 175.0 375.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="110.0" cy="375.0" r="3.5" fill="#ef4444" />
-<text x="110.0" y="388.0" font-family="sans-serif" font-size="6.5" font-weight="bold" fill="#ef4444" text-anchor="middle">PIVOT WHEEL</text>
-<line x1="45.0" y1="375.0" x2="110.0" y2="375.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="77.5" y="387.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="110.0" y1="375.0" x2="64.03805922287441" y2="329.03805922287444" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
-<text x="80.12473849486837" y="343.1247384948684" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R0 (45°)</text>
-<line x1="110.0" y1="375.0" x2="110.0" y2="310.0" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
-<text x="110.0" y="330.75" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R0 (90°)</text>
-<line x1="110.0" y1="375.0" x2="155.9619407771256" y2="329.0380592228744" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
-<text x="139.87526150513162" y="343.1247384948684" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R0 (135°)</text>
-<line x1="110.0" y1="375.0" x2="175.0" y2="375.0" stroke="#2563eb" stroke-width="2.4" stroke-linecap="square" />
-<text x="142.5" y="387.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0 (180°)</text>
-<text x="110.0" y="400.0" font-family="sans-serif" font-size="6.5" fill="#64748b" text-anchor="middle">PIVOT FAN | 45° / unit | 4 units = 180° | Flip for (0, L) | Back for Reverse</text>
-<text x="110.0" y="409.0" font-family="sans-serif" font-size="5.8" fill="#94a3b8" text-anchor="middle">&gt;4: Move to end (L4 R0, 180°) + Remainder</text>
+<path d="M 95.0 85.0 L 30.0 85.0 A 65.0 65.0 0 0 1 160.0 85.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="95.0" cy="85.0" r="3.5" fill="#ef4444" />
+<text x="95.0" y="98.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle">PIN</text>
+<line x1="30.0" y1="85.0" x2="95.0" y2="85.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="62.5" y="97.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="95.0" y1="85.0" x2="49.0" y2="39.0" stroke="#2563eb" stroke-width="2.6" />
+<text x="63.7" y="50.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R0 (45°)</text>
+<line x1="95.0" y1="85.0" x2="95.0" y2="20.0" stroke="#2563eb" stroke-width="2.6" />
+<text x="95.0" y="37.8" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R0 (90°)</text>
+<line x1="95.0" y1="85.0" x2="141.0" y2="39.0" stroke="#2563eb" stroke-width="2.6" />
+<text x="126.3" y="50.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R0 (135°)</text>
+<line x1="95.0" y1="85.0" x2="160.0" y2="85.0" stroke="#2563eb" stroke-width="2.6" />
+<text x="127.5" y="97.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0 (180°)</text>
 </g>
-<g id="template_curve_ratio_2_1">
-<path d="M 20.0 575.0 A 130.0 130.0 0 0 1 150.0 445.0 L 150.0 510.0 A 65.0 65.0 0 0 0 85.0 575.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 52.5 575.0 A 97.5 97.5 0 0 1 150.0 477.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="20.0" y1="575.0" x2="85.0" y2="575.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="52.5" y="586.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="58.07611844574882" y1="483.0761184457488" x2="104.03805922287441" y2="529.0380592228744" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="81.05708883431161" y="503.05708883431157" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R1</text>
-<line x1="150.0" y1="445.0" x2="150.0" y2="510.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="150.0" y="474.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
-<text x="25.0" y="437.0" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
+  </g>
+  <!-- Template: Gentle Curve Template (curve_gentle) -->
+  <g transform="translate(20.0, 300.0)">
+<g id="template_curve_gentle">
+<path d="M 5.0 199.7 A 172.5 172.5 0 0 1 146.6 30.0 L 158.2 93.9 A 107.5 107.5 0 0 0 70.0 199.7 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 37.5 199.7 A 140.0 140.0 0 0 1 152.4 62.0" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="199.7" x2="70.0" y2="199.7" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="37.5" y="211.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="27.2" y1="118.5" x2="73.1" y2="164.5" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="46.6" y="145.1" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R1</text>
+<line x1="48.7" y1="85.0" x2="94.7" y2="131.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="68.2" y="111.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R2</text>
+<line x1="78.9" y1="58.9" x2="124.8" y2="104.9" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="98.3" y="85.4" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R3</text>
+<line x1="115.1" y1="42.4" x2="161.1" y2="88.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="134.6" y="68.9" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R4</text>
 </g>
-<g id="template_curve_L3_R1">
-<path d="M 20.0 762.5 A 97.5 97.5 0 0 1 117.5 665.0 L 117.5 730.0 A 32.5 32.5 0 0 0 85.0 762.5 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 52.5 762.5 A 65.0 65.0 0 0 1 117.5 697.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="20.0" y1="762.5" x2="85.0" y2="762.5" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="52.5" y="773.5" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="117.5" y1="665.0" x2="117.5" y2="730.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="117.5" y="694.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R1</text>
-<text x="25.0" y="657.0" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
+  </g>
+  <!-- Template: Medium Curve Template (curve_medium) -->
+  <g transform="translate(271.6, 300.0)">
+<g id="template_curve_medium">
+<path d="M 5.0 138.9 A 108.9 108.9 0 0 1 177.9 50.8 L 139.7 103.4 A 43.9 43.9 0 0 0 70.0 138.9 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 37.5 138.9 A 76.4 76.4 0 0 1 158.8 77.1" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="138.9" x2="70.0" y2="138.9" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="37.5" y="150.9" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="75.7" y1="40.2" x2="75.7" y2="105.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="70.7" y="72.7" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R1</text>
+<line x1="113.9" y1="30.0" x2="113.9" y2="95.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="108.9" y="62.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
+<line x1="152.1" y1="40.2" x2="152.1" y2="105.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="147.1" y="72.7" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R3</text>
 </g>
-<g id="template_curve_L4_R1">
-<path d="M 20.0 939.1666666666666 A 86.66666666666667 86.66666666666667 0 0 1 167.94925436950078 877.8840789638325 L 121.9873135923752 923.8460197409581 A 21.666666666666668 21.666666666666668 0 0 0 85.0 939.1666666666666 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 52.5 939.1666666666666 A 54.16666666666667 54.16666666666667 0 0 1 144.968283980938 900.8650493523953" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="20.0" y1="939.1666666666666" x2="85.0" y2="939.1666666666666" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="52.5" y="950.1666666666666" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="167.94925436950078" y1="877.8840789638325" x2="121.9873135923752" y2="923.8460197409581" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="144.968283980938" y="897.8650493523953" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R1</text>
-<text x="25.0" y="844.5" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
+  </g>
+  <!-- Template: Sharp Curve Template (curve_sharp) -->
+  <g transform="translate(20.0, 554.7)">
+<g id="template_curve_sharp">
+<path d="M 5.0 107.5 A 77.5 77.5 0 1 1 159.8 113.2 L 95.0 108.4 A 12.5 12.5 0 1 0 70.0 107.5 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 37.5 107.5 A 45.0 45.0 0 1 1 127.4 110.8" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="107.5" x2="70.0" y2="107.5" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="37.5" y="119.5" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="132.8" y1="48.7" x2="86.8" y2="94.7" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="106.2" y="68.2" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R1</text>
+<line x1="150.5" y1="83.1" x2="104.5" y2="129.1" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="123.9" y="102.6" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R2</text>
+<line x1="155.0" y1="86.9" x2="90.0" y2="86.9" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="122.5" y="81.9" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R1</text>
 </g>
-<g id="template_curve_L5_R1">
-<path d="M 20.0 1110.4166666666667 A 81.25 81.25 0 0 1 182.5 1110.4166666666667 L 117.5 1110.4166666666667 A 16.25 16.25 0 0 0 85.0 1110.4166666666667 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 52.5 1110.4166666666667 A 48.75 48.75 0 0 1 150.0 1110.4166666666667" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="20.0" y1="1110.4166666666667" x2="85.0" y2="1110.4166666666667" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="52.5" y="1121.4166666666667" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="182.5" y1="1110.4166666666667" x2="117.5" y2="1110.4166666666667" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="150.0" y="1107.4166666666667" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R1</text>
-<text x="25.0" y="1021.1666666666667" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
+  </g>
+  <!-- Template: Tight Hook Template (tight_hook) -->
+  <g transform="translate(285.0, 554.7)">
+<g id="template_tight_hook">
+<path d="M 25.0 75.0 A 50.0 50.0 0 1 1 68.0 124.5 L 77.1 60.1 A 15.0 15.0 0 1 0 90.0 75.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="75.0" cy="75.0" r="2.5" fill="#94a3b8" />
+<line x1="25.0" y1="75.0" x2="90.0" y2="75.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="57.5" y="87.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="110.4" y1="39.6" x2="64.4" y2="85.6" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="87.4" y="59.6" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-1</text>
+<line x1="125.0" y1="75.0" x2="60.0" y2="75.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="92.5" y="72.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-1</text>
+<line x1="110.4" y1="110.4" x2="64.4" y2="64.4" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="87.4" y="84.4" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-1</text>
+<line x1="75.0" y1="125.0" x2="75.0" y2="60.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="75.0" y="89.5" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-1</text>
 </g>
-<g id="template_curve_L3_R2">
-<path d="M 20.0 1338.3024889980434 A 195.0 195.0 0 0 1 77.11417766862323 1200.4166666666665 L 123.07611844574882 1246.3786074437921 A 130.0 130.0 0 0 0 85.0 1338.3024889980434 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 52.5 1338.3024889980434 A 162.5 162.5 0 0 1 100.09514805718602 1223.3976370552293" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="20.0" y1="1338.3024889980434" x2="85.0" y2="1338.3024889980434" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="52.5" y="1349.3024889980434" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="77.11417766862323" y1="1200.4166666666665" x2="123.07611844574882" y2="1246.3786074437921" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="100.09514805718602" y="1220.3976370552293" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R2</text>
-<text x="25.0" y="1192.4166666666667" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
+  </g>
+  <!-- Template: Tight Counter-Spin Template (tight_spin) -->
+  <g transform="translate(437.5, 554.7)">
+<g id="template_tight_spin">
+<path d="M 25.0 66.0 A 41.0 41.0 0 1 1 41.3 33.3 L 80.4 85.2 A 24.0 24.0 0 1 0 90.0 66.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="66.0" cy="66.0" r="2.5" fill="#94a3b8" />
+<line x1="25.0" y1="66.0" x2="90.0" y2="66.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="57.5" y="78.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="95.0" y1="95.0" x2="49.0" y2="49.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="72.0" y="69.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-2</text>
+<line x1="66.0" y1="107.0" x2="66.0" y2="42.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="66.0" y="71.5" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-2</text>
+<line x1="37.0" y1="95.0" x2="83.0" y2="49.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="60.0" y="69.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-2</text>
+<line x1="37.0" y1="95.0" x2="83.0" y2="49.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="60.0" y="69.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-3</text>
+<line x1="25.0" y1="66.0" x2="90.0" y2="66.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="57.5" y="63.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-3</text>
+<line x1="37.0" y1="37.0" x2="83.0" y2="83.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="60.0" y="57.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-4</text>
 </g>
-<g id="template_curve_L4_R3">
-<path d="M 190.11417766862326 1384.264429775169 A 260.0 260.0 0 0 1 266.2664145601209 1200.4166666666667 L 312.2283553372465 1246.3786074437921 A 195.0 195.0 0 0 0 255.11417766862326 1384.264429775169 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 222.61417766862326 1384.264429775169 A 227.5 227.5 0 0 1 289.2473849486837 1223.3976370552296" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="190.11417766862326" y1="1384.264429775169" x2="255.11417766862326" y2="1384.264429775169" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="222.61417766862326" y="1395.264429775169" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="266.2664145601209" y1="1200.4166666666667" x2="312.2283553372465" y2="1246.3786074437921" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="289.2473849486837" y="1220.3976370552296" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R3</text>
-<text x="195.11417766862323" y="1192.4166666666667" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
-</g>
-<g id="template_curve_L5_R4">
-<path d="M 20.0 1704.0741336607969 A 325.0 325.0 0 0 1 115.19029611437205 1474.264429775169 L 161.15223689149764 1520.2263705522946 A 260.0 260.0 0 0 0 85.0 1704.0741336607969 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 52.5 1704.0741336607969 A 292.5 292.5 0 0 1 138.17126650293483 1497.2454001637318" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="20.0" y1="1704.0741336607969" x2="85.0" y2="1704.0741336607969" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="52.5" y="1715.0741336607969" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="115.19029611437205" y1="1474.264429775169" x2="161.15223689149764" y2="1520.2263705522946" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="138.17126650293483" y="1494.2454001637318" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R4</text>
-<text x="25.0" y="1466.264429775169" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
-</g>
-<g id="template_curve_L5_R2">
-<path d="M 19.999999999999986 1902.4074669941301 A 108.33333333333333 108.33333333333333 0 0 1 204.93656796187594 1825.8042323655875 L 158.97462718475037 1871.7661731427131 A 43.333333333333336 43.333333333333336 0 0 0 84.99999999999997 1902.4074669941301 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 52.499999999999986 1902.4074669941301 A 75.83333333333333 75.83333333333333 0 0 1 181.95559757331316 1848.7852027541503" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="19.999999999999986" y1="1902.4074669941301" x2="84.99999999999997" y2="1902.4074669941301" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="52.49999999999998" y="1913.4074669941301" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="204.93656796187594" y1="1825.8042323655875" x2="158.97462718475037" y2="1871.7661731427131" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="181.95559757331316" y="1845.7852027541503" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R2</text>
-<text x="25.0" y="1786.0741336607969" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
-</g>
-<g id="template_curve_L5_R3">
-<path d="M 20.0 2154.90746699413 A 162.5 162.5 0 0 1 182.5 1992.4074669941301 L 182.5 2057.40746699413 A 97.5 97.5 0 0 0 85.0 2154.90746699413 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 52.5 2154.90746699413 A 130.0 130.0 0 0 1 182.5 2024.9074669941301" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="20.0" y1="2154.90746699413" x2="85.0" y2="2154.90746699413" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="52.5" y="2165.90746699413" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START FRONT</text>
-<line x1="182.5" y1="1992.4074669941301" x2="182.5" y2="2057.40746699413" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="182.5" y="2021.9074669941301" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R3</text>
-<text x="25.0" y="1984.4074669941301" font-family="sans-serif" font-size="6.5" fill="#64748b">CURVE | Flip for L&lt;R | Back for -L -R</text>
-</g>
-<g id="template_tight_ratio_2_1">
-<path d="M 56.666666666666664 2304.90746699413 A 43.333333333333336 43.333333333333336 0 1 1 100.00000000000001 2348.2408003274636 L 100.0 2283.2408003274636 A 21.666666666666668 21.666666666666668 0 1 0 121.66666666666667 2304.90746699413 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="56.666666666666664" y1="2304.90746699413" x2="121.66666666666667" y2="2304.90746699413" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="89.16666666666667" y="2316.90746699413" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="130.64129385141706" y1="2274.266173142713" x2="84.67935307429147" y2="2320.2281139198385" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="107.66032346285427" y="2294.2471435312755" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-1</text>
-<line x1="100.00000000000001" y1="2348.2408003274636" x2="100.0" y2="2283.2408003274636" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="100.0" y="2312.7408003274636" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-2</text>
-<text x="25.0" y="2236.90746699413" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
-<g id="template_tight_L3_Rm1">
-<path d="M 51.25 2438.2408003274636 A 48.75 48.75 0 0 1 148.75 2438.2408003274636 L 83.75 2438.2408003274636 A 16.25 16.25 0 0 0 116.25 2438.2408003274636 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="51.25" y1="2438.2408003274636" x2="116.25" y2="2438.2408003274636" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="83.75" y="2450.2408003274636" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="148.75" y1="2438.2408003274636" x2="83.75" y2="2438.2408003274636" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="116.25" y="2435.2408003274636" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-1</text>
-<text x="25.0" y="2370.2408003274636" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
-<g id="template_tight_L4_Rm1">
-<path d="M 48.0 2576.9908003274636 A 52.0 52.0 0 1 1 136.76955262170048 2613.760352949164 L 90.80761184457488 2567.7984121720383 A 13.0 13.0 0 1 0 113.0 2576.9908003274636 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="48.0" y1="2576.9908003274636" x2="113.0" y2="2576.9908003274636" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="80.5" y="2588.9908003274636" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="136.76955262170048" y1="2613.760352949164" x2="90.80761184457488" y2="2567.7984121720383" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="113.78858223313767" y="2587.7793825606013" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-1</text>
-<text x="25.0" y="2508.9908003274636" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
-<g id="template_tight_L5_Rm1">
-<path d="M 45.833333333333336 2718.9908003274636 A 54.166666666666664 54.166666666666664 0 1 1 100.00000000000001 2773.15746699413 L 100.0 2708.15746699413 A 10.833333333333334 10.833333333333334 0 1 0 110.83333333333333 2718.9908003274636 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="45.833333333333336" y1="2718.9908003274636" x2="110.83333333333333" y2="2718.9908003274636" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="78.33333333333333" y="2730.9908003274636" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="100.00000000000001" y1="2773.15746699413" x2="100.0" y2="2708.15746699413" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="100.0" y="2737.65746699413" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-1</text>
-<text x="25.0" y="2650.9908003274636" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
-<g id="template_tight_L3_Rm2">
-<path d="M 61.0 2863.15746699413 A 39.0 39.0 0 1 1 127.57716446627536 2890.7346314604056 L 81.61522368914976 2844.77269068328 A 26.0 26.0 0 1 0 126.0 2863.15746699413 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="61.0" y1="2863.15746699413" x2="126.0" y2="2863.15746699413" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="93.5" y="2875.15746699413" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="127.57716446627536" y1="2890.7346314604056" x2="81.61522368914976" y2="2844.77269068328" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="104.59619407771257" y="2864.7536610718425" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-2</text>
-<text x="25.0" y="2795.15746699413" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
-<g id="template_tight_L4_Rm3">
-<path d="M 253.85714285714286 2863.15746699413 A 37.142857142857146 37.142857142857146 0 1 1 264.73603384164255 2889.4214331524877 L 310.6979746187681 2843.459492375362 A 27.857142857142858 27.857142857142858 0 1 0 318.85714285714283 2863.15746699413 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="253.85714285714286" y1="2863.15746699413" x2="318.85714285714283" y2="2863.15746699413" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="286.35714285714283" y="2875.15746699413" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="264.73603384164255" y1="2889.4214331524877" x2="310.6979746187681" y2="2843.459492375362" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="287.71700423020536" y="2863.440462763925" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-3</text>
-<text x="216.0" y="2795.15746699413" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
-<g id="template_tight_L5_Rm4">
-<path d="M 63.888888888888886 2992.15746699413 A 36.111111111111114 36.111111111111114 0 1 1 74.46558845715245 2966.6230554512827 L 120.42752923427804 3012.5849962284083 A 28.88888888888889 28.88888888888889 0 1 0 128.88888888888889 2992.15746699413 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="63.888888888888886" y1="2992.15746699413" x2="128.88888888888889" y2="2992.15746699413" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="96.38888888888889" y="3004.15746699413" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="74.46558845715245" y1="2966.6230554512827" x2="120.42752923427804" y2="3012.5849962284083" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="97.44655884571524" y="2986.6040258398452" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-4</text>
-<text x="25.0" y="2924.15746699413" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
-<g id="template_tight_L5_Rm2">
-<path d="M 238.79365079365078 2992.15746699413 A 46.42857142857143 46.42857142857143 0 1 1 252.3922645242754 3024.987424692077 L 298.35420530140095 2979.0254839149516 A 18.571428571428573 18.571428571428573 0 1 0 303.7936507936508 2992.15746699413 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="238.79365079365078" y1="2992.15746699413" x2="303.7936507936508" y2="2992.15746699413" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="271.2936507936508" y="3004.15746699413" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="252.3922645242754" y1="3024.987424692077" x2="298.35420530140095" y2="2979.0254839149516" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="275.37323491283814" y="2999.006454303514" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-2</text>
-<text x="210.22222222222223" y="2924.15746699413" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
-<g id="template_tight_L5_Rm3">
-<path d="M 59.375 3128.5860384227017 A 40.625 40.625 0 1 1 59.375 3128.5860384227017 L 124.375 3128.5860384227017 A 24.375 24.375 0 1 0 124.375 3128.5860384227017 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<line x1="59.375" y1="3128.5860384227017" x2="124.375" y2="3128.5860384227017" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />
-<text x="91.875" y="3140.5860384227017" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="59.375" y1="3128.5860384227017" x2="124.375" y2="3128.5860384227017" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="91.875" y="3125.5860384227017" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-3</text>
-<text x="25.0" y="3060.5860384227017" font-family="sans-serif" font-size="6.5" fill="#64748b">TIGHT TURN | Flip for L&lt;R</text>
-</g>
+  </g>
 </svg>

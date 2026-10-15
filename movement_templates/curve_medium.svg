@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 267.9 178.9" width="267.9mm" height="178.9mm">
+  <defs>
+    <style>
+      text { user-select: none; }
+    </style>
+  </defs>
+<g id="template_curve_medium">
+<path d="M 15.0 148.9 A 108.9 108.9 0 0 1 187.9 60.8 L 149.7 113.4 A 43.9 43.9 0 0 0 80.0 148.9 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 47.5 148.9 A 76.4 76.4 0 0 1 168.8 87.1" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="15.0" y1="148.9" x2="80.0" y2="148.9" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<text x="47.5" y="160.9" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<line x1="85.7" y1="50.2" x2="85.7" y2="115.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="80.7" y="82.7" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R1</text>
+<line x1="123.9" y1="40.0" x2="123.9" y2="105.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="118.9" y="72.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
+<line x1="162.1" y1="50.2" x2="162.1" y2="115.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<text x="157.1" y="82.7" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R3</text>
+</g>
+</svg>
