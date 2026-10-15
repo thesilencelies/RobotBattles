@@ -10,7 +10,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Galaxy_120.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -24,7 +24,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Galaxy_300_3S.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -38,7 +38,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Galaxy_1000_3S.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -52,7 +52,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Tattu_450_4S.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -66,7 +66,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Power_Switch_Protector.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -80,7 +80,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Wires.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -94,7 +94,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Heavy_Gauge_Wire.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -108,7 +108,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Simple_ESC.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -122,7 +122,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Brushless_Motor.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -136,7 +136,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/N20_Spark_Gearmotor.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -150,7 +150,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/22mm_Beetle_Gearmotor.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -164,7 +164,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/D2830_Weapon_Motor.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -178,7 +178,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Repeat_2207_Hubmotor.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -192,7 +192,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Micro_Servo.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -206,7 +206,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/15kg_Analog_Servo.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -220,7 +220,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/20kg_Metal_Gear_Servo.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -234,7 +234,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/25kg_High_Voltage_Servo.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -248,7 +248,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Snap_Wheels.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -262,7 +262,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Banebots_Compliant_Wheels.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -276,7 +276,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Banebots_T81_Heavy_Wheels.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -290,7 +290,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/High_Grip_Tires.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -304,7 +304,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Aluminum_Plate.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -318,7 +318,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/TPU_Plate.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -332,7 +332,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Titanium_Top_Plate.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -346,7 +346,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/UHMW_Wraparound_Armor.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -360,7 +360,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Titanium_Wedge.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -374,7 +374,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Steel_Wedge.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -388,7 +388,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/AR500_Wedge.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -402,7 +402,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Forks.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -416,7 +416,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Titanium_Horns.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -430,7 +430,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Belt.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -444,7 +444,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Timing_Pulley.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -458,7 +458,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Self_righting_arm.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -473,7 +473,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Horizontal_Spinner.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -488,7 +488,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Bloodsport_Bar.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -503,7 +503,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Titanium_Spinner_Blade.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -518,7 +518,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Vertical_Spinner.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -533,7 +533,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Single_Tooth_Disc.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -548,7 +548,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/NightWing_AR500_Disc.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -563,7 +563,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Beater_Bar.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -578,7 +578,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Cronos_Scythe.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -593,7 +593,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Chonk_Key_Blade.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -608,7 +608,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Four-Bar_Lifter.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     },
@@ -623,7 +623,7 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Lifter_Claw.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
     }

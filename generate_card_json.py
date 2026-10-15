@@ -16,7 +16,7 @@ The schema matches the TTS custom-object import format:
           "tags":        {"1": "Card", "2": "Component"},
           "lua_script":  "",
           "face":        "<raw.githubusercontent URL of front image in CardImages>",
-          "back":        "<raw.githubusercontent URL of card back in tts_assets>",
+          "back":        "<raw.githubusercontent URL of card back in pictures/backs>",
           "type":        "0",
           "sideways":    "false"
         }, ...
@@ -78,7 +78,7 @@ PICTURES_URL = GITHUB_REPO_RAW + "pictures/"
 ICONS_URL = GITHUB_REPO_RAW + "pictures/icons/"
 COMPONENTS_URL = GITHUB_REPO_RAW + "components/"
 
-CARD_BACK_URL = TTS_ASSETS_URL + "card_back.png"
+CARD_BACK_URL = PICTURES_URL + "backs/CardBack.png"
 CHASSIS_BACK_URL = TTS_ASSETS_URL + "chassis_back.png"
 
 # --------------------------------------------------------------------------
@@ -448,6 +448,10 @@ def main():
     )
 
     # Check local image existence
+    card_back_file = PICTURES_DIR / "backs" / "CardBack.png"
+    if not card_back_file.is_file():
+        print(f"\nWarning: Card back image not found: {card_back_file}")
+
     missing_cards = [
         c["name"]
         for c in cards
