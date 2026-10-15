@@ -331,12 +331,13 @@ def create_miniature(
     # 6. Bot Label
     if not ghost:
         lbl = f"Bot {name}" if len(name) == 1 else name
+        f_sz = 13.0 if len(name) == 1 else 9.5
         ax.text(
             0.0,
             -3.0 if chassis_lower != "wide" else 0.0,
             lbl,
             color="#FFFFFF",
-            fontsize=13.0,
+            fontsize=f_sz,
             fontweight="bold",
             ha="center",
             va="center",
@@ -357,10 +358,11 @@ def main():
     create_miniature("mini_bot_triangle_circle.png", chassis="Triangle", color=LIGHT_BLUE, name="A", weapon="Circle")
     create_miniature("mini_bot_ghost_triangle_line.png", chassis="Triangle", color=LIGHT_BLUE, name="A", weapon="Line", ghost=True)
 
-    # Square robots (Bot B)
+    # Square robots (Bot B & Vyper)
     create_miniature("mini_bot_square_circle.png", chassis="Square", color=CRIMSON, name="B", weapon="Circle")
     create_miniature("mini_bot_square_large_circle.png", chassis="Square", color=CRIMSON, name="B", weapon="Large Circle")
     create_miniature("mini_bot_square_line.png", chassis="Square", color=AMBER_NOTE, name="B", weapon="Line")
+    create_miniature("mini_bot_vyper_square.png", chassis="Square", color=CRIMSON, name="Vyper", weapon="Line")
     create_miniature("mini_bot_ghost_square_circle.png", chassis="Square", color=CRIMSON, name="B", weapon="Circle", ghost=True)
     create_miniature("mini_bot_ghost_square_line.png", chassis="Square", color=AMBER_NOTE, name="B", weapon="Line", ghost=True)
 

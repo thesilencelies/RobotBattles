@@ -539,9 +539,10 @@ class MovementTemplate:
         svg_parts.append("</g>")
         return "\n".join(svg_parts)
 
-    def to_svg(self) -> str:
+    def to_svg(self, transparent_bg: bool = False) -> str:
         """Renders complete standalone SVG document."""
         bw, bh = self.get_dimensions()
+        bg_rect = "" if transparent_bg else '  <rect width="100%" height="100%" fill="#ffffff" />\n'
         svg_header = (
             f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {bw:.1f} {bh:.1f}" '
             f'width="{bw:.1f}mm" height="{bh:.1f}mm">\n'
@@ -550,7 +551,7 @@ class MovementTemplate:
             f'      text {{ user-select: none; }}\n'
             f'    </style>\n'
             f'  </defs>\n'
-            f'  <rect width="100%" height="100%" fill="#ffffff" />\n'
+            f'{bg_rect}'
         )
         body = self.render_svg_content(offset_x=15.0, offset_y=15.0)
         svg_footer = "\n</svg>"
@@ -811,6 +812,24 @@ def generate_permutation_markdown(perms: List[Dict[str, Any]]) -> str:
 # CLI Main
 # ----------------------------------------------------------------------
 
+def export_template_png(svg_str: str, png_path: Path, dpi: int = 300) -> bool:
+    """Exports SVG content to high-resolution transparent PNG."""
+    try:
+        import shutil
+        import subprocess
+        convert_bin = shutil.which("magick") or shutil.which("convert")
+        if convert_bin:
+            cmd = [convert_bin, "-background", "none", "-density", str(dpi), "svg:-", str(png_path)]
+            subprocess.run(cmd, input=svg_str.encode("utf-8"), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            return True
+        import cairosvg
+        cairosvg.svg2png(bytestring=svg_str.encode("utf-8"), write_to=str(png_path), dpi=dpi)
+        return True
+    except Exception as e:
+        print(f"Warning: Could not export {png_path}: {e}")
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate physical movement templates for every permutation from -5 to 5."
@@ -854,12 +873,31 @@ def main():
     templates = build_all_movement_templates(wheelbase=args.wheelbase, drive_unit=args.drive_unit)
     print(f"Created {len(templates)} minimal movement templates.")
 
-    # 1. Output individual SVG templates
+    # 1. Output individual SVG and transparent PNG templates
+    rules_img_dir = Path("rules/images")
+    rules_img_dir.mkdir(parents=True, exist_ok=True)
     for t in templates:
+        svg_content = t.to_svg(transparent_bg=True)
         file_path = args.output_dir / f"{t.template_id}.svg"
         with open(file_path, "w", encoding="utf-8") as f:
-            f.write(t.to_svg())
-    print(f"Saved {len(templates)} individual SVG templates to {args.output_dir}/")
+            f.write(svg_content)
+        png_path = args.output_dir / f"{t.template_id}.png"
+        export_template_png(svg_content, png_path)
+
+        # Also copy key templates for rulebook diagrams into rules/images/
+        if t.template_id in ("straight", "spin", "pivot", "curve_ratio_2_1"):
+            rulebook_png = rules_img_dir / f"template_{t.template_id}.png"
+            export_template_png(svg_content, rulebook_png)
+            if t.template_id == "curve_ratio_2_1":
+                try:
+                    import shutil
+                    import subprocess
+                    convert_bin = shutil.which("magick") or shutil.which("convert")
+                    if convert_bin:
+                        subprocess.run([convert_bin, "-flop", str(rulebook_png), str(rules_img_dir / "template_curve_ratio_2_1_flipped.png")], check=True)
+                except Exception as e:
+                    print(f"Warning: Could not flop curve template: {e}")
+    print(f"Saved {len(templates)} individual SVG and transparent PNG templates to {args.output_dir}/")
 
     # 2. Output permutation catalog
     perms = compute_all_permutations()

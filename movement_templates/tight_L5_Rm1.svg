@@ -4,7 +4,6 @@
       text { user-select: none; }
     </style>
   </defs>
-  <rect width="100%" height="100%" fill="#ffffff" />
 <g id="template_tight_L5_Rm1">
 <path d="M 40.833333333333336 95.0 A 54.166666666666664 54.166666666666664 0 1 1 95.00000000000001 149.16666666666666 L 95.0 84.16666666666667 A 10.833333333333334 10.833333333333334 0 1 0 105.83333333333333 95.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <line x1="40.833333333333336" y1="95.0" x2="105.83333333333333" y2="95.0" stroke="#0f172a" stroke-width="3.8" stroke-linecap="square" />

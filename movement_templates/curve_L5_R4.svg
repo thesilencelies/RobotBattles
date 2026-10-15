@@ -4,7 +4,6 @@
       text { user-select: none; }
     </style>
   </defs>
-  <rect width="100%" height="100%" fill="#ffffff" />
 <g id="template_curve_L5_R4">
 <path d="M 15.0 264.8097038856279 A 325.0 325.0 0 0 1 110.19029611437205 35.0 L 156.15223689149764 80.96194077712559 A 260.0 260.0 0 0 0 80.0 264.8097038856279 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <path d="M 47.5 264.8097038856279 A 292.5 292.5 0 0 1 133.17126650293483 57.98097038856278" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
