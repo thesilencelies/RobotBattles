@@ -466,7 +466,7 @@ def main():
         CARD_DEFS_DIR / "weapons.csv",
     ]
     for extra_csv in CARD_DEFS_DIR.glob("*.csv"):
-        if extra_csv not in csv_files:
+        if extra_csv not in csv_files and extra_csv.name != "chassis.csv":
             csv_files.append(extra_csv)
 
     for csv_file in csv_files:

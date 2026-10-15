@@ -67,7 +67,7 @@ class TestServerRoutes(unittest.TestCase):
         self.assertEqual(res_manifest.status, 200)
 
     def test_serve_card_image(self):
-        res = self.router.dispatch("GET", "/CardImages/Viper_Wedge_Chassis.png", {}, b"")
+        res = self.router.dispatch("GET", "/CardImages/Galaxy_120.png", {}, b"")
         self.assertEqual(res.status, 200)
         self.assertEqual(res.content_type, "image/png")
 

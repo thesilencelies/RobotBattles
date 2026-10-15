@@ -42,8 +42,7 @@ The schema matches the TTS custom-object import format:
 Sources:
     cardDefinitions/components.csv -> Card, Component
     cardDefinitions/weapons.csv    -> Card, Weapon, <Template>
-    cardDefinitions/chassis.csv    -> Card, Chassis, <Template>
-    Chassis & Weapon templates     -> Tile (Chassis & Template markers)
+    Chassis & Weapon templates     -> Tile (Template markers)
 
 Usage:
     python generate_card_json.py
@@ -334,64 +333,13 @@ def enumerate_cards() -> list[dict]:
             "_local_image": CARD_IMAGES_DIR / image_name,
         })
 
-    # 3. Chassis
-    for row in read_rows(CARD_DEFS_DIR / "chassis.csv"):
-        name = _cell(row, "Name")
-        gm = chassis_gm_notes(row)
-        desc = description_for(row)
-        tpl = _cell(row, "Template")
-        image_name = f"{sanitize_filename(name)}.png"
-        tags = build_tags("Card", "Chassis", tpl) if tpl else build_tags("Card", "Chassis")
-        cards.append({
-            "name": name,
-            "description": desc,
-            "gm_notes": gm,
-            "tags": tags,
-            "lua_script": "",
-            "face": CARD_IMAGES_URL + quote(image_name),
-            "back": CHASSIS_BACK_URL,
-            "type": "0",
-            "sideways": "false",
-            "_local_image": CARD_IMAGES_DIR / image_name,
-        })
-
     return cards
 
 
 def enumerate_tiles() -> list[dict]:
     tiles = []
 
-    # 1. Chassis Tiles (one for each robot chassis)
-    chassis_rows = read_rows(CARD_DEFS_DIR / "chassis.csv")
-    for row in chassis_rows:
-        name = _cell(row, "Name")
-        tpl = _cell(row, "Template")
-        pic = _cell(row, "Picture")
-        gm = chassis_gm_notes(row)
-        desc = f"{tpl} template chassis (flip strength {_cell(row, 'Flip strength') or 'N/A'})"
-
-        pic_path = WORKSPACE / pic
-        tpl_icon_name = CHASSIS_TEMPLATE_INFO.get(tpl, {}).get("icon", "template_square.png")
-        tpl_icon_path = ICONS_DIR / tpl_icon_name
-
-        face_url = GITHUB_REPO_RAW + quote(pic)
-        back_url = ICONS_URL + quote(tpl_icon_name)
-
-        tiles.append({
-            "name": name,
-            "description": desc,
-            "gm_notes": gm,
-            "tags": build_tags("Tile", "Chassis", tpl),
-            "lua_script": "",
-            "face": face_url,
-            "back": back_url,
-            "type": "0",
-            "thickness": "0.5",
-            "stackable": "true",
-            "_local_images": (pic_path, tpl_icon_path),
-        })
-
-    # 2. Chassis Template Boundary Tiles (Square, Triangle, Wide)
+    # 1. Chassis Template Boundary Tiles (Square, Triangle, Wide)
     for tpl_name, tpl_data in CHASSIS_TEMPLATE_INFO.items():
         icon_name = tpl_data["icon"]
         icon_path = ICONS_DIR / icon_name
@@ -410,7 +358,7 @@ def enumerate_tiles() -> list[dict]:
             "_local_images": (icon_path,),
         })
 
-    # 3. Weapon Template Tiles (Circle, Large Circle, Line, Bar, Prongs)
+    # 2. Weapon Template Tiles (Circle, Large Circle, Line, Bar, Prongs)
     weapon_rows = read_rows(CARD_DEFS_DIR / "weapons.csv")
     weapons_by_template: dict[str, list[str]] = {}
     for w in weapon_rows:
@@ -439,33 +387,6 @@ def enumerate_tiles() -> list[dict]:
             "thickness": "0.5",
             "stackable": "true",
             "_local_images": (icon_path,),
-        })
-
-    # 4. Individual Weapon Marker Tiles (front = component photo, back = template icon)
-    for w in weapon_rows:
-        name = _cell(w, "Name")
-        tpl = _cell(w, "Template")
-        pic = _cell(w, "Picture")
-        pic_path = WORKSPACE / pic
-        tpl_info = WEAPON_TEMPLATE_INFO.get(tpl, WEAPON_TEMPLATE_INFO["Line"])
-        icon_name = tpl_info["icon"]
-        icon_path = ICONS_DIR / icon_name
-
-        face_url = GITHUB_REPO_RAW + quote(pic)
-        back_url = ICONS_URL + quote(icon_name)
-
-        tiles.append({
-            "name": f"{name} ({tpl})",
-            "description": f"{tpl} active area weapon marker",
-            "gm_notes": weapon_gm_notes(w),
-            "tags": build_tags("Tile", "Weapon", tpl),
-            "lua_script": "",
-            "face": face_url,
-            "back": back_url,
-            "type": tpl_info["type"],
-            "thickness": "0.5",
-            "stackable": "true",
-            "_local_images": (pic_path, icon_path),
         })
 
     return tiles

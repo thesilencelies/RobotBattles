@@ -34,8 +34,8 @@ class TestData(unittest.TestCase):
         self.assertEqual(viper["weight"], 3)
         self.assertEqual(viper["cost"], 2)
         self.assertEqual(viper["template"], "Square")
-        self.assertEqual(viper["flip_strength"], 5)
-        self.assertIsNotNone(viper["image_url"])
+        self.assertIsNotNone(viper["picture_url"])
+        self.assertIsNone(viper["image_url"])
 
     def test_compute_card_box(self):
         # 0 rotation

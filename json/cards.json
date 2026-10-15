@@ -143,7 +143,7 @@
     "11": {
       "name": "22mm Beetle Gearmotor",
       "description": "",
-      "gm_notes": "weight:2\ncost:$1\nreq:EEEE\nout:SSSS\ndurability:7\nabsorption:1",
+      "gm_notes": "weight:3\ncost:$2\nreq:EEE\nout:SSS\ndurability:7\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -171,7 +171,7 @@
     "13": {
       "name": "Repeat 2207 Hubmotor",
       "description": "",
-      "gm_notes": "weight:3\ncost:$3\nreq:EEE\nout:SSSS\ndurability:8\nabsorption:2",
+      "gm_notes": "weight:3\ncost:$3\nreq:EEEE\nout:SSSS\ndurability:8\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -626,103 +626,10 @@
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/card_back.png",
       "type": "0",
       "sideways": "false"
-    },
-    "45": {
-      "name": "Viper Wedge Chassis",
-      "description": "",
-      "gm_notes": "weight:3\ncost:$2\nflip:5\ntemplate:Square",
-      "tags": {
-        "1": "Card",
-        "2": "Chassis",
-        "3": "Square"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Viper_Wedge_Chassis.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/chassis_back.png",
-      "type": "0",
-      "sideways": "false"
-    },
-    "46": {
-      "name": "SSP 2.0 Billet Chassis",
-      "description": "",
-      "gm_notes": "weight:3\ncost:$2\nflip:5\ntemplate:Triangle",
-      "tags": {
-        "1": "Card",
-        "2": "Chassis",
-        "3": "Triangle"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/SSP_2.0_Billet_Chassis.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/chassis_back.png",
-      "type": "0",
-      "sideways": "false"
-    },
-    "47": {
-      "name": "Nautiloid Drum Chassis",
-      "description": "",
-      "gm_notes": "weight:2\ncost:$2\nflip:4\ntemplate:Wide",
-      "tags": {
-        "1": "Card",
-        "2": "Chassis",
-        "3": "Wide"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Nautiloid_Drum_Chassis.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/tts_assets/chassis_back.png",
-      "type": "0",
-      "sideways": "false"
     }
   },
   "Tile": {
     "1": {
-      "name": "Viper Wedge Chassis",
-      "description": "Square template chassis (flip strength 5)",
-      "gm_notes": "weight:3\ncost:$2\nflip:5\ntemplate:Square",
-      "tags": {
-        "1": "Tile",
-        "2": "Chassis",
-        "3": "Square"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/kits_and_chassis/viper-combat-robot-kit-base.jpg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_square.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "2": {
-      "name": "SSP 2.0 Billet Chassis",
-      "description": "Triangle template chassis (flip strength 5)",
-      "gm_notes": "weight:3\ncost:$2\nflip:5\ntemplate:Triangle",
-      "tags": {
-        "1": "Tile",
-        "2": "Chassis",
-        "3": "Triangle"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/kits_and_chassis/just-cuz-robotics-ssp-2-0-beetleweight-combat-robot-kit.jpg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_triangle.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "3": {
-      "name": "Nautiloid Drum Chassis",
-      "description": "Wide template chassis (flip strength 4)",
-      "gm_notes": "weight:2\ncost:$2\nflip:4\ntemplate:Wide",
-      "tags": {
-        "1": "Tile",
-        "2": "Chassis",
-        "3": "Wide"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/kits_and_chassis/baby-nautiloid-combat-robot-radio-ready.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_wide.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "4": {
       "name": "Square Chassis Template",
       "description": "Square chassis boundary template (220mm x 256mm)",
       "gm_notes": "template:Square\nbounds:220x256mm",
@@ -739,7 +646,7 @@
       "thickness": "0.5",
       "stackable": "true"
     },
-    "5": {
+    "2": {
       "name": "Triangle Chassis Template",
       "description": "Triangle wedge chassis boundary template (340mm x 256mm)",
       "gm_notes": "template:Triangle\nbounds:340x256mm",
@@ -756,7 +663,7 @@
       "thickness": "0.5",
       "stackable": "true"
     },
-    "6": {
+    "3": {
       "name": "Wide Chassis Template",
       "description": "Wide chassis boundary template (396mm x 170mm)",
       "gm_notes": "template:Wide\nbounds:396x170mm",
@@ -773,7 +680,7 @@
       "thickness": "0.5",
       "stackable": "true"
     },
-    "7": {
+    "4": {
       "name": "Circle Weapon Template",
       "description": "Circle weapon active area template: 360-degree radial contact",
       "gm_notes": "template:Circle\nactive_area:360-degree radial contact\nweapons:Horizontal Spinner, Titanium Spinner Blade, Chonk Key Blade",
@@ -790,7 +697,7 @@
       "thickness": "0.5",
       "stackable": "true"
     },
-    "8": {
+    "5": {
       "name": "Large Circle Weapon Template",
       "description": "Large circle weapon active area template: expanded 360-degree radial reach",
       "gm_notes": "template:Large Circle\nactive_area:expanded 360-degree radial reach\nweapons:Bloodsport Bar",
@@ -807,7 +714,7 @@
       "thickness": "0.5",
       "stackable": "true"
     },
-    "9": {
+    "6": {
       "name": "Line Weapon Template",
       "description": "Line weapon active area template: narrow frontal line contact",
       "gm_notes": "template:Line\nactive_area:narrow frontal line contact\nweapons:Vertical Spinner, Single Tooth Disc, NightWing AR500 Disc, Four-Bar Lifter",
@@ -824,7 +731,7 @@
       "thickness": "0.5",
       "stackable": "true"
     },
-    "10": {
+    "7": {
       "name": "Bar Weapon Template",
       "description": "Bar weapon active area template: wide frontal bar contact",
       "gm_notes": "template:Bar\nactive_area:wide frontal bar contact\nweapons:Beater Bar",
@@ -841,7 +748,7 @@
       "thickness": "0.5",
       "stackable": "true"
     },
-    "11": {
+    "8": {
       "name": "Prongs Weapon Template",
       "description": "Prongs weapon active area template: dual forward prongs contact",
       "gm_notes": "template:Prongs\nactive_area:dual forward prongs contact\nweapons:Cronos Scythe, Lifter Claw",
@@ -853,182 +760,6 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "12": {
-      "name": "Horizontal Spinner (Circle)",
-      "description": "Circle active area weapon marker",
-      "gm_notes": "weight:5\ncost:$3\ntemplate:Circle\nreq:SSSS\nout:2XW\ndurability:12\nabsorption:1",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Circle"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/kits_and_chassis/viper-horizontal-spinner.jpeg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
-      "type": "2",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "13": {
-      "name": "Bloodsport Bar (Large Circle)",
-      "description": "Large Circle active area weapon marker",
-      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSS\nout:2XWW\ndurability:12\nabsorption:1",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Large Circle"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/bloodsport-bar.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_large_circle.png",
-      "type": "2",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "14": {
-      "name": "Titanium Spinner Blade (Circle)",
-      "description": "Circle active area weapon marker",
-      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:2XW\ndurability:14\nabsorption:2",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Circle"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/viper-horizontal-spinner-titanium-blade.jpg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
-      "type": "2",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "15": {
-      "name": "Vertical Spinner (Line)",
-      "description": "Line active area weapon marker",
-      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SS\nout:2XWW\ndurability:7\nabsorption:1\nIncreases throw strength by 2",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Line"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/viper-vertical-spinner-clamping-drum.jpeg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "16": {
-      "name": "Single Tooth Disc (Line)",
-      "description": "Line active area weapon marker",
-      "gm_notes": "weight:2\ncost:$3\ntemplate:Line\nreq:SSS\nout:WWWW\ndurability:8\nabsorption:2\nIncreases throw strength by 2",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Line"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/baby-nautiloid-weapon-disc-single-tooth-ar500.jpeg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "17": {
-      "name": "NightWing AR500 Disc (Line)",
-      "description": "Line active area weapon marker",
-      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSS\nout:2XWW\ndurability:9\nabsorption:1\nIncreases throw strength by 2",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Line"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/fingertech-nightwing-ar500-weapon-disc-10in.jpg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "18": {
-      "name": "Beater Bar (Bar)",
-      "description": "Bar active area weapon marker",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nIncreases throw strength by 3",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Bar"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/1lb-beater-bar.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_bar.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "19": {
-      "name": "Cronos Scythe (Prongs)",
-      "description": "Prongs active area weapon marker",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSS\nout:XWWW\ndurability:7\nabsorption:1\nIncreases throw strength by 2",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Prongs"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/cronos-scythe.jpg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "20": {
-      "name": "Chonk Key Blade (Circle)",
-      "description": "Circle active area weapon marker",
-      "gm_notes": "weight:6\ncost:$3\ntemplate:Circle\nreq:SSSSSS\nout:XXW\ndurability:16\nabsorption:1",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Circle"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/just-cuz-robotics-chonk-key-blade.jpg",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
-      "type": "2",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "21": {
-      "name": "Four-Bar Lifter (Line)",
-      "description": "Line active area weapon marker",
-      "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:WWWWWW\ndurability:9\nabsorption:1\nDeals no damage only throws",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Line"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/weapons/viper-lifter-weapon.png",
-      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
-      "type": "0",
-      "thickness": "0.5",
-      "stackable": "true"
-    },
-    "22": {
-      "name": "Lifter Claw (Prongs)",
-      "description": "Prongs active area weapon marker",
-      "gm_notes": "weight:3\ncost:$3\ntemplate:Prongs\nreq:PPP\nout:WWW\ndurability:8\nabsorption:2\nDeals no damage. Always inverts.",
-      "tags": {
-        "1": "Tile",
-        "2": "Weapon",
-        "3": "Prongs"
-      },
-      "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-claw-forks.jpg",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
       "type": "0",
       "thickness": "0.5",
