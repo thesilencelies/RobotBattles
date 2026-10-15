@@ -360,9 +360,9 @@ def create_template_prongs():
     black = (10, 10, 10, 255)
     red = (235, 10, 10, 255)
 
-    draw.rectangle((50, 60, 140, 340), fill=black)
-    draw.rectangle((120, 60, 350, 130), fill=red)
-    draw.rectangle((120, 270, 350, 340), fill=red)
+    draw.rectangle((50, 80, 130, 320), fill=black)
+    draw.rectangle((120, 100, 350, 128), fill=red)
+    draw.rectangle((120, 272, 350, 300), fill=red)
 
     im.save(ICONS_DIR / "template_prongs.png", "PNG")
     print(f"Created {ICONS_DIR / 'template_prongs.png'}")
