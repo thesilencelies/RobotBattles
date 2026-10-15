@@ -418,24 +418,24 @@ Movement units are found on the straight movement template. Where an effect says
     % Straight 3/3 (Left)
     \node[font=\scriptsize\bfseries, text=accentBlue] at (1.8, 5.7) {Straight (3/3) Advance};
     % Actual Straight Template PNG
-    \node[anchor=south] at (1.8, 1.3) {\includegraphics[width=1.55cm]{images/template_straight.png}};
-    % Ghost Bot A at start
-    \node at (1.8, 0.7) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
-    % End Bot A (over template at L3 R3)
-    \node at (1.8, 3.8) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
+    \node[anchor=south] at (1.8, 1.25) {\includegraphics[width=1.55cm]{images/template_straight.png}};
+    % Ghost Bot A at start (front bumper flush to START line)
+    \node at (1.8, 1.30) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
+    % End Bot A (over template, front bumper flush to L3 R3)
+    \node at (1.8, 3.26) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
     % Motion vector
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (0.35, 0.7) -- (0.35, 3.8) node[midway, left=-1pt, font=\footnotesize\bfseries, text=accentBlue, align=center] {Advance\\3 units};
+    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (0.4, 1.30) -- (0.4, 3.26) node[midway, left=-1pt, font=\footnotesize\bfseries, text=accentBlue, align=center] {Advance\\3 units};
 
-    % Reverse -2/-2 (Right)
+    % Reverse -2/-2 (Right): Template rotated 180 deg so numbers increase downwards
     \node[font=\scriptsize\bfseries, text=arenaRed] at (5.9, 5.7) {Reverse (-2/-2) Maneuver};
-    % Actual Straight Template placed at rear
-    \node[anchor=south] at (5.9, 1.3) {\includegraphics[width=1.55cm]{images/template_straight.png}};
-    % Ghost Bot B at start (rear bumper flush to START)
-    \node at (5.9, 4.4) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_square_circle.png}};
-    % End Bot B (reversed to L2 R2)
-    \node at (5.9, 2.7) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
+    % Straight Template rotated 180 deg, START line placed at rear of start bot
+    \node[anchor=north] at (5.9, 4.92) {\includegraphics[width=1.55cm, angle=180]{images/template_straight.png}};
+    % Ghost Bot B at start (rear bumper flush to START line at top)
+    \node at (5.9, 4.80) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_square_circle.png}};
+    % End Bot B (reversed 2 units down to L2 R2)
+    \node at (5.9, 3.49) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
     % Motion vector
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (7.35, 4.4) -- (7.35, 2.7) node[midway, right=-1pt, font=\footnotesize\bfseries, text=arenaRed, align=center] {Reverse\\2 units};
+    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (4.4, 4.80) -- (4.4, 3.49) node[midway, left=1pt, font=\footnotesize\bfseries, text=arenaRed, align=center] {Reverse\\2 units};
 
     % PANEL 2: Curved Arcs: Right (2/1) & Left (1/2) Flipped
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0) rectangle (16.2, 7.2);
@@ -445,12 +445,12 @@ Movement units are found on the straight movement template. Where an effect says
     \node[font=\scriptsize\bfseries, text=accentBlue] at (10.2, 5.8) {Curve Right (2/1) Face-Up};
     % Actual Curve Template PNG
     \node[anchor=south west] at (8.6, 1.2) {\includegraphics[width=3.6cm]{images/template_curve_ratio_2_1.png}};
-    % Ghost Bot C at START FRONT (over template baseline)
-    \node at (9.43, 1.0) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
-    % End Bot C (over template at L2 R1, rotated -45 deg CW)
-    \node at (10.40, 3.48) [rotate=-45] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
+    % Ghost Bot C at START FRONT (front line hard up against START FRONT edge)
+    \node at (9.33, 1.53) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
+    % End Bot C (front line hard up against line L2 R1, rotated -45 deg CW)
+    \node at (9.35, 2.87) [rotate=-45] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
     % Curved motion arrow tracking over template path
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (9.43, 1.5) to[bend left=25] (10.15, 3.0);
+    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (9.33, 1.88) to[bend left=25] (9.35, 2.87);
     \node[font=\footnotesize\bfseries, text=accentBlue, align=center] at (8.9, 3.7) {Sweep\\45$^\circ$ CW};
 
     % Left Turn 1/2 (FLIP FACE-DOWN)
@@ -458,12 +458,12 @@ Movement units are found on the straight movement template. Where an effect says
     \node[draw=noteBorder, fill=noteBg, font=\tiny\bfseries, rounded corners=2pt, inner sep=1.5pt] at (14.2, 5.55) {FLIP FACE-DOWN (R > L)};
     % Actual Flipped Curve Template PNG
     \node[anchor=south east] at (15.9, 1.2) {\includegraphics[width=3.6cm]{images/template_curve_ratio_2_1_flipped.png}};
-    % Ghost Bot D at START FRONT (over template baseline)
-    \node at (15.07, 1.0) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_square_circle.png}};
-    % End Bot D (over template at L1 R2, rotated 45 deg CCW)
-    \node at (14.10, 3.48) [rotate=45] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
+    % Ghost Bot D at START FRONT (front line hard up against START FRONT edge)
+    \node at (15.17, 1.59) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_square_circle.png}};
+    % End Bot D (front line hard up against line L1 R2, rotated 45 deg CCW)
+    \node at (15.10, 2.92) [rotate=45] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
     % Curved motion arrow tracking over template path
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (15.07, 1.5) to[bend right=25] (14.35, 3.0);
+    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (15.17, 1.88) to[bend right=25] (15.10, 2.92);
     \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (15.6, 3.7) {Sweep\\45$^\circ$ CCW};
   \end{tikzpicture}
   \caption{Straight Driving, Reverse Maneuvers, and Curved Arcs with Face-Down Flipping}
@@ -590,11 +590,11 @@ For a collision, place both robots as far along their path as they can go withou
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 11.0) {1. Weapon vs Weapon};
 
     % Bot A (Triangle with Circle weapon) moving East
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (0.4, 9.3) -- (1.1, 9.3) node[midway, above=-1pt, font=\scriptsize\bfseries, text=accentBlue] {Motion};
-    \node at (1.8, 9.3) [rotate=-90] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_circle.png}};
-    % Bot B (Square with Circle weapon) moving West (weapons in direct contact)
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (4.8, 9.3) -- (4.1, 9.3) node[midway, above=-1pt, font=\scriptsize\bfseries, text=arenaRed] {Motion};
-    \node at (3.4, 9.3) [rotate=90] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] (0.3, 9.3) -- (1.0, 9.3) node[midway, above=-1pt, font=\tiny\bfseries, text=accentBlue] {Motion};
+    \node at (1.72, 9.3) [rotate=-90] {\includegraphics[width=3.4cm]{images/mini_bot_triangle_circle.png}};
+    % Bot B (Square with Circle weapon) moving West (weapons in direct contact at x=2.60)
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=arenaRed] (4.9, 9.3) -- (4.2, 9.3) node[midway, above=-1pt, font=\tiny\bfseries, text=arenaRed] {Motion};
+    \node at (3.45, 9.3) [rotate=90] {\includegraphics[width=3.4cm]{images/mini_bot_square_circle.png}};
     % Scenario 1 label box
     \node[draw=arenaRed, fill=noteBg, font=\scriptsize, rounded corners=2pt, align=center, inner sep=2.5pt] at (2.6, 7.3) {%
       \textbf{ACTIVE CONTACT (Mutual)}\\%
@@ -607,11 +607,11 @@ For a collision, place both robots as far along their path as they can go withou
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (5.65, 11.0) {2. Weapon from One Side};
 
     % Bot A (Triangle with Line weapon) strikes flank directly
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (5.7, 9.3) -- (6.3, 9.3) node[midway, above=-1pt, font=\scriptsize\bfseries, text=accentBlue] {Motion};
-    \node at (7.0, 9.3) [rotate=-90] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
-    % Bot B moving North (weapon in direct contact with flank)
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (9.8, 8.2) -- (9.8, 9.0) node[midway, left=1pt, font=\scriptsize\bfseries, text=arenaRed] {Motion};
-    \node at (8.5, 9.3) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] (5.7, 9.3) -- (6.3, 9.3) node[midway, above=-1pt, font=\tiny\bfseries, text=accentBlue] {Motion};
+    \node at (7.00, 9.3) [rotate=-90] {\includegraphics[width=3.4cm]{images/mini_bot_triangle_line.png}};
+    % Bot B moving North (weapon in direct contact with left flank at x=8.00)
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=arenaRed] (9.7, 8.2) -- (9.7, 9.0) node[midway, left=1pt, font=\tiny\bfseries, text=arenaRed] {Motion};
+    \node at (8.68, 9.3) [rotate=0] {\includegraphics[width=3.4cm]{images/mini_bot_square_circle.png}};
     % Scenario 2 label box
     \node[draw=arenaRed, fill=noteBg, font=\scriptsize, rounded corners=2pt, align=center, inner sep=2.5pt] at (8.1, 7.3) {%
       \textbf{ACTIVE CONTACT (One-Sided)}\\%
@@ -623,12 +623,12 @@ For a collision, place both robots as far along their path as they can go withou
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (11.0, 6.2) rectangle (16.2, 11.2);
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (11.15, 11.0) {3. Inertial Chassis Contact};
 
-    % Bot A (Triangle with Line weapon) angled at 30 deg, non-weapon bumper makes contact
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (11.3, 8.0) -- (12.0, 8.5) node[midway, below right=-2pt, font=\scriptsize\bfseries, text=accentBlue] {Motion};
-    \node at (12.6, 9.15) [rotate=-30] {\includegraphics[width=1.7cm]{images/mini_bot_triangle_line.png}};
+    % Bot A (Triangle with Line weapon) angled at -30 deg, non-weapon bumper makes contact
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] (11.3, 8.0) -- (12.0, 8.5) node[midway, below right=-2pt, font=\tiny\bfseries, text=accentBlue] {Motion};
+    \node at (12.75, 9.15) [rotate=-30] {\includegraphics[width=3.2cm]{images/mini_bot_triangle_line.png}};
     % Bot B (Wide with Line weapon) angled at 75 deg, flank makes direct contact
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=amberNote!80!black] (15.7, 10.0) -- (15.0, 9.5) node[midway, above right=-2pt, font=\scriptsize\bfseries, text=amberNote!80!black] {Motion};
-    \node at (14.1, 9.15) [rotate=75] {\includegraphics[width=1.7cm]{images/mini_bot_wide_line.png}};
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=amberNote!80!black] (15.5, 9.9) -- (14.9, 9.5) node[midway, above=-1pt, font=\tiny\bfseries, text=amberNote!80!black] {Motion};
+    \node at (14.11, 9.15) [rotate=75] {\includegraphics[width=3.2cm]{images/mini_bot_wide_line.png}};
     % Scenario 3 label box
     \node[draw=accentBlue, fill=boxBg, font=\scriptsize, rounded corners=2pt, align=center, inner sep=2.5pt] at (13.6, 7.3) {%
       \textbf{INERT CONTACT (No Weapons)}\\%
@@ -643,20 +643,20 @@ For a collision, place both robots as far along their path as they can go withou
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 5.6) {Automata Card Sheet Mapping};
 
     % Left: Both robots shown in collision - Bot A (Triangle) strikes Vyper (Square)
-    \node at (1.1, 2.7) [rotate=-90] {\includegraphics[width=1.65cm]{images/mini_bot_triangle_line.png}};
-    \node at (2.6, 2.7) [rotate=0] {\includegraphics[width=1.65cm]{images/mini_bot_vyper_square.png}};
+    \node at (0.97, 2.94) [rotate=-90] {\includegraphics[width=3.3cm]{images/mini_bot_triangle_line.png}};
+    \node at (2.41, 2.40) [rotate=0] {\includegraphics[width=3.3cm]{images/mini_bot_vyper_square.png}};
     % Contact line at Front-L shoulder
-    \draw[line width=1.8pt, draw=arenaRed, dashed] (2.0, 3.2) -- (3.2, 3.2);
+    \draw[line width=1.8pt, draw=arenaRed, dashed] (1.6, 2.94) -- (2.8, 2.94);
     \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (1.85, 0.7) {1. Align contact line\\with Vyper's chassis};
 
     % Middle: Bold follow arrow
-    \draw[-{Stealth[length=4mm]}, line width=3pt, draw=arenaRed] (3.4, 2.7) -- (4.9, 2.7) node[midway, above=2pt, font=\footnotesize\bfseries, text=arenaRed, align=center] {Follow line\\into layout};
+    \draw[-{Stealth[length=3.5mm]}, line width=2.5pt, draw=arenaRed] (3.1, 2.94) -- (4.8, 2.94) node[midway, above=1pt, font=\scriptsize\bfseries, text=arenaRed, align=center] {Follow line\\into layout};
 
     % Right: Actual Automata Card Sheet Layout (Double Size!)
-    \node[anchor=west] at (5.1, 2.5) {\includegraphics[height=4.6cm]{images/automata_vyper_layout.png}};
+    \node[anchor=west] at (5.0, 2.6) {\includegraphics[height=4.6cm]{images/automata_vyper_layout.png}};
 
     % Callout arrow to Titanium Wedge (Front-L)
-    \draw[-{Stealth[length=2.5mm]}, line width=2pt, draw=arenaRed] (6.5, 4.8) -- (6.5, 4.1) node[pos=0, above=1pt, font=\scriptsize\bfseries, text=arenaRed] {* HIT! * Titanium Wedge};
+    \draw[-{Stealth[length=2.5mm]}, line width=2pt, draw=arenaRed] (6.4, 4.8) -- (6.4, 4.1) node[pos=0, above=1pt, font=\scriptsize\bfseries, text=arenaRed] {* HIT! * Titanium Wedge};
 
     % Rules summary callout on right
     \node[draw=accentBlue, fill=noteBg, rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt] at (13.4, 2.7) {%
@@ -954,21 +954,21 @@ to each component that supplies it, shared equally if there are multiple compone
     % Bot A (Nightwing Wide with center disc, no protruding fork tines)
     \node at (2.2, 1.4) [rotate=0] {\includegraphics[width=2.2cm]{images/mini_bot_nightwing.png}};
 
-    % Bot B contacting at angle in direct physical contact with front bumper
-    \node at (1.85, 2.65) [rotate=20] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
+    % Bot B contacting at angle in direct physical contact with front bumper at Fork L
+    \node at (2.01, 2.07) [rotate=20] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
 
     % Fork L: Single dotted line originating on chassis, extending OVER opponent's body
-    \draw[densely dotted, line width=1.6pt, draw=amberNote!90!black] (1.86, 1.45) -- (1.86, 3.4) node[pos=0.95, above=2pt, font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=amberNote!90!black] {In Line with Fork L};
+    \draw[densely dotted, line width=1.6pt, draw=amberNote!90!black] (1.86, 1.45) -- (1.86, 2.85) node[pos=0.95, above=2pt, font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=amberNote!90!black] {In Line with Fork L};
 
     % Fork R: Single dotted line originating on chassis, extending strictly 0.6cm into space
     \draw[densely dotted, line width=1.6pt, draw=amberNote!90!black] (2.54, 1.45) -- (2.54, 2.28) node[above=2pt, font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=amberNote!90!black] {Fork R};
 
-    \node[font=\scriptsize\bfseries, text=amberNote!90!black, align=left] at (0.9, 0.6) {Opponent in line\\with Fork L};
-    \draw[-{Stealth[length=2.2mm]}, draw=amberNote!90!black, line width=1.2pt] (0.9, 0.9) -- (1.86, 2.2);
+    \node[font=\scriptsize\bfseries, text=amberNote!90!black, align=center] at (1.0, 1.1) {Opponent in\\line with Fork L};
+    \draw[-{Stealth[length=2.2mm]}, draw=amberNote!90!black, line width=1.2pt] (1.0, 1.4) -- (1.86, 1.9);
 
     % Status Badge & Penalties Box
-    \node[fill=arenaRed, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3pt] at (5.5, 4.1) {STATUS: RAISED};
-    \node[draw=arenaRed, fill=noteBg, rounded corners=2pt, font=\scriptsize, align=left, text width=3.4cm, inner sep=3pt] at (5.5, 1.9) {%
+    \node[fill=arenaRed, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3pt] at (5.5, 3.8) {STATUS: RAISED};
+    \node[draw=arenaRed, fill=noteBg, rounded corners=2pt, font=\scriptsize, align=left, text width=3.4cm, inner sep=3pt] at (5.5, 1.8) {%
       \textbf{Raised Penalties (Sec 6.4):}\\%
       \textbullet\ Flip strength is \textbf{halved}.\\%
       \textbullet\ Throw strength \textbf{reduced by 2}.\\%
@@ -989,13 +989,13 @@ to each component that supplies it, shared equally if there are multiple compone
     \draw[densely dotted, line width=1.6pt, draw=amberNote!90!black] (10.74, 1.45) -- (10.74, 2.28);
     \node[font=\fontsize{6}{7}\selectfont\bfseries, text=amberNote!90!black, anchor=south west] at (10.65, 2.30) {Fork R};
 
-    % Bot B contacting from flank in direct physical contact
-    \node at (12.2, 1.4) [rotate=-90] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
-    \draw[-{Stealth[length=2.5mm]}, draw=textDark, line width=1.4pt] (12.4, 2.1) -- (11.45, 1.6);
+    % Bot B contacting from flank in direct physical contact with right flank
+    \node at (11.45, 1.4) [rotate=-90] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
+    \draw[-{Stealth[length=2.5mm]}, draw=textDark, line width=1.4pt] (12.4, 2.1) -- (11.6, 1.6);
 
     % Status Badge & Rules Box
-    \node[fill=gray!80!black, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3pt] at (14.2, 4.1) {STATUS: NOT RAISED};
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=3.2cm, inner sep=3pt] at (14.2, 1.9) {%
+    \node[fill=gray!80!black, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3pt] at (14.2, 3.8) {STATUS: NOT RAISED};
+    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=3.2cm, inner sep=3pt] at (14.2, 1.8) {%
       \textbf{Flank Contact:}\\%
       \textbullet\ Contact is on flank.\\%
       \textbullet\ Outside fork reach.\\%
