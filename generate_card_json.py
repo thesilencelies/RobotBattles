@@ -79,7 +79,6 @@ ICONS_URL = GITHUB_REPO_RAW + "pictures/icons/"
 COMPONENTS_URL = GITHUB_REPO_RAW + "components/"
 
 CARD_BACK_URL = PICTURES_URL + "backs/CardBack.png"
-CHASSIS_BACK_URL = TTS_ASSETS_URL + "chassis_back.png"
 
 # --------------------------------------------------------------------------
 # Keyword glossary (the `description` field)

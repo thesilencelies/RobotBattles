@@ -104,7 +104,7 @@ def generate_chassis_svg(chassis: Dict[str, Any]) -> str:
 
   <!-- Chassis Boundary Shape -->
   <polygon points="{pts_str}" fill="rgba(2, 132, 199, 0.03)" stroke="#0284c7" stroke-width="2.0" stroke-dasharray="6,4" stroke-linejoin="round" class="chassis-boundary-shape"/>
-  <text x="{p0[0] + 3}" y="{p0[1] + 6}" fill="#0284c7" font-family="sans-serif" font-size="3.8" font-weight="bold">Chassis Boundary ({tpl_name})</text>
+  <text x="{316.0 if tpl_name == 'Square' else (376.0 if tpl_name == 'Triangle' else (404.0 if tpl_name == 'Wide' else p0[0] + 3))}" y="{28.5 if tpl_name == 'Square' else (139.5 if tpl_name == 'Triangle' else (69.5 if tpl_name == 'Wide' else p0[1] + 6))}" fill="#0284c7" font-family="sans-serif" font-size="3.8" font-weight="bold" text-anchor="{'end' if tpl_name in ('Square', 'Triangle', 'Wide') else 'start'}">Chassis Boundary ({tpl_name})</text>
 
   <!-- Forward / Facing Indicator -->
   <g class="facing-indicator" transform="translate({A3_WIDTH_MM/2}, 20)">
@@ -224,9 +224,9 @@ def generate_chassis_tikz(chassis: Dict[str, Any]) -> str:
     pts_str = " -- ".join(f"({p[0]:.1f}, {p[1]:.1f})" for p in points)
     p0 = points[0] if points else [100.0, 24.0]
 
-    # Coherent weight icons
+    # Coherent weight icons (0.45cm matches standard text line height)
     if weight > 0:
-        weight_icons = r"\;".join([r"\raisebox{-0.15ex}{\weighticon}"] * weight)
+        weight_icons = r"\;".join([r"\raisebox{-0.15ex}{\weighticon[0.45cm]}"] * weight)
         weight_markup = rf"{weight_icons} \enspace ({weight})"
     else:
         weight_markup = "0"
@@ -264,9 +264,22 @@ def generate_chassis_tikz(chassis: Dict[str, Any]) -> str:
     # 3. Chassis Boundary Outline
     lines.append(r"  % Chassis Boundary Outline")
     lines.append(rf"  \draw[cyan!60!blue, line width=1.4pt, line join=round, dashed] {pts_str} -- cycle;")
+    if tpl_name == "Square":
+        label_pos = "at (316.0, 26.0) "
+        label_anchor = "anchor=north east"
+    elif tpl_name == "Triangle":
+        label_pos = "at (376.0, 137.0) "
+        label_anchor = "anchor=north east"
+    elif tpl_name == "Wide":
+        label_pos = "at (404.0, 67.0) "
+        label_anchor = "anchor=north east"
+    else:
+        label_pos = f"at ({p0[0] + 2:.1f}, {p0[1] + 2:.1f}) "
+        label_anchor = "anchor=north west"
+
     lines.append(
-        rf"  \node[anchor=north west, font=\sffamily\scriptsize\bfseries, text=cyan!60!blue] "
-        rf"at ({p0[0] + 2:.1f}, {p0[1] + 2:.1f}) {{Chassis Boundary ({tex_escape(tpl_name)})}};"
+        rf"  \node[{label_anchor}, font=\sffamily\scriptsize\bfseries, text=cyan!60!blue] "
+        rf"{label_pos}{{Chassis Boundary ({tex_escape(tpl_name)})}};"
     )
 
     # 4. Forward Heading Indicator
@@ -276,21 +289,23 @@ def generate_chassis_tikz(chassis: Dict[str, Any]) -> str:
 
     # 5. Chassis Info Plate (Top-Left)
     lines.append(r"  % Chassis Information Plate")
-    lines.append(r"  \node[anchor=north west, fill=white, draw=black!30, rounded corners=2.5mm, inner sep=3.5mm, line width=0.8pt] at (12, 12) {")
-    lines.append(r"    \begin{minipage}{88mm}")
-    lines.append(rf"      {{\LARGE\bfseries\sffamily {tex_escape(name)}}} \par\vspace{{1.5mm}}")
-    lines.append(rf"      {{\small\sffamily\textbf{{Template:}} {tex_escape(tpl_name)}}} \par\vspace{{2.5mm}}")
-    lines.append(rf"      {{\sffamily\bfseries WEIGHT:}} {weight_markup} \quad {{\sffamily\bfseries COST:}} {cost_markup} \quad {{\sffamily\bfseries FLIP STR:}} {flip} \par\vspace{{2mm}}")
+    lines.append(r"  \node[anchor=north west, fill=white, draw=black!30, rounded corners=2.5mm, inner sep=3.0mm, line width=0.8pt] at (12, 10) {")
+    lines.append(r"    \begin{minipage}{82mm}")
+    lines.append(rf"      {{\LARGE\bfseries\sffamily {tex_escape(name)}}} \par\vspace{{1.2mm}}")
+    lines.append(rf"      {{\small\sffamily\textbf{{Template:}} {tex_escape(tpl_name)}}} \par\vspace{{2.0mm}}")
+    lines.append(r"      {\sffamily\small")
+    lines.append(rf"        \textbf{{WEIGHT:}}\enspace {weight_markup} \hfill \textbf{{COST:}}\enspace {cost_markup} \par\vspace{{1.2mm}}")
+    lines.append(rf"        \textbf{{FLIP STRENGTH:}}\enspace \textcolor{{durabilityred}}{{\textbf{{{flip}}}}}")
+    lines.append(r"      } \par\vspace{1.5mm}")
 
     if kw_markup:
-        lines.append(rf"      {kw_markup} \par\vspace{{2mm}}")
+        lines.append(rf"      {kw_markup} \par\vspace{{1.5mm}}")
     if text:
-        lines.append(rf"      {{\sffamily\small {tex_escape(text)}}} \par\vspace{{2mm}}")
+        lines.append(rf"      {{\sffamily\small {tex_escape(text)}}} \par\vspace{{1.5mm}}")
 
     if pic_rel and (WORKSPACE_DIR / pic_rel).is_file():
-        lines.append(r"      \begin{center}")
-        lines.append(rf"        \includegraphics[width=78mm, max height=30mm, keepaspectratio]{{{pic_rel}}}")
-        lines.append(r"      \end{center}")
+        lines.append(r"      \vspace{0.5mm}")
+        lines.append(rf"      {{\centering\includegraphics[width=72mm, max height=22mm, keepaspectratio]{{{pic_rel}}}\par}}")
 
     lines.append(r"    \end{minipage}")
     lines.append(r"  };")
@@ -339,7 +354,7 @@ def generate_chassis_latex_document(pages_tikz: List[str]) -> str:
 
 
 def compile_latex_to_pdf(doc_tex: str, output_pdf_path: Path) -> Path:
-    """Compiles LaTeX string via pdflatex to an output PDF file."""
+    """Compiles LaTeX string via pdflatex (2 passes) to an output PDF file."""
     output_pdf_path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
@@ -349,16 +364,24 @@ def compile_latex_to_pdf(doc_tex: str, output_pdf_path: Path) -> Path:
         cmd = [
             "pdflatex",
             "-interaction=nonstopmode",
-            "-output-directory",
-            str(tmp_path),
+            "-halt-on-error",
+            f"-output-directory={tmp_path}",
             str(tex_file),
         ]
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=WORKSPACE_DIR, text=True)
+        # Pass 1
+        res1 = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=WORKSPACE_DIR, text=True)
+        if res1.returncode != 0:
+            print("LaTeX compilation pass 1 failed:")
+            print(res1.stdout[-1500:])
+            raise RuntimeError(f"pdflatex pass 1 failed for {output_pdf_path.name}")
+
+        # Pass 2 to resolve TikZ remember picture overlay coordinates
+        res2 = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=WORKSPACE_DIR, text=True)
         compiled_pdf = tmp_path / "document.pdf"
-        if res.returncode != 0 or not compiled_pdf.is_file():
-            print("LaTeX compilation failed:")
-            print(res.stdout[-1500:])
-            raise RuntimeError(f"pdflatex failed to generate {output_pdf_path.name}")
+        if res2.returncode != 0 or not compiled_pdf.is_file():
+            print("LaTeX compilation pass 2 failed:")
+            print(res2.stdout[-1500:])
+            raise RuntimeError(f"pdflatex pass 2 failed for {output_pdf_path.name}")
 
         shutil.copyfile(compiled_pdf, output_pdf_path)
     return output_pdf_path

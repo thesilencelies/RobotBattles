@@ -24,7 +24,7 @@
 
   <!-- Chassis Boundary Shape -->
   <polygon points="100.0,24.0 320.0,24.0 320.0,280.0 100.0,280.0" fill="rgba(2, 132, 199, 0.03)" stroke="#0284c7" stroke-width="2.0" stroke-dasharray="6,4" stroke-linejoin="round" class="chassis-boundary-shape"/>
-  <text x="103.0" y="30.0" fill="#0284c7" font-family="sans-serif" font-size="3.8" font-weight="bold">Chassis Boundary (Square)</text>
+  <text x="316.0" y="28.5" fill="#0284c7" font-family="sans-serif" font-size="3.8" font-weight="bold" text-anchor="end">Chassis Boundary (Square)</text>
 
   <!-- Forward / Facing Indicator -->
   <g class="facing-indicator" transform="translate(210.0, 20)">
