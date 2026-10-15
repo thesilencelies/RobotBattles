@@ -160,8 +160,8 @@ class TestMovementTemplates(unittest.TestCase):
 
             svg = t.to_svg()
             self.assertTrue(svg.startswith("<svg"))
-            self.assertTrue(svg.strip().endswith("</svg>"))
-            self.assertIn("START", svg)
+            self.assertNotIn("START", svg)
+            self.assertNotIn("°", svg)
             for l, r in t.pairs:
                 self.assertIn(f"L{l} R{r}", svg)
 

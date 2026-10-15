@@ -11,7 +11,6 @@
 <rect x="5.0" y="5.0" width="65.0" height="200.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />
 <line x1="37.5" y1="205.0" x2="37.5" y2="5.0" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
 <line x1="5.0" y1="205.0" x2="70.0" y2="205.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<g transform="translate(37.5, 217.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
 <line x1="5.0" y1="165.0" x2="70.0" y2="165.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <g transform="translate(37.5, 185.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R1</text></g>
 <line x1="5.0" y1="125.0" x2="70.0" y2="125.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
@@ -25,47 +24,42 @@
 </g>
   </g>
   <!-- Template: Spin Disc Template (spin) -->
-  <g transform="translate(130.0, 45.0)">
+  <g transform="translate(120.0, 45.0)">
 <g id="template_spin">
-<circle cx="100.0" cy="70.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="100.0" cy="70.0" r="3" fill="#0f172a" />
-<line x1="100.0" y1="70.0" x2="100.0" y2="35.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
-<g transform="translate(100.0, 29.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
-<line x1="100.0" y1="70.0" x2="135.0" y2="70.0" stroke="#2563eb" stroke-width="2.4" />
-<g transform="translate(141.0, 73.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start" dominant-baseline="central">L1 R-1 (90°)</text></g>
-<line x1="100.0" y1="70.0" x2="100.0" y2="105.0" stroke="#2563eb" stroke-width="2.4" />
-<g transform="translate(100.0, 117.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R-2 (180°)</text></g>
-<line x1="100.0" y1="70.0" x2="65.0" y2="70.0" stroke="#2563eb" stroke-width="2.4" />
-<g transform="translate(59.0, 73.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end" dominant-baseline="central">L3 R-3 (270°)</text></g>
-<g transform="translate(100.0, 20.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-4 (360°)</text></g>
-<path d="M 119.2 70.0 A 19.2 19.2 0 0 1 100.0 89.2" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
+<circle cx="40.0" cy="40.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="40.0" cy="40.0" r="3" fill="#0f172a" />
+<line x1="40.0" y1="40.0" x2="40.0" y2="5.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="square" />
+<line x1="40.0" y1="40.0" x2="75.0" y2="40.0" stroke="#2563eb" stroke-width="2.5" stroke-linecap="square" />
+<line x1="40.0" y1="40.0" x2="40.0" y2="75.0" stroke="#2563eb" stroke-width="2.5" stroke-linecap="square" />
+<line x1="40.0" y1="40.0" x2="5.0" y2="40.0" stroke="#2563eb" stroke-width="2.5" stroke-linecap="square" />
+<g transform="translate(59.2, 33.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R-1</text></g>
+<g transform="translate(47.0, 59.2) rotate(90)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R-2</text></g>
+<g transform="translate(20.8, 47.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R-3</text></g>
+<g transform="translate(33.0, 20.8) rotate(-90)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-4</text></g>
 </g>
   </g>
   <!-- Template: Pivot Fan Template (pivot) -->
-  <g transform="translate(345.0, 45.0)">
+  <g transform="translate(225.0, 45.0)">
 <g id="template_pivot">
-<path d="M 95.0 85.0 L 30.0 85.0 A 65.0 65.0 0 0 1 160.0 85.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="95.0" cy="85.0" r="3.5" fill="#ef4444" />
-<g transform="translate(95.0, 98.0)"><text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle" dominant-baseline="central">PIN</text></g>
-<line x1="30.0" y1="85.0" x2="95.0" y2="85.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<g transform="translate(62.5, 97.0)"><text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
-<line x1="95.0" y1="85.0" x2="49.0" y2="39.0" stroke="#2563eb" stroke-width="2.6" />
-<g transform="translate(63.7, 50.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R0 (45°)</text></g>
-<line x1="95.0" y1="85.0" x2="95.0" y2="20.0" stroke="#2563eb" stroke-width="2.6" />
-<g transform="translate(95.0, 37.8)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R0 (90°)</text></g>
-<line x1="95.0" y1="85.0" x2="141.0" y2="39.0" stroke="#2563eb" stroke-width="2.6" />
-<g transform="translate(126.3, 50.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R0 (135°)</text></g>
-<line x1="95.0" y1="85.0" x2="160.0" y2="85.0" stroke="#2563eb" stroke-width="2.6" />
-<g transform="translate(127.5, 97.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R0 (180°)</text></g>
+<path d="M 70.0 70.0 L 5.0 70.0 A 65.0 65.0 0 0 1 135.0 70.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="70.0" cy="70.0" r="3.5" fill="#ef4444" />
+<line x1="5.0" y1="70.0" x2="70.0" y2="70.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<line x1="70.0" y1="70.0" x2="24.0" y2="24.0" stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />
+<g transform="translate(36.6, 47.5) rotate(45.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R0</text></g>
+<line x1="70.0" y1="70.0" x2="70.0" y2="5.0" stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />
+<g transform="translate(62.3, 30.4) rotate(-90.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R0</text></g>
+<line x1="70.0" y1="70.0" x2="116.0" y2="24.0" stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />
+<g transform="translate(92.5, 36.6) rotate(-45.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R0</text></g>
+<line x1="70.0" y1="70.0" x2="135.0" y2="70.0" stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />
+<g transform="translate(109.6, 62.3) rotate(0.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R0</text></g>
 </g>
   </g>
   <!-- Template: Gentle Curve Template (curve_gentle) -->
-  <g transform="translate(20.0, 300.0)">
+  <g transform="translate(390.0, 45.0)">
 <g id="template_curve_gentle">
 <path d="M 5.0 189.7 A 252.5 252.5 0 0 1 85.3 5.0 L 129.6 52.5 A 187.5 187.5 0 0 0 70.0 189.7 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <path d="M 37.5 189.7 A 220.0 220.0 0 0 1 107.5 28.8" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
 <line x1="5.0" y1="189.7" x2="70.0" y2="189.7" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<g transform="translate(37.5, 201.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
 <line x1="89.0" y1="107.5" x2="30.6" y2="79.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <g transform="translate(43.1, 140.2) rotate(-77.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R2</text></g>
 <line x1="106.8" y1="78.1" x2="54.5" y2="39.5" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
@@ -75,12 +69,11 @@
 </g>
   </g>
   <!-- Template: Medium Curve Template (curve_medium) -->
-  <g transform="translate(189.6, 300.0)">
+  <g transform="translate(20.0, 280.0)">
 <g id="template_curve_medium">
 <path d="M 5.0 135.0 A 130.0 130.0 0 0 1 144.1 5.3 L 139.5 70.2 A 65.0 65.0 0 0 0 70.0 135.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <path d="M 37.5 135.0 A 97.5 97.5 0 0 1 141.8 37.7" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
 <line x1="5.0" y1="135.0" x2="70.0" y2="135.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<g transform="translate(37.5, 147.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
 <line x1="81.8" y1="97.7" x2="28.5" y2="60.4" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <g transform="translate(42.0, 105.7) rotate(-72.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R1</text></g>
 <line x1="112.8" y1="73.9" x2="90.5" y2="12.8" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
@@ -90,12 +83,11 @@
 </g>
   </g>
   <!-- Template: Sharp Curve Template (curve_sharp) -->
-  <g transform="translate(373.7, 300.0)">
+  <g transform="translate(194.1, 280.0)">
 <g id="template_curve_sharp">
 <path d="M 5.0 92.5 A 87.5 87.5 0 0 1 180.0 92.5 L 115.0 92.5 A 22.5 22.5 0 0 0 70.0 92.5 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <path d="M 37.5 92.5 A 55.0 55.0 0 0 1 147.5 92.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
 <line x1="5.0" y1="92.5" x2="70.0" y2="92.5" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<g transform="translate(37.5, 104.5)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
 <line x1="84.8" y1="71.4" x2="62.6" y2="10.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <g transform="translate(47.4, 61.0) rotate(-55.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R1</text></g>
 <line x1="98.3" y1="70.8" x2="115.1" y2="8.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />

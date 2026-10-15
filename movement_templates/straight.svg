@@ -1,23 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 95.0 240.0" width="95.0mm" height="240.0mm">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85.0 220.0" width="85.0mm" height="220.0mm">
   <defs>
     <style>
       text { user-select: none; }
     </style>
   </defs>
 <g id="template_straight">
-<rect x="15.0" y="15.0" width="65.0" height="200.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />
-<line x1="47.5" y1="215.0" x2="47.5" y2="15.0" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="15.0" y1="215.0" x2="80.0" y2="215.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<g transform="translate(47.5, 227.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
-<line x1="15.0" y1="175.0" x2="80.0" y2="175.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<g transform="translate(47.5, 195.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R1</text></g>
-<line x1="15.0" y1="135.0" x2="80.0" y2="135.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<g transform="translate(47.5, 155.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R2</text></g>
-<line x1="15.0" y1="95.0" x2="80.0" y2="95.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<g transform="translate(47.5, 115.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R3</text></g>
-<line x1="15.0" y1="55.0" x2="80.0" y2="55.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<g transform="translate(47.5, 75.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R4</text></g>
-<line x1="15.0" y1="15.0" x2="80.0" y2="15.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<g transform="translate(47.5, 35.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R5</text></g>
+<rect x="10.0" y="10.0" width="65.0" height="200.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />
+<line x1="42.5" y1="210.0" x2="42.5" y2="10.0" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="10.0" y1="210.0" x2="75.0" y2="210.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<line x1="10.0" y1="170.0" x2="75.0" y2="170.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(42.5, 190.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R1</text></g>
+<line x1="10.0" y1="130.0" x2="75.0" y2="130.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(42.5, 150.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R2</text></g>
+<line x1="10.0" y1="90.0" x2="75.0" y2="90.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(42.5, 110.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R3</text></g>
+<line x1="10.0" y1="50.0" x2="75.0" y2="50.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(42.5, 70.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R4</text></g>
+<line x1="10.0" y1="10.0" x2="75.0" y2="10.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(42.5, 30.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R5</text></g>
 </g>
 </svg>

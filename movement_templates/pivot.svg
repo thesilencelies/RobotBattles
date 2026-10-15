@@ -1,22 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180.0 120.0" width="180.0mm" height="120.0mm">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.0 85.0" width="150.0mm" height="85.0mm">
   <defs>
     <style>
       text { user-select: none; }
     </style>
   </defs>
 <g id="template_pivot">
-<path d="M 105.0 95.0 L 40.0 95.0 A 65.0 65.0 0 0 1 170.0 95.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="105.0" cy="95.0" r="3.5" fill="#ef4444" />
-<g transform="translate(105.0, 108.0)"><text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle" dominant-baseline="central">PIN</text></g>
-<line x1="40.0" y1="95.0" x2="105.0" y2="95.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<g transform="translate(72.5, 107.0)"><text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
-<line x1="105.0" y1="95.0" x2="59.0" y2="49.0" stroke="#2563eb" stroke-width="2.6" />
-<g transform="translate(73.7, 60.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R0 (45°)</text></g>
-<line x1="105.0" y1="95.0" x2="105.0" y2="30.0" stroke="#2563eb" stroke-width="2.6" />
-<g transform="translate(105.0, 47.8)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R0 (90°)</text></g>
-<line x1="105.0" y1="95.0" x2="151.0" y2="49.0" stroke="#2563eb" stroke-width="2.6" />
-<g transform="translate(136.3, 60.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R0 (135°)</text></g>
-<line x1="105.0" y1="95.0" x2="170.0" y2="95.0" stroke="#2563eb" stroke-width="2.6" />
-<g transform="translate(137.5, 107.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R0 (180°)</text></g>
+<path d="M 75.0 75.0 L 10.0 75.0 A 65.0 65.0 0 0 1 140.0 75.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="75.0" cy="75.0" r="3.5" fill="#ef4444" />
+<line x1="10.0" y1="75.0" x2="75.0" y2="75.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<line x1="75.0" y1="75.0" x2="29.0" y2="29.0" stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />
+<g transform="translate(41.6, 52.5) rotate(45.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R0</text></g>
+<line x1="75.0" y1="75.0" x2="75.0" y2="10.0" stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />
+<g transform="translate(67.3, 35.4) rotate(-90.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R0</text></g>
+<line x1="75.0" y1="75.0" x2="121.0" y2="29.0" stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />
+<g transform="translate(97.5, 41.6) rotate(-45.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R0</text></g>
+<line x1="75.0" y1="75.0" x2="140.0" y2="75.0" stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />
+<g transform="translate(114.6, 67.3) rotate(0.0)"><text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R0</text></g>
 </g>
 </svg>

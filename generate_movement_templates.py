@@ -207,7 +207,6 @@ class MovementTemplate:
             for r in (rin, rout):
                 xs.append(-r * math.cos(phi))
                 ys.append(-r * math.sin(phi))
-        ys.append(15.0)  # space below START baseline for text
         return min(xs), max(xs), min(ys), max(ys)
 
     def get_dimensions(self) -> Tuple[float, float]:
@@ -216,16 +215,16 @@ class MovementTemplate:
         u = self.drive_unit
         if self.category == "straight":
             max_l = max(p[0] for p in self.pairs)
-            return (w + 30.0, max_l * u + 40.0)
+            return (w + 20.0, max_l * u + 20.0)
         elif self.category == "spin":
             radius = DEFAULT_MINIATURE_RADIUS
-            return (radius * 2.0 + 130.0, radius * 2.0 + 70.0)
+            return (radius * 2.0 + 20.0, radius * 2.0 + 20.0)
         elif self.category == "pivot":
             radius = w
-            return (radius * 2.0 + 50.0, radius + 55.0)
-        else:  # curve_forward and curve_tight
+            return (radius * 2.0 + 20.0, radius + 20.0)
+        else:  # curve_forward
             xmin, xmax, ymin, ymax = self.get_curve_bounds()
-            margin = 15.0
+            margin = 10.0
             bw = (xmax - xmin) + 2 * margin
             bh = (ymax - ymin) + 2 * margin
             return (bw, bh)
@@ -266,10 +265,6 @@ class MovementTemplate:
                 f'<line x1="{x0:.1f}" y1="{y_base:.1f}" x2="{x0 + w:.1f}" y2="{y_base:.1f}" '
                 f'stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />'
             )
-            svg_parts.append(
-                f'<g transform="translate({x0 + w/2:.1f}, {y_base + 12:.1f})">'
-                f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>'
-            )
 
             # Stop lines and cell labels
             for l, r in self.pairs:
@@ -287,8 +282,8 @@ class MovementTemplate:
         elif self.category == "spin":
             # Spin on spot disc: 90 deg increments per 1 drive unit (4 units = 360 deg)
             radius = DEFAULT_MINIATURE_RADIUS
-            cx = offset_x + radius + 60.0
-            cy = offset_y + radius + 30.0
+            cx = offset_x + radius
+            cy = offset_y + radius
 
             # Disc circle
             svg_parts.append(
@@ -300,107 +295,93 @@ class MovementTemplate:
             # Baseline at angle 0 (North: dx=0, dy=-radius)
             svg_parts.append(
                 f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{cx:.1f}" y2="{cy - radius:.1f}" '
-                f'stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />'
-            )
-            svg_parts.append(
-                f'<g transform="translate({cx:.1f}, {cy - radius - 6:.1f})">'
-                f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>'
+                f'stroke="#0f172a" stroke-width="3.5" stroke-linecap="square" />'
             )
 
-            # Markings for each spin unit (L, -L)
-            for l, r in self.pairs:
-                d_theta = l * (math.pi / 2.0)
-                px = cx + radius * math.sin(d_theta)
-                py = cy - radius * math.cos(d_theta)
-                if l < 4:
-                    svg_parts.append(
-                        f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="#2563eb" stroke-width="2.4" />'
-                    )
-                if l == 1:
-                    svg_parts.append(
-                        f'<g transform="translate({px + 6:.1f}, {py + 3:.1f})">'
-                        f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start" dominant-baseline="central">L1 R-1 (90°)</text></g>'
-                    )
-                elif l == 2:
-                    svg_parts.append(
-                        f'<g transform="translate({px:.1f}, {py + 12:.1f})">'
-                        f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R-2 (180°)</text></g>'
-                    )
-                elif l == 3:
-                    svg_parts.append(
-                        f'<g transform="translate({px - 6:.1f}, {py + 3:.1f})">'
-                        f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end" dominant-baseline="central">L3 R-3 (270°)</text></g>'
-                    )
-                elif l == 4:
-                    svg_parts.append(
-                        f'<g transform="translate({cx:.1f}, {cy - radius - 15:.1f})">'
-                        f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-4 (360°)</text></g>'
-                    )
-
-            # Circular clockwise guide arrow
-            arc_r = radius * 0.55
+            # Stop lines for l = 1, 2, 3
+            # l = 1 (East)
             svg_parts.append(
-                f'<path d="M {cx + arc_r:.1f} {cy:.1f} A {arc_r:.1f} {arc_r:.1f} 0 0 1 {cx:.1f} {cy + arc_r:.1f}" '
-                f'fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />'
+                f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{cx + radius:.1f}" y2="{cy:.1f}" stroke="#2563eb" stroke-width="2.5" stroke-linecap="square" />'
+            )
+            # l = 2 (South)
+            svg_parts.append(
+                f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{cx:.1f}" y2="{cy + radius:.1f}" stroke="#2563eb" stroke-width="2.5" stroke-linecap="square" />'
+            )
+            # l = 3 (West)
+            svg_parts.append(
+                f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{cx - radius:.1f}" y2="{cy:.1f}" stroke="#2563eb" stroke-width="2.5" stroke-linecap="square" />'
+            )
+
+            # Labels placed ON the template in each quadrant, angled to line up with the end line
+            # l = 1: along East line, inside top-right quadrant
+            svg_parts.append(
+                f'<g transform="translate({cx + radius*0.55:.1f}, {cy - 7.0:.1f})">'
+                f'<text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R-1</text></g>'
+            )
+            # l = 2: along South line, inside bottom-right quadrant
+            svg_parts.append(
+                f'<g transform="translate({cx + 7.0:.1f}, {cy + radius*0.55:.1f}) rotate(90)">'
+                f'<text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R-2</text></g>'
+            )
+            # l = 3: along West line, inside bottom-left quadrant
+            svg_parts.append(
+                f'<g transform="translate({cx - radius*0.55:.1f}, {cy + 7.0:.1f})">'
+                f'<text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R-3</text></g>'
+            )
+            # l = 4: along North line, inside top-left quadrant
+            svg_parts.append(
+                f'<g transform="translate({cx - 7.0:.1f}, {cy - radius*0.55:.1f}) rotate(-90)">'
+                f'<text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-4</text></g>'
             )
 
         elif self.category == "pivot":
             # Pivot around right wheel: 45 deg per 1 drive unit (hits 180 deg at 4, 0)
             radius = w
-            cx = offset_x + radius + 25.0
-            cy = offset_y + radius + 15.0
+            cx = offset_x + radius
+            cy = offset_y + radius
 
             x_start = cx - radius
-            y_start = cy
             x_end = cx + radius
-            y_end = cy
 
             # Semicircle contour
-            path_d = f"M {cx:.1f} {cy:.1f} L {x_start:.1f} {y_start:.1f} A {radius:.1f} {radius:.1f} 0 0 1 {x_end:.1f} {y_end:.1f} Z"
+            path_d = f"M {cx:.1f} {cy:.1f} L {x_start:.1f} {cy:.1f} A {radius:.1f} {radius:.1f} 0 0 1 {x_end:.1f} {cy:.1f} Z"
             svg_parts.append(
                 f'<path d="{path_d}" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />'
             )
             svg_parts.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3.5" fill="#ef4444" />')
-            svg_parts.append(
-                f'<g transform="translate({cx:.1f}, {cy + 13:.1f})">'
-                f'<text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle" dominant-baseline="central">PIN</text></g>'
-            )
 
-            # Start line along baseline
+            # Start line along baseline (left half)
             svg_parts.append(
-                f'<line x1="{x_start:.1f}" y1="{y_start:.1f}" x2="{cx:.1f}" y2="{cy:.1f}" '
+                f'<line x1="{x_start:.1f}" y1="{cy:.1f}" x2="{cx:.1f}" y2="{cy:.1f}" '
                 f'stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />'
-            )
-            svg_parts.append(
-                f'<g transform="translate({(x_start + cx)/2:.1f}, {cy + 12:.1f})">'
-                f'<text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>'
             )
 
             # Pivot stop lines: 45, 90, 135, 180 deg
             for l, r in self.pairs:
-                d_th = l * (math.pi / 4.0)
-                px = cx - radius * math.cos(d_th)
-                py = cy - radius * math.sin(d_th)
-                if l < 4:
-                    svg_parts.append(
-                        f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{px:.1f}" y2="{py:.1f}" stroke="#2563eb" stroke-width="2.6" />'
-                    )
-                deg_label = l * 45
-                lbl_x = cx - (radius * 0.68) * math.cos(d_th)
-                lbl_y = cy - (radius * 0.68) * math.sin(d_th)
-                if l == 4:
-                    svg_parts.append(
-                        f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{x_end:.1f}" y2="{y_end:.1f}" stroke="#2563eb" stroke-width="2.6" />'
-                    )
-                    svg_parts.append(
-                        f'<g transform="translate({cx + radius/2:.1f}, {cy + 12:.1f})">'
-                        f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R0 (180°)</text></g>'
-                    )
-                else:
-                    svg_parts.append(
-                        f'<g transform="translate({lbl_x:.1f}, {lbl_y - 3:.1f})">'
-                        f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L{l} R0 ({deg_label}°)</text></g>'
-                    )
+                phi = l * (math.pi / 4.0)
+                px = cx - radius * math.cos(phi)
+                py = cy - radius * math.sin(phi)
+                svg_parts.append(
+                    f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{px:.1f}" y2="{py:.1f}" '
+                    f'stroke="#2563eb" stroke-width="2.6" stroke-linecap="square" />'
+                )
+
+                # Label placement on the template inside sector, angled to line up with the end line
+                label_phi = phi - math.radians(11.0)
+                dist = radius * 0.62
+                tx = cx - dist * math.cos(label_phi)
+                ty = cy - dist * math.sin(label_phi)
+
+                deg = -180.0 + math.degrees(phi)
+                if deg < -90.0:
+                    deg += 180.0
+                elif deg > 90.0:
+                    deg -= 180.0
+
+                svg_parts.append(
+                    f'<g transform="translate({tx:.1f}, {ty:.1f}) rotate({deg:.1f})">'
+                    f'<text x="0" y="0" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L{l} R0</text></g>'
+                )
 
         else:  # category in ("curve_forward", "curve_tight")
             # Solid annular channel representing the exact path swept by the robot bumper
@@ -442,10 +423,6 @@ class MovementTemplate:
             svg_parts.append(
                 f'<line x1="{p_out_start[0]:.1f}" y1="{p_out_start[1]:.1f}" x2="{p_in_start[0]:.1f}" y2="{p_in_start[1]:.1f}" '
                 f'stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />'
-            )
-            svg_parts.append(
-                f'<g transform="translate({(p_out_start[0] + p_in_start[0])/2:.1f}, {cy + 12:.1f})">'
-                f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>'
             )
 
             # Stop lines and cell labels
@@ -494,7 +471,7 @@ class MovementTemplate:
             f'  </defs>\n'
             f'{bg_rect}'
         )
-        body = self.render_svg_content(offset_x=15.0, offset_y=15.0)
+        body = self.render_svg_content(offset_x=10.0, offset_y=10.0)
         svg_footer = "\n</svg>"
         return svg_header + body + svg_footer
 
@@ -504,7 +481,7 @@ def build_all_movement_templates(
     drive_unit: float = DEFAULT_DRIVE_UNIT_MM,
 ) -> List[MovementTemplate]:
     """
-    Constructs the minimal consolidated set of 8 physical MovementTemplate instances
+    Constructs the minimal consolidated set of 6 physical MovementTemplate instances
     covering every permutation from -5 to +5 on both tracks.
     """
     templates: List[MovementTemplate] = []
@@ -666,43 +643,44 @@ def generate_rulebook_preview_svg(
   <rect width="100%" height="100%" fill="#ffffff" />
 
   <!-- Straight Template (Left) -->
-  <g transform="translate(60, 50) scale(2.2)">
+  <g transform="translate(70, 60) scale(2.8)">
     {t_straight.render_svg_content(offset_x=0, offset_y=0) if t_straight else ''}
   </g>
 
   <!-- Curve Template (Top Right) -->
-  <g transform="translate(340, 50) scale(2.2)">
+  <g transform="translate(450, 60) scale(2.6)">
     {t_curve.render_svg_content(offset_x=0, offset_y=0) if t_curve else ''}
   </g>
 
-  <!-- Spin Disc Template (Bottom Center) -->
-  <g transform="translate(350, 590) scale(2.2)">
+  <!-- Spin Disc Template (Bottom Middle) -->
+  <g transform="translate(350, 560) scale(2.6)">
     {t_spin.render_svg_content(offset_x=0, offset_y=0) if t_spin else ''}
   </g>
 
   <!-- Pivot Fan Template (Bottom Right) -->
-  <g transform="translate(560, 560) scale(2.2)">
+  <g transform="translate(560, 587) scale(2.5)">
     {t_pivot.render_svg_content(offset_x=0, offset_y=0) if t_pivot else ''}
   </g>
 
   <!-- Explanatory Rulebook Callouts -->
   <g font-family="sans-serif" fill="#1e293b">
     <!-- Straight notes -->
-    <text x="60" y="820" font-size="16" font-weight="bold">Straight (1 to 5)</text>
-    <text x="60" y="842" font-size="13" fill="#64748b">Place at rear for reverse (-1 to -5)</text>
+    <text x="161" y="660" font-size="16" font-weight="bold" text-anchor="middle">Straight (1 to 5)</text>
+    <text x="161" y="682" font-size="12" fill="#64748b" text-anchor="middle">Place at rear for Reverse (-1 to -5)</text>
 
     <!-- Curve notes -->
-    <text x="560" y="440" font-size="16" font-weight="bold">Curve Template</text>
-    <text x="560" y="462" font-size="13" fill="#64748b">Align bumper to marked stop line</text>
-    <text x="560" y="482" font-size="13" fill="#64748b">Flip for Left | Back for Reverse</text>
+    <text x="630" y="440" font-size="16" font-weight="bold" text-anchor="middle">Curve Template</text>
+    <text x="630" y="462" font-size="12" fill="#64748b" text-anchor="middle">Flip for Left Turn | Place at rear for Reverse</text>
 
     <!-- Spin notes -->
-    <text x="350" y="842" font-size="14" font-weight="bold" text-anchor="middle">Spin on Spot</text>
-    <text x="350" y="862" font-size="12" fill="#64748b" text-anchor="middle">Rotate around center (90° / unit)</text>
+    <text x="441" y="785" font-size="15" font-weight="bold" text-anchor="middle">Spin on Spot</text>
+    <text x="441" y="805" font-size="12" fill="#64748b" text-anchor="middle">Rotate on center (4 increments)</text>
+    <text x="441" y="822" font-size="10.5" fill="#94a3b8" text-anchor="middle">&gt;4: Spin 360° then use remainder</text>
 
     <!-- Pivot notes -->
-    <text x="730" y="842" font-size="14" font-weight="bold" text-anchor="middle">Pivot Fan</text>
-    <text x="730" y="862" font-size="12" fill="#64748b" text-anchor="middle">Pivot on locked wheel (45° / unit)</text>
+    <text x="722" y="785" font-size="15" font-weight="bold" text-anchor="middle">Pivot Fan</text>
+    <text x="722" y="805" font-size="12" fill="#64748b" text-anchor="middle">Pivot on pinned wheel (4 increments)</text>
+    <text x="722" y="822" font-size="10.5" fill="#94a3b8" text-anchor="middle">&gt;4: Pivot 180° then use remainder</text>
   </g>
 </svg>"""
     return svg
@@ -857,121 +835,9 @@ def main():
         with open(preview_svg_path, "w", encoding="utf-8") as f:
             f.write(preview_svg)
 
-        png_rendered = False
-        try:
-            import cairosvg
-            cairosvg.svg2png(bytestring=preview_svg.encode("utf-8"), write_to=str(args.rules_image))
-            png_rendered = True
-        except ImportError:
-            pass
-
+        png_rendered = export_template_png(preview_svg, args.rules_image, dpi=100)
         if not png_rendered:
-            try:
-                import matplotlib
-                matplotlib.use("Agg")
-                import matplotlib.pyplot as plt
-                import matplotlib.patches as patches
-                import numpy as np
-
-                fig, ax = plt.subplots(figsize=(9, 9), dpi=100)
-                ax.set_xlim(0, 900)
-                ax.set_ylim(900, 0)
-                ax.axis("off")
-
-                # 1. Straight template (Left)
-                rect = patches.Rectangle((60, 60), 180, 560, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
-                ax.add_patch(rect)
-                ax.plot([60, 240], [620, 620], color="#0f172a", linewidth=4.5)
-                ax.text(150, 642, "START (ALIGN FRONT / REAR)", fontsize=8.5, fontweight="bold", ha="center", color="#0f172a")
-
-                for k in range(1, 6):
-                    ly = 620 - k * 105
-                    if k < 5:
-                        ax.plot([60, 240], [ly, ly], color="#2563eb", linewidth=2.5)
-                    ax.text(150, ly + 55, f"L{k} R{k}", fontsize=13, fontweight="bold", ha="center", va="center", color="#1e293b")
-
-                ax.text(150, 820, "Straight (1 to 5)", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
-                ax.text(150, 842, "Place at rear for Reverse (-1 to -5)", fontsize=10, ha="center", color="#475569")
-
-                # 2. Curve template (Top Right)
-                arc_wedge = patches.Wedge((640, 420), 320, 180, 270, width=150, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
-                ax.add_patch(arc_wedge)
-
-                ax.plot([320, 470], [420, 420], color="#0f172a", linewidth=4.5)
-                ax.text(395, 442, "START FRONT", fontsize=8.5, fontweight="bold", ha="center", color="#0f172a")
-
-                th1 = np.radians(180 + 45.0)
-                p1_out = (640 + 320 * np.cos(th1), 420 + 320 * np.sin(th1))
-                p1_in = (640 + 170 * np.cos(th1), 420 + 170 * np.sin(th1))
-                ax.plot([p1_out[0], p1_in[0]], [p1_out[1], p1_in[1]], color="#2563eb", linewidth=2.5)
-                ax.text((p1_out[0]+p1_in[0])/2 - 20, (p1_out[1]+p1_in[1])/2 + 25, "L3 R1", fontsize=11, fontweight="bold", color="#1e293b", ha="center")
-
-                th2 = np.radians(180 + 90.0)
-                p2_out = (640 + 320 * np.cos(th2), 420 + 320 * np.sin(th2))
-                p2_in = (640 + 170 * np.cos(th2), 420 + 170 * np.sin(th2))
-                ax.plot([p2_out[0], p2_in[0]], [p2_out[1], p2_in[1]], color="#2563eb", linewidth=2.5)
-                ax.text((p2_out[0]+p2_in[0])/2 - 20, (p2_out[1]+p2_in[1])/2 + 25, "L4 R2", fontsize=11, fontweight="bold", color="#1e293b", ha="center")
-
-                ax.text(640, 460, "Curve Template", fontsize=13, fontweight="bold", ha="center", color="#0f172a")
-                ax.text(640, 482, "Flip for Left Turn | Place at rear for Reverse", fontsize=10, ha="center", color="#475569")
-
-                # 3. Spin disc (Bottom Center)
-                cx_s, cy_s = 350, 680
-                r_s = 70
-                spin_circ = patches.Circle((cx_s, cy_s), r_s, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
-                ax.add_patch(spin_circ)
-                ax.plot(cx_s, cy_s, "ko", markersize=4)
-
-                ax.plot([cx_s, cx_s], [cy_s, cy_s - r_s], color="#0f172a", linewidth=4)
-                ax.text(cx_s, cy_s - r_s - 8, "START / L4 R-4 (360°)", fontsize=7.5, fontweight="bold", ha="center", color="#0f172a")
-
-                for k, lbl in [(1, "L1 R-1 (90°)"), (2, "L2 R-2 (180°)"), (3, "L3 R-3 (270°)")]:
-                    ang = np.radians(k * 90.0 - 90.0)
-                    px = cx_s + r_s * np.cos(ang)
-                    py = cy_s + r_s * np.sin(ang)
-                    ax.plot([cx_s, px], [cy_s, py], color="#2563eb", linewidth=2.2)
-                    tx = cx_s + (r_s * 0.6) * np.cos(ang) + (10 if np.cos(ang) > 0 else (-10 if np.cos(ang) < 0 else 0))
-                    ty = cy_s + (r_s * 0.6) * np.sin(ang) + (12 if np.sin(ang) > 0 else (-6 if np.sin(ang) < 0 else 0))
-                    ax.text(tx, ty, lbl, fontsize=8, fontweight="bold", color="#1e293b", ha="center")
-
-                ax.text(cx_s, 785, "Spin on Spot (90° / unit)", fontsize=12, fontweight="bold", ha="center", color="#0f172a")
-                ax.text(cx_s, 807, "Rotate on center | Flip for CCW", fontsize=9.5, ha="center", color="#475569")
-                ax.text(cx_s, 825, ">4: L4 R-4 (360°) + Remainder", fontsize=8.5, ha="center", color="#64748b")
-
-                # 4. Pivot fan (Bottom Right)
-                cx_p, cy_p = 720, 680
-                r_p = 140
-                piv_wedge = patches.Wedge((cx_p, cy_p), r_p, 180, 360, facecolor="#f8fafc", edgecolor="#1e293b", linewidth=2.5)
-                ax.add_patch(piv_wedge)
-                ax.plot(cx_p, cy_p, "ro", markersize=7)
-                ax.text(cx_p, cy_p + 15, "PIVOT WHEEL", fontsize=8, fontweight="bold", color="#ef4444", ha="center")
-
-                ax.plot([cx_p - r_p, cx_p], [cy_p, cy_p], color="#0f172a", linewidth=4)
-                ax.text(cx_p - r_p/2, cy_p + 16, "START FRONT", fontsize=8, fontweight="bold", ha="center", color="#0f172a")
-
-                for k in [1, 2, 3, 4]:
-                    th_p = np.radians(180 + k * 45.0)
-                    px = cx_p + r_p * np.cos(th_p)
-                    py = cy_p + r_p * np.sin(th_p)
-                    ax.plot([cx_p, px], [cy_p, py], color="#2563eb", linewidth=2.2)
-                    if k == 4:
-                        ax.text(cx_p + r_p/2, cy_p + 16, "L4 R0 (180°)", fontsize=8.5, fontweight="bold", color="#1d4ed8", ha="center")
-                    else:
-                        deg_lbl = k * 45
-                        tx = cx_p + (r_p * 0.65) * np.cos(th_p)
-                        ty = cy_p + (r_p * 0.65) * np.sin(th_p)
-                        ax.text(tx, ty, f"L{k} R0 ({deg_lbl}°)", fontsize=8, fontweight="bold", color="#1e293b", ha="center")
-
-                ax.text(cx_p, 815, "Pivot Fan (45° / unit, 4 = 180°)", fontsize=12, fontweight="bold", ha="center", color="#0f172a")
-                ax.text(cx_p, 835, "Flip for (0, L) | Back for Reverse", fontsize=9.5, ha="center", color="#475569")
-                ax.text(cx_p, 852, ">4: L4 R0 (180°) + Remainder", fontsize=8.5, ha="center", color="#64748b")
-
-                plt.tight_layout()
-                fig.savefig(str(args.rules_image), dpi=100)
-                plt.close(fig)
-                png_rendered = True
-            except Exception as e:
-                print(f"Warning: Could not render PNG preview ({e}). SVG preview is available at {preview_svg_path}")
+            print(f"Warning: Could not render PNG preview. SVG preview is available at {preview_svg_path}")
 
         if png_rendered:
             print(f"Updated rulebook graphic at {args.rules_image}")
