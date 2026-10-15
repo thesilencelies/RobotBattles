@@ -35,6 +35,27 @@
             "module": "playtest.server",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Regenerate and Upload Rules",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/upload_rules.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build Rules PDF"
+        },
+        {
+            "name": "Regenerate and Upload Rules (Force)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/upload_rules.py",
+            "args": [
+                "--force"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build Rules PDF"
         }
     ]
 }

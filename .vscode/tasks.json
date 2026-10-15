@@ -32,6 +32,57 @@
                 "panel": "shared"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Build Rules PDF",
+            "command": "pdflatex",
+            "type": "shell",
+            "args": [
+                "-interaction=nonstopmode",
+                "combat_robotics_game.tex"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/rules"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Upload Rules",
+            "command": "python3",
+            "type": "shell",
+            "args": [
+                "upload_rules.py"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build and Upload Rules",
+            "type": "shell",
+            "command": "echo 'Rules successfully built and uploaded.'",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Build Rules PDF",
+                "Upload Rules"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
         }
     ]
 }
