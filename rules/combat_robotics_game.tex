@@ -120,6 +120,13 @@
 % PAGE 1: OVERVIEW & CARD ANATOMY
 % ==============================================================================
 
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{pictures/backs/TitleSpread.png}
+\end{figure}
+
+
 \begin{center}
   {\Huge\bfseries\color{primaryDark} Robot Battles}\\[0.3em]
   {\Large\color{accentBlue} Combat Robotics Card \& Miniature Game}\\[0.2em]
@@ -381,7 +388,6 @@ Movement units are found on the straight movement template. Where an effect says
 % ==============================================================================
 
 \subsection{Movement Examples}
-\enlargethispage{2.5\baselineskip}
 
 \vspace{0.2em}
 \noindent\textbf{1. Straight Driving and Reverse Maneuvers (\texttt{3/3} vs \texttt{-2/-2})}
@@ -398,12 +404,27 @@ Movement units are found on the straight movement template. Where an effect says
   \item \textbf{(\texttt{-2/-1}):} Placed face-up against the rear bumper; robot backs up along the curved track.
 \end{itemize}
 
-\vspace{0.2em}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/diagram_movement_straight_curve.png}
+  \caption{Straight Driving, Reverse Maneuvers, and Curved Arcs with Face-Down Flipping}
+  \label{fig:diagram_movement_straight_curve}
+\end{figure}
+
+\clearpage
+
 \noindent\textbf{3. Pivot Fan vs. Spin Disc Rotations (\texttt{2/0} vs \texttt{2/-2})}
 \begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
   \item \textbf{(\texttt{2/0}):} Right wheel is locked. Place Pivot Fan red marker on the \textbf{right wheel}. Robot swings clockwise around that wheel by $90^\circ$ ($2 \times 45^\circ$) to line \textbf{L2 R0}.
   \item \textbf{(\texttt{2/-2}):} Tracks counter-rotate equally. Center the Spin Disc under the chassis. Robot rotates $180^\circ$ clockwise ($2 \times 90^\circ$) to \textbf{L2 R-2} on the spot with zero displacement.
 \end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/diagram_movement_pivot_spin.png}
+  \caption{Locked-Wheel Pivot Fan vs. In-Place Spin Disc Rotations}
+  \label{fig:diagram_movement_pivot_spin}
+\end{figure}
 
 \vspace{0.2em}
 \noindent\textbf{4. Movements Beyond the Template (Remainder Chaining: \texttt{5/0}, \texttt{5/-5}, \texttt{6/6})}
@@ -418,29 +439,6 @@ Movement units are found on the straight movement template. Where an effect says
 \begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
   \item \textbf{Tight Hook Turn (\texttt{3/-1}):} Track 1 drives forward 3 units while opposing track reverses 1 unit. Uses Tight Turn Template (3:-1 ratio). Counter-rotation with unequal speeds swings robot $180^\circ$ while translating slightly forward.
 \end{itemize}
-
-\vspace{0.2em}
-% \begin{table}[H]
-% \centering
-% \small
-% \renewcommand{\arraystretch}{1.12}
-% \begin{tabularx}{\textwidth}{l c c X}
-%   \toprule
-%   \textbf{Drive Pair} & \textbf{Category} & \textbf{Template Used} & \textbf{Physical Placement \& Execution Rule} \\
-%   \midrule
-%   $L = R > 0$ & Straight & Straight (1--5) & Front baseline. Move forward with fixed heading. \\
-%   $L = R < 0$ & Reverse & Straight (1--5) & Rear baseline. Reverse backward with fixed heading. \\
-%   $L > R > 0$ & Curve (Right) & Curve Arc & Front baseline, face-up. Turn right by $(L - R)\times 45^\circ$. \\
-%   $R > L > 0$ & Curve (Left) & Curve Arc & Front baseline, \textbf{flip face-down}. Turn left by $(R - L)\times 45^\circ$. \\
-%   $L > 0, R = 0$ & Pivot (Right) & Pivot Fan & Red pin on right wheel. Pivot CW by $L \times 45^\circ$ (4 = $180^\circ$). \\
-%   $L = 0, R > 0$ & Pivot (Left) & Pivot Fan & \textbf{Flip face-down}, pin on left wheel. Pivot CCW by $R \times 45^\circ$. \\
-%   $L = -R$ & Spin Disc & Spin Disc & Centered under chassis. Spin on spot by $L \times 90^\circ$ (4 = $360^\circ$). \\
-%   $L > 4$ or $|R| > 4$ & Chaining & Same Template & Move to template end, then apply template again for remainder. \\
-%   \bottomrule
-% \end{tabularx}
-% \caption{Differential Drive Permutation Reference Guide}
-% \label{tab:drive_ref}
-% \end{table}
 
 \clearpage
 
@@ -459,6 +457,13 @@ For a collision, first determine which octant of each robot makes contact with t
   \item \textbf{Inert Contact:} Otherwise, it is an inert contact.
 \end{itemize}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/diagram_contact_point.png}
+  \caption{Determining Contact Point along Movement Paths and Contact Classification}
+  \label{fig:diagram_contact_point}
+\end{figure}
+
 \subsection{Inert Contact (Pushing Match)}
 
 Essentially a pushing match between colliding chassis surfaces:
@@ -470,9 +475,12 @@ Essentially a pushing match between colliding chassis surfaces:
   \item If the robots are still touching, both robots are moved back a full unit to separate them.
 \end{enumerate}
 
-\begin{draftnotebox}
-  \textbf{Editor Note:} [Needs a diagram here]
-\end{draftnotebox}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth]{images/diagram_inert_contact.png}
+  \caption{Step-by-Step Resolution of Inert Contact (Pushing Match)}
+  \label{fig:diagram_inert_contact}
+\end{figure}
 
 \subsection{Active Contact (Weapon Hits)}
 
@@ -501,7 +509,6 @@ When weapons collide with an opponent's chassis or components:
 % ==============================================================================
 
 \section{Combat Resolution, Damage \& Status Effects}
-\enlargethispage{2.0\baselineskip}
 
 \subsection{Throws \& Inversion}
 
@@ -510,6 +517,12 @@ If the throw strength minus the thrown distance is greater than the flip value o
 After the throw the thrown robot takes feedback at a randomly chosen component equal to half the throw strength. If the robot hits a wall, it instead takes feedback equal to the full throw strength.
 The component is chosen randomly by dropping a dice onto the robot and seeing which component it lands on.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/diagram_active_contact.png}
+  \caption{Active Weapon Hits, Radiating Throws, Inversion Check, and Arena Hazards}
+  \label{fig:diagram_active_contact}
+\end{figure}
 
 \subsection{Damage Resolution}
 
@@ -533,6 +546,13 @@ to each component that supplies it, shared equally if there are multiple compone
   \item[Inverted:] While a robot is inverted, weapons, drive, and component abilities (such as wedges and forks) without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
   \item[Raised:] Some components (mostly forks) will make the opponent raised during contact if any part of the opposing robot is in line with them. A robot that is raised has its flip strength halved, its throw strength reduced by 2, and its motion does not contribute to the motion in inertial contact.
 \end{description}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/diagram_forks_raised.png}
+  \caption{Fork Engagement (Raised Status) and Mechanical Penalties}
+  \label{fig:diagram_forks_raised}
+\end{figure}
 
 \begin{summarybox}{Damage \& Feedback Rules Summary}
 \begin{itemize}[leftmargin=*]
