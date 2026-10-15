@@ -367,7 +367,7 @@ def main():
     # Wide robots (Bot B & Nightwing)
     create_miniature("mini_bot_wide_line.png", chassis="Wide", color=AMBER_NOTE, name="B", weapon="Line")
     create_miniature("mini_bot_ghost_wide_line.png", chassis="Wide", color=AMBER_NOTE, name="B", weapon="Line", ghost=True)
-    create_miniature("mini_bot_nightwing.png", chassis="Wide", color=NIGHTWING_INDIGO, name="A", weapon="Circle", forks=True)
+    create_miniature("mini_bot_nightwing.png", chassis="Wide", color=NIGHTWING_INDIGO, name="A", weapon="Circle", forks=False)
     create_miniature("mini_bot_opponent_square.png", chassis="Square", color=CRIMSON, name="B", weapon="Circle")
 
     print("All miniature sprites generated successfully!")
