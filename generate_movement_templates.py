@@ -5,10 +5,11 @@ generate_movement_templates.py
 Generates physical movement templates for every permutation of differential drive
 settings from -5 to +5 on each side (121 total permutations).
 
-Consolidated to 8 physical templates:
+Consolidated to 6 physical templates:
 1. Core (3 Pieces): Straight, Spin Disc, Pivot Fan
-2. Forward Curves (3 Pieces): Gentle Curve (45°), Medium Curve (90°), Sharp Curve (135°-180°)
-3. Counter-Drive Tight Turns (2 Pieces): Tight Hook (R = -1), Tight Counter-Spin (R <= -2)
+2. Forward Curves (3 Pieces): Gentle Curve, Medium Curve, Sharp Curve
+Asymmetric counter-drives (opposite signs): Resolved by first spinning on the spot
+(Spin Disc) for the common magnitude, then using the Pivot Fan for the remainder.
 
 Symmetries:
 1. Left/Right symmetry: Flipping the template horizontally turns rightward curves
@@ -124,23 +125,24 @@ def map_permutation_to_template(
         if pair in ((3, 2), (4, 3), (5, 4)):
             t_id = "curve_gentle"
             name = "Gentle Curve Template"
-        elif pair in ((2, 1), (3, 1), (4, 2), (5, 3)):
+        elif pair in ((2, 1), (4, 2), (5, 3)):
             t_id = "curve_medium"
             name = "Medium Curve Template"
-        else:  # (4, 1), (5, 2), (5, 1)
+        else:  # (3, 1), (4, 1), (5, 2), (5, 1)
             t_id = "curve_sharp"
             name = "Sharp Curve Template"
         target_line = f"L{c_l} R{c_r}"
-    else:  # c_r < 0
-        cat = "curve_tight"
-        pair = (c_l, c_r)
-        if pair in ((2, -1), (3, -1), (4, -1), (4, -2), (5, -1), (5, -2)):
-            t_id = "tight_hook"
-            name = "Tight Hook Template"
-        else:  # (3, -2), (4, -3), (5, -3), (5, -4)
-            t_id = "tight_spin"
-            name = "Tight Counter-Spin Template"
-        target_line = f"L{c_l} R{c_r}"
+    else:  # c_r < 0 (asymmetric with negative: e.g. 3/-1, 3/-2)
+        cat = "asymmetric_counter"
+        t_id = "spin_pivot"
+        name = "Spin Disc + Pivot Fan"
+        k = -c_r  # spin magnitude = min(c_l, |c_r|) since c_l > |c_r| > 0
+        rem = c_l - k  # pivot remainder magnitude
+        target_line = f"Spin L{k} R-{k} ({k*90}°), then Pivot L{rem} R0 ({rem*45}°)"
+        remainder_note = (
+            f"First spin on spot {k*90}° using Spin Disc (L{k} R-{k}), "
+            f"then pivot {rem*45}° using Pivot Fan (L{rem} R0). Total: {k*90 + rem*45}°."
+        )
 
     return {
         "template_id": t_id,
@@ -561,18 +563,17 @@ def build_all_movement_templates(
         )
     )
 
-    # 5. Medium Curve Template: (2, 1), (3, 1), (4, 2), (5, 3)
+    # 5. Medium Curve Template: (2, 1), (4, 2), (5, 3)
     # Strict multiples (2, 1) and (4, 2) together on same piece
     templates.append(
         MovementTemplate(
             template_id="curve_medium",
             name="Medium Curve Template",
             category="curve_forward",
-            pairs=[(2, 1), (3, 1), (4, 2), (5, 3)],
+            pairs=[(2, 1), (4, 2), (5, 3)],
             nominal_rc=97.5,
             pair_angles={
                 (2, 1): math.radians(35.0),
-                (3, 1): math.radians(47.0),
                 (4, 2): math.radians(70.0),
                 (5, 3): math.radians(94.0),
             },
@@ -581,59 +582,19 @@ def build_all_movement_templates(
         )
     )
 
-    # 6. Sharp Curve Template: (4, 1), (5, 2), (5, 1)
+    # 6. Sharp Curve Template: (3, 1), (4, 1), (5, 2), (5, 1)
     templates.append(
         MovementTemplate(
             template_id="curve_sharp",
             name="Sharp Curve Template",
             category="curve_forward",
-            pairs=[(4, 1), (5, 2), (5, 1)],
+            pairs=[(3, 1), (4, 1), (5, 2), (5, 1)],
             nominal_rc=55.0,
             pair_angles={
+                (3, 1): math.radians(70.0),
                 (4, 1): math.radians(105.0),
                 (5, 2): math.radians(145.0),
                 (5, 1): math.radians(180.0),
-            },
-            wheelbase=wheelbase,
-            drive_unit=drive_unit,
-        )
-    )
-
-    # 7. Tight Hook Template: (2, -1), (3, -1), (4, -1), (4, -2), (5, -1), (5, -2)
-    # Strict multiples (2, -1) and (4, -2) together on same piece
-    templates.append(
-        MovementTemplate(
-            template_id="tight_hook",
-            name="Tight Hook Template",
-            category="curve_tight",
-            pairs=[(2, -1), (3, -1), (4, -1), (4, -2), (5, -1), (5, -2)],
-            nominal_rc=48.0,
-            pair_angles={
-                (2, -1): math.radians(125.0),
-                (3, -1): math.radians(170.0),
-                (4, -1): math.radians(215.0),
-                (4, -2): math.radians(250.0),
-                (5, -1): math.radians(285.0),
-                (5, -2): math.radians(315.0),
-            },
-            wheelbase=wheelbase,
-            drive_unit=drive_unit,
-        )
-    )
-
-    # 8. Tight Counter-Spin Template: (3, -2), (4, -3), (5, -3), (5, -4)
-    templates.append(
-        MovementTemplate(
-            template_id="tight_spin",
-            name="Tight Counter-Spin Template",
-            category="curve_tight",
-            pairs=[(3, -2), (4, -3), (5, -3), (5, -4)],
-            nominal_rc=42.0,
-            pair_angles={
-                (3, -2): math.radians(165.0),
-                (4, -3): math.radians(225.0),
-                (5, -3): math.radians(265.0),
-                (5, -4): math.radians(305.0),
             },
             wheelbase=wheelbase,
             drive_unit=drive_unit,
@@ -652,13 +613,13 @@ def generate_printable_sheet_svg(
     sheet_width_mm: float = 650.0,
     sheet_height_mm: float = 650.0,
 ) -> str:
-    """Arranges the 8 consolidated templates onto a single printable sheet."""
+    """Arranges the 6 consolidated templates onto a single printable sheet."""
     svg_parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {sheet_width_mm} {sheet_height_mm}" '
         f'width="{sheet_width_mm}mm" height="{sheet_height_mm}mm">',
         '  <rect width="100%" height="100%" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />',
-        '  <text x="20" y="22" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0f172a">ROBOT BATTLES - MOVEMENT TEMPLATES (8 CONSOLIDATED TEMPLATES)</text>',
-        '  <text x="20" y="32" font-family="sans-serif" font-size="7.5" fill="#475569">Complete range -5 to +5. Flip face-down for left turns. Place at rear for reverse.</text>',
+        '  <text x="20" y="22" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0f172a">ROBOT BATTLES - MOVEMENT TEMPLATES (6 CONSOLIDATED TEMPLATES)</text>',
+        '  <text x="20" y="32" font-family="sans-serif" font-size="7.5" fill="#475569">Complete range -5 to +5. Flip face-down for left turns. Place at rear for reverse. Asymmetric negative drives: spin on spot, then pivot.</text>',
         '  <!-- 50mm Calibration Scale Bar -->',
         '  <line x1="550" y1="20" x2="600" y2="20" stroke="#0f172a" stroke-width="2.5" />',
         '  <text x="575" y="27" font-family="sans-serif" font-size="6" fill="#0f172a" text-anchor="middle">50 mm SCALE BAR</text>',
@@ -752,7 +713,7 @@ def generate_permutation_markdown(perms: List[Dict[str, Any]]) -> str:
     md = [
         "# Movement Permutation Catalog (-5 to +5)\n\n",
         "This table details all **121 combinations** of Left and Right drive settings, "
-        "the physical template to use across the **8 consolidated templates**, and whether to **flip** "
+        "the physical template to use across the **6 consolidated templates**, and whether to **flip** "
         "the template (for left turns) or place it at the **rear** (for reverse).\n\n",
         "| Left | Right | Template Name | Target Line | Flip? | Position | Category |\n",
         "|:---:|:---:|:---|:---:|:---:|:---:|:---|\n",
@@ -794,7 +755,7 @@ def export_template_png(svg_str: str, png_path: Path, dpi: int = 300) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate physical movement templates for every permutation from -5 to 5 (8 consolidated templates)."
+        description="Generate physical movement templates for every permutation from -5 to 5 (6 consolidated templates)."
     )
     parser.add_argument(
         "--output-dir",

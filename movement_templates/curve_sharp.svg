@@ -9,8 +9,10 @@
 <path d="M 47.5 102.5 A 55.0 55.0 0 0 1 157.5 102.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
 <line x1="15.0" y1="102.5" x2="80.0" y2="102.5" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
 <g transform="translate(47.5, 114.5)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
+<line x1="94.8" y1="81.4" x2="72.6" y2="20.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(57.4, 71.0) rotate(-55.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R1</text></g>
 <line x1="108.3" y1="80.8" x2="125.1" y2="18.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<g transform="translate(69.0, 58.9) rotate(-37.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R1</text></g>
+<g transform="translate(100.1, 47.6) rotate(-2.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R1</text></g>
 <line x1="120.9" y1="89.6" x2="174.2" y2="52.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <g transform="translate(134.0, 57.4) rotate(35.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R2</text></g>
 <line x1="125.0" y1="102.5" x2="190.0" y2="102.5" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />

@@ -3,7 +3,7 @@ tests/test_movement_templates.py
 
 Tests for the movement template generator and permutation mapping.
 Verifies complete coverage of all 121 permutations from -5 to +5 on both tracks,
-the minimality of the 8 consolidated physical templates, and SVG rendering integrity.
+the minimality of the 6 consolidated physical templates, and SVG rendering integrity.
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ class TestMovementTemplates(unittest.TestCase):
                 self.assertEqual(p["category"], "stop")
                 self.assertEqual(p["template_id"], "stop")
             else:
-                self.assertIn(p["category"], ["straight", "spin", "pivot", "curve_forward", "curve_tight"])
+                self.assertIn(p["category"], ["straight", "spin", "pivot", "curve_forward", "asymmetric_counter"])
                 self.assertTrue(isinstance(p["flipped"], bool))
                 self.assertTrue(isinstance(p["at_rear"], bool))
                 self.assertTrue(len(p["target_line_label"]) > 0)
@@ -56,11 +56,10 @@ class TestMovementTemplates(unittest.TestCase):
         # All 121 unique coordinate pairs checked
         self.assertEqual(len(seen_pairs), 121)
 
-        # Non-zero pairs map to the 8 physical templates
-        self.assertEqual(len(templates_used), 8)
+        # Non-zero pairs map to the 6 physical templates or asymmetric counter
         self.assertEqual(
             templates_used,
-            {"straight", "spin", "pivot", "curve_gentle", "curve_medium", "curve_sharp", "tight_hook", "tight_spin"}
+            {"straight", "spin", "pivot", "curve_gentle", "curve_medium", "curve_sharp", "spin_pivot"}
         )
 
     def test_symmetry_logic(self):
@@ -111,26 +110,25 @@ class TestMovementTemplates(unittest.TestCase):
         self.assertFalse(p_rev_right["flipped"])
         self.assertTrue(p_rev_left["flipped"])
 
-        # Forward sharp curve (4, 1) and (5, 1)
-        p_sharp = map_permutation_to_template(4, 1)
-        self.assertEqual(p_sharp["template_id"], "curve_sharp")
-        self.assertEqual(p_sharp["target_line_label"], "L4 R1")
+        # Forward sharp curve (3, 1), (4, 1), and (5, 1)
+        p_sharp_31 = map_permutation_to_template(3, 1)
+        p_sharp_41 = map_permutation_to_template(4, 1)
+        self.assertEqual(p_sharp_31["template_id"], "curve_sharp")
+        self.assertEqual(p_sharp_31["target_line_label"], "L3 R1")
+        self.assertEqual(p_sharp_41["template_id"], "curve_sharp")
+        self.assertEqual(p_sharp_41["target_line_label"], "L4 R1")
 
-        # Tight hook (2, -1) and strict multiple (4, -2) on SAME template
-        p_hook_21 = map_permutation_to_template(2, -1)
-        p_hook_42 = map_permutation_to_template(4, -2)
-        p_hook_31 = map_permutation_to_template(3, -1)
-        self.assertEqual(p_hook_21["template_id"], "tight_hook")
-        self.assertEqual(p_hook_42["template_id"], "tight_hook")
-        self.assertEqual(p_hook_31["template_id"], "tight_hook")
-        self.assertEqual(p_hook_21["target_line_label"], "L2 R-1")
-        self.assertEqual(p_hook_42["target_line_label"], "L4 R-2")
-        self.assertEqual(p_hook_31["target_line_label"], "L3 R-1")
+        # Asymmetric drive with negative (3, -1) and (3, -2): resolved via spin then pivot
+        p_asym_31 = map_permutation_to_template(3, -1)
+        self.assertEqual(p_asym_31["template_id"], "spin_pivot")
+        self.assertEqual(p_asym_31["category"], "asymmetric_counter")
+        self.assertIn("Spin L1 R-1", p_asym_31["target_line_label"])
+        self.assertIn("Pivot L2 R0", p_asym_31["target_line_label"])
 
-        # Tight counter-spin (4, -3) and (3, -2)
-        p_tight_spin = map_permutation_to_template(4, -3)
-        self.assertEqual(p_tight_spin["template_id"], "tight_spin")
-        self.assertEqual(p_tight_spin["target_line_label"], "L4 R-3")
+        p_asym_32 = map_permutation_to_template(3, -2)
+        self.assertEqual(p_asym_32["template_id"], "spin_pivot")
+        self.assertIn("Spin L2 R-2", p_asym_32["target_line_label"])
+        self.assertIn("Pivot L1 R0", p_asym_32["target_line_label"])
 
         # Spin CW (2, -2) vs Spin CCW (-2, 2)
         p_spin_cw = map_permutation_to_template(2, -2)
@@ -149,9 +147,9 @@ class TestMovementTemplates(unittest.TestCase):
         self.assertTrue(p_piv_l["flipped"])
 
     def test_consolidated_template_set(self):
-        """Verify the 8 consolidated MovementTemplate definitions."""
+        """Verify the 6 consolidated MovementTemplate definitions."""
         templates = build_all_movement_templates()
-        self.assertEqual(len(templates), 8)
+        self.assertEqual(len(templates), 6)
 
         categories = {}
         for t in templates:
@@ -171,7 +169,7 @@ class TestMovementTemplates(unittest.TestCase):
         self.assertEqual(categories["spin"], 1)
         self.assertEqual(categories["pivot"], 1)
         self.assertEqual(categories["curve_forward"], 3)
-        self.assertEqual(categories["curve_tight"], 2)
+        self.assertEqual(len(categories), 4)
 
     def test_sheet_and_preview_svg(self):
         """Verify multi-template sheet and rulebook preview generation."""

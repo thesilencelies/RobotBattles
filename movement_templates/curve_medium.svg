@@ -11,10 +11,8 @@
 <g transform="translate(47.5, 157.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
 <line x1="91.8" y1="107.7" x2="38.5" y2="70.4" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <g transform="translate(52.0, 115.7) rotate(-72.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R1</text></g>
-<line x1="100.7" y1="97.5" x2="56.3" y2="49.9" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<g transform="translate(71.4, 81.0) rotate(-49.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R1</text></g>
 <line x1="122.8" y1="83.9" x2="100.5" y2="22.8" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<g transform="translate(94.1, 61.9) rotate(-31.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R2</text></g>
+<g transform="translate(85.6, 67.6) rotate(-37.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R2</text></g>
 <line x1="149.5" y1="80.2" x2="154.1" y2="15.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
 <g transform="translate(131.4, 48.4) rotate(-8.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R3</text></g>
 </g>

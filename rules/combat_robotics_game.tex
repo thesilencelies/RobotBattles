@@ -374,6 +374,7 @@ Movement units are found on the straight movement template. Where an effect says
       \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns ($L \ge R$). If turning left ($R > L$), flip the template face-down.
       \item \textbf{Reverse Maneuvers (Rear Placement):} If drive is negative, place the template baseline against the \textbf{back} (rear) of the robot; move backward to the target line.
       \item \textbf{Rotations \& Pivots:} In-place spins ($L = -R$) use the center spin disc in $90^\circ$ increments per unit ($4/-4 = 360^\circ$). Pivots on a locked wheel ($R = 0$ or $L = 0$) use the pivot fan in $45^\circ$ increments per unit ($4/0 = 180^\circ$ semicircle).
+      \item \textbf{Asymmetric Drive with a Negative:} When drive choices have opposite signs with unequal magnitudes (e.g., \texttt{3/-1} or \texttt{3/-2}), resolve the movement in two steps: first spin on the spot using the Spin Disc for the shared magnitude, then from that new heading use the Pivot Fan for the remainder.
       \item \textbf{Movements Beyond the Template:} If drive exceeds markings (e.g., $5/0$, $5/-5$, or boosted drive), move to the template end, then place another template for the remainder.
       \item \textbf{Path Overlap \& Collision Check:} Overlapping paths cause collisions at contact.
     \end{enumerate}
@@ -557,10 +558,10 @@ Movement units are found on the straight movement template. Where an effect says
 \end{itemize}
 
 \vspace{0.2em}
-\noindent\textbf{5. Counter-Drive Tight Turns (\texttt{3/-1} vs \texttt{3/-2})}
+\noindent\textbf{5. Asymmetric Drive with a Negative (\texttt{3/-1} and \texttt{3/-2})}
 \begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-  \item \textbf{Tight Hook Turn (\texttt{3/-1}):} Track 1 drives forward 3 units while opposing track reverses 1 unit. Uses the Tight Hook Template ($R = -1$). Counter-rotation with unequal speeds swings the robot $180^\circ$ while translating slightly forward to line \textbf{L3 R-1}.
-  \item \textbf{Tight Counter-Spin (\texttt{3/-2}):} Outer track drives forward 3 units while opposing track reverses 2 units. Uses the Tight Counter-Spin Template ($R \le -2$), placing the inner wheel at the marked radius and stopping at line \textbf{L3 R-2} for an intense $225^\circ$ turn.
+  \item \textbf{(\texttt{3/-1}):} Track 1 drives forward 3 units while opposing track reverses 1 unit (shared magnitude $\min(3, 1) = 1$). First, spin on the spot 1 unit clockwise using the Spin Disc (\textbf{L1 R-1}, $90^\circ$). Then from this new facing, place the Pivot Fan at the front bumper (pinned at the inner track) and advance the remainder $3 - 1 = 2$ units (\textbf{L2 R0}, $90^\circ$). Total heading change is $90^\circ + 90^\circ = \mathbf{180^\circ}$.
+  \item \textbf{(\texttt{3/-2}):} Outer track drives forward 3 units while opposing track reverses 2 units (shared magnitude $\min(3, 2) = 2$). First, spin on the spot 2 units clockwise using the Spin Disc (\textbf{L2 R-2}, $180^\circ$). Then from this new facing, use the Pivot Fan to advance the remainder $3 - 2 = 1$ unit (\textbf{L1 R0}, $45^\circ$). Total heading change is $180^\circ + 45^\circ = \mathbf{225^\circ}$.
 \end{itemize}
 
 \clearpage
