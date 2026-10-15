@@ -229,20 +229,27 @@ class TestCombatSimulation(unittest.TestCase):
     def test_card_resource_rendering(self):
         from cardCreation.generateCards import parse_resources
 
-        # 2XWW -> 1 fixed W + 2X multiplier W
+        # 2XWW -> 1 fixed W in top row + 2X multiplier W in bottom row
         out_2xww = parse_resources("2XWW")
         self.assertIn(r"\resourceW", out_2xww)
         self.assertIn("2X", out_2xww)
+        self.assertIn(r"\parbox", out_2xww)
 
-        # XWW -> 1 fixed W + X multiplier W
+        # W2XW -> equivalent to 2XWW: 1 fixed W in top row + 2X multiplier W in bottom row
+        out_w2xw = parse_resources("W2XW")
+        self.assertEqual(out_w2xw, out_2xww)
+
+        # XWW -> 1 fixed W in top row + X multiplier W in bottom row
         out_xww = parse_resources("XWW")
         self.assertIn(r"\resourceW", out_xww)
         self.assertIn("X", out_xww)
+        self.assertIn(r"\parbox", out_xww)
 
-        # XWWW -> 2 fixed W + X multiplier W
+        # XWWW -> 2 fixed W in top row + X multiplier W in bottom row
         out_xwww = parse_resources("XWWW")
         self.assertIn(r"\resourceW\hspace{1.5pt}\resourceW", out_xwww)
         self.assertIn("X", out_xwww)
+        self.assertIn(r"\parbox", out_xwww)
 
         # XXW -> XxX multiplier W
         out_xxw = parse_resources("XXW")

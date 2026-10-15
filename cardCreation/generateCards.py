@@ -149,7 +149,8 @@ def find_component_image(picture_field: str = "") -> str:
 
 def format_resource_item(prefix: str, char: str) -> str:
     """Formats a single resource item, repeated icons, or fixed + multiplier symbols."""
-    if prefix and all(c == char for c in prefix):
+    char = char.upper()
+    if prefix and all(c.upper() == char for c in prefix):
         count = len(prefix) + 1
         icons = [f"\\resource{char}" for _ in range(count)]
         if count <= 2:
@@ -162,23 +163,28 @@ def format_resource_item(prefix: str, char: str) -> str:
             row2 = r"\hspace{1.5pt}".join(icons[top_count:])
             return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
     elif prefix:
-        # Check if prefix contains an algebraic multiplier with fixed symbols (e.g. "2XW", "XWW", "XW")
-        # In notations like "2XWW", regex captures prefix="2XW", char="W".
-        # Fixed symbols should be visualized first, followed by multiplier symbols.
-        mult_match = re.match(r"^(\d*(?:XxX|XX|X|\d+x\d+))([ECSMWPD]*)$", prefix, re.IGNORECASE)
-        if mult_match:
-            mult_expr, extra_icons = mult_match.groups()
+        # Check if prefix contains an algebraic multiplier with fixed symbols, e.g.:
+        # - Multiplier before symbols (e.g. "2XW", "XWW", "XWWW" where char="W")
+        # - Symbols before multiplier (e.g. "W2X", "WWX" where char="W" as in "W2XW", "WWXW")
+        mult_after_match = re.match(r"^(\d*(?:XxX|XX|X|\d+x\d+))([ECSMWPD]*)$", prefix, re.IGNORECASE)
+        mult_before_match = re.match(r"^([ECSMWPD]+)(\d*(?:XxX|XX|X|\d+x\d+))$", prefix, re.IGNORECASE)
+
+        if mult_after_match or mult_before_match:
+            if mult_after_match:
+                mult_expr, extra_icons = mult_after_match.groups()
+            else:
+                extra_icons, mult_expr = mult_before_match.groups()
+
             if mult_expr.upper() == "XX":
                 mult_expr = "XxX"
             esc_mult = escape_latex(mult_expr)
             mult_element = rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
 
-            fixed_count = len(extra_icons) if all(c == char for c in extra_icons) else 0
+            fixed_count = len(extra_icons) if all(c.upper() == char for c in extra_icons) else 0
             if fixed_count == 0:
                 return mult_element
-            elif fixed_count == 1:
-                return rf"$\vcenter{{\hbox{{\resource{char}}}}}\;\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
             else:
+                # Additive symbols in top row, math plus symbol in the row below them
                 fixed_icons = [rf"\resource{char}" for _ in range(fixed_count)]
                 row1 = r"\hspace{1.5pt}".join(fixed_icons)
                 row2 = mult_element
@@ -199,9 +205,10 @@ def parse_resources(res_str: str) -> str:
     Rules from terminology.md:
       - Repeated letter (e.g. EE, CC, SSS) -> multiple icons drawn.
         Repeat symbols are placed closer together, spilling into two rows if count >= 3.
-      - Number or algebraic expression followed by letter (e.g. 4XW, 2XW, XE, 6W)
-        -> prefix rendered in sans-serif text vertically center-aligned with the icon.
-      - Fixed symbols followed by multiplier symbols (e.g. 2XWW -> 1 fixed W + 2X W, XWWW -> 2 fixed W + X W).
+      - Additive symbols and math (e.g. W2XW, 2XWW, XWW, XWWW) ->
+        Pure symbols drawn in row 1, math plus symbol drawn in row 2 below them.
+      - Multiplier alone (e.g. 2XW, XXW, XE, 6W) ->
+        Prefix rendered in sans-serif text vertically center-aligned with the icon in a single row.
       - Multiplier XX is rendered as XxX (X times X).
     """
     if not res_str:
@@ -211,17 +218,24 @@ def parse_resources(res_str: str) -> str:
     if not res_str:
         return ""
 
-    # Check for single token like "EE", "CC", "SSS", "4XW", "XE", "E", "PP", "DD", "2XWW", "XWWW"
-    match_expr = re.match(r"^([0-9]*[A-Za-z]*)([ECSMWPD])$", res_str)
+    # Normalize if it contains math (X or x) and optional + / spaces, all referring to same resource
+    # e.g. "W + 2XW" -> "W2XW", "2XW + W" -> "2XWW"
+    resource_chars = set(re.findall(r"[ECSMWPD]", res_str, re.IGNORECASE))
+    cleaned_str = res_str
+    if len(resource_chars) <= 1 and re.search(r"[Xx]", res_str):
+        cleaned_str = re.sub(r"[\s+]+", "", res_str)
+
+    # Check for single token like "EE", "CC", "SSS", "4XW", "XE", "E", "PP", "DD", "2XWW", "W2XW", "XWWW"
+    match_expr = re.match(r"^([0-9A-Za-z]*)([ECSMWPD])$", cleaned_str)
     if match_expr:
         prefix, char = match_expr.groups()
         return format_resource_item(prefix, char)
 
     # Multi-token strings
-    tokens = re.findall(r"([0-9]*[A-Za-z]*[ECSMWPD]|[A-Za-z0-9+]+)", res_str)
+    tokens = re.findall(r"([0-9A-Za-z]*[ECSMWPD]|[A-Za-z0-9+]+)", res_str)
     out_elements = []
     for tok in tokens:
-        submatch = re.match(r"^([0-9]*[A-Za-z]*)([ECSMWPD])$", tok)
+        submatch = re.match(r"^([0-9A-Za-z]*)([ECSMWPD])$", tok)
         if submatch:
             prefix, char = submatch.groups()
             out_elements.append(format_resource_item(prefix, char))
