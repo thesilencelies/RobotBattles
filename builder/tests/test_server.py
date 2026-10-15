@@ -52,7 +52,7 @@ class TestServerRoutes(unittest.TestCase):
         res = self.router.dispatch("GET", "/", {}, b"")
         self.assertEqual(res.status, 200)
         self.assertIn("text/html", res.content_type)
-        self.assertIn(b"Combat Robotics - Robot Builder", res.body)
+        self.assertIn(b"Robot Battles - Robot Builder", res.body)
 
     def test_serve_static_assets(self):
         res_css = self.router.dispatch("GET", "/app.css", {}, b"")

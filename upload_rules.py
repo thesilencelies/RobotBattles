@@ -346,7 +346,7 @@ def upload(service, file_path: Path, folder_id: str, file_id: str = None, quiet=
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Publish the combat robotics rules PDF to Google Drive under 'RobotBattles'."
+        description="Publish the Robot Battles rules PDF to Google Drive under 'RobotBattles'."
     )
     parser.add_argument(
         "--force", action="store_true", help="upload even if the PDF is unchanged"

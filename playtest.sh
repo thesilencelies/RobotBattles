@@ -1,5 +1,5 @@
 #!/bin/sh
-# One-tap launcher for the Combat Robotics Playtest App.
+# One-tap launcher for the Robot Battles Playtest App.
 #
 # Termux:  copy or symlink this into ~/.shortcuts/ and add the Termux:Widget
 #          to the home screen -- tapping it starts the server and opens the

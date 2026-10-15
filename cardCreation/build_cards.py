@@ -2,7 +2,7 @@
 """
 build_cards.py
 
-Master pipeline script for the Combat Robotics card generation system.
+Master pipeline script for the Robot Battles card generation system.
 Automates the full flow:
   1. Generate temporary icons (generate_icons.py)
   2. Parse CSVs and generate card TikZ .tex files (generateCards.py)
@@ -41,7 +41,7 @@ def run(cmd, cwd=None, label=""):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Master build pipeline for combatRoboticsGame cards.")
+    parser = argparse.ArgumentParser(description="Master build pipeline for Robot Battles cards.")
     parser.add_argument("--icons", action="store_true", help="Generate icons in pictures/icons/")
     parser.add_argument("--cards", action="store_true", help="Generate card .tex files in build/card/")
     parser.add_argument("--images", action="store_true", help="Generate individual card PNG images")
@@ -53,7 +53,7 @@ def main():
     # Default to all if no specific step requested
     run_all = args.all or not (args.icons or args.cards or args.images or args.print)
 
-    print("=== Combat Robotics Card Pipeline ===")
+    print("=== Robot Battles Card Pipeline ===")
 
     # Step 1: Icons
     if run_all or args.icons:

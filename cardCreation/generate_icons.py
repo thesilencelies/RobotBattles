@@ -3,7 +3,7 @@
 generate_icons.py
 
 Procedurally generates clean, high-resolution temporary PNG icons with alpha
-transparency for the Combat Robotics card game into pictures/icons/.
+transparency for the Robot Battles card game into pictures/icons/.
 
 Icons generated:
 - weight.png: Kettlebell / 1-tonne weight with "1T" text

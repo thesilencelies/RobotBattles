@@ -1,6 +1,6 @@
 # Card Creation Pipeline
 
-A data-driven pipeline for generating combat robotics game cards from CSV specifications into LaTeX (`.tex`) files, standalone high-resolution card images, and printable A4 grid sheets.
+A data-driven pipeline for generating Robot Battles cards from CSV specifications into LaTeX (`.tex`) files, standalone high-resolution card images, and printable A4 grid sheets.
 
 Modelled after the card generation pipeline in `mobileSuitGame`.
 

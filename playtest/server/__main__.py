@@ -1,4 +1,4 @@
-"""CLI entry point for Combat Robotics Playtest App."""
+"""CLI entry point for Robot Battles Playtest App."""
 
 import argparse
 import sys
@@ -13,7 +13,7 @@ from playtest.server.httpd import DEFAULT_HOST, DEFAULT_PORT, serve
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Combat Robotics Playtest App Server")
+    parser = argparse.ArgumentParser(description="Robot Battles Playtest App Server")
     parser.add_argument("--host", default=DEFAULT_HOST, help="Host address to bind to (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to listen on (default: 8002)")
     parser.add_argument("--quiet", action="store_true", help="Suppress access logging")

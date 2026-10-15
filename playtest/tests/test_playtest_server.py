@@ -81,7 +81,7 @@ class TestPlaytestServer(unittest.TestCase):
         # Index HTML
         res_html = self.router.dispatch("GET", "/", {}, b"")
         self.assertEqual(res_html.status, 200)
-        self.assertIn("Robot Battles - Combat Robotics Playtest", res_html.body.decode("utf-8"))
+        self.assertIn("Robot Battles - Playtest", res_html.body.decode("utf-8"))
 
         # App CSS
         res_css = self.router.dispatch("GET", "/app.css", {}, b"")

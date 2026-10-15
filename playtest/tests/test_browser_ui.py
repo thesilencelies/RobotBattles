@@ -1,4 +1,4 @@
-"""End-to-end headless browser test for Combat Robotics playtest UI elements."""
+"""End-to-end headless browser test for Robot Battles playtest UI elements."""
 
 import base64
 import json
@@ -176,7 +176,7 @@ class TestBrowserUI(unittest.TestCase):
 
     def test_01_page_title_and_tabs(self):
         title = self.js_eval("document.title")
-        self.assertIn("Combat Robotics Playtest", title)
+        self.assertIn("Robot Battles - Playtest", title)
         tabs = self.js_eval("[...document.querySelectorAll('#main-nav .nav-tab')].map(t => t.dataset.tab)")
         self.assertEqual(tabs, ["arena", "player-robot", "automaton-robot", "builder", "log"])
 

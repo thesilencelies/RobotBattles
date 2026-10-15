@@ -1,4 +1,4 @@
-"""Pure standard library HTTP server for Combat Robotics Playtest App."""
+"""Pure standard library HTTP server for Robot Battles Playtest App."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ MAX_BODY = 10 * 1024 * 1024  # 10MB limit
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    server_version = "CombatRoboticsPlaytest/1.0"
+    server_version = "RobotBattlesPlaytest/1.0"
     protocol_version = "HTTP/1.1"
 
     def do_GET(self) -> None:
@@ -89,7 +89,7 @@ class PlaytestServer(ThreadingHTTPServer):
 
 def serve(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, quiet: bool = False) -> None:
     server = PlaytestServer(host=host, port=port, quiet=quiet)
-    print(f"Combat Robotics Game - Playtest & Arena App")
+    print(f"Robot Battles - Playtest & Arena App")
     print(f"Serving at http://{host}:{port}/ (Press Ctrl+C to stop)")
     try:
         server.serve_forever()

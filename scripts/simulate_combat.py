@@ -1500,7 +1500,7 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Combat Robotics Balance & Feedback Scaling Report</title>
+  <title>Robot Battles Balance & Feedback Scaling Report</title>
   <style>
     :root {{
       --bg: #0b0f17;
@@ -2175,7 +2175,7 @@ def generate_html_report(robots: List[RobotModel], catalog: Dict[str, Any]) -> s
 <body>
   <div class="container">
     <header>
-      <h1>🤖 Combat Robotics Damage & Feedback Scaling Report</h1>
+      <h1>🤖 Robot Battles Damage & Feedback Scaling Report</h1>
       <p class="subtitle">Detailed evaluation of weapon damage numbers, supply-chain feedback propagation, and throw shock scaling across robot components.</p>
     </header>
 
@@ -2273,7 +2273,7 @@ def generate_text_report(robot: RobotModel, catalog: Dict[str, Any]) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Simulate combat robotics damage and feedback scaling.")
+    parser = argparse.ArgumentParser(description="Simulate Robot Battles damage and feedback scaling.")
     parser.add_argument("robot_csvs", nargs="*", help="Robot layout CSV paths in automata/ or elsewhere")
     parser.add_argument("--tolerance", type=float, default=3.0, help="Physical connection tolerance in mm (default: 3.0)")
     parser.add_argument("--html", type=str, help="Path for HTML report (default: scripts/output/combat_simulation_report.html)")

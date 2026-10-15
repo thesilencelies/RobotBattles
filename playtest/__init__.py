@@ -1,1 +1,1 @@
-"""Playtest package for Combat Robotics."""
+"""Playtest package for Robot Battles."""

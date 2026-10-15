@@ -1,11 +1,11 @@
 {
-  "name": "Combat Robotics - Robot Builder",
+  "name": "Robot Battles - Robot Builder",
   "short_name": "BotBuilder",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f141c",
   "theme_color": "#0f141c",
-  "description": "Interactive mobile robot building tool for Combat Robotics Game",
+  "description": "Interactive mobile robot building tool for Robot Battles",
   "icons": [
     {
       "src": "/icon-192.png",

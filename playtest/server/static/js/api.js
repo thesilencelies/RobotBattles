@@ -1,5 +1,5 @@
 /**
- * HTTP API client for Combat Robotics Playtest App
+ * HTTP API client for Robot Battles Playtest App
  */
 
 export class PlaytestApi {

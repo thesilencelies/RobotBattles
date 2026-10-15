@@ -15,7 +15,7 @@ MAX_BODY = 10 * 1024 * 1024  # 10MB limit
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    server_version = "CombatRoboticsBuilder/1.0"
+    server_version = "RobotBattlesBuilder/1.0"
     protocol_version = "HTTP/1.1"
 
     def do_GET(self) -> None:
@@ -90,7 +90,7 @@ class BuilderServer(ThreadingHTTPServer):
 
 def serve(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, quiet: bool = False) -> None:
     server = BuilderServer(host=host, port=port, quiet=quiet)
-    print(f"Combat Robotics Game - Robot Builder")
+    print(f"Robot Battles - Robot Builder")
     print(f"Serving at http://{host}:{port}/ (Press Ctrl+C to stop)")
     try:
         server.serve_forever()

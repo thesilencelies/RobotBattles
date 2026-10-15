@@ -1,5 +1,5 @@
 /**
- * Combat Robotics Playtest App Master Controller
+ * Robot Battles Playtest App Master Controller
  */
 
 import { PlaytestApi } from "./api.js";

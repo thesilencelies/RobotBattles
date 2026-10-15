@@ -247,7 +247,7 @@ def create_macros(extra_colors: dict = None):
     colors_block = "\n".join(color_lines)
 
     with open(macros_file, "w", encoding="utf-8") as f:
-        f.write(r"""% Combat Robotics Card Macros
+        f.write(r"""% Robot Battles Card Macros
 \RequirePackage{xcolor}
 \RequirePackage{graphicx}
 \RequirePackage[export]{adjustbox}

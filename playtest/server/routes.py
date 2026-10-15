@@ -1,4 +1,4 @@
-"""HTTP routing for the Combat Robotics Playtest App."""
+"""HTTP routing for the Robot Battles Playtest App."""
 
 from __future__ import annotations
 
