@@ -1,21 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150.0 130.0" width="150.0mm" height="130.0mm">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200.0 140.0" width="200.0mm" height="140.0mm">
   <defs>
     <style>
       text { user-select: none; }
     </style>
   </defs>
 <g id="template_spin">
-<circle cx="85.0" cy="75.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="85.0" cy="75.0" r="3" fill="#0f172a" />
-<line x1="85.0" y1="75.0" x2="85.0" y2="40.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
-<text x="85.0" y="34.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="85.0" y1="75.0" x2="120.0" y2="75.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="126.0" y="78.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>
-<line x1="85.0" y1="75.0" x2="85.0" y2="110.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="85.0" y="122.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>
-<line x1="85.0" y1="75.0" x2="50.0" y2="75.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="44.0" y="78.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
-<text x="85.0" y="25.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360°)</text>
-<path d="M 104.2 75.0 A 19.2 19.2 0 0 1 85.0 94.2" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
+<circle cx="110.0" cy="80.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="110.0" cy="80.0" r="3" fill="#0f172a" />
+<line x1="110.0" y1="80.0" x2="110.0" y2="45.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+<g transform="translate(110.0, 39.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
+<line x1="110.0" y1="80.0" x2="145.0" y2="80.0" stroke="#2563eb" stroke-width="2.4" />
+<g transform="translate(151.0, 83.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start" dominant-baseline="central">L1 R-1 (90°)</text></g>
+<line x1="110.0" y1="80.0" x2="110.0" y2="115.0" stroke="#2563eb" stroke-width="2.4" />
+<g transform="translate(110.0, 127.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R-2 (180°)</text></g>
+<line x1="110.0" y1="80.0" x2="75.0" y2="80.0" stroke="#2563eb" stroke-width="2.4" />
+<g transform="translate(69.0, 83.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end" dominant-baseline="central">L3 R-3 (270°)</text></g>
+<g transform="translate(110.0, 30.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-4 (360°)</text></g>
+<path d="M 129.2 80.0 A 19.2 19.2 0 0 1 110.0 99.2" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
 </g>
 </svg>

@@ -11,137 +11,137 @@
 <rect x="5.0" y="5.0" width="65.0" height="200.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" rx="3" />
 <line x1="37.5" y1="205.0" x2="37.5" y2="5.0" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
 <line x1="5.0" y1="205.0" x2="70.0" y2="205.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="37.5" y="217.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<g transform="translate(37.5, 217.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
 <line x1="5.0" y1="165.0" x2="70.0" y2="165.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="37.5" y="161.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R1</text>
+<g transform="translate(37.5, 185.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R1</text></g>
 <line x1="5.0" y1="125.0" x2="70.0" y2="125.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="37.5" y="121.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R2</text>
+<g transform="translate(37.5, 145.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R2</text></g>
 <line x1="5.0" y1="85.0" x2="70.0" y2="85.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="37.5" y="81.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R3</text>
+<g transform="translate(37.5, 105.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R3</text></g>
 <line x1="5.0" y1="45.0" x2="70.0" y2="45.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="37.5" y="41.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R4</text>
+<g transform="translate(37.5, 65.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R4</text></g>
 <line x1="5.0" y1="5.0" x2="70.0" y2="5.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="37.5" y="1.0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R5</text>
+<g transform="translate(37.5, 25.0)"><text x="0" y="0" font-family="sans-serif" font-size="9" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R5</text></g>
 </g>
   </g>
   <!-- Template: Spin Disc Template (spin) -->
   <g transform="translate(130.0, 45.0)">
 <g id="template_spin">
-<circle cx="75.0" cy="65.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="75.0" cy="65.0" r="3" fill="#0f172a" />
-<line x1="75.0" y1="65.0" x2="75.0" y2="30.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
-<text x="75.0" y="24.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="75.0" y1="65.0" x2="110.0" y2="65.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="116.0" y="68.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start">L1 R-1 (90°)</text>
-<line x1="75.0" y1="65.0" x2="75.0" y2="100.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="75.0" y="112.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-2 (180°)</text>
-<line x1="75.0" y1="65.0" x2="40.0" y2="65.0" stroke="#2563eb" stroke-width="2.4" />
-<text x="34.0" y="68.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end">L3 R-3 (270°)</text>
-<text x="75.0" y="15.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-4 (360°)</text>
-<path d="M 94.2 65.0 A 19.2 19.2 0 0 1 75.0 84.2" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
+<circle cx="100.0" cy="70.0" r="35.0" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<circle cx="100.0" cy="70.0" r="3" fill="#0f172a" />
+<line x1="100.0" y1="70.0" x2="100.0" y2="35.0" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+<g transform="translate(100.0, 29.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
+<line x1="100.0" y1="70.0" x2="135.0" y2="70.0" stroke="#2563eb" stroke-width="2.4" />
+<g transform="translate(141.0, 73.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="start" dominant-baseline="central">L1 R-1 (90°)</text></g>
+<line x1="100.0" y1="70.0" x2="100.0" y2="105.0" stroke="#2563eb" stroke-width="2.4" />
+<g transform="translate(100.0, 117.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R-2 (180°)</text></g>
+<line x1="100.0" y1="70.0" x2="65.0" y2="70.0" stroke="#2563eb" stroke-width="2.4" />
+<g transform="translate(59.0, 73.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="end" dominant-baseline="central">L3 R-3 (270°)</text></g>
+<g transform="translate(100.0, 20.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-4 (360°)</text></g>
+<path d="M 119.2 70.0 A 19.2 19.2 0 0 1 100.0 89.2" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3" />
 </g>
   </g>
   <!-- Template: Pivot Fan Template (pivot) -->
-  <g transform="translate(295.0, 45.0)">
+  <g transform="translate(345.0, 45.0)">
 <g id="template_pivot">
 <path d="M 95.0 85.0 L 30.0 85.0 A 65.0 65.0 0 0 1 160.0 85.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <circle cx="95.0" cy="85.0" r="3.5" fill="#ef4444" />
-<text x="95.0" y="98.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle">PIN</text>
+<g transform="translate(95.0, 98.0)"><text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle" dominant-baseline="central">PIN</text></g>
 <line x1="30.0" y1="85.0" x2="95.0" y2="85.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="62.5" y="97.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<g transform="translate(62.5, 97.0)"><text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
 <line x1="95.0" y1="85.0" x2="49.0" y2="39.0" stroke="#2563eb" stroke-width="2.6" />
-<text x="63.7" y="50.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R0 (45°)</text>
+<g transform="translate(63.7, 50.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R0 (45°)</text></g>
 <line x1="95.0" y1="85.0" x2="95.0" y2="20.0" stroke="#2563eb" stroke-width="2.6" />
-<text x="95.0" y="37.8" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R0 (90°)</text>
+<g transform="translate(95.0, 37.8)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R0 (90°)</text></g>
 <line x1="95.0" y1="85.0" x2="141.0" y2="39.0" stroke="#2563eb" stroke-width="2.6" />
-<text x="126.3" y="50.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R0 (135°)</text>
+<g transform="translate(126.3, 50.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R0 (135°)</text></g>
 <line x1="95.0" y1="85.0" x2="160.0" y2="85.0" stroke="#2563eb" stroke-width="2.6" />
-<text x="127.5" y="97.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0 (180°)</text>
+<g transform="translate(127.5, 97.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R0 (180°)</text></g>
 </g>
   </g>
   <!-- Template: Gentle Curve Template (curve_gentle) -->
   <g transform="translate(20.0, 300.0)">
 <g id="template_curve_gentle">
-<path d="M 5.0 199.7 A 172.5 172.5 0 0 1 146.6 30.0 L 158.2 93.9 A 107.5 107.5 0 0 0 70.0 199.7 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 37.5 199.7 A 140.0 140.0 0 0 1 152.4 62.0" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="5.0" y1="199.7" x2="70.0" y2="199.7" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="37.5" y="211.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="27.2" y1="118.5" x2="73.1" y2="164.5" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="46.6" y="145.1" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R1</text>
-<line x1="48.7" y1="85.0" x2="94.7" y2="131.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="68.2" y="111.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R2</text>
-<line x1="78.9" y1="58.9" x2="124.8" y2="104.9" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="98.3" y="85.4" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R3</text>
-<line x1="115.1" y1="42.4" x2="161.1" y2="88.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="134.6" y="68.9" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R4</text>
+<path d="M 5.0 189.7 A 252.5 252.5 0 0 1 85.3 5.0 L 129.6 52.5 A 187.5 187.5 0 0 0 70.0 189.7 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 37.5 189.7 A 220.0 220.0 0 0 1 107.5 28.8" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="189.7" x2="70.0" y2="189.7" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<g transform="translate(37.5, 201.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
+<line x1="89.0" y1="107.5" x2="30.6" y2="79.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(43.1, 140.2) rotate(-77.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R2</text></g>
+<line x1="106.8" y1="78.1" x2="54.5" y2="39.5" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(69.4, 75.5) rotate(-58.8)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R3</text></g>
+<line x1="129.6" y1="52.5" x2="85.3" y2="5.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(93.4, 43.2) rotate(-48.2)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R4</text></g>
 </g>
   </g>
   <!-- Template: Medium Curve Template (curve_medium) -->
-  <g transform="translate(271.6, 300.0)">
+  <g transform="translate(189.6, 300.0)">
 <g id="template_curve_medium">
-<path d="M 5.0 138.9 A 108.9 108.9 0 0 1 177.9 50.8 L 139.7 103.4 A 43.9 43.9 0 0 0 70.0 138.9 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 37.5 138.9 A 76.4 76.4 0 0 1 158.8 77.1" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="5.0" y1="138.9" x2="70.0" y2="138.9" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="37.5" y="150.9" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="75.7" y1="40.2" x2="75.7" y2="105.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="70.7" y="72.7" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R1</text>
-<line x1="113.9" y1="30.0" x2="113.9" y2="95.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="108.9" y="62.5" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R2</text>
-<line x1="152.1" y1="40.2" x2="152.1" y2="105.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="147.1" y="72.7" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R3</text>
+<path d="M 5.0 135.0 A 130.0 130.0 0 0 1 144.1 5.3 L 139.5 70.2 A 65.0 65.0 0 0 0 70.0 135.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 37.5 135.0 A 97.5 97.5 0 0 1 141.8 37.7" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="135.0" x2="70.0" y2="135.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<g transform="translate(37.5, 147.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
+<line x1="81.8" y1="97.7" x2="28.5" y2="60.4" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(42.0, 105.7) rotate(-72.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R1</text></g>
+<line x1="90.7" y1="87.5" x2="46.3" y2="39.9" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(61.4, 71.0) rotate(-49.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R1</text></g>
+<line x1="112.8" y1="73.9" x2="90.5" y2="12.8" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(84.1, 51.9) rotate(-31.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R2</text></g>
+<line x1="139.5" y1="70.2" x2="144.1" y2="5.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(121.4, 38.4) rotate(-8.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R3</text></g>
 </g>
   </g>
   <!-- Template: Sharp Curve Template (curve_sharp) -->
-  <g transform="translate(20.0, 554.7)">
+  <g transform="translate(373.7, 300.0)">
 <g id="template_curve_sharp">
-<path d="M 5.0 107.5 A 77.5 77.5 0 1 1 159.8 113.2 L 95.0 108.4 A 12.5 12.5 0 1 0 70.0 107.5 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<path d="M 37.5 107.5 A 45.0 45.0 0 1 1 127.4 110.8" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
-<line x1="5.0" y1="107.5" x2="70.0" y2="107.5" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="37.5" y="119.5" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="132.8" y1="48.7" x2="86.8" y2="94.7" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="106.2" y="68.2" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R1</text>
-<line x1="150.5" y1="83.1" x2="104.5" y2="129.1" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="123.9" y="102.6" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R2</text>
-<line x1="155.0" y1="86.9" x2="90.0" y2="86.9" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="122.5" y="81.9" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R1</text>
+<path d="M 5.0 92.5 A 87.5 87.5 0 0 1 180.0 92.5 L 115.0 92.5 A 22.5 22.5 0 0 0 70.0 92.5 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 37.5 92.5 A 55.0 55.0 0 0 1 147.5 92.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="92.5" x2="70.0" y2="92.5" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<g transform="translate(37.5, 104.5)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
+<line x1="98.3" y1="70.8" x2="115.1" y2="8.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(59.0, 48.9) rotate(-37.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R1</text></g>
+<line x1="110.9" y1="79.6" x2="164.2" y2="42.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(124.0, 47.4) rotate(35.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R2</text></g>
+<line x1="115.0" y1="92.5" x2="180.0" y2="92.5" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(145.0, 76.0) rotate(72.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R1</text></g>
 </g>
   </g>
   <!-- Template: Tight Hook Template (tight_hook) -->
-  <g transform="translate(285.0, 554.7)">
+  <g transform="translate(20.0, 544.7)">
 <g id="template_tight_hook">
-<path d="M 25.0 75.0 A 50.0 50.0 0 1 1 68.0 124.5 L 77.1 60.1 A 15.0 15.0 0 1 0 90.0 75.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="75.0" cy="75.0" r="2.5" fill="#94a3b8" />
-<line x1="25.0" y1="75.0" x2="90.0" y2="75.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="57.5" y="87.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="110.4" y1="39.6" x2="64.4" y2="85.6" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="87.4" y="59.6" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R-1</text>
-<line x1="125.0" y1="75.0" x2="60.0" y2="75.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="92.5" y="72.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-1</text>
-<line x1="110.4" y1="110.4" x2="64.4" y2="64.4" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="87.4" y="84.4" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-1</text>
-<line x1="75.0" y1="125.0" x2="75.0" y2="60.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="75.0" y="89.5" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-1</text>
+<path d="M 5.0 85.5 A 80.5 80.5 0 1 1 28.6 142.4 L 74.5 96.5 A 15.5 15.5 0 1 0 70.0 85.5 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 37.5 85.5 A 48.0 48.0 0 1 1 51.6 119.4" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="85.5" x2="70.0" y2="85.5" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<g transform="translate(37.5, 97.5)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
+<line x1="94.4" y1="72.8" x2="131.7" y2="19.6" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(63.3, 42.9) rotate(-27.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R-1</text></g>
+<line x1="100.8" y1="82.8" x2="164.8" y2="71.5" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(126.0, 59.7) rotate(57.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R-1</text></g>
+<line x1="98.2" y1="94.4" x2="151.4" y2="131.7" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(132.4, 95.9) rotate(-77.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-1</text></g>
+<line x1="90.8" y1="100.1" x2="113.0" y2="161.1" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(114.7, 123.6) rotate(-37.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-2</text></g>
+<line x1="81.5" y1="100.5" x2="64.7" y2="163.3" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(87.6, 133.5) rotate(-2.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R-1</text></g>
+<line x1="74.5" y1="96.5" x2="28.6" y2="142.4" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(61.5, 127.1) rotate(30.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R-2</text></g>
 </g>
   </g>
   <!-- Template: Tight Counter-Spin Template (tight_spin) -->
-  <g transform="translate(437.5, 554.7)">
+  <g transform="translate(226.0, 544.7)">
 <g id="template_tight_spin">
-<path d="M 25.0 66.0 A 41.0 41.0 0 1 1 41.3 33.3 L 80.4 85.2 A 24.0 24.0 0 1 0 90.0 66.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
-<circle cx="66.0" cy="66.0" r="2.5" fill="#94a3b8" />
-<line x1="25.0" y1="66.0" x2="90.0" y2="66.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="57.5" y="78.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
-<line x1="95.0" y1="95.0" x2="49.0" y2="49.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="72.0" y="69.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R-2</text>
-<line x1="66.0" y1="107.0" x2="66.0" y2="42.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="66.0" y="71.5" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-2</text>
-<line x1="37.0" y1="95.0" x2="83.0" y2="49.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="60.0" y="69.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-2</text>
-<line x1="37.0" y1="95.0" x2="83.0" y2="49.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="60.0" y="69.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R-3</text>
-<line x1="25.0" y1="66.0" x2="90.0" y2="66.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="57.5" y="63.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-3</text>
-<line x1="37.0" y1="37.0" x2="83.0" y2="83.0" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
-<text x="60.0" y="57.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L5 R-4</text>
+<path d="M 5.0 79.5 A 74.5 74.5 0 1 1 36.8 140.5 L 74.1 87.3 A 9.5 9.5 0 1 0 70.0 79.5 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
+<path d="M 37.5 79.5 A 42.0 42.0 0 1 1 55.4 113.9" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,4" />
+<line x1="5.0" y1="79.5" x2="70.0" y2="79.5" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
+<g transform="translate(37.5, 91.5)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
+<line x1="88.7" y1="77.0" x2="151.5" y2="60.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(74.0, 37.9) rotate(-7.5)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R-2</text></g>
+<line x1="86.2" y1="86.2" x2="132.2" y2="132.2" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(120.1, 90.4) rotate(-75.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R-3</text></g>
+<line x1="80.3" y1="89.0" x2="86.0" y2="153.7" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(97.2, 117.6) rotate(-25.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R-3</text></g>
+<line x1="74.1" y1="87.3" x2="36.8" y2="140.5" stroke="#2563eb" stroke-width="2.8" stroke-linecap="square" />
+<g transform="translate(68.6, 120.1) rotate(15.0)"><text x="0" y="0" font-family="sans-serif" font-size="8.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L5 R-4</text></g>
 </g>
   </g>
 </svg>

@@ -403,8 +403,8 @@ Movement units are found on the straight movement template. Where an effect says
 \vspace{0.2em}
 \noindent\textbf{2. Curved Arcs and Left/Right Flipping (\texttt{2/1} vs \texttt{1/2})}
 \begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-  \item \textbf{(\texttt{2/1}):} Place the Gentle Curve Template face-up with baseline at the front bumper. Advance along the curve until the front bumper aligns with line \textbf{L2 R1}, sweeping $45^\circ$ clockwise to the right ($\Delta\theta = (2 - 1) \times 45^\circ$).
-  \item \textbf{(\texttt{1/2}):} Right track is faster ($R > L$), turning left. Take the \textbf{exact same} Gentle Curve Template and \textbf{flip it face-down}. Advance along the arc to line \textbf{L2 R1}, sweeping $45^\circ$ counter-clockwise.
+  \item \textbf{(\texttt{2/1}):} Place the Medium Curve Template face-up with baseline at the front bumper. Advance along the curve until the front bumper aligns with line \textbf{L2 R1}, sweeping $35^\circ$ clockwise to the right.
+  \item \textbf{(\texttt{1/2}):} Right track is faster ($R > L$), turning left. Take the \textbf{exact same} Medium Curve Template and \textbf{flip it face-down}. Advance along the arc to line \textbf{L2 R1}, sweeping $35^\circ$ counter-clockwise.
   \item \textbf{(\texttt{-2/-1}):} Placed face-up against the rear bumper; robot backs up along the curved track.
 \end{itemize}
 
@@ -447,11 +447,11 @@ Movement units are found on the straight movement template. Where an effect says
     \node[anchor=south west] at (8.6, 1.2) {\includegraphics[width=3.6cm]{images/template_curve_ratio_2_1.png}};
     % Ghost Bot C at START FRONT (front line hard up against START FRONT edge)
     \node at (9.33, 1.53) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
-    % End Bot C (front line hard up against line L2 R1, rotated -45 deg CW)
-    \node at (9.35, 2.87) [rotate=-45] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
+    % End Bot C (front line hard up against line L2 R1, rotated -35 deg CW)
+    \node at (9.35, 2.87) [rotate=-35] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
     % Curved motion arrow tracking over template path
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (9.33, 1.88) to[bend left=25] (9.35, 2.87);
-    \node[font=\footnotesize\bfseries, text=accentBlue, align=center] at (8.9, 3.7) {Sweep\\45$^\circ$ CW};
+    \node[font=\footnotesize\bfseries, text=accentBlue, align=center] at (8.9, 3.7) {Sweep\\35$^\circ$ CW};
 
     % Left Turn 1/2 (FLIP FACE-DOWN)
     \node[font=\scriptsize\bfseries, text=arenaRed] at (14.2, 6.1) {Curve Left (1/2) Flipped};
@@ -460,11 +460,11 @@ Movement units are found on the straight movement template. Where an effect says
     \node[anchor=south east] at (15.9, 1.2) {\includegraphics[width=3.6cm]{images/template_curve_ratio_2_1_flipped.png}};
     % Ghost Bot D at START FRONT (front line hard up against START FRONT edge)
     \node at (15.17, 1.59) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_square_circle.png}};
-    % End Bot D (front line hard up against line L1 R2, rotated 45 deg CCW)
-    \node at (15.10, 2.92) [rotate=45] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
+    % End Bot D (front line hard up against line L1 R2, rotated 35 deg CCW)
+    \node at (15.10, 2.92) [rotate=35] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
     % Curved motion arrow tracking over template path
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (15.17, 1.88) to[bend right=25] (15.10, 2.92);
-    \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (15.6, 3.7) {Sweep\\45$^\circ$ CCW};
+    \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (15.6, 3.7) {Sweep\\35$^\circ$ CCW};
   \end{tikzpicture}
   \caption{Straight Driving, Reverse Maneuvers, and Curved Arcs with Face-Down Flipping}
   \label{fig:diagram_movement_straight_curve}

@@ -7,16 +7,16 @@
 <g id="template_pivot">
 <path d="M 105.0 95.0 L 40.0 95.0 A 65.0 65.0 0 0 1 170.0 95.0 Z" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5" />
 <circle cx="105.0" cy="95.0" r="3.5" fill="#ef4444" />
-<text x="105.0" y="108.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle">PIN</text>
+<g transform="translate(105.0, 108.0)"><text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle" dominant-baseline="central">PIN</text></g>
 <line x1="40.0" y1="95.0" x2="105.0" y2="95.0" stroke="#0f172a" stroke-width="4.0" stroke-linecap="square" />
-<text x="72.5" y="107.0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text>
+<g transform="translate(72.5, 107.0)"><text x="0" y="0" font-family="sans-serif" font-size="7" font-weight="bold" fill="#0f172a" text-anchor="middle">START</text></g>
 <line x1="105.0" y1="95.0" x2="59.0" y2="49.0" stroke="#2563eb" stroke-width="2.6" />
-<text x="73.7" y="60.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L1 R0 (45°)</text>
+<g transform="translate(73.7, 60.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L1 R0 (45°)</text></g>
 <line x1="105.0" y1="95.0" x2="105.0" y2="30.0" stroke="#2563eb" stroke-width="2.6" />
-<text x="105.0" y="47.8" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L2 R0 (90°)</text>
+<g transform="translate(105.0, 47.8)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L2 R0 (90°)</text></g>
 <line x1="105.0" y1="95.0" x2="151.0" y2="49.0" stroke="#2563eb" stroke-width="2.6" />
-<text x="136.3" y="60.7" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L3 R0 (135°)</text>
+<g transform="translate(136.3, 60.7)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L3 R0 (135°)</text></g>
 <line x1="105.0" y1="95.0" x2="170.0" y2="95.0" stroke="#2563eb" stroke-width="2.6" />
-<text x="137.5" y="107.0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle">L4 R0 (180°)</text>
+<g transform="translate(137.5, 107.0)"><text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#1d4ed8" text-anchor="middle" dominant-baseline="central">L4 R0 (180°)</text></g>
 </g>
 </svg>
