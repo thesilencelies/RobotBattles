@@ -797,10 +797,11 @@ class TestPlaytestEngine(unittest.TestCase):
         # Invert the robot
         bot.is_inverted = True
 
-        # Destroy invertible wheels so drive is 0 while inverted
+        # Make wheels non-invertible so drive is 0 while inverted
         for comp in bot.components.values():
-            if "invertible" in comp.keywords.lower():
-                comp.is_destroyed = True
+            if comp.is_invertible:
+                comp.is_invertible = False
+                comp.keywords = ""
 
         from playtest.engine.combat import refresh_robot_drive_and_power
         refresh_robot_drive_and_power(bot)
@@ -908,22 +909,24 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_active_hit=False,
         )
 
-        # Case 1: Thrown clear of wall -> takes half throw damage rounding up: ceil(5 / 2) = 3
-        with patch("random.randint", return_value=1): # 1+1 = 2 roll
+        # Case 1: Thrown clear of wall -> takes throw damage equal to full throw strength (5)
+        with patch("random.randint", return_value=2): # d6 roll = 2
             logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
             thrown_logs = [l.message for l in logs if "THROWN" in l.message]
-            self.assertTrue(any("takes half throw damage 3" in msg for msg in thrown_logs))
+            self.assertTrue(any("takes throw damage 5" in msg for msg in thrown_logs))
+            self.assertTrue(any("rolled 2 -> rotated 120° clockwise" in l.message for l in logs))
 
-        # Case 2: Thrown near wall (target lands <= 20mm from wall) -> takes full throw damage (5)
+        # Case 2: Thrown near wall (target lands <= 20mm from wall) -> takes throw damage equal to full throw strength (5)
         # Position victim close to top wall (y=25) so thrown displacement hits the wall
         a_bot.pose = Pose(x=400.0, y=25.0, theta=180.0)
         p_bot.pose = Pose(x=400.0, y=50.0, theta=0.0)
         col.contact_point = (400.0, 45.0)
         w_comp.is_active = True
-        with patch("random.randint", return_value=3): # 3+3 = 6 roll
+        with patch("random.randint", return_value=3): # d6 roll = 3
             logs_wall = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
             wall_logs = [l.message for l in logs_wall if "THROWN into a WALL" in l.message]
-            self.assertTrue(any("takes full throw damage 5" in msg for msg in wall_logs))
+            self.assertTrue(any("takes throw damage 5" in msg for msg in wall_logs))
+            self.assertTrue(any("rolled 3 -> rotated 180° clockwise" in l.message for l in logs_wall))
 
     def test_active_contact_still_in_contact_proceeds_to_inertial(self):
         from playtest.engine.combat import resolve_collision_combat
@@ -1395,10 +1398,9 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(armor_comp.is_destroyed)
 
         # 2. Connected internal components do NOT take excess weapon damage
+        weapon_damage_cids = {s.target_cid for s in steps if s.phase == "damage"}
         for nid in connected_to_armor:
-            ncomp = p_bot.components[nid]
-            self.assertFalse(ncomp.is_destroyed, f"{ncomp.name} should not be destroyed by weapon damage")
-            self.assertFalse(ncomp.is_damaged, f"{ncomp.name} should not be damaged by weapon damage")
+            self.assertNotIn(nid, weapon_damage_cids, f"Component #{nid} should not take excess weapon damage")
 
         # 3. Only 1 damage step for player (no inward damage steps)
         p_damage_steps = [s for s in steps if s.robot_id == p_bot.id and s.phase == "damage"]
@@ -2172,10 +2174,12 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertAlmostEqual(p_bot.pose.x, 135.0, places=1)
 
         # Verify weapon contacted wall: lost all spin counters and suffered feedback
-        self.assertEqual(p_bot.weapon_spin_counters[w_id], 0)
-        self.assertEqual(w_comp.spin_counters, 0)
         wall_logs = [e.message for e in match.log if "contacted the wall" in e.message]
         self.assertTrue(len(wall_logs) > 0, "Driving weapon into wall should log contact and feedback")
+        self.assertTrue(any("Lost all spin counters (was 4)" in msg for msg in wall_logs))
+        # At start of round 2, undamaged active weapon spins up 1 counter
+        self.assertEqual(p_bot.weapon_spin_counters[w_id], 1)
+        self.assertEqual(w_comp.spin_counters, 1)
 
     def test_physical_curve_templates_trajectory(self):
         """Tests that consolidated physical curve templates generate trajectories matching exact angles."""
