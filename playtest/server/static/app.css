@@ -385,19 +385,43 @@ html, body {
 
 .planning-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
+}
+
+.planning-title-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .planning-header h3 {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--accent-blue);
+  margin: 0;
 }
 
 .planning-hint {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.planning-template-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+  white-space: nowrap;
+  letter-spacing: 0.2px;
 }
 
 .drive-inputs-grid {

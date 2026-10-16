@@ -261,17 +261,36 @@ export class ArenaRenderer {
     this.animFrame = requestAnimationFrame(step);
   }
 
-  _renderMovementTemplate(startPose, choice, templateInfo, role) {
+  renderPlanningPreview(playerPose, choice, templateInfo) {
+    if (!this.layerTemplates) return;
+    this.layerTemplates.innerHTML = "";
+    this.layerTemplates.style.opacity = "1";
+    if (!templateInfo || templateInfo.category === "stop") {
+      return;
+    }
+    this._renderMovementTemplate(playerPose, choice, templateInfo, "player", true);
+  }
+
+  clearPlanningPreview() {
+    if (this.layerTemplates && !this.animating) {
+      this.layerTemplates.innerHTML = "";
+    }
+  }
+
+  _renderMovementTemplate(startPose, choice, templateInfo, role, isPlanning = false) {
     if (!startPose || !templateInfo || templateInfo.category === "stop") return;
 
     const { x, y, theta } = startPose;
     const isPlayer = role === "player";
     const primaryColor = isPlayer ? "#00e5ff" : "#f43f5e";
     const targetColor = isPlayer ? "#38bdf8" : "#fb7185";
-    const acrylicFill = isPlayer ? "rgba(0, 229, 255, 0.16)" : "rgba(244, 63, 94, 0.16)";
+    const acrylicFill = isPlanning
+      ? (isPlayer ? "rgba(0, 229, 255, 0.22)" : "rgba(244, 63, 94, 0.22)")
+      : (isPlayer ? "rgba(0, 229, 255, 0.16)" : "rgba(244, 63, 94, 0.16)");
 
     const outerG = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    outerG.setAttribute("class", `movement-template-overlay template-${role}`);
+    const planClass = isPlanning ? " planning-preview" : "";
+    outerG.setAttribute("class", `movement-template-overlay template-${role}${planClass}`);
     outerG.setAttribute("transform", `translate(${x}, ${y}) rotate(${theta})`);
 
     // Inner transform group handling flip & at_rear
@@ -288,44 +307,48 @@ export class ArenaRenderer {
     }
 
     const cat = templateInfo.category;
+    const t_id = templateInfo.template_id || "";
     if (cat === "straight") {
       this._buildStraightTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill);
     } else if (cat === "spin") {
       this._buildSpinTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill);
     } else if (cat === "pivot") {
       this._buildPivotTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill);
-    } else if (cat === "curve_forward" || cat === "curve_tight") {
-      this._buildCurveTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill, cat === "curve_tight");
+    } else if (cat === "curve_forward" || cat === "curve_tight" || cat.startsWith("curve_") || t_id.startsWith("curve_")) {
+      this._buildCurveTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill);
+    } else if (cat === "asymmetric_counter") {
+      this._buildAsymmetricCounterTemplate(innerG, templateInfo, primaryColor, targetColor, acrylicFill);
     }
 
     outerG.appendChild(innerG);
 
     // Template Title / Type Badge (not flipped so text stays readable)
     const badgeG = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    const badgeY = templateInfo.at_rear ? 65 : -55;
+    const badgeY = templateInfo.at_rear ? -50 : 50;
     badgeG.setAttribute("transform", `translate(0, ${badgeY})`);
 
     const badgeBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    badgeBg.setAttribute("x", "-70");
-    badgeBg.setAttribute("y", "-9");
-    badgeBg.setAttribute("width", "140");
-    badgeBg.setAttribute("height", "18");
+    badgeBg.setAttribute("x", "-90");
+    badgeBg.setAttribute("y", "-10");
+    badgeBg.setAttribute("width", "180");
+    badgeBg.setAttribute("height", "20");
     badgeBg.setAttribute("rx", "4");
-    badgeBg.setAttribute("fill", "rgba(15, 23, 42, 0.9)");
+    badgeBg.setAttribute("fill", "rgba(15, 23, 42, 0.92)");
     badgeBg.setAttribute("stroke", primaryColor);
-    badgeBg.setAttribute("stroke-width", "1");
+    badgeBg.setAttribute("stroke-width", isPlanning ? "1.6" : "1");
     badgeG.appendChild(badgeBg);
 
     const badgeText = document.createElementNS("http://www.w3.org/2000/svg", "text");
     badgeText.setAttribute("x", "0");
-    badgeText.setAttribute("y", "3.5");
+    badgeText.setAttribute("y", "4");
     badgeText.setAttribute("fill", "#ffffff");
     badgeText.setAttribute("font-size", "7.5");
     badgeText.setAttribute("font-weight", "bold");
     badgeText.setAttribute("text-anchor", "middle");
     const flipTag = templateInfo.flipped ? " [FLIP]" : "";
     const rearTag = templateInfo.at_rear ? " [REAR]" : "";
-    badgeText.textContent = `📐 ${templateInfo.name}${flipTag}${rearTag}`;
+    const modeTag = isPlanning ? "PREVIEW: " : "";
+    badgeText.textContent = `${modeTag}📐 ${templateInfo.name}${flipTag}${rearTag}`;
     badgeG.appendChild(badgeText);
 
     outerG.appendChild(badgeG);
@@ -452,6 +475,9 @@ export class ArenaRenderer {
     base.setAttribute("stroke-width", "3.5");
     parentG.appendChild(base);
 
+    const flipX = templateInfo.flipped ? -1 : 1;
+    const flipY = (templateInfo.at_rear && templateInfo.category !== "straight") ? -1 : 1;
+
     for (const [l, r] of pairs) {
       const d_th = l * (Math.PI / 2.0);
       const px = radius * Math.sin(d_th);
@@ -469,15 +495,19 @@ export class ArenaRenderer {
         radLine.setAttribute("stroke-width", "3.2");
         parentG.appendChild(radLine);
 
+        const lblG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        lblG.setAttribute("transform", `translate(${px * 1.25}, ${py * 1.25 + 3}) scale(${flipX}, ${flipY})`);
+
         const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        lbl.setAttribute("x", `${px * 1.25}`);
-        lbl.setAttribute("y", `${py * 1.25 + 3}`);
+        lbl.setAttribute("x", "0");
+        lbl.setAttribute("y", "0");
         lbl.setAttribute("fill", targetColor);
         lbl.setAttribute("font-size", "8");
         lbl.setAttribute("font-weight", "900");
         lbl.setAttribute("text-anchor", px > 2 ? "start" : px < -2 ? "end" : "middle");
         lbl.textContent = `★ ${templateInfo.target_line_label} (${l * 90}°)`;
-        parentG.appendChild(lbl);
+        lblG.appendChild(lbl);
+        parentG.appendChild(lblG);
       } else {
         radLine.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
         radLine.setAttribute("stroke-width", "1.5");
@@ -521,6 +551,9 @@ export class ArenaRenderer {
     startLine.setAttribute("stroke-width", "3.5");
     parentG.appendChild(startLine);
 
+    const flipX = templateInfo.flipped ? -1 : 1;
+    const flipY = (templateInfo.at_rear && templateInfo.category !== "straight") ? -1 : 1;
+
     for (const [l, r] of pairs) {
       const d_th = l * (Math.PI / 4.0);
       const px = pv_x - radius * Math.cos(d_th);
@@ -538,15 +571,21 @@ export class ArenaRenderer {
         line.setAttribute("stroke-width", "3.2");
         parentG.appendChild(line);
 
+        const lx = pv_x - (radius * 0.65) * Math.cos(d_th);
+        const ly = pv_y - (radius * 0.65) * Math.sin(d_th) - 4;
+        const lblG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        lblG.setAttribute("transform", `translate(${lx}, ${ly}) scale(${flipX}, ${flipY})`);
+
         const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        lbl.setAttribute("x", `${pv_x - (radius * 0.65) * Math.cos(d_th)}`);
-        lbl.setAttribute("y", `${pv_y - (radius * 0.65) * Math.sin(d_th) - 4}`);
+        lbl.setAttribute("x", "0");
+        lbl.setAttribute("y", "0");
         lbl.setAttribute("fill", targetColor);
         lbl.setAttribute("font-size", "8");
         lbl.setAttribute("font-weight", "900");
         lbl.setAttribute("text-anchor", "middle");
         lbl.textContent = `★ ${templateInfo.target_line_label} (${l * 45}°)`;
-        parentG.appendChild(lbl);
+        lblG.appendChild(lbl);
+        parentG.appendChild(lblG);
       } else {
         line.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
         line.setAttribute("stroke-width", "1.5");
@@ -556,26 +595,55 @@ export class ArenaRenderer {
     }
   }
 
-  _buildCurveTemplate(parentG, templateInfo, primaryColor, targetColor, acrylicFill, isTight = false) {
-    const w = 65.0;
-    const pairs = templateInfo.pairs || [[templateInfo.canonical_left, templateInfo.canonical_right]];
-    const max_l = Math.max(...pairs.map(p => p[0]));
-    const max_r = Math.max(...pairs.map(p => p[1]));
-    const diff = isTight ? (max_l - Math.min(...pairs.map(p => p[1]))) : (max_l - max_r);
+  _buildCurveTemplate(parentG, templateInfo, primaryColor, targetColor, acrylicFill) {
+    const w = 65.0; // WHEELBASE_MM
+    const r_mini = 35.0; // MINIATURE_RADIUS
+    const t_id = templateInfo.template_id || "curve_medium";
 
-    const r_out = w * max_l / diff;
-    const r_in = isTight ? Math.abs(w * Math.min(...pairs.map(p => p[1])) / diff) : (w * max_r / diff);
-    const cx = isTight ? (-w / 2 + r_out) : (w / 2 + r_in);
-    const cy = 0;
+    let r_c = templateInfo.nominal_rc;
+    if (!r_c) {
+      if (t_id === "curve_gentle") r_c = 220.0;
+      else if (t_id === "curve_sharp") r_c = 55.0;
+      else r_c = 97.5;
+    }
 
-    const d_th_max = diff * (Math.PI / 4.0);
-    const largeArc = d_th_max > Math.PI ? 1 : 0;
+    let pairs = templateInfo.pairs;
+    if (!pairs || pairs.length === 0) {
+      if (t_id === "curve_gentle") pairs = [[3, 2], [4, 3], [5, 4]];
+      else if (t_id === "curve_sharp") pairs = [[3, 1], [4, 1], [5, 2], [5, 1]];
+      else pairs = [[2, 1], [4, 2], [5, 3]];
+    }
 
-    const p_out_start = [-w / 2, 0];
-    const p_in_start = [w / 2, 0];
-    const p_out_end = [cx - r_out * Math.cos(d_th_max), cy - r_out * Math.sin(d_th_max)];
-    const p_in_end = [cx - r_in * Math.cos(d_th_max), cy - r_in * Math.sin(d_th_max)];
+    let pairAngles = templateInfo.pair_angles;
+    if (!pairAngles || Object.keys(pairAngles).length === 0) {
+      if (t_id === "curve_gentle") {
+        pairAngles = { "3,2": 26.0, "4,3": 36.5, "5,4": 47.0 };
+      } else if (t_id === "curve_sharp") {
+        pairAngles = { "3,1": 70.0, "4,1": 105.0, "5,2": 145.0, "5,1": 180.0 };
+      } else {
+        pairAngles = { "2,1": 35.0, "4,2": 70.0, "5,3": 94.0 };
+      }
+    }
 
+    const r_in = r_c - w / 2.0;
+    const r_out = r_c + w / 2.0;
+    const cx = r_c;
+    const cy = -r_mini;
+
+    const angleVals = pairs.map(p => {
+      const k = `${p[0]},${p[1]}`;
+      return pairAngles[k] !== undefined ? pairAngles[k] : ((p[0] - p[1]) * 35.0);
+    });
+    const maxAngleDeg = Math.max(...angleVals);
+    const phi_max = (maxAngleDeg * Math.PI) / 180.0;
+    const largeArc = phi_max > Math.PI ? 1 : 0;
+
+    const p_out_start = [-w / 2.0, cy];
+    const p_in_start = [w / 2.0, cy];
+    const p_out_end = [cx - r_out * Math.cos(phi_max), cy - r_out * Math.sin(phi_max)];
+    const p_in_end = [cx - r_in * Math.cos(phi_max), cy - r_in * Math.sin(phi_max)];
+
+    // Annular channel contour
     const pathD = `M ${p_out_start[0]} ${p_out_start[1]} ` +
       `A ${r_out} ${r_out} 0 ${largeArc} 1 ${p_out_end[0]} ${p_out_end[1]} ` +
       `L ${p_in_end[0]} ${p_in_end[1]} ` +
@@ -589,8 +657,8 @@ export class ArenaRenderer {
     parentG.appendChild(path);
 
     // Centerline
-    const r_mid = (r_in + r_out) / 2.0;
-    const midD = `M 0 0 A ${r_mid} ${r_mid} 0 ${largeArc} 1 ${cx - r_mid * Math.cos(d_th_max)} ${cy - r_mid * Math.sin(d_th_max)}`;
+    const midEnd = [cx - r_c * Math.cos(phi_max), cy - r_c * Math.sin(phi_max)];
+    const midD = `M 0 ${cy} A ${r_c} ${r_c} 0 ${largeArc} 1 ${midEnd[0]} ${midEnd[1]}`;
     const midLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
     midLine.setAttribute("d", midD);
     midLine.setAttribute("fill", "none");
@@ -599,7 +667,7 @@ export class ArenaRenderer {
     midLine.setAttribute("stroke-dasharray", "4,3");
     parentG.appendChild(midLine);
 
-    // Start line
+    // Start Baseline
     const startLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
     startLine.setAttribute("x1", `${p_out_start[0]}`);
     startLine.setAttribute("y1", `${p_out_start[1]}`);
@@ -609,11 +677,16 @@ export class ArenaRenderer {
     startLine.setAttribute("stroke-width", "3.5");
     parentG.appendChild(startLine);
 
+    const flipX = templateInfo.flipped ? -1 : 1;
+    const flipY = (templateInfo.at_rear && templateInfo.category !== "straight") ? -1 : 1;
+
     for (const [l, r] of pairs) {
-      const d_th = (l - r) * (Math.PI / 4.0);
-      const po = [cx - r_out * Math.cos(d_th), cy - r_out * Math.sin(d_th)];
-      const pi = [cx - r_in * Math.cos(d_th), cy - r_in * Math.sin(d_th)];
-      const isTarget = (l === templateInfo.canonical_left);
+      const k = `${l},${r}`;
+      const deg = pairAngles[k] !== undefined ? pairAngles[k] : ((l - r) * 35.0);
+      const phi = (deg * Math.PI) / 180.0;
+      const po = [cx - r_out * Math.cos(phi), cy - r_out * Math.sin(phi)];
+      const pi = [cx - r_in * Math.cos(phi), cy - r_in * Math.sin(phi)];
+      const isTarget = (l === templateInfo.canonical_left && r === templateInfo.canonical_right);
 
       const mark = document.createElementNS("http://www.w3.org/2000/svg", "line");
       mark.setAttribute("x1", `${po[0]}`);
@@ -621,27 +694,179 @@ export class ArenaRenderer {
       mark.setAttribute("x2", `${pi[0]}`);
       mark.setAttribute("y2", `${pi[1]}`);
 
+      const pm = [(po[0] + pi[0]) / 2.0, (po[1] + pi[1]) / 2.0];
+      const lblG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      lblG.setAttribute("transform", `translate(${pm[0]}, ${pm[1]}) scale(${flipX}, ${flipY})`);
+
       if (isTarget) {
         mark.setAttribute("stroke", targetColor);
         mark.setAttribute("stroke-width", "3.2");
         parentG.appendChild(mark);
 
         const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        lbl.setAttribute("x", `${(po[0] + pi[0]) / 2}`);
-        lbl.setAttribute("y", `${(po[1] + pi[1]) / 2 - 4}`);
+        lbl.setAttribute("x", "0");
+        lbl.setAttribute("y", "-4");
         lbl.setAttribute("fill", targetColor);
         lbl.setAttribute("font-size", "8");
         lbl.setAttribute("font-weight", "900");
         lbl.setAttribute("text-anchor", "middle");
-        lbl.textContent = `★ ${templateInfo.target_line_label}`;
-        parentG.appendChild(lbl);
+        lbl.textContent = `★ ${templateInfo.target_line_label} (${deg}°)`;
+        lblG.appendChild(lbl);
+        parentG.appendChild(lblG);
       } else {
         mark.setAttribute("stroke", "rgba(148, 163, 184, 0.45)");
         mark.setAttribute("stroke-width", "1.5");
         mark.setAttribute("stroke-dasharray", "3,3");
         parentG.appendChild(mark);
+
+        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lbl.setAttribute("x", "0");
+        lbl.setAttribute("y", "-3");
+        lbl.setAttribute("fill", "rgba(148, 163, 184, 0.7)");
+        lbl.setAttribute("font-size", "6");
+        lbl.setAttribute("text-anchor", "middle");
+        lbl.textContent = `L${l} R${r}`;
+        lblG.appendChild(lbl);
+        parentG.appendChild(lblG);
       }
     }
+  }
+
+  _buildAsymmetricCounterTemplate(parentG, templateInfo, primaryColor, targetColor, acrylicFill) {
+    const k = templateInfo.spin_k || Math.min(templateInfo.canonical_left, Math.abs(templateInfo.canonical_right)) || 1;
+    const spinDeg = templateInfo.spin_deg || (k * 90.0);
+    const rem = templateInfo.pivot_rem || (templateInfo.canonical_left - k) || 1;
+    const pivotDeg = templateInfo.pivot_deg || (rem * 45.0);
+
+    const flipX = templateInfo.flipped ? -1 : 1;
+    const flipY = (templateInfo.at_rear && templateInfo.category !== "straight") ? -1 : 1;
+
+    // Phase 1: Spin Disc (centered at robot pose)
+    const spinG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    spinG.setAttribute("class", "template-phase-spin");
+
+    const radius = 35.0; // MINIATURE_RADIUS
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", "0");
+    circle.setAttribute("cy", "0");
+    circle.setAttribute("r", `${radius}`);
+    circle.setAttribute("fill", acrylicFill);
+    circle.setAttribute("stroke", primaryColor);
+    circle.setAttribute("stroke-width", "2");
+    circle.setAttribute("stroke-dasharray", "4,2");
+    spinG.appendChild(circle);
+
+    const pin = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    pin.setAttribute("cx", "0");
+    pin.setAttribute("cy", "0");
+    pin.setAttribute("r", "3.5");
+    pin.setAttribute("fill", "#ffffff");
+    spinG.appendChild(pin);
+
+    // Baseline (0°) towards front bumper
+    const base = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    base.setAttribute("x1", "0");
+    base.setAttribute("y1", "0");
+    base.setAttribute("x2", "0");
+    base.setAttribute("y2", `${-radius}`);
+    base.setAttribute("stroke", "#0f172a");
+    base.setAttribute("stroke-width", "3.5");
+    spinG.appendChild(base);
+
+    // Spin stop line at spinDeg
+    const spinRad = (spinDeg * Math.PI) / 180.0;
+    const spX = radius * Math.sin(spinRad);
+    const spY = -radius * Math.cos(spinRad);
+
+    const spinLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    spinLine.setAttribute("x1", "0");
+    spinLine.setAttribute("y1", "0");
+    spinLine.setAttribute("x2", `${spX}`);
+    spinLine.setAttribute("y2", `${spY}`);
+    spinLine.setAttribute("stroke", targetColor);
+    spinLine.setAttribute("stroke-width", "3.2");
+    spinG.appendChild(spinLine);
+
+    // Spin Label
+    const spinLblG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const slX = spX * 0.65;
+    const slY = spY * 0.65;
+    spinLblG.setAttribute("transform", `translate(${slX}, ${slY}) scale(${flipX}, ${flipY})`);
+    const spinLbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    spinLbl.setAttribute("x", "0");
+    spinLbl.setAttribute("y", "-3");
+    spinLbl.setAttribute("fill", targetColor);
+    spinLbl.setAttribute("font-size", "7.5");
+    spinLbl.setAttribute("font-weight", "bold");
+    spinLbl.setAttribute("text-anchor", "middle");
+    spinLbl.textContent = `① Spin ${spinDeg}° (L${k} R-${k})`;
+    spinLblG.appendChild(spinLbl);
+    spinG.appendChild(spinLblG);
+
+    parentG.appendChild(spinG);
+
+    // Phase 2: Pivot Fan (placed at post-spin heading)
+    const pivotG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    pivotG.setAttribute("class", "template-phase-pivot");
+    pivotG.setAttribute("transform", `rotate(${spinDeg})`);
+
+    const w = 65.0; // WHEELBASE_MM
+    const pv_x = 32.5;
+    const pv_y = 0;
+
+    const pathD = `M ${pv_x} ${pv_y} L -32.5 0 A ${w} ${w} 0 0 1 ${pv_x + w} 0 Z`;
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathD);
+    path.setAttribute("fill", acrylicFill);
+    path.setAttribute("stroke", primaryColor);
+    path.setAttribute("stroke-width", "2");
+    pivotG.appendChild(path);
+
+    const pPin = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    pPin.setAttribute("cx", `${pv_x}`);
+    pPin.setAttribute("cy", `${pv_y}`);
+    pPin.setAttribute("r", "3.5");
+    pPin.setAttribute("fill", "#ef4444");
+    pivotG.appendChild(pPin);
+
+    const pStartLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    pStartLine.setAttribute("x1", "-32.5");
+    pStartLine.setAttribute("y1", "0");
+    pStartLine.setAttribute("x2", `${pv_x}`);
+    pStartLine.setAttribute("y2", "0");
+    pStartLine.setAttribute("stroke", "#0f172a");
+    pStartLine.setAttribute("stroke-width", "3.5");
+    pivotG.appendChild(pStartLine);
+
+    const pivRad = (pivotDeg * Math.PI) / 180.0;
+    const px = pv_x - w * Math.cos(pivRad);
+    const py = pv_y - w * Math.sin(pivRad);
+
+    const pLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    pLine.setAttribute("x1", `${pv_x}`);
+    pLine.setAttribute("y1", `${pv_y}`);
+    pLine.setAttribute("x2", `${px}`);
+    pLine.setAttribute("y2", `${py}`);
+    pLine.setAttribute("stroke", targetColor);
+    pLine.setAttribute("stroke-width", "3.2");
+    pivotG.appendChild(pLine);
+
+    const pivLblG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const plX = pv_x - (w * 0.65) * Math.cos(pivRad);
+    const plY = pv_y - (w * 0.65) * Math.sin(pivRad);
+    pivLblG.setAttribute("transform", `translate(${plX}, ${plY}) scale(${flipX}, ${flipY})`);
+    const pivLbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    pivLbl.setAttribute("x", "0");
+    pivLbl.setAttribute("y", "-4");
+    pivLbl.setAttribute("fill", targetColor);
+    pivLbl.setAttribute("font-size", "7.5");
+    pivLbl.setAttribute("font-weight", "bold");
+    pivLbl.setAttribute("text-anchor", "middle");
+    pivLbl.textContent = `② Pivot ${pivotDeg}° (L${rem} R0)`;
+    pivLblG.appendChild(pivLbl);
+    pivotG.appendChild(pivLblG);
+
+    parentG.appendChild(pivotG);
   }
 
 

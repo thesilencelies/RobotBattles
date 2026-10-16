@@ -82,6 +82,8 @@ class PlaytestApp {
     this.btnRightPlus = document.getElementById("btn-right-plus");
     this.btnExecuteTurn = document.getElementById("btn-execute-turn");
     this.presetButtons = document.querySelectorAll(".btn-preset");
+    this.planningTemplateBadge = document.getElementById("planning-template-badge");
+    this._templateCache = new Map();
 
     // Views
     this.playerRobotContainer = document.getElementById("player-robot-container");
@@ -107,6 +109,9 @@ class PlaytestApp {
 
     if (tabName === "arena" && this.currentMatch) {
       this.arenaRenderer.render(this.currentMatch);
+      if (this.currentMatch.phase !== "game_over") {
+        this._updatePlanningPreview();
+      }
     } else if (tabName === "builder" && this.builderController) {
       setTimeout(() => this.builderController.zoomFit(), 100);
     }
@@ -118,6 +123,7 @@ class PlaytestApp {
       this.rightDriveVal.textContent = this.turnRight > 0 ? `+${this.turnRight}` : this.turnRight;
       this.leftSlider.value = this.turnLeft;
       this.rightSlider.value = this.turnRight;
+      this._updatePlanningPreview();
     };
 
     this.leftSlider.addEventListener("input", (e) => {
@@ -339,6 +345,7 @@ class PlaytestApp {
 
     this.btnExecuteTurn.disabled = true;
     this.btnExecuteTurn.textContent = "⚙️ Executing...";
+    this.arenaRenderer.clearPlanningPreview();
 
     try {
       const data = await PlaytestApi.submitTurn(this.turnLeft, this.turnRight);
@@ -480,6 +487,53 @@ class PlaytestApp {
     RobotViewRenderer.renderRobotState(this.playerRobotContainer, pBot, false);
     RobotViewRenderer.renderRobotState(this.automatonRobotContainer, aBot, true, m.automaton_roll, m.automaton_action);
     CombatLogRenderer.renderLog(this.logContainer, m.log);
+
+    if (m.phase !== "game_over") {
+      this._updatePlanningPreview();
+    } else {
+      this.arenaRenderer.clearPlanningPreview();
+      if (this.planningTemplateBadge) {
+        this.planningTemplateBadge.textContent = "🏁 Match Concluded";
+      }
+    }
+  }
+
+  async _updatePlanningPreview() {
+    const left = this.turnLeft;
+    const right = this.turnRight;
+    const key = `${left},${right}`;
+    let templateInfo = this._templateCache.get(key);
+    if (!templateInfo) {
+      try {
+        const data = await PlaytestApi.getMovementTemplate(left, right);
+        templateInfo = data.template || data;
+        this._templateCache.set(key, templateInfo);
+      } catch (err) {
+        console.warn("Could not fetch template preview:", err);
+        return;
+      }
+    }
+
+    if (this.turnLeft !== left || this.turnRight !== right) {
+      return;
+    }
+
+    if (this.planningTemplateBadge) {
+      const flipTag = templateInfo.flipped ? " [FLIP]" : "";
+      const rearTag = templateInfo.at_rear ? " [REAR]" : "";
+      const lineLbl = templateInfo.target_line_label ? ` • ${templateInfo.target_line_label}` : "";
+      this.planningTemplateBadge.textContent = `📐 ${templateInfo.name}${flipTag}${rearTag}${lineLbl}`;
+    }
+
+    if (this.currentMatch && this.currentMatch.player_robot && this.currentMatch.player_robot.pose) {
+      if (this.currentMatch.phase !== "game_over" && !this.arenaRenderer.animating) {
+        this.arenaRenderer.renderPlanningPreview(
+          this.currentMatch.player_robot.pose,
+          { left, right },
+          templateInfo
+        );
+      }
+    }
   }
 }
 

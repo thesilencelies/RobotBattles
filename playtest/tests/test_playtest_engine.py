@@ -2163,6 +2163,79 @@ class TestPlaytestEngine(unittest.TestCase):
         wall_logs = [e.message for e in match.log if "contacted the wall" in e.message]
         self.assertTrue(len(wall_logs) > 0, "Driving weapon into wall should log contact and feedback")
 
+    def test_physical_curve_templates_trajectory(self):
+        """Tests that consolidated physical curve templates generate trajectories matching exact angles."""
+        from playtest.engine.match import get_template_metadata
+        from playtest.engine.movement import generate_trajectory
+
+        start = Pose(x=400.0, y=400.0, theta=0.0)
+
+        # 1. Gentle curve: (3, 2) -> 26.0 deg right
+        meta_gentle = get_template_metadata(3, 2)
+        self.assertEqual(meta_gentle["template_id"], "curve_gentle")
+        self.assertEqual(meta_gentle["nominal_rc"], 220.0)
+        self.assertAlmostEqual(meta_gentle["target_angle_deg"], 26.0)
+        self.assertFalse(meta_gentle["flipped"])
+        traj_g = generate_trajectory(start, MoveChoice(3, 2), num_steps=20)
+        self.assertAlmostEqual(traj_g[-1].theta, 26.0, places=1)
+        self.assertGreater(traj_g[-1].x, 400.0)  # moved right
+        self.assertLess(traj_g[-1].y, 400.0)     # moved forward (decreased y)
+
+        # Flipped gentle curve: (2, 3) -> 26.0 deg left (334 deg)
+        meta_gentle_flip = get_template_metadata(2, 3)
+        self.assertTrue(meta_gentle_flip["flipped"])
+        traj_gf = generate_trajectory(start, MoveChoice(2, 3), num_steps=20)
+        self.assertAlmostEqual(traj_gf[-1].theta, 334.0, places=1)
+        self.assertLess(traj_gf[-1].x, 400.0)    # moved left
+
+        # 2. Medium curve: (2, 1) -> 35.0 deg
+        meta_med = get_template_metadata(2, 1)
+        self.assertEqual(meta_med["template_id"], "curve_medium")
+        self.assertEqual(meta_med["nominal_rc"], 97.5)
+        self.assertAlmostEqual(meta_med["target_angle_deg"], 35.0)
+        traj_m = generate_trajectory(start, MoveChoice(2, 1), num_steps=20)
+        self.assertAlmostEqual(traj_m[-1].theta, 35.0, places=1)
+
+        # 3. Sharp curve: (3, 1) -> 70.0 deg, and (5, 1) -> 180.0 deg
+        meta_sharp = get_template_metadata(3, 1)
+        self.assertEqual(meta_sharp["template_id"], "curve_sharp")
+        self.assertEqual(meta_sharp["nominal_rc"], 55.0)
+        self.assertAlmostEqual(meta_sharp["target_angle_deg"], 70.0)
+        traj_s = generate_trajectory(start, MoveChoice(3, 1), num_steps=20)
+        self.assertAlmostEqual(traj_s[-1].theta, 70.0, places=1)
+
+        meta_sharp_max = get_template_metadata(5, 1)
+        self.assertAlmostEqual(meta_sharp_max["target_angle_deg"], 180.0)
+        traj_smax = generate_trajectory(start, MoveChoice(5, 1), num_steps=20)
+        self.assertAlmostEqual(traj_smax[-1].theta, 180.0, places=1)
+
+    def test_asymmetric_counter_drives_trajectory(self):
+        """Tests Rule 6.1 g: Spin Disc for min(|L|, |R|) then Pivot Fan for remainder."""
+        from playtest.engine.match import get_template_metadata
+        from playtest.engine.movement import generate_trajectory
+
+        start = Pose(x=400.0, y=400.0, theta=0.0)
+
+        # Choice (3, -1): k=1 (spin 90°), rem=2 (pivot 90°) -> total rotation 180°
+        meta = get_template_metadata(3, -1)
+        self.assertEqual(meta["category"], "asymmetric_counter")
+        self.assertEqual(meta["spin_k"], 1)
+        self.assertEqual(meta["spin_deg"], 90.0)
+        self.assertEqual(meta["pivot_rem"], 2)
+        self.assertEqual(meta["pivot_deg"], 90.0)
+        self.assertFalse(meta["flipped"])
+
+        traj = generate_trajectory(start, MoveChoice(3, -1), num_steps=20)
+        # End theta should be 180 deg
+        self.assertAlmostEqual(traj[-1].theta, 180.0, places=1)
+
+        # Choice (-1, 3): left turn counter-drive -> flipped = True
+        meta_flip = get_template_metadata(-1, 3)
+        self.assertEqual(meta_flip["category"], "asymmetric_counter")
+        self.assertTrue(meta_flip["flipped"])
+        traj_flip = generate_trajectory(start, MoveChoice(-1, 3), num_steps=20)
+        self.assertAlmostEqual(traj_flip[-1].theta, 180.0, places=1)
+
 
 if __name__ == "__main__":
     unittest.main()

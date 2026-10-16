@@ -29,7 +29,13 @@ from .combat import (
     start_of_turn_spin_up,
 )
 from .field import AUTOMATON_START_POSE, PLAYER_START_POSE
-from .movement import DRIVE_UNIT_MM, generate_trajectory
+from .movement import (
+    CURVE_CONFIGS,
+    DRIVE_UNIT_MM,
+    MINIATURE_RADIUS,
+    WHEELBASE_MM,
+    generate_trajectory,
+)
 from .types import (
     CollisionEvent,
     CombatLogEntry,
@@ -46,10 +52,32 @@ _CANONICAL_TEMPLATE_PAIRS = {t.template_id: t.pairs for t in build_all_movement_
 
 def get_template_metadata(left: int, right: int) -> Dict[str, Any]:
     info = map_permutation_to_template(left, right)
-    info["pairs"] = _CANONICAL_TEMPLATE_PAIRS.get(
-        info["template_id"],
+    t_id = info["template_id"]
+    pairs = _CANONICAL_TEMPLATE_PAIRS.get(
+        t_id,
         [(info["canonical_left"], info["canonical_right"])],
     )
+    info["pairs"] = pairs
+    info["wheelbase"] = WHEELBASE_MM
+    info["drive_unit"] = DRIVE_UNIT_MM
+    info["miniature_radius"] = MINIATURE_RADIUS
+
+    if t_id in CURVE_CONFIGS:
+        cfg = CURVE_CONFIGS[t_id]
+        info["nominal_rc"] = cfg["nominal_rc"]
+        info["pair_angles"] = {f"{k[0]},{k[1]}": v for k, v in cfg["pair_angles"].items()}
+        pair = (info["canonical_left"], info["canonical_right"])
+        info["target_angle_deg"] = cfg["pair_angles"].get(pair, 0.0)
+
+    if info["category"] == "asymmetric_counter":
+        c_l, c_r = info["canonical_left"], info["canonical_right"]
+        k = -c_r
+        rem = c_l - k
+        info["spin_k"] = k
+        info["spin_deg"] = k * 90.0
+        info["pivot_rem"] = rem
+        info["pivot_deg"] = rem * 45.0
+
     return info
 
 

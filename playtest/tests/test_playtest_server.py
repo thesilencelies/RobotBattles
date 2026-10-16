@@ -134,6 +134,25 @@ class TestPlaytestServer(unittest.TestCase):
         match = json.loads(res.body.decode("utf-8"))["match"]
         self.assertEqual(match["max_rounds"], 20)
 
+    def test_api_movement_template(self):
+        # 1. Gentle curve (3, 2)
+        res = self.router.dispatch("GET", "/api/movement/template", {"left": "3", "right": "2"}, b"")
+        self.assertEqual(res.status, 200)
+        data = json.loads(res.body.decode("utf-8"))
+        tmpl = data.get("template") or data
+        self.assertEqual(tmpl["template_id"], "curve_gentle")
+        self.assertEqual(tmpl["nominal_rc"], 220.0)
+        self.assertAlmostEqual(tmpl["target_angle_deg"], 26.0)
+
+        # 2. Asymmetric counter (3, -1)
+        res_asym = self.router.dispatch("GET", "/api/movement/template", {"left": "3", "right": "-1"}, b"")
+        self.assertEqual(res_asym.status, 200)
+        data_asym = json.loads(res_asym.body.decode("utf-8"))
+        tmpl_asym = data_asym.get("template") or data_asym
+        self.assertEqual(tmpl_asym["category"], "asymmetric_counter")
+        self.assertEqual(tmpl_asym["spin_k"], 1)
+        self.assertEqual(tmpl_asym["pivot_rem"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -21,7 +21,7 @@ from builder.server.data import (
     serialize_robot_csv,
     write_saved_robot,
 )
-from playtest.engine.match import create_match, execute_turn
+from playtest.engine.match import create_match, execute_turn, get_template_metadata
 from playtest.engine.types import MatchState, MoveChoice
 
 PLAYTEST_DIR = Path(__file__).resolve().parent.parent
@@ -101,6 +101,7 @@ class Router:
         self.routes_post["/api/battle/turn"] = self._api_battle_turn
         self.routes_post["/api/battle/reset"] = self._api_battle_reset
         self.routes_get["/api/battle/export"] = self._api_battle_export
+        self.routes_get["/api/movement/template"] = self._api_movement_template
 
     def _api_cards(self, query: Mapping[str, str]) -> Response:
         cards = load_all_cards()
@@ -225,6 +226,15 @@ class Router:
         resp = Response.json(export_data)
         resp.headers["Content-Disposition"] = f"attachment; filename=match_{self.current_match.match_id}_round_{self.current_match.round}.json"
         return resp
+
+    def _api_movement_template(self, query: Mapping[str, str]) -> Response:
+        try:
+            left = int(query.get("left", 0))
+            right = int(query.get("right", 0))
+        except (ValueError, TypeError):
+            raise HttpError(400, "Query params 'left' and 'right' must be integers")
+        meta = get_template_metadata(left, right)
+        return Response.json({"template": meta, **meta})
 
     def dispatch(
         self, method: str, path: str, query: Mapping[str, str], body: bytes

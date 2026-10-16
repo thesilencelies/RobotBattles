@@ -232,27 +232,16 @@ Components may have keywords that define specific mechanical rules and interacti
   \toprule
   \textbf{Keyword} & \textbf{Summary} \\
   \midrule
-  \keywordbadge{kw_fragile}{Fragile} & Destroyed as if durability 1 when taking weapon damage. \\
-  \keywordbadge{kw_spin_up}{Spin up (X, Y)} & Add X spin counters at turn start (max Y); cleared on attack or inactive. \\
-  \keywordbadge{kw_forks}{Forks} & Opponent in line with forks (any part of robot) raised during contact (disabled if inverted unless invertible). \\
-  \keywordbadge{kw_wedge}{Wedge} & Hit robot is not thrown (disabled if inverted unless invertible). \\
+  \keywordbadge{kw_fragile}{Fragile} & If this component takes weapon damage it is destroyed as if it had a durability of 1 \\
+  \keywordbadge{kw_spin_up}{Spin up X} & Add a spin counters at turn start (max X); cleared on attack, hitting a wall or becoming inactive. \\
+  \keywordbadge{kw_forks}{Forks} & If the opposing robot is in line with the forks during contact, they become lifted for this contact (does not work while inverted)  \\
+  \keywordbadge{kw_wedge}{Wedge} & If this component is hit this robot receives half the throw strength (does not work while inverted) \\
   \keywordbadge{kw_invertible}{Invertible} & Component functions normally while inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & Inverts upright at turn end without contact if active. \\
-  \keywordbadge{kw_reset}{Reset} & Weapon inactive the turn after use; requires supply to reset. \\
+  \keywordbadge{kw_reset}{Reset} & This weapon is inactive the turn after it is used. unt] (this does not cause the robot to be considered stuck if it is also a self righter) \\
   \bottomrule
 \end{tabularx}
 \end{center}
-
-\subsubsection{Keyword Rules \& Mechanical Details}
-\begin{description}[leftmargin=!, labelwidth=2.5cm, itemsep=1pt, parsep=0pt, topsep=1pt, font=\bfseries\color{primaryDark}\small]
-  \item[Fragile:] When this component takes weapon strike damage, it is immediately destroyed as if its durability were 1.
-  \item[Spin up (X, Y):] At the start of each turn, add $X$ spin counters (max $Y$). All counters are removed when the weapon attacks or if it becomes inactive.
-  \item[Forks:] If any part of the opposing robot is in line with the forks during contact, they become \textbf{raised} (lifted) for that contact. Forks do not function while inverted unless they have the \textit{invertible} keyword.
-  \item[Wedge:] If this component is hit, this robot is not thrown. Wedges do not function while inverted unless they have the \textit{invertible} keyword.
-  \item[Invertible:] This component functions inverted. Components lacking this keyword (including weapons, drive, wedges, and forks) do not function while inverted.
-  \item[Self-right:] If a turn ends without contact and this robot is inverted, invert it. Requires the component to be active.
-  \item[Reset:] This weapon is inactive the turn after it is used (triggered by attacking or self-righting). A component that is resetting needs to be supplied in order to reset. (Does not cause the robot to be considered stuck if it is also a self-righter.)
-\end{description}
 
 \clearpage
 

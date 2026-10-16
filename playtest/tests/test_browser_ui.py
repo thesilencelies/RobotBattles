@@ -480,6 +480,46 @@ class TestBrowserUI(unittest.TestCase):
         self.assertTrue(train_res["hasHud"], "Damage train HUD should be visible during animation")
         self.assertTrue(train_res["hasReplay"], "Replay damage train button should be present on robot view")
 
+    def test_07_interactive_planning_template_and_preview(self):
+        self.js_eval("window.app.switchTab('arena')")
+        # 1. Test slider change to Gentle Curve (3, 2)
+        res = self.js_eval("""
+        (async () => {
+          window.app.turnLeft = 3;
+          window.app.turnRight = 2;
+          await window.app._updatePlanningPreview();
+          const badgeText = document.getElementById("planning-template-badge").textContent;
+          const overlay = window.app.arenaRenderer.layerTemplates.querySelector(".movement-template-overlay.planning-preview");
+          return {
+            badgeText,
+            hasOverlay: Boolean(overlay),
+            isGentle: badgeText.includes("Gentle Curve")
+          };
+        })()
+        """)
+        self.assertTrue(res["hasOverlay"], "Planning preview template overlay should be rendered on the arena")
+        self.assertTrue(res["isGentle"], f"Badge text should reflect Gentle Curve: {res['badgeText']}")
+
+        # 2. Test asymmetric counter-drive (3, -1) -> Spin Disc + Pivot Fan
+        asym_res = self.js_eval("""
+        (async () => {
+          window.app.turnLeft = 3;
+          window.app.turnRight = -1;
+          await window.app._updatePlanningPreview();
+          const badgeText = document.getElementById("planning-template-badge").textContent;
+          const spinPhase = window.app.arenaRenderer.layerTemplates.querySelector(".template-phase-spin");
+          const pivotPhase = window.app.arenaRenderer.layerTemplates.querySelector(".template-phase-pivot");
+          return {
+            badgeText,
+            hasSpin: Boolean(spinPhase),
+            hasPivot: Boolean(pivotPhase)
+          };
+        })()
+        """)
+        self.assertTrue(asym_res["hasSpin"], "Asymmetric counter should render Phase 1: Spin Disc")
+        self.assertTrue(asym_res["hasPivot"], "Asymmetric counter should render Phase 2: Pivot Fan")
+        self.assertIn("Spin Disc + Pivot Fan", asym_res["badgeText"])
+
 
 if __name__ == "__main__":
     unittest.main()

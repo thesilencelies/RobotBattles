@@ -111,4 +111,13 @@ export class PlaytestApi {
     }
     return res.json();
   }
+
+  static async getMovementTemplate(left, right) {
+    const res = await fetch(`/api/movement/template?left=${encodeURIComponent(left)}&right=${encodeURIComponent(right)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to fetch movement template");
+    }
+    return res.json();
+  }
 }
