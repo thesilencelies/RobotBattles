@@ -31,7 +31,7 @@
 \newcommand{\renderCard}[1]{%
   \begin{tikzpicture}
     \node[draw=boxBorder, line width=0.8pt, rounded corners=2.5mm, fill=white, inner sep=0pt] {%
-      \resizebox{!}{5.0cm}{#1}%
+      \resizebox{!}{8.5cm}{#1}%
     };
   \end{tikzpicture}%
 }
@@ -159,8 +159,8 @@ Cards represent the physical components, electronics, mechanical assemblies, and
   \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \renderCard{\input{../cardCreation/build/card/Simple_ESC.tex}}
-    \caption{Component Card (Electronic Speed Controller)}
+    \renderCard{\input{../cardCreation/build/card/Brushless_motor.tex}}
+    \caption{Component Card (motor)}
     \label{fig:card_esc}
   \end{subfigure}
   \hfill
@@ -282,7 +282,7 @@ A component is only active if its requirements are supplied by connected compone
 
 \section{The Arena}
 
-Combat takes place inside a hazard-filled enclosed arena.
+Combat takes place inside an enclosed arena with pits at each corner.
 
 \begin{figure}[H]
   \centering
@@ -342,31 +342,22 @@ Each round follows a sequence of four phases:
 Movement units are found on the straight movement template. Where an effect says a robot moves that amount, move them along that template without changing facing.
 
 \begin{figure}[H]
-  \centering
-  \begin{minipage}[c]{0.32\textwidth}
     \centering
     \includegraphics[height=4.3cm]{images/movement_templates.png}
-    \caption{Core Templates}
+    \caption{Movement Templates}
     \label{fig:movement_templates}
-  \end{minipage}
-  \hfill
-  \begin{minipage}[c]{0.65\textwidth}
-    \begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=0.5pt]
+\end{figure}
+
+\begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=0.5pt]
       \item In planning, players secretly choose drive settings with absolute value $\le$ active drive count on each side (\texttt{0/0} is stationary). Choices are revealed simultaneously.
       \item Both robots advance along the template corresponding to their chosen drive pair.
       \item \textbf{Forward Alignment \& Stop Lines:} Front bumper starts flush at black baseline. On curved templates, target stop lines are drawn at the robot's intended bumper angle; align the bumper flush against the target line to achieve the correct position and facing.
       \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns ($L \ge R$). If turning left ($R > L$), flip the template face-down.
       \item \textbf{Reverse Maneuvers (Rear Placement):} If drive is negative, place the template baseline against the \textbf{back} (rear) of the robot; move backward to the target line.
-      \item \textbf{Rotations \& Pivots:} In-place spins ($L = -R$) use the center spin disc in $90^\circ$ increments per unit ($4/-4 = 360^\circ$). Pivots on a locked wheel ($R = 0$ or $L = 0$) use the pivot fan in $45^\circ$ increments per unit ($4/0 = 180^\circ$ semicircle).
       \item \textbf{Asymmetric Drive with a Negative:} When drive choices have opposite signs with unequal magnitudes (e.g., \texttt{3/-1} or \texttt{3/-2}), resolve the movement in two steps: first spin on the spot using the Spin Disc for the shared magnitude, then from that new heading use the Pivot Fan for the remainder.
       \item \textbf{Movements Beyond the Template:} If drive exceeds markings (e.g., $5/0$, $5/-5$, or boosted drive), move to the template end, then place another template for the remainder.
       \item \textbf{Path Overlap \& Collision Check:} Overlapping paths cause collisions at contact.
-    \end{enumerate}
-  \end{minipage}
-\end{figure}
-
-\vspace{-0.5em}
-
+\end{enumerate}
 \clearpage
 
 % ==============================================================================
@@ -385,9 +376,8 @@ Movement units are found on the straight movement template. Where an effect says
 \vspace{0.2em}
 \noindent\textbf{2. Curved Arcs and Left/Right Flipping (\texttt{2/1} vs \texttt{1/2})}
 \begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-  \item \textbf{(\texttt{2/1}):} Place the Medium Curve Template face-up with baseline at the front bumper. Advance along the curve until the front bumper aligns with line \textbf{L2 R1}, sweeping $35^\circ$ clockwise to the right.
-  \item \textbf{(\texttt{1/2}):} Right track is faster ($R > L$), turning left. Take the \textbf{exact same} Medium Curve Template and \textbf{flip it face-down}. Advance along the arc to line \textbf{L2 R1}, sweeping $35^\circ$ counter-clockwise.
-  \item \textbf{(\texttt{-2/-1}):} Placed face-up against the rear bumper; robot backs up along the curved track.
+  \item \textbf{(\texttt{2/1}):} Place the Medium Curve Template face-up with baseline at the front bumper. Advance along the curve until the front bumper aligns with line \textbf{L2 R1}.
+  \item \textbf{(\texttt{1/2}):} Turning left. Take the Medium Curve Template and \textbf{flip it face-down}. Advance along the arc to line \textbf{L2 R1}, sweeping counter-clockwise.
 \end{itemize}
 
 \begin{figure}[H]
@@ -423,6 +413,7 @@ Movement units are found on the straight movement template. Where an effect says
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0) rectangle (16.2, 7.2);
     \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 7.0) {2. Curved Arcs: Right (2/1) \& Left (1/2) Flipped};
 
+% this robot and curve are in the wrong place
     % Right Turn 2/1 (Face-Up)
     \node[font=\scriptsize\bfseries, text=accentBlue] at (10.2, 5.8) {Curve Right (2/1) Face-Up};
     % Actual Curve Template PNG
@@ -433,8 +424,8 @@ Movement units are found on the straight movement template. Where an effect says
     \node at (9.35, 2.87) [rotate=-35] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
     % Curved motion arrow tracking over template path
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (9.33, 1.88) to[bend left=25] (9.35, 2.87);
-    \node[font=\footnotesize\bfseries, text=accentBlue, align=center] at (8.9, 3.7) {Sweep\\35$^\circ$ CW};
 
+% this robot is in the wrong place 
     % Left Turn 1/2 (FLIP FACE-DOWN)
     \node[font=\scriptsize\bfseries, text=arenaRed] at (14.2, 6.1) {Curve Left (1/2) Flipped};
     \node[draw=noteBorder, fill=noteBg, font=\tiny\bfseries, rounded corners=2pt, inner sep=1.5pt] at (14.2, 5.55) {FLIP FACE-DOWN (R > L)};
@@ -446,7 +437,6 @@ Movement units are found on the straight movement template. Where an effect says
     \node at (15.10, 2.92) [rotate=35] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
     % Curved motion arrow tracking over template path
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (15.17, 1.88) to[bend right=25] (15.10, 2.92);
-    \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (15.6, 3.7) {Sweep\\35$^\circ$ CCW};
   \end{tikzpicture}
   \caption{Straight Driving, Reverse Maneuvers, and Curved Arcs with Face-Down Flipping}
   \label{fig:diagram_movement_straight_curve}
@@ -489,12 +479,6 @@ Movement units are found on the straight movement template. Where an effect says
     % Pivot rotation arc
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (2.8, 3.2) arc (160:105:1.6);
     \node[font=\footnotesize\bfseries, text=arenaRed] at (2.2, 4.3) {Pivot 90$^\circ$ CW};
-
-    % Remainder explanation box
-    \node[draw=boxBorder, fill=white, rounded corners=2pt, font=\fontsize{6.5}{8}\selectfont, align=left, inner sep=3pt] at (3.9, 0.75) {%
-      \textbf{Movements $>$4 (e.g. 5/0):} Pivot $180^\circ$ to template end (L4 R0), then place\\%
-      template again from new position for remainder 1 (L1 R0, $45^\circ$) $\implies$ Total = \textbf{225$^\circ$}.%
-    };
 
     % PANEL 2: In-Place Spin Disc (2/-2)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0) rectangle (16.2, 6.6);
