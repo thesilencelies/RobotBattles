@@ -4,7 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[sfdefault]{roboto}
 \usepackage{amsmath}
-\usepackage[margin=2.0cm, headheight=14pt]{geometry}
+\usepackage[top=2.0cm, bottom=2.5cm, left=2.0cm, right=2.0cm, headheight=14pt, footskip=1.2cm]{geometry}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{xcolor}
@@ -50,19 +50,20 @@
 \definecolor{wallBlack}{HTML}{0F172A}    % Boundary wall black
 
 % Typography & Section formatting
+\setcounter{secnumdepth}{0}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{primaryDark}}
-  {\thesection}{0.8em}{}[\color{primaryDark}\titlerule]
+  {}{0pt}{}[\color{primaryDark}\titlerule]
 \titlespacing*{\section}{0pt}{14pt plus 2pt minus 2pt}{6pt}
 
 \titleformat{\subsection}
   {\normalfont\large\bfseries\color{accentBlue}}
-  {\thesubsection}{0.6em}{}
+  {}{0pt}{}
 \titlespacing*{\subsection}{0pt}{10pt plus 2pt minus 2pt}{4pt}
 
 \titleformat{\subsubsection}
   {\normalfont\normalsize\bfseries\color{primaryDark}}
-  {\thesubsubsection}{0.5em}{}
+  {}{0pt}{}
 \titlespacing*{\subsubsection}{0pt}{8pt plus 1pt minus 1pt}{3pt}
 
 % Header and Footer
@@ -159,7 +160,7 @@ Cards represent the physical components, electronics, mechanical assemblies, and
   \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \renderCard{\input{../cardCreation/build/card/Brushless_motor.tex}}
+    \renderCard{\input{../cardCreation/build/card/Brushless_Motor.tex}}
     \caption{Component Card (motor)}
     \label{fig:card_esc}
   \end{subfigure}
@@ -196,7 +197,6 @@ The anatomy of each card consists of the following key attributes:
 % ==============================================================================
 
 \section{Terminology \& Keywords}
-\enlargethispage{2.0\baselineskip}
 
 \subsection{Resource Types}
 
@@ -252,14 +252,14 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
   \centering
   \begin{subfigure}[b]{0.48\textwidth}
     \centering
-    \includegraphics[height=5.2cm]{images/chassis_templates.png}
+    \includegraphics[width=\linewidth, height=5.2cm, keepaspectratio]{images/chassis_templates.png}
     \caption{Chassis Templates}
     \label{fig:chassis_templates}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.48\textwidth}
     \centering
-    \includegraphics[height=5.2cm]{images/weapon_templates.png}
+    \includegraphics[width=\linewidth, height=5.2cm, keepaspectratio]{images/weapon_templates.png}
     \caption{Weapon \& Active Area Templates}
     \label{fig:weapon_templates}
   \end{subfigure}
@@ -278,7 +278,7 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
 
 A component is only active if its requirements are supplied by connected components. If multiple components supply multiple components, sum up and distribute available supply across connected components. When there is not enough supply to power all connected components, the player chooses which components get supplied during the planning phase each turn.
 
-\vspace{0.8em}
+\clearpage
 
 \section{The Arena}
 
@@ -313,7 +313,6 @@ Combat takes place inside an enclosed arena with pits at each corner.
 % ==============================================================================
 
 \section{Battle Rules}
-\enlargethispage{2.5\baselineskip}
 
 \subsection{Match Length \& Win Conditions}
 
@@ -337,6 +336,8 @@ Each round follows a sequence of four phases:
   \bottomrule
 \end{tabularx}}
 
+\clearpage
+
 \subsection{Movement Execution}
 
 Movement units are found on the straight movement template. Where an effect says a robot moves that amount, move them along that template without changing facing.
@@ -348,16 +349,19 @@ Movement units are found on the straight movement template. Where an effect says
     \label{fig:movement_templates}
 \end{figure}
 
+\begingroup
+\emergencystretch=1.5em
 \begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=0.5pt]
       \item In planning, players secretly choose drive settings with absolute value $\le$ active drive count on each side (\texttt{0/0} is stationary). Choices are revealed simultaneously.
       \item Both robots advance along the template corresponding to their chosen drive pair.
       \item \textbf{Forward Alignment \& Stop Lines:} Front bumper starts flush at black baseline. On curved templates, target stop lines are drawn at the robot's intended bumper angle; align the bumper flush against the target line to achieve the correct position and facing.
       \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns ($L \ge R$). If turning left ($R > L$), flip the template face-down.
       \item \textbf{Reverse Maneuvers (Rear Placement):} If drive is negative, place the template baseline against the \textbf{back} (rear) of the robot; move backward to the target line.
-      \item \textbf{Asymmetric Drive with a Negative:} When drive choices have opposite signs with unequal magnitudes (e.g., \texttt{3/-1} or \texttt{3/-2}), resolve the movement in two steps: first spin on the spot using the Spin Disc for the shared magnitude, then from that new heading use the Pivot Fan for the remainder.
+      \item \textbf{Asymmetric Drive with a Negative:} When drive choices have opposite signs with unequal magnitudes (e.g., \texttt{3/\allowbreak-1} or \texttt{3/\allowbreak-2}), resolve the movement in two steps: first spin on the spot using the Spin Disc for the shared magnitude, then from that new heading use the Pivot Fan for the remainder.
       \item \textbf{Movements Beyond the Template:} If drive exceeds markings (e.g., $5/0$, $5/-5$, or boosted drive), move to the template end, then place another template for the remainder.
       \item \textbf{Path Overlap \& Collision Check:} Overlapping paths cause collisions at contact.
 \end{enumerate}
+\endgroup
 \clearpage
 
 % ==============================================================================
@@ -382,6 +386,7 @@ Movement units are found on the straight movement template. Where an effect says
 
 \begin{figure}[H]
   \centering
+  \adjustbox{max width=\linewidth}{%
   \begin{tikzpicture}[x=1cm, y=1cm]
     % PANEL 1: Straight (3/3) & Reverse (-2/-2)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (7.9, 7.2);
@@ -437,7 +442,8 @@ Movement units are found on the straight movement template. Where an effect says
     \node at (15.10, 2.92) [rotate=35] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
     % Curved motion arrow tracking over template path
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (15.17, 1.88) to[bend right=25] (15.10, 2.92);
-  \end{tikzpicture}
+  \end{tikzpicture}%
+  }
   \caption{Straight Driving, Reverse Maneuvers, and Curved Arcs with Face-Down Flipping}
   \label{fig:diagram_movement_straight_curve}
 \end{figure}
@@ -504,11 +510,6 @@ Movement units are found on the straight movement template. Where an effect says
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (10.6, 4.4) arc (140:-40:2.0);
     \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (14.2, 5.2) {Spin 180$^\circ$ CW\\(On the spot)};
 
-    % Remainder box
-    \node[draw=boxBorder, fill=white, rounded corners=2pt, font=\fontsize{6.5}{8}\selectfont, align=left, inner sep=3pt] at (12.2, 0.75) {%
-      \textbf{Movements $>$4 (e.g. 5/-5):} Spin $360^\circ$ to template end (L4 R-4), then apply\\%
-      remainder 1 (L1 R-1, $90^\circ$) on spot $\implies$ Total spin = \textbf{450$^\circ$} (zero displacement).%
-    };
   \end{tikzpicture}
   \caption{Locked-Wheel Pivot Fan vs. In-Place Spin Disc Rotations}
   \label{fig:diagram_movement_pivot_spin}
@@ -548,6 +549,7 @@ For a collision, place both robots as far along their path as they can go withou
 
 \begin{figure}[H]
   \centering
+  \adjustbox{max width=\linewidth}{%
   \begin{tikzpicture}[x=1cm, y=1cm]
     % -------------------------------------------------------------
     % TOP ROW: THREE COLLISION SCENARIOS
@@ -562,12 +564,8 @@ For a collision, place both robots as far along their path as they can go withou
     % Bot B (Square with Circle weapon) moving West (weapons in direct contact at x=2.60)
     \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=arenaRed] (4.9, 9.3) -- (4.2, 9.3) node[midway, above=-1pt, font=\tiny\bfseries, text=arenaRed] {Motion};
     \node at (3.45, 9.3) [rotate=90] {\includegraphics[width=3.4cm]{images/mini_bot_square_circle.png}};
-    % Scenario 1 label box
-    \node[draw=arenaRed, fill=noteBg, font=\scriptsize, rounded corners=2pt, align=center, inner sep=2.5pt] at (2.6, 7.3) {%
-      \textbf{ACTIVE CONTACT (Mutual)}\\%
-      \textbullet\ Active red weapon zones touch.\\%
-      \textbullet\ Both deal damage \& thrown apart.%
-    };
+    % Scenario 1 label badge
+    \node[fill=arenaRed, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (2.6, 7.3) {Active Contact (Mutual)};
 
     % SCENARIO 2: Weapon From One Side (Active vs Inert)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (5.5, 6.2) rectangle (10.7, 11.2);
@@ -579,12 +577,8 @@ For a collision, place both robots as far along their path as they can go withou
     % Bot B moving North (weapon in direct contact with left flank at x=8.00)
     \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=arenaRed] (9.7, 8.2) -- (9.7, 9.0) node[midway, left=1pt, font=\tiny\bfseries, text=arenaRed] {Motion};
     \node at (8.68, 9.3) [rotate=0] {\includegraphics[width=3.4cm]{images/mini_bot_square_circle.png}};
-    % Scenario 2 label box
-    \node[draw=arenaRed, fill=noteBg, font=\scriptsize, rounded corners=2pt, align=center, inner sep=2.5pt] at (8.1, 7.3) {%
-      \textbf{ACTIVE CONTACT (One-Sided)}\\%
-      \textbullet\ Bot A active weapon hits B's flank.\\%
-      \textbullet\ Bot B takes strike; A takes feedback.%
-    };
+    % Scenario 2 label badge
+    \node[fill=arenaRed, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (8.1, 7.3) {Active Contact (One-Sided)};
 
     % SCENARIO 3: Inertial Chassis Contact (Actual contact, Line template, NO weapons touch)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (11.0, 6.2) rectangle (16.2, 11.2);
@@ -596,12 +590,8 @@ For a collision, place both robots as far along their path as they can go withou
     % Bot B (Wide with Line weapon) angled at 75 deg, flank makes direct contact
     \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=amberNote!80!black] (15.5, 9.9) -- (14.9, 9.5) node[midway, above=-1pt, font=\tiny\bfseries, text=amberNote!80!black] {Motion};
     \node at (14.11, 9.15) [rotate=75] {\includegraphics[width=3.2cm]{images/mini_bot_wide_line.png}};
-    % Scenario 3 label box
-    \node[draw=accentBlue, fill=boxBg, font=\scriptsize, rounded corners=2pt, align=center, inner sep=2.5pt] at (13.6, 7.3) {%
-      \textbf{INERT CONTACT (No Weapons)}\\%
-      \textbullet\ Bumpers/flanks touch; weapons clear.\\%
-      \textbullet\ Resolves as Pushing Match (Sec 5.2).%
-    };
+    % Scenario 3 label badge
+    \node[fill=accentBlue, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (13.6, 7.3) {Inert Contact};
 
     % -------------------------------------------------------------
     % BOTTOM ROW: AUTOMATA CARD SHEET MAPPING (VYPER ON SQUARE CHASSIS)
@@ -614,30 +604,26 @@ For a collision, place both robots as far along their path as they can go withou
     \node at (2.41, 2.40) [rotate=0] {\includegraphics[width=3.3cm]{images/mini_bot_vyper_square.png}};
     % Contact line at Front-L shoulder
     \draw[line width=1.8pt, draw=arenaRed, dashed] (1.6, 2.94) -- (2.8, 2.94);
-    \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (1.85, 0.7) {1. Align contact line\\with Vyper's chassis};
+    \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (1.85, 0.9) {Align Contact Line};
 
     % Middle: Bold follow arrow
-    \draw[-{Stealth[length=3.5mm]}, line width=2.5pt, draw=arenaRed] (3.1, 2.94) -- (4.8, 2.94) node[midway, above=1pt, font=\scriptsize\bfseries, text=arenaRed, align=center] {Follow line\\into layout};
+    \draw[-{Stealth[length=3.5mm]}, line width=2.5pt, draw=arenaRed] (3.1, 2.94) -- (4.8, 2.94) node[midway, above=1pt, font=\scriptsize\bfseries, text=arenaRed, align=center] {Follow line};
 
     % Right: Actual Automata Card Sheet Layout (Double Size!)
     \node[anchor=west] at (5.0, 2.6) {\includegraphics[height=4.6cm]{images/automata_vyper_layout.png}};
 
     % Callout arrow to Titanium Wedge (Front-L)
-    \draw[-{Stealth[length=2.5mm]}, line width=2pt, draw=arenaRed] (6.4, 4.8) -- (6.4, 4.1) node[pos=0, above=1pt, font=\scriptsize\bfseries, text=arenaRed] {* HIT! * Titanium Wedge};
+    \draw[-{Stealth[length=2.5mm]}, line width=2pt, draw=arenaRed] (6.4, 4.8) -- (6.4, 4.1) node[pos=0, above=1pt, font=\scriptsize\bfseries, text=arenaRed] {Hit: Titanium Wedge};
 
-    % Rules summary callout on right
-    \node[draw=accentBlue, fill=noteBg, rounded corners=3pt, font=\scriptsize, align=left, inner sep=4pt] at (13.4, 2.7) {%
-      \textbf{Component Hit Rules:}\\[3pt]%
-      \textbullet\ Follow contact line into card sheet.\\%
-      \textbullet\ \textbf{Front-L Wedge} is outermost card contacted.\\%
-      \textbullet\ Takes full weapon damage.\\%
-      \textbullet\ Internal ESC, Motor \& Battery behind it\\%
-      \quad are \textbf{SHIELDED} (damage does not penetrate!).%
-    };
-  \end{tikzpicture}
+    % Callout badge on right
+    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize\bfseries, text=primaryDark, align=center, inner sep=4pt] at (13.4, 2.7) {Outermost Card Hit\\(Internals Shielded)};
+  \end{tikzpicture}%
+  }
   \caption{Determining Contact Point along Movement Paths and Mapping to Automata Sheet}
   \label{fig:diagram_contact_point}
 \end{figure}
+
+\clearpage
 
 \subsection{Inert Contact (Pushing Match)}
 
@@ -673,12 +659,6 @@ Essentially a pushing match between colliding chassis surfaces:
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue, dashed] (2.1, 6.4) -- ++(65:1.5) node[above right=-2pt, font=\scriptsize\bfseries, text=accentBlue] {Remainder $\vec{v}_A$};
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=amberNote!80!black, dashed] (3.6, 6.5) -- ++(165:1.4) node[above left=-2pt, font=\scriptsize\bfseries, text=amberNote!80!black] {Remainder $\vec{v}_B$};
 
-    % Step 1 callout
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=7.2cm, inner sep=3pt] at (3.95, 5.25) {%
-      \textbullet\ Robots advance along templates until contact (shoulder-to-flank).\\%
-      \textbullet\ Templates illustrate remaining travel vectors $\vec{v}_A$ and $\vec{v}_B$.%
-    };
-
     % PANEL 2: Step 2 (Displace Remainder Template)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 4.7) rectangle (16.2, 9.2);
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 9.05) {Step 2: Displace Remainder $\vec{v}_A$ to End of $\vec{v}_B$};
@@ -693,12 +673,6 @@ Essentially a pushing match between colliding chassis surfaces:
     \draw[-{Stealth[length=3.5mm]}, line width=2pt, draw=accentBlue] (12.0, 6.9) -- (13.4, 7.9) node[midway, below right=-2pt, font=\scriptsize\bfseries, text=accentBlue] {Displaced $\vec{v}_A$};
     % Resultant net vector line
     \draw[-{Stealth[length=3.5mm]}, line width=2.4pt, draw=arenaRed, dashed] (9.6, 6.2) -- (13.4, 7.9) node[pos=0.45, above=1pt, sloped, font=\footnotesize\bfseries, text=arenaRed] {Net Pushing Vector};
-
-    % Step 2 callout
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=7.2cm, inner sep=3pt] at (12.25, 5.25) {%
-      \textbullet\ Displace Robot A's remainder template to end of Robot B's template.\\%
-      \textbullet\ Straight line from contact to end of A forms shared push path.%
-    };
 
     % PANEL 3: Step 3 (Joint Push Along Net Vector)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0.0) rectangle (7.9, 4.4);
@@ -715,12 +689,6 @@ Essentially a pushing match between colliding chassis surfaces:
     \node at (4.3, 2.6) [rotate=-25] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
     \node at (5.4, 2.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
 
-    % Step 3 callout
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=7.2cm, inner sep=3pt] at (3.95, 0.65) {%
-      \textbullet\ Both robots move together along the straight net line.\\%
-      \textbullet\ Note: A raised robot's motion does not contribute to push power.%
-    };
-
     % PANEL 4: Step 4 (Wall Impact & 1-Unit Separation)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0.0) rectangle (16.2, 4.4);
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 4.25) {Step 4: Wall Impact \& 1-Unit Separation};
@@ -733,18 +701,12 @@ Essentially a pushing match between colliding chassis surfaces:
     \node at (14.2, 2.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
     % Small textless impact star placed above the contact point
     \node[star, star points=6, star point ratio=1.5, fill=arenaRed, draw=arenaRed!60!black, line width=0.5pt, inner sep=1.8pt] at (15.15, 3.55) {};
-    \node[draw=arenaRed, fill=noteBg, font=\scriptsize, rounded corners=2pt, align=center, inner sep=2.5pt] at (11.4, 3.3) {Throw strength = Lost distance\\Weapons take feedback};
+    \node[font=\scriptsize\bfseries, text=arenaRed, align=center] at (11.4, 3.3) {Throw = Lost Distance};
 
     % Separation after collision
     \draw[{Stealth[length=2.5mm]}-{Stealth[length=2.5mm]}, line width=2pt, draw=accentBlue] (9.6, 1.8) -- (11.8, 1.8) node[midway, below=2pt, font=\scriptsize\bfseries, text=accentBlue] {1 Unit Separation};
     \node at (9.0, 1.9) [rotate=-25] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
     \node at (12.4, 1.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
-
-    % Step 4 callout
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=7.2cm, inner sep=3pt] at (12.25, 0.8) {%
-      \textbullet\ Wall impact throws robot away with strength equal to lost distance.\\%
-      \textbullet\ If still touching, both robots are moved back 1 full unit to separate.%
-    };
   \end{tikzpicture}
   \caption{Step-by-Step Resolution of Inert Contact (Pushing Match)}
   \label{fig:diagram_inert_contact}
@@ -777,7 +739,6 @@ When weapons collide with an opponent's chassis or components:
 % ==============================================================================
 
 \section{Combat Resolution, Damage \& Status Effects}
-\enlargethispage{1.5\baselineskip}
 
 \subsection{Throws \& Inversion}
 
@@ -791,7 +752,7 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
   \centering
   \begin{tikzpicture}[x=1cm, y=1cm]
     % PANEL 1: Active Weapon Strike & Outward Throw Direction
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (9.8, 5.8);
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 1.4) rectangle (9.8, 5.8);
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 5.65) {Active Weapon Strike \& Outward Throw Direction};
 
     % Bot A (Square with Circle weapon, Crimson) pointing along theta = 18 deg (rotate = -72)
@@ -814,18 +775,8 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     \draw[-{Stealth[length=2.5mm]}, line width=1.5pt, draw=accentBlue] (7.9, 3.9) arc (-40:120:0.6);
     \node[font=\scriptsize\bfseries, text=accentBlue] at (8.3, 4.7) {Model Spin};
 
-    % Rules callout box
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=9.0cm, inner sep=3.5pt] at (4.9, 0.95) {%
-      \textbf{Active Contact Strike \& Throw Rules:}\\%
-      \textbullet\ Contact occurs at weapon template perimeter (no penetration into chassis).\\%
-      \textbullet\ Outermost component contacted takes weapon damage.\\%
-      \textbullet\ Throw vector $\vec{F}_{\text{throw}}$ radiates outward along the line connecting robot centers ($C_A \to C_B$).\\%
-      \textbullet\ Thrown robot moves 2d6 up to throw strength; model is spun during throw.\\%
-      \textbullet\ Striking weapons take feedback equal to half the combined attack strength.%
-    };
-
     % PANEL 2: Hazard Wall Elimination
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (10.2, 0) rectangle (16.2, 5.8);
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (10.2, 1.4) rectangle (16.2, 5.8);
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (10.35, 5.65) {Hazard Wall Elimination};
 
     % Boundary Perimeter Wall
@@ -844,14 +795,6 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     % Bot contacting the hazard wall directly
     \node at (13.6, 3.8) [rotate=25] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
     \node[fill=arenaRed, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (12.3, 2.35) {STATUS: KNOCKED OUT};
-
-    % Hazard Wall rules callout
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=5.4cm, inner sep=3.5pt] at (13.2, 0.85) {%
-      \textbf{Hazard Wall Rules:}\\%
-      \textbullet\ Hazard walls have yellow hatching on outer edge.\\%
-      \textbullet\ Robot pushed or thrown into marked wall is \textbf{knocked out}!\\%
-      \textbullet\ Hazard walls remain active throughout the match.%
-    };
   \end{tikzpicture}
   \caption{Active Weapon Hits, Center-to-Center Throw Line, and Hazard Wall Elimination}
   \label{fig:diagram_active_contact}
@@ -873,6 +816,8 @@ Weapon strike damage applies only to the single outermost component contacted (i
 Feedback represents components over-straining themselves under combat loads. It is damage that progresses back from the source component 
 to each component that supplies it, shared equally if there are multiple components (rounding up), down the tree until the damage is all absorbed.
 
+\clearpage
+
 \subsection{Status Effects}
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
@@ -880,103 +825,83 @@ to each component that supplies it, shared equally if there are multiple compone
   \item[Raised:] Some components (mostly forks) will make the opponent raised during contact if any part of the opposing robot is in line with them. A robot that is raised has its flip strength halved, has the throw strength of its attacks reduced by 2, and its motion does not contribute to the motion in inertial contact.
 \end{description}
 
-\clearpage
-
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[x=1cm, y=1cm]
     % -------------------------------------------------------------
     % ROW 1: AUTOMATA CARD SHEET LAYOUT & FORK POSITIONS
     % -------------------------------------------------------------
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 5.2) rectangle (16.2, 11.4);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 11.2) {Automata Layout: Locating Fork Cards on the Robot Sheet (Nightwing Wide)};
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 4.2) rectangle (16.2, 8.8);
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 8.65) {Automata Layout: Locating Fork Cards on the Robot Sheet (Nightwing Wide)};
 
-    % Double-size layout image (height=4.2cm, width ~ 6.55cm)
-    \node[anchor=west] at (0.3, 7.3) {\includegraphics[height=4.2cm]{images/automata_nightwing_layout.png}};
+    % Layout image (height=2.85cm)
+    \node[anchor=west] at (0.3, 5.75) {\includegraphics[height=2.85cm]{images/automata_nightwing_layout.png}};
 
     % Callout arrows pointing down to bumper cards
-    \node[font=\scriptsize\bfseries, text=amberNote!90!black] at (1.75, 10.3) {Front-L Fork};
-    \draw[-{Stealth[length=2.2mm]}, line width=1.6pt, draw=amberNote!90!black] (1.75, 10.1) -- (1.75, 9.5);
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=amberNote!90!black] at (1.30, 7.65) {Fork L};
+    \draw[-{Stealth[length=1.8mm]}, line width=1.3pt, draw=amberNote!90!black] (1.30, 7.48) -- (1.30, 7.20);
 
-    \node[font=\scriptsize\bfseries, text=arenaRed] at (3.58, 10.3) {Kinetic Discs};
-    \draw[-{Stealth[length=2.2mm]}, line width=1.6pt, draw=arenaRed] (3.58, 10.1) -- (3.58, 9.5);
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=arenaRed] at (2.56, 7.65) {Discs};
+    \draw[-{Stealth[length=1.8mm]}, line width=1.3pt, draw=arenaRed] (2.56, 7.48) -- (2.56, 7.20);
 
-    \node[font=\scriptsize\bfseries, text=amberNote!90!black] at (5.40, 10.3) {Front-R Fork};
-    \draw[-{Stealth[length=2.2mm]}, line width=1.6pt, draw=amberNote!90!black] (5.40, 10.1) -- (5.40, 9.5);
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=amberNote!90!black] at (3.82, 7.65) {Fork R};
+    \draw[-{Stealth[length=1.8mm]}, line width=1.3pt, draw=amberNote!90!black] (3.82, 7.48) -- (3.82, 7.20);
 
     % Explanatory Card on Right side of Row 1
-    \node[draw=boxBorder, fill=boxBg, rounded corners=3pt, font=\scriptsize, align=left, text width=8.0cm, inner sep=5pt] at (11.7, 7.8) {%
-      \textbf{\normalsize Fork Identification \& Engagement:}\\[4pt]
-      \textbullet\ \textbf{Sheet Positions:} \textbf{Forks} occupy the front bumper slots flanking the central Kinetic Disc weapons.\\[3pt]
-      \textbullet\ \textbf{No Physical Board Templates:} Miniatures on the table do \textbf{not} feature protruding fork templates. Fork engagement is determined by contact line alignment with the robot card sheet layout.\\[3pt]
-      \textbullet\ \textbf{Short Reach Zone:} Fork effects only apply directly in contact immediately at the front bumper reach zone.%
-    };
+    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize\bfseries, text=primaryDark, align=center, inner sep=5pt] at (11.7, 6.4) {Forks in Front Bumper Slots\\(Contact in line with forks causes Raised)};
 
     % -------------------------------------------------------------
     % ROW 2: ENGAGEMENT COMPARISON (POSITIVE VS NEGATIVE)
     % -------------------------------------------------------------
     % PANEL 1: Positive Engagement (In Line with Fork)
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (7.9, 4.8);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 4.65) {Positive: Contact In Line with Fork};
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (7.9, 4.0);
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 3.85) {Positive: Contact In Line with Fork};
 
     % Bot A (Nightwing Wide with center disc, no protruding fork tines)
-    \node at (2.2, 1.4) [rotate=0] {\includegraphics[width=2.2cm]{images/mini_bot_nightwing.png}};
+    \node at (2.2, 1.3) [rotate=0] {\includegraphics[width=2.0cm]{images/mini_bot_nightwing.png}};
 
     % Bot B contacting at angle in direct physical contact with front bumper at Fork L
-    \node at (2.01, 2.07) [rotate=20] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
+    \node at (2.01, 1.95) [rotate=20] {\includegraphics[width=1.7cm]{images/mini_bot_opponent_square.png}};
 
     % Fork L: Single dotted line originating on chassis, extending OVER opponent's body
-    \draw[densely dotted, line width=1.6pt, draw=amberNote!90!black] (1.86, 1.45) -- (1.86, 2.85) node[pos=0.95, above=2pt, font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=amberNote!90!black] {In Line with Fork L};
+    \draw[densely dotted, line width=1.5pt, draw=amberNote!90!black] (1.86, 1.35) -- (1.86, 2.75) node[pos=0.95, above=2pt, font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=amberNote!90!black] {In Line with Fork L};
 
     % Fork R: Single dotted line originating on chassis, extending strictly 0.6cm into space
-    \draw[densely dotted, line width=1.6pt, draw=amberNote!90!black] (2.54, 1.45) -- (2.54, 2.28) node[above=2pt, font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=amberNote!90!black] {Fork R};
+    \draw[densely dotted, line width=1.5pt, draw=amberNote!90!black] (2.54, 1.35) -- (2.54, 2.15) node[above=2pt, font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=amberNote!90!black] {Fork R};
 
-    \node[font=\scriptsize\bfseries, text=amberNote!90!black, align=center] at (1.0, 1.1) {Opponent in\\line with Fork L};
-    \draw[-{Stealth[length=2.2mm]}, draw=amberNote!90!black, line width=1.2pt] (1.0, 1.4) -- (1.86, 1.9);
+    \node[font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=amberNote!90!black, align=center] at (1.0, 1.0) {Opponent in\\line with Fork L};
+    \draw[-{Stealth[length=2.0mm]}, draw=amberNote!90!black, line width=1.1pt] (1.0, 1.3) -- (1.86, 1.8);
 
-    % Status Badge & Penalties Box
-    \node[fill=arenaRed, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3pt] at (5.5, 3.8) {STATUS: RAISED};
-    \node[draw=arenaRed, fill=noteBg, rounded corners=2pt, font=\scriptsize, align=left, text width=3.4cm, inner sep=3pt] at (5.5, 1.8) {%
-      \textbf{Raised Penalties (Sec 6.4):}\\%
-      \textbullet\ Flip strength is \textbf{halved}.\\%
-      \textbullet\ Throw strength of attacks \textbf{reduced by 2}.\\%
-      \textbullet\ Motion does \textbf{not contribute}\\
-      \quad to pushing match.%
-    };
+    % Status Badge
+    \node[fill=arenaRed, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3.5pt] at (5.5, 2.1) {STATUS: RAISED};
 
     % PANEL 2: Negative Engagement (Flank Contact Outside Forks)
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0) rectangle (16.2, 4.8);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 4.65) {Negative: Flank Contact (Outside Forks)};
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0) rectangle (16.2, 4.0);
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 3.85) {Negative: Flank Contact (Outside Forks)};
 
     % Bot A (Nightwing Wide)
-    \node at (10.4, 1.4) [rotate=0] {\includegraphics[width=2.2cm]{images/mini_bot_nightwing.png}};
+    \node at (10.4, 1.3) [rotate=0] {\includegraphics[width=2.0cm]{images/mini_bot_nightwing.png}};
 
     % Fork L & Fork R: Single dotted lines extending strictly 0.6cm into space
-    \draw[densely dotted, line width=1.6pt, draw=amberNote!90!black] (10.06, 1.45) -- (10.06, 2.28);
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=amberNote!90!black, anchor=south east] at (10.15, 2.30) {Fork L};
-    \draw[densely dotted, line width=1.6pt, draw=amberNote!90!black] (10.74, 1.45) -- (10.74, 2.28);
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=amberNote!90!black, anchor=south west] at (10.65, 2.30) {Fork R};
+    \draw[densely dotted, line width=1.5pt, draw=amberNote!90!black] (10.06, 1.35) -- (10.06, 2.15);
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=amberNote!90!black, anchor=south east] at (10.15, 2.17) {Fork L};
+    \draw[densely dotted, line width=1.5pt, draw=amberNote!90!black] (10.74, 1.35) -- (10.74, 2.15);
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=amberNote!90!black, anchor=south west] at (10.65, 2.17) {Fork R};
 
     % Bot B contacting from flank in direct physical contact with right flank
-    \node at (11.45, 1.4) [rotate=-90] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
-    \draw[-{Stealth[length=2.5mm]}, draw=textDark, line width=1.4pt] (12.4, 2.1) -- (11.6, 1.6);
+    \node at (11.45, 1.3) [rotate=-90] {\includegraphics[width=1.7cm]{images/mini_bot_opponent_square.png}};
+    \draw[-{Stealth[length=2.3mm]}, draw=textDark, line width=1.3pt] (12.3, 2.0) -- (11.6, 1.5);
 
-    % Status Badge & Rules Box
-    \node[fill=gray!80!black, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3pt] at (14.2, 3.8) {STATUS: NOT RAISED};
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=3.2cm, inner sep=3pt] at (14.2, 1.8) {%
-      \textbf{Flank Contact:}\\%
-      \textbullet\ Contact is on flank.\\%
-      \textbullet\ Outside fork reach.\\%
-      \textbullet\ Neither fork engaged.\\%
-      \textbullet\ Normal rules apply.%
-    };
+    % Status Badge
+    \node[fill=gray!80!black, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3.5pt] at (14.2, 2.1) {STATUS: NOT RAISED};
   \end{tikzpicture}
   \caption{Fork Engagement (Raised Status) and Mechanical Penalties}
   \label{fig:diagram_forks_raised}
 \end{figure}
 
 \begin{summarybox}{Damage \& Feedback Rules Summary}
-\begin{itemize}[leftmargin=*]
+\small
+\begin{itemize}[leftmargin=*, itemsep=1.5pt, topsep=1pt, parsep=0pt]
   \item \textbf{Direct Weapon Damage:} Weapon strike damage applies only to the single outermost component hit; excess damage does not penetrate inwards (throw shock covers internals).
   \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged}. Absorption reduces base throw strength received during attacks.
   \item \textbf{Throw Damage:} Throw damage equals half the throw strength (rounding up), unless the robot hits a wall (which inflicts full throw strength).
@@ -992,21 +917,24 @@ to each component that supplies it, shared equally if there are multiple compone
 % PAGE 7: GAME FORMATS & TOURNAMENT PLAY
 % ==============================================================================
 
+\begingroup
+\titlespacing*{\subsection}{0pt}{7pt plus 1pt minus 1pt}{2pt}
+
 \section{Game Formats}
-\enlargethispage{2.0\baselineskip}
+
 \subsection{Robot Weight Limits}
 The default weight limit is 40. Feel free to set a different weight limit for your own play, but that is the number used for the automata. All robots must be built within the weight budget.
 
 \subsection{Preconstructed}
 
-\begin{itemize}
+\begin{itemize}[itemsep=1pt, topsep=0.5pt, parsep=0pt]
   \item Each player brings a build deck up to the budget chosen (we recommend \$50).
   \item Then you each build a robot from that within the weight budget and fight with those.
 \end{itemize}
 
 \subsection{Limited (Recommended)}
 
-\begin{itemize}
+\begin{itemize}[itemsep=1pt, topsep=0.5pt, parsep=0pt]
   \item There is a pool in the middle of cards, split into basic and special.
   \item You can grab anything from the basic pile.
   \item For special cards, there is a market of 9 face-up cards you can take from, after which you must reveal the next card. You cannot return any card you have taken to the supply once you have taken it.
@@ -1020,7 +948,7 @@ If you just want to dive right into the action, you can grab one of the automato
 
 \subsection{Tournament Play}
 
-\begin{itemize}
+\begin{itemize}[itemsep=1pt, topsep=0.5pt, parsep=0pt]
   \item \textbf{Format Structure:} Robot Battles is designed to be played across multiple battles (typically 3), where you repair your robot from the spares in your supply between rounds. Components destroyed in one round cannot be used in future rounds and must be discarded. Damaged components can be repaired between rounds from your supply.
   \item \textbf{Victory Condition:} The winner of the tournament is the player with the most wins after all games are played.
   \item \textbf{Pairings:} Battles are played with random pairings for round 1, then with a ``winners play winners'' pattern. If you have an odd number of players, include an automaton as one person in the tournament (feel free to include more if you like).
@@ -1034,7 +962,7 @@ They will take actions according to the table written on the right-hand side of 
 First check the chart to see which table to roll on based on the current state of the robot. Automata consider themselves at full spin unless they have an active weapon with spin up that is not at max spin (e.g. if their weapons are down or at max spin, they roll on the full spin / charged table).
 Then roll a d6 to see which action they take.
 The possible actions are as follows:
-\begin{itemize}
+\begin{itemize}[itemsep=1pt, topsep=0.5pt, parsep=0pt]
   \item \textbf{Rush:} They will move at maximum speed towards their opponent.
   \item \textbf{Face:} They rotate on the spot to face their opponent.
   \item \textbf{Retreat:} They face towards their opponent and move backwards 1 step.
@@ -1043,8 +971,10 @@ The possible actions are as follows:
 From this you can calculate the drive values that they will choose (for each they consider the current position of their opponent). 
 Roll this after deciding your own drive values.
 
-\vspace{0.5em}
+\vspace{0.3em}
 \noindent\textbf{Automaton Power Allocation:}\\
 If an automaton robot has insufficient supply to power all connected components, it chooses which components to supply in order: self-righting mechanisms (if it is inverted), then weapons, then drive.
+
+\endgroup
 
 \end{document}
