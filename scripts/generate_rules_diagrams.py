@@ -1118,7 +1118,7 @@ def generate_forks_raised(output_path: Path) -> None:
         "POSITIVE ENGAGEMENT\n"
         "• Opponent contacts in line with forks\n"
         "• Bot B is lifted ==> RAISED!\n"
-        "• Halved flip strength, -2 throw str,\n"
+        "• Halved flip strength\n"
         "  and 0 pushing contribution",
         fontsize=7.5, color=DARK_NAVY, ha="center",
         bbox=dict(boxstyle="round,pad=0.25", facecolor="#F0FDF4", edgecolor=SUCCESS_GREEN)

@@ -449,7 +449,7 @@ class TestPlaytestEngine(unittest.TestCase):
         # Ensure player robot has a non-invertible wedge component hit, and is inverted!
         wedge_comp = ComponentHealth(
             id="wedge_1", name="Steel Wedge", card_type="component",
-            max_durability=11, current_durability=11, absorption=2, requirements="",
+            max_durability=11, current_durability=11, absorption=3, requirements="",
             outputs="", keywords="wedge", text="", x=100, y=20, rotation=0,
             box=(100, 20, 144, 84), is_wedge=True, is_invertible=False,
         )
@@ -1908,8 +1908,9 @@ class TestPlaytestEngine(unittest.TestCase):
 
     def test_raised_status_effects(self):
         """
-        Rule: 'A robot that is raised has its flip strength halved, its throw strength reduced by 2,
+        Rule: 'A robot that is raised has its flip strength halved,
         and its motion does not contribute to the motion in inertial contact.'
+        Throw strength is NOT reduced when raised.
         Wedges remain active when raised. Drive strength is NOT halved.
         """
         from playtest.engine.combat import resolve_collision_combat, refresh_robot_drive_and_power
@@ -1931,7 +1932,7 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(p_bot.left_drive_max, normal_left, "Drive is not halved when raised")
         self.assertEqual(p_bot.right_drive_max, normal_right, "Drive is not halved when raised")
 
-        # 2. Weapon deals full damage when raised, but throw strength is reduced by 2
+        # 2. Weapon deals full damage when raised, and throw strength is NOT reduced
         wpn = next(c for c in p_bot.components.values() if c.card_type == "weapon")
         wpn.is_active = True
         p_bot.weapon_spin_counters[wpn.id] = 3  # attack strength 6
@@ -1954,7 +1955,7 @@ class TestPlaytestEngine(unittest.TestCase):
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
         self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs))
 
-        # Now raised: damage is still 6, but throw strength reduced by 2 (from 6 to 4)!
+        # Now raised: damage is still 6, and throw strength is NOT reduced (remains 6)!
         target_cid = list(a_bot.components.keys())[0]
         a_bot.components[target_cid].is_damaged = False
         a_bot.components[target_cid].is_destroyed = False
@@ -1966,7 +1967,8 @@ class TestPlaytestEngine(unittest.TestCase):
         wpn.was_used_this_turn = False
         logs_raised = resolve_collision_combat(col, p_bot, a_bot, round_num=2)
         self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs_raised))
-        self.assertTrue(any("[Raised]" in entry.message and "throw strength of attack reduced by 2 (now 4)" in entry.message for entry in logs_raised))
+        self.assertFalse(any("throw strength of attack reduced by 2" in entry.message for entry in logs_raised))
+        self.assertTrue(any("Strength 6" in entry.message for entry in logs_raised))
 
     def test_feedback_propagation_rounding_up(self):
         """

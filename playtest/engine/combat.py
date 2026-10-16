@@ -1028,13 +1028,13 @@ def resolve_collision_combat(
         r2.is_raised = True
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: flip strength halved, throw strength of attacks reduced by 2, motion does not contribute in inertial contact)",
+            message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: flip strength halved, motion does not contribute in inertial contact)",
         ))
     if r2_forks_in_line:
         r1.is_raised = True
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: flip strength halved, throw strength of attacks reduced by 2, motion does not contribute in inertial contact)",
+            message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: flip strength halved, motion does not contribute in inertial contact)",
         ))
 
     # Check Ground Game: Wedge keyword (applies to both active and inert contact)
@@ -1081,13 +1081,13 @@ def resolve_collision_combat(
         r2.is_raised = True
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🛡️ {r1.name}'s Wedge makes contact — {r2.name} is RAISED! (flip strength halved, throw strength of attacks reduced by 2, motion does not contribute in inertial contact)",
+            message=f"🛡️ {r1.name}'s Wedge makes contact — {r2.name} is RAISED! (flip strength halved, motion does not contribute in inertial contact)",
         ))
     if r2_wedge_in_contact:
         r1.is_raised = True
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🛡️ {r2.name}'s Wedge makes contact — {r1.name} is RAISED! (flip strength halved, throw strength of attacks reduced by 2, motion does not contribute in inertial contact)",
+            message=f"🛡️ {r2.name}'s Wedge makes contact — {r1.name} is RAISED! (flip strength halved, motion does not contribute in inertial contact)",
         ))
 
     if col.contact_type == "ACTIVE":
@@ -1207,12 +1207,6 @@ def resolve_collision_combat(
                 throw_str_2 += int(m_throw_1.group(1))
             elif "double the throw strength" in w1_comp.text.lower():
                 throw_str_2 *= 2
-            if r1.is_raised and throw_str_2 > 0:
-                throw_str_2 = max(0, throw_str_2 - 2)
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"  [Raised] {r1.name} is raised: throw strength of attack reduced by 2 (now {throw_str_2}).",
-                ))
             if "always inverts" in w1_comp.text.lower():
                 r2.is_inverted = not r2.is_inverted
                 logs.append(CombatLogEntry(
@@ -1295,12 +1289,6 @@ def resolve_collision_combat(
                 throw_str_1 += int(m_throw_2.group(1))
             elif "double the throw strength" in w2_comp.text.lower():
                 throw_str_1 *= 2
-            if r2.is_raised and throw_str_1 > 0:
-                throw_str_1 = max(0, throw_str_1 - 2)
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"  [Raised] {r2.name} is raised: throw strength of attack reduced by 2 (now {throw_str_1}).",
-                ))
             if "always inverts" in w2_comp.text.lower():
                 r1.is_inverted = not r1.is_inverted
                 logs.append(CombatLogEntry(
