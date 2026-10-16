@@ -15,18 +15,18 @@ The core gameplay is split into two main parts:
 - **Chassis:** Each robot is built onto a chassis mat that determines its shape, base weight, cost, flip strength, and any special abilities.
 - **Component Cards:** Represent modules such as motors, batteries, ESCs, armor, and weapons. Cards must physically sit on the chassis.
 - **Resource Connectivity:** A component is active only if its input requirements (Power, Spin, Pressure) are supplied by connected (touching) components.
-- **Budgets:** Robots must be built within the chosen cost budget (typically \$25) and weight capacity. Players may enter up to two robots (e.g., clusterbots) within the total budget.
+- **Budgets:** Robots must be built within the chosen cost budget (typically \$50) and weight capacity. Players may enter up to two robots (e.g., clusterbots) within the total budget.
 
 ### 2. Robot Battling (Arena & Miniatures)
 - **The Arena:** Matches take place on an arena map featuring starting zones, perimeter walls, and hazard/pit zones (where thrown robots exit the arena).
-- **Match Length:** Played for 20 rounds or until a robot is immobilized (has no active drive or cannot unflip).
+- **Match Length:** Played for 20 rounds or until a robot is knocked out (has no active drive or cannot unflip).
 
 ## Game Formats
 
-- **Limited (Recommended):** Players build robots from a central pool with an unlimited basic pile and a rotating 9-card face-up market of special cards within a \$25 budget.
+- **Limited (Recommended):** Players build robots from a central pool with an unlimited basic pile and a rotating 9-card face-up market of special cards within a \$50 budget.
 - **Preconstructed:** Players bring pre-built decks up to the agreed budget.
 
-- **Tournament:** Multi-round competition (typically 3 battles) where damaged components cannot be reused and players must repair robots from spare parts between rounds.
+- **Tournament:** Multi-round competition (typically 3 battles) where destroyed components cannot be reused and players must repair robots from spare parts between rounds.
 - **Automaton (AI / Solo / Odd Players):** Pre-built robots controlled by rolling a d6 on an action table to balance tournament numbers or allow solo play.
 
 ---

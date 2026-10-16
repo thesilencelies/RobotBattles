@@ -178,10 +178,10 @@ The anatomy of each card consists of the following key attributes:
 
 \begin{description}[leftmargin=!, labelwidth=2.8cm, font=\bfseries\color{primaryDark}]
   \item[Price (\$\$):] You cannot have more total price in your pool than your budget.
-  \item[Weight:] Your robot's total weight must be less than the weight limit.
+  \item[Weight:] Your robot's total weight must be within the weight budget.
   \item[Requirements:] A component is only active if its requirements are supplied by connected components. (Power, spin, pressure are the resources that need supply.)
   \item[Durability:] How much damage a component can take before destruction.
-  \item[Absorption:] How much damage a component stops from being passed on during an attack.
+  \item[Absorption:] How much damage a component absorbs to reduce throw strength received during an attack (also absorbs feedback damage).
   \item[Outputs:] What resources the component supplies. Also includes drive.
   \item[Ability Text:] Any special rules or passive traits for the component.
 \end{description}
@@ -217,11 +217,6 @@ Components produce, require, and consume various resource types. The primary res
 \end{tabularx}
 \end{center}
 
-\subsection{Resource Notation}
-Resources are noted with repeated symbols. For larger or variable quantities, numbers
-and algebraic notation are used prior to the symbol amount. Any additive quantities are 
-noted with symbols preceding the math.
-
 \subsection{Keywords}
 
 Components may have keywords that define specific mechanical rules and interactions:
@@ -233,12 +228,12 @@ Components may have keywords that define specific mechanical rules and interacti
   \textbf{Keyword} & \textbf{Summary} \\
   \midrule
   \keywordbadge{kw_fragile}{Fragile} & If this component takes weapon damage it is destroyed as if it had a durability of 1 \\
-  \keywordbadge{kw_spin_up}{Spin up X} & Add a spin counters at turn start (max X); cleared on attack, hitting a wall or becoming inactive. \\
-  \keywordbadge{kw_forks}{Forks} & If the opposing robot is in line with the forks during contact, they become lifted for this contact (does not work while inverted)  \\
-  \keywordbadge{kw_wedge}{Wedge} & If this component is hit this robot receives half the throw strength (does not work while inverted) \\
+  \keywordbadge{kw_spin_up}{Spin up X} & Add a spin counter at turn start (max X); cleared on attack, hitting a wall or becoming inactive. \\
+  \keywordbadge{kw_forks}{Forks} & If the opposing robot is in line with the forks during contact, they become raised for this contact (does not work while inverted)  \\
+  \keywordbadge{kw_wedge}{Wedge} & If this component makes contact, the opponent becomes raised for this contact and this component has double absorption against weapon contact (does not work while inverted) \\
   \keywordbadge{kw_invertible}{Invertible} & Component functions normally while inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & Inverts upright at turn end without contact if active. \\
-  \keywordbadge{kw_reset}{Reset} & This weapon is inactive the turn after it is used. unt] (this does not cause the robot to be considered stuck if it is also a self righter) \\
+  \keywordbadge{kw_reset}{Reset} & This weapon is inactive the turn after it is used. (this does not cause the robot to be considered knocked out if it is also a self righter) \\
   \bottomrule
 \end{tabularx}
 \end{center}
@@ -275,7 +270,7 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
 \begin{itemize}
   \item The chassis determines the model used for play.
   \item A card is considered connected to any other card it is touching.
-  \item You may submit up to two robots, and the total weight across all the robots must be within the weight budget.
+  \item You may submit up to two robots (e.g., clusterbots); the total weight across all robots must be within the weight budget, and their combined cost must be within the budget. A clusterbot team is knocked out only when both robots are knocked out.
   \item Each robot must have active drive to be submitted.
 \end{itemize}
 
@@ -303,7 +298,7 @@ Combat takes place inside a hazard-filled enclosed arena.
     \begin{itemize}[leftmargin=*]
       \item \textbf{\color{arenaRed}Red Zone:} Starting area where robots deploy at the beginning of a battle.
       \item \textbf{Black Lines:} Arena perimeter walls. Pushing robots into walls triggers throw feedback.
-      \item \textbf{Hazard Walls (Yellow Hatched):} Walls marked with yellow hazard hatching on their outer edge. If a robot is pushed or thrown into a marked wall, it is eliminated.
+      \item \textbf{Hazard Walls (Yellow Hatched):} Walls marked with yellow hazard hatching on their outer edge. If a robot is pushed or thrown into a marked wall, it is knocked out.
     \end{itemize}
     \vspace{0.8em}
     \textbf{Robot Markers:}\\
@@ -322,9 +317,9 @@ Combat takes place inside a hazard-filled enclosed arena.
 
 \subsection{Match Length \& Win Conditions}
 
-The battle is played for \textbf{20 rounds} or until a robot is defeated. A robot is defeated if it has no active drive and no way to uninvert itself to regain drive (a self-righting weapon temporarily inactive due to \textit{Reset} does not cause the robot to be considered defeated).
+The battle is played for \textbf{20 rounds} or until a robot is knocked out. A robot is knocked out if it has no active drive and no way to uninvert itself to regain drive (a self-righting weapon temporarily inactive due to \textit{Reset} does not cause the robot to be considered knocked out). A robot pushed or thrown into a marked Hazard Wall is also immediately knocked out.
 
-If neither robot is immobilized by the end of round 20, the winner is decided by a \textbf{Judge's Decision}. The judge's decision damage count is the number of cards destroyed followed by the number of cards damaged (the robot with fewer cards destroyed wins; if tied, the robot with fewer cards damaged wins; if still tied, the match is a draw).
+If neither robot is knocked out by the end of round 20, the winner is decided by a \textbf{Judge's Decision}. The judge's decision damage count is the number of cards destroyed followed by the number of cards damaged (the robot with fewer cards destroyed wins; if tied, the robot with fewer cards damaged wins; if still tied, the match is a draw).
 
 \subsection{Round Structure}
 
@@ -357,7 +352,7 @@ Movement units are found on the straight movement template. Where an effect says
   \hfill
   \begin{minipage}[c]{0.65\textwidth}
     \begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=0.5pt]
-      \item In planning, players secretly choose drive settings with absolute value $\le$ active drive count on each side (\texttt{0/0} is stationary), and choose which components to supply if supply is insufficient. Choices are revealed simultaneously.
+      \item In planning, players secretly choose drive settings with absolute value $\le$ active drive count on each side (\texttt{0/0} is stationary). Choices are revealed simultaneously.
       \item Both robots advance along the template corresponding to their chosen drive pair.
       \item \textbf{Forward Alignment \& Stop Lines:} Front bumper starts flush at black baseline. On curved templates, target stop lines are drawn at the robot's intended bumper angle; align the bumper flush against the target line to achieve the correct position and facing.
       \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns ($L \ge R$). If turning left ($R > L$), flip the template face-down.
@@ -371,9 +366,6 @@ Movement units are found on the straight movement template. Where an effect says
 \end{figure}
 
 \vspace{-0.5em}
-% \begin{summarybox}{Movement Rules Summary}
-% Drive values chosen in Planning directly determine robot displacement and turning trajectory. Templates cover all 121 permutations with minimal physical pieces: flipping handles left/right turns, placing at the rear handles reverse maneuvers, in-place discs/fans handle rotations, and remainder chaining handles values exceeding template markings.
-% \end{summarybox}
 
 \clearpage
 
@@ -670,7 +662,7 @@ Essentially a pushing match between colliding chassis surfaces:
   \item Move along templates until contact.
   \item Displace the remainder of robot A's template to the end of robot B's template.
   \item Move both robots along the straight line from the initial contact point to the end of A's displaced template (a raised robot's motion does not contribute).
-  \item If a robot hits a wall, throw it away with throw strength equal to the distance it would have moved if the wall was not there. Any weapon contacting a wall loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$.
+  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the remaining distance of the move. If its weapon contacts the wall, it loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$. Because it has already hit the wall, the robot immediately takes throw damage equal to the full throw strength.
   \item If the robots are still touching, both robots are moved back a full unit to separate them.
 \end{enumerate}
 
@@ -779,18 +771,18 @@ Essentially a pushing match between colliding chassis surfaces:
 When weapons collide with an opponent's chassis or components:
 \begin{itemize}
   \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the single outermost component contacted (damage does not penetrate inwards).
-  \item Then both robots are thrown away from the contact. The base throw strength is equal to the attack strength received.
-  \item Weapons receive feedback equal to half the total attack strength in the contact. A weapon contacting an arena wall loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$.
-  \item If after active contact the robots are still in contact, then proceed with inertial contact. If the robots are still touching after this, both robots are moved back a full unit to separate them.
+  \item Then both robots are thrown away from the contact. The base throw strength received is equal to the attack damage minus the absorption of the hit component (minimum 0). Any additions to throw strength are added after that.
+  \item Weapons receive feedback equal to half the combined attack strength in the contact. A weapon contacting an arena wall loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$.
+  \item If after active contact the robots are still in contact, proceed with inertial contact.
 \end{itemize}
 
 \begin{summarybox}{Contact Classification Quick Reference}
 \begin{tabularx}{\textwidth}{l X}
   \textbf{Contact Type} & \textbf{Resolution Mechanism} \\
   \midrule
-  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals damage to outermost component contacted $\rightarrow$ Base throw strength equals attack strength received $\rightarrow$ Weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$. If robots are still in contact, proceed with inertial contact; if still touching, both robots are moved back a full unit to separate them. \\
+  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals damage to outermost component contacted $\rightarrow$ Base throw strength equals attack damage minus absorption of hit component (min 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength. If robots are still in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw $\rightarrow$ If still touching, move both back a full unit to separate them. \\
+  \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw (takes full throw damage) $\rightarrow$ If still touching, move both back a full unit to separate them. \\
 \end{tabularx}
 \end{summarybox}
 
@@ -801,14 +793,15 @@ When weapons collide with an opponent's chassis or components:
 % ==============================================================================
 
 \section{Combat Resolution, Damage \& Status Effects}
+\enlargethispage{1.5\baselineskip}
 
 \subsection{Throws \& Inversion}
 
-A robot that is thrown is moved a random amount (2d6) up to the throw strength away from the contact point along the center-to-center line and rotated by spinning the model. 
-If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted}.
-After the throw the thrown robot takes feedback at a randomly chosen component equal to half the throw strength. If the robot hits a normal wall, it instead takes feedback equal to the full throw strength.
-If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately eliminated}.
-The component is chosen randomly by dropping a dice onto the robot and seeing which component it lands on.
+A robot that is thrown is moved a random amount (2d6) up to the throw strength away from the contact point along the center-to-center line and rotated by spinning the model.
+If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted} (lower rolled distances represent high-arching vertical throws rather than horizontal displacement).
+After the throw, the thrown robot takes throw damage at a randomly chosen component equal to half the throw strength (rounding up). If the robot is thrown into a normal wall, it instead takes throw damage equal to the full throw strength.
+If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately knocked out}.
+The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on.
 
 \begin{figure}[H]
   \centering
@@ -844,7 +837,7 @@ The component is chosen randomly by dropping a dice onto the robot and seeing wh
       \textbullet\ Outermost component contacted takes weapon damage.\\%
       \textbullet\ Throw vector $\vec{F}_{\text{throw}}$ radiates outward along the line connecting robot centers ($C_A \to C_B$).\\%
       \textbullet\ Thrown robot moves 2d6 up to throw strength; model is spun during throw.\\%
-      \textbullet\ Striking weapons take feedback equal to $\frac{1}{2}\times\text{attack strength}$.%
+      \textbullet\ Striking weapons take feedback equal to half the combined attack strength.%
     };
 
     % PANEL 2: Hazard Wall Elimination
@@ -866,13 +859,13 @@ The component is chosen randomly by dropping a dice onto the robot and seeing wh
 
     % Bot contacting the hazard wall directly
     \node at (13.6, 3.8) [rotate=25] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
-    \node[fill=arenaRed, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (12.3, 2.35) {STATUS: ELIMINATED};
+    \node[fill=arenaRed, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (12.3, 2.35) {STATUS: KNOCKED OUT};
 
     % Hazard Wall rules callout
     \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize, align=left, text width=5.4cm, inner sep=3.5pt] at (13.2, 0.85) {%
       \textbf{Hazard Wall Rules:}\\%
       \textbullet\ Hazard walls have yellow hatching on outer edge.\\%
-      \textbullet\ Robot pushed or thrown into marked wall is \textbf{eliminated}!\\%
+      \textbullet\ Robot pushed or thrown into marked wall is \textbf{knocked out}!\\%
       \textbullet\ Hazard walls remain active throughout the match.%
     };
   \end{tikzpicture}
@@ -900,7 +893,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons, drive, and component abilities (such as wedges and forks) without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Some components (mostly forks) will make the opponent raised during contact if any part of the opposing robot is in line with them. A robot that is raised has its flip strength halved, its throw strength reduced by 2, and its motion does not contribute to the motion in inertial contact.
+  \item[Raised:] Some components (mostly forks) will make the opponent raised during contact if any part of the opposing robot is in line with them. A robot that is raised has its flip strength halved, has the throw strength of its attacks reduced by 2, and its motion does not contribute to the motion in inertial contact.
 \end{description}
 
 \clearpage
@@ -962,7 +955,7 @@ to each component that supplies it, shared equally if there are multiple compone
     \node[draw=arenaRed, fill=noteBg, rounded corners=2pt, font=\scriptsize, align=left, text width=3.4cm, inner sep=3pt] at (5.5, 1.8) {%
       \textbf{Raised Penalties (Sec 6.4):}\\%
       \textbullet\ Flip strength is \textbf{halved}.\\%
-      \textbullet\ Throw strength \textbf{reduced by 2}.\\%
+      \textbullet\ Throw strength of attacks \textbf{reduced by 2}.\\%
       \textbullet\ Motion does \textbf{not contribute}\\
       \quad to pushing match.%
     };
@@ -1001,12 +994,11 @@ to each component that supplies it, shared equally if there are multiple compone
 \begin{summarybox}{Damage \& Feedback Rules Summary}
 \begin{itemize}[leftmargin=*]
   \item \textbf{Direct Weapon Damage:} Weapon strike damage applies only to the single outermost component hit; excess damage does not penetrate inwards (throw shock covers internals).
-  \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged} (both ignore absorption). Damaged again $\implies$ \textbf{Destroyed}.
-  \item \textbf{Throw Damage:} Throw feedback equals half the throw strength (rounded down), unless the robot hits a wall (which inflicts full throw strength).
-  \item \textbf{Active into Inertial Contact:} If after active contact the robots are still in contact, proceed with inertial contact. If still touching, both robots are moved back a full unit to separate them.
-  \item \textbf{Inertial Separation:} If robots are still touching after inertial contact, both robots are moved back a full unit to separate them.
-  \item \textbf{Weapon Wall Contact:} When a weapon contacts an arena wall (driven or pushed), it loses all spin counters and suffers feedback equal to $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$. Driving into a wall stops the robot without a throw.
-  \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounded down).
+  \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged}. Absorption reduces base throw strength received during attacks.
+  \item \textbf{Throw Damage:} Throw damage equals half the throw strength (rounding up), unless the robot hits a wall (which inflicts full throw strength).
+  \item \textbf{Separation:} If robots are still touching after contact resolution, both robots are moved back a full unit to separate them.
+  \item \textbf{Wall Collisions:} Driving into a wall stops the robot without a throw, but any contacting weapon takes feedback $\lfloor \frac{\text{weapon strength}}{2} \rfloor$. Robots thrown into walls take throw damage equal to full throw strength. Robots pushed into walls are thrown with throw strength equal to remaining distance, take weapon feedback if a weapon hits the wall, and take throw damage equal to full throw strength.
+  \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounding up).
 \end{itemize}
 \end{summarybox}
 
@@ -1019,13 +1011,13 @@ to each component that supplies it, shared equally if there are multiple compone
 \section{Game Formats}
 \enlargethispage{2.0\baselineskip}
 \subsection{Robot Weight Limits}
-The default weight limit is 40. Feel free to set a different weight limit for your own play, but that is the number used for the automata.
+The default weight limit is 40. Feel free to set a different weight limit for your own play, but that is the number used for the automata. All robots must be built within the weight budget.
 
 \subsection{Preconstructed}
 
 \begin{itemize}
-  \item Each player brings a build deck up to the budget chosen (we recommend \$40).
-  \item Then you each build a robot from that up to the weight limit and fight with those.
+  \item Each player brings a build deck up to the budget chosen (we recommend \$50).
+  \item Then you each build a robot from that within the weight budget and fight with those.
 \end{itemize}
 
 \subsection{Limited (Recommended)}
@@ -1034,7 +1026,7 @@ The default weight limit is 40. Feel free to set a different weight limit for yo
   \item There is a pool in the middle of cards, split into basic and special.
   \item You can grab anything from the basic pile.
   \item For special cards, there is a market of 9 face-up cards you can take from, after which you must reveal the next card. You cannot return any card you have taken to the supply once you have taken it.
-  \item You cannot take more total cost than your budget (\$40 recommended).
+  \item You cannot take more total cost than your budget (\$50 recommended).
   \item From this pool, you build your robot to fight with. You are considered to have an infinite supply of all free components.
 \end{itemize}
 
@@ -1045,7 +1037,7 @@ If you just want to dive right into the action, you can grab one of the automato
 \subsection{Tournament Play}
 
 \begin{itemize}
-  \item \textbf{Format Structure:} Robot Battles is designed to be played across multiple battles (typically 3), where you repair your robot from the spares in your supply between rounds. Components damaged in one round cannot be used in future rounds.
+  \item \textbf{Format Structure:} Robot Battles is designed to be played across multiple battles (typically 3), where you repair your robot from the spares in your supply between rounds. Components destroyed in one round cannot be used in future rounds and must be discarded. Damaged components can be repaired between rounds from your supply.
   \item \textbf{Victory Condition:} The winner of the tournament is the player with the most wins after all games are played.
   \item \textbf{Pairings:} Battles are played with random pairings for round 1, then with a ``winners play winners'' pattern. If you have an odd number of players, include an automaton as one person in the tournament (feel free to include more if you like).
 \end{itemize}
@@ -1070,7 +1062,5 @@ Roll this after deciding your own drive values.
 \vspace{0.5em}
 \noindent\textbf{Automaton Power Allocation:}\\
 If an automaton robot has insufficient supply to power all connected components, it chooses which components to supply in order: self-righting mechanisms (if it is inverted), then weapons, then drive.
-
-\
 
 \end{document}
