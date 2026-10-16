@@ -3,7 +3,7 @@
 generate_card_json.py
 
 Writes json/cards.json: Tabletop Simulator metadata for all cards, tiles
-(chassis and weapon templates), and tokens in one file.
+(chassis and weapon templates), and tokens (movement templates) in one file.
 
 The schema matches the TTS custom-object import format:
 
@@ -35,7 +35,20 @@ The schema matches the TTS custom-object import format:
           "stackable":   "true"
         }, ...
       },
-      "Token": {},
+      "Token": {
+        "1": {
+          "name":           "<Name>",
+          "description":    "<description of movement template>",
+          "gm_notes":       "<pairs and geometry>",
+          "tags":           {"1": "Token", "2": "Template", "3": "Movement", "4": "Straight"},
+          "lua_script":     "",
+          "face":           "<raw.githubusercontent URL of token image in movement_templates>",
+          "back":           "<raw.githubusercontent URL of token image in movement_templates>",
+          "thickness":      "0.2",
+          "merge_distance": "15.0",
+          "stackable":      "false"
+        }, ...
+      },
       "Figurine": {}
     }
 
@@ -43,6 +56,7 @@ Sources:
     cardDefinitions/components.csv -> Card, Component
     cardDefinitions/weapons.csv    -> Card, Weapon, <Template>
     Chassis & Weapon templates     -> Tile (Template markers)
+    movement_templates/*.png       -> Token (Movement templates)
 
 Usage:
     python generate_card_json.py
@@ -60,6 +74,8 @@ import sys
 from pathlib import Path
 from urllib.parse import quote
 
+from generate_movement_templates import build_all_movement_templates
+
 WORKSPACE = Path(__file__).resolve().parent
 CARD_DEFS_DIR = WORKSPACE / "cardDefinitions"
 CARD_IMAGES_DIR = WORKSPACE / "CardImages"
@@ -67,6 +83,7 @@ TTS_ASSETS_DIR = WORKSPACE / "tts_assets"
 PICTURES_DIR = WORKSPACE / "pictures"
 ICONS_DIR = PICTURES_DIR / "icons"
 COMPONENTS_DIR = WORKSPACE / "components"
+MOVEMENT_TEMPLATES_DIR = WORKSPACE / "movement_templates"
 
 GITHUB_REPO_RAW = (
     "https://raw.githubusercontent.com/thesilencelies/RobotBattles/"
@@ -77,6 +94,7 @@ TTS_ASSETS_URL = GITHUB_REPO_RAW + "tts_assets/"
 PICTURES_URL = GITHUB_REPO_RAW + "pictures/"
 ICONS_URL = GITHUB_REPO_RAW + "pictures/icons/"
 COMPONENTS_URL = GITHUB_REPO_RAW + "components/"
+MOVEMENT_TEMPLATES_URL = GITHUB_REPO_RAW + "movement_templates/"
 
 CARD_BACK_URL = PICTURES_URL + "backs/CardBack.png"
 
@@ -391,6 +409,53 @@ def enumerate_tiles() -> list[dict]:
     return tiles
 
 
+def enumerate_tokens() -> list[dict]:
+    tokens = []
+    templates = build_all_movement_templates()
+
+    for t in templates:
+        image_name = f"{t.template_id}.png"
+        image_path = MOVEMENT_TEMPLATES_DIR / image_name
+        image_url = MOVEMENT_TEMPLATES_URL + quote(image_name)
+
+        pairs_str = ", ".join(f"({l}, {r})" for l, r in t.pairs)
+        if t.category == "straight":
+            desc = f"Straight movement template for drive pairs: {pairs_str}"
+        elif t.category == "spin":
+            desc = f"Spin disc movement template (360-degree rotation) for drive pairs: {pairs_str}"
+        elif t.category == "pivot":
+            desc = f"Pivot fan movement template (180-degree semicircle) for drive pairs: {pairs_str}"
+        else:
+            desc = f"{t.name} for forward curved maneuvers: {pairs_str}"
+
+        gm_lines = [
+            f"template:{t.name.replace(' Template', '')}",
+            f"category:{t.category}",
+            f"pairs:{pairs_str}",
+        ]
+        if t.category == "curve_forward":
+            gm_lines.append(f"radius:{t.nominal_rc:g}mm")
+
+        tag_name = t.name.replace(" Template", "")
+        token_name = f"{tag_name} Movement Template"
+
+        tokens.append({
+            "name": token_name,
+            "description": desc,
+            "gm_notes": "\n".join(gm_lines),
+            "tags": build_tags("Token", "Template", "Movement", tag_name),
+            "lua_script": "",
+            "face": image_url,
+            "back": image_url,
+            "thickness": "0.2",
+            "merge_distance": "15.0",
+            "stackable": "false",
+            "_local_images": (image_path,),
+        })
+
+    return tokens
+
+
 def to_indexed_dict(entries: list[dict]) -> dict[str, dict]:
     """Convert a list of items to a stringified 1-based indexed dict (1, 2, 3...).
     Strips internal helper keys (like `_local_image`)."""
@@ -422,11 +487,12 @@ def main():
 
     cards = enumerate_cards()
     tiles = enumerate_tiles()
+    tokens = enumerate_tokens()
 
     doc = {
         "Card": to_indexed_dict(cards),
         "Tile": to_indexed_dict(tiles),
-        "Token": {},
+        "Token": to_indexed_dict(tokens),
         "Figurine": {},
     }
 
@@ -440,10 +506,13 @@ def main():
         print(f"\nTiles ({len(tiles)}):")
         for t in tiles:
             print(f"  {t['name']}  <- {t['face']}")
+        print(f"\nTokens ({len(tokens)}):")
+        for tok in tokens:
+            print(f"  {tok['name']}  <- {tok['face']}")
 
     print(
-        f"\nWrote {len(cards)} card(s) and {len(tiles)} tile(s) "
-        f"to {output_path.relative_to(WORKSPACE)}"
+        f"\nWrote {len(cards)} card(s), {len(tiles)} tile(s), "
+        f"and {len(tokens)} token(s) to {output_path.relative_to(WORKSPACE)}"
     )
 
     # Check local image existence
@@ -469,6 +538,16 @@ def main():
     if missing_tiles:
         print(f"\nWarning: {len(missing_tiles)} tile image(s) not found locally:")
         for name in missing_tiles:
+            print(f"  {name}")
+
+    missing_tokens = [
+        tok["name"]
+        for tok in tokens
+        if any(not p.is_file() for p in tok.get("_local_images", ()))
+    ]
+    if missing_tokens:
+        print(f"\nWarning: {len(missing_tokens)} token image(s) not found locally:")
+        for name in missing_tokens:
             print(f"  {name}")
 
 

@@ -766,6 +766,109 @@
       "stackable": "true"
     }
   },
-  "Token": {},
+  "Token": {
+    "1": {
+      "name": "Straight Movement Template",
+      "description": "Straight movement template for drive pairs: (1, 1), (2, 2), (3, 3), (4, 4), (5, 5)",
+      "gm_notes": "template:Straight\ncategory:straight\npairs:(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)",
+      "tags": {
+        "1": "Token",
+        "2": "Template",
+        "3": "Movement",
+        "4": "Straight"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/straight.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/straight.png",
+      "thickness": "0.2",
+      "merge_distance": "15.0",
+      "stackable": "false"
+    },
+    "2": {
+      "name": "Spin Disc Movement Template",
+      "description": "Spin disc movement template (360-degree rotation) for drive pairs: (1, -1), (2, -2), (3, -3), (4, -4)",
+      "gm_notes": "template:Spin Disc\ncategory:spin\npairs:(1, -1), (2, -2), (3, -3), (4, -4)",
+      "tags": {
+        "1": "Token",
+        "2": "Template",
+        "3": "Movement",
+        "4": "Spin Disc"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/spin.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/spin.png",
+      "thickness": "0.2",
+      "merge_distance": "15.0",
+      "stackable": "false"
+    },
+    "3": {
+      "name": "Pivot Fan Movement Template",
+      "description": "Pivot fan movement template (180-degree semicircle) for drive pairs: (1, 0), (2, 0), (3, 0), (4, 0)",
+      "gm_notes": "template:Pivot Fan\ncategory:pivot\npairs:(1, 0), (2, 0), (3, 0), (4, 0)",
+      "tags": {
+        "1": "Token",
+        "2": "Template",
+        "3": "Movement",
+        "4": "Pivot Fan"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/pivot.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/pivot.png",
+      "thickness": "0.2",
+      "merge_distance": "15.0",
+      "stackable": "false"
+    },
+    "4": {
+      "name": "Gentle Curve Movement Template",
+      "description": "Gentle Curve Template for forward curved maneuvers: (3, 2), (4, 3), (5, 4)",
+      "gm_notes": "template:Gentle Curve\ncategory:curve_forward\npairs:(3, 2), (4, 3), (5, 4)\nradius:220mm",
+      "tags": {
+        "1": "Token",
+        "2": "Template",
+        "3": "Movement",
+        "4": "Gentle Curve"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/curve_gentle.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/curve_gentle.png",
+      "thickness": "0.2",
+      "merge_distance": "15.0",
+      "stackable": "false"
+    },
+    "5": {
+      "name": "Medium Curve Movement Template",
+      "description": "Medium Curve Template for forward curved maneuvers: (2, 1), (4, 2), (5, 3)",
+      "gm_notes": "template:Medium Curve\ncategory:curve_forward\npairs:(2, 1), (4, 2), (5, 3)\nradius:97.5mm",
+      "tags": {
+        "1": "Token",
+        "2": "Template",
+        "3": "Movement",
+        "4": "Medium Curve"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/curve_medium.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/curve_medium.png",
+      "thickness": "0.2",
+      "merge_distance": "15.0",
+      "stackable": "false"
+    },
+    "6": {
+      "name": "Sharp Curve Movement Template",
+      "description": "Sharp Curve Template for forward curved maneuvers: (3, 1), (4, 1), (5, 2), (5, 1)",
+      "gm_notes": "template:Sharp Curve\ncategory:curve_forward\npairs:(3, 1), (4, 1), (5, 2), (5, 1)\nradius:55mm",
+      "tags": {
+        "1": "Token",
+        "2": "Template",
+        "3": "Movement",
+        "4": "Sharp Curve"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/curve_sharp.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/movement_templates/curve_sharp.png",
+      "thickness": "0.2",
+      "merge_distance": "15.0",
+      "stackable": "false"
+    }
+  },
   "Figurine": {}
 }
