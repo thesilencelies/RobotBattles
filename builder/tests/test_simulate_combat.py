@@ -188,8 +188,13 @@ class TestCombatSimulation(unittest.TestCase):
         # Test throw shock
         shock_outcomes = simulate_throw_shock(robot, 10, hit_on_wedge=False)
         self.assertEqual(len(shock_outcomes), len(robot.components))
-        shock_on_wedge = simulate_throw_shock(robot, 10, hit_on_wedge=True)
-        self.assertEqual(len(shock_on_wedge), 0)
+        # Wedge has double absorption (abs 1 * 2 = 2) against weapon contact
+        # Throw strength 2 vs wedge double absorption 2 -> 0 throw strength -> 0 shock outcomes
+        shock_on_wedge_absorbed = simulate_throw_shock(robot, 2, hit_on_wedge=True)
+        self.assertEqual(len(shock_on_wedge_absorbed), 0)
+        # Throw strength 10 vs wedge double absorption 2 -> 8 throw strength -> shock outcomes
+        shock_on_wedge_10 = simulate_throw_shock(robot, 10, hit_on_wedge=True)
+        self.assertEqual(len(shock_on_wedge_10), len(robot.components))
 
     def test_load_all_automata(self):
         for name in ["Beater_wide.csv", "Nightwing_wide.csv", "Chonk.csv", "Vyper_flipper.csv", "Vyper_Spinner.csv"]:

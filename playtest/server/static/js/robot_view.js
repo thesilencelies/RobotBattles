@@ -59,8 +59,8 @@ export class RobotViewRenderer {
     if (robot.is_raised) {
       statusBadges.push(`<span class="badge badge-purple">🔱 RAISED (-2 Throw Str, Half Flip)</span>`);
     }
-    if (robot.is_eliminated) {
-      statusBadges.push(`<span class="badge badge-danger">☠️ ELIMINATED</span>`);
+    if (robot.is_knocked_out || robot.is_eliminated) {
+      statusBadges.push(`<span class="badge badge-danger">☠️ KNOCKED OUT</span>`);
     }
 
     // Spin counters summary

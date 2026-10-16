@@ -325,12 +325,13 @@ def can_robot_uninvert_to_regain_drive(robot: RobotState) -> bool:
             robot.components[cid].is_active = was_act
 
 
-def is_robot_defeated(robot: RobotState) -> bool:
+def is_robot_knocked_out(robot: RobotState) -> bool:
     """
-    Rule: "A robot is defeated if it has no active drive and no way to uninvert itself to regain drive"
-    Also defeated if eliminated (e.g. pushed into hazard pit).
+    Rule: "A robot is knocked out if it has no active drive and no way to uninvert itself to regain drive
+    (a self-righting weapon temporarily inactive due to Reset does not cause the robot to be considered knocked out).
+    A robot pushed or thrown into a marked Hazard Wall is also immediately knocked out."
     """
-    if robot.is_eliminated:
+    if robot.is_knocked_out or robot.is_eliminated:
         return True
 
     if robot.left_drive_max > 0 or robot.right_drive_max > 0:
@@ -340,6 +341,9 @@ def is_robot_defeated(robot: RobotState) -> bool:
         return False
 
     return True
+
+
+is_robot_defeated = is_robot_knocked_out
 
 
 def execute_turn(
@@ -444,12 +448,12 @@ def execute_turn(
             if excess_dist > 2.0:
                 match.log.append(CombatLogEntry(
                     round=r_num, phase="movement",
-                    message=f"🧱 {bot.name} drove into the arena wall and got stuck at the wall (impact strength {drive_throw_str}).",
+                    message=f"🧱 {bot.name} drove into the arena wall and stopped at the wall.",
                 ))
 
-            # Weapon wall contact check: loses all spin counters and takes feedback
+            # Weapon wall contact check: loses all spin counters and takes feedback (weapon_strength // 2, without throw)
             w_logs = resolve_weapon_wall_contact(
-                bot, throw_strength=drive_throw_str, round_num=r_num, phase="movement", steps=match.damage_steps
+                bot, throw_strength=0, round_num=r_num, phase="movement", steps=match.damage_steps
             )
             match.log.extend(w_logs)
 
@@ -510,32 +514,32 @@ def execute_turn(
     refresh_robot_drive_and_power(a_bot, is_automaton=True)
 
     # Win Condition Evaluation
-    p_defeated = is_robot_defeated(p_bot)
-    a_defeated = is_robot_defeated(a_bot)
+    p_knocked_out = is_robot_knocked_out(p_bot)
+    a_knocked_out = is_robot_knocked_out(a_bot)
 
-    if p_bot.is_eliminated and a_bot.is_eliminated:
+    if (p_bot.is_knocked_out or p_bot.is_eliminated) and (a_bot.is_knocked_out or a_bot.is_eliminated):
         match.winner = "draw"
-        match.win_reason = "Both robots were eliminated in the hazard pit!"
+        match.win_reason = "Both robots were knocked out in hazard zones or marked hazard walls!"
         match.phase = "game_over"
-    elif p_bot.is_eliminated:
+    elif p_bot.is_knocked_out or p_bot.is_eliminated:
         match.winner = "automaton"
-        match.win_reason = f"{p_bot.name} was eliminated in the hazard pit!"
+        match.win_reason = f"{p_bot.name} was knocked out in a hazard zone or marked hazard wall!"
         match.phase = "game_over"
-    elif a_bot.is_eliminated:
+    elif a_bot.is_knocked_out or a_bot.is_eliminated:
         match.winner = "player"
-        match.win_reason = f"{a_bot.name} was eliminated in the hazard pit!"
+        match.win_reason = f"{a_bot.name} was knocked out in a hazard zone or marked hazard wall!"
         match.phase = "game_over"
-    elif p_defeated and a_defeated:
+    elif p_knocked_out and a_knocked_out:
         match.winner = "draw"
-        match.win_reason = "Both robots are defeated (no active drive and no way to uninvert to regain drive)!"
+        match.win_reason = "Both robots are knocked out (no active drive and no way to uninvert to regain drive)!"
         match.phase = "game_over"
-    elif p_defeated:
+    elif p_knocked_out:
         match.winner = "automaton"
-        match.win_reason = f"{p_bot.name} is defeated (no active drive and no way to uninvert to regain drive)!"
+        match.win_reason = f"{p_bot.name} is knocked out (no active drive and no way to uninvert to regain drive)!"
         match.phase = "game_over"
-    elif a_defeated:
+    elif a_knocked_out:
         match.winner = "player"
-        match.win_reason = f"{a_bot.name} is defeated (no active drive and no way to uninvert to regain drive)!"
+        match.win_reason = f"{a_bot.name} is knocked out (no active drive and no way to uninvert to regain drive)!"
         match.phase = "game_over"
     elif match.round >= match.max_rounds:
         match.phase = "game_over"

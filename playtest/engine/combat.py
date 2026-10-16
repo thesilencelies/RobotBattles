@@ -17,6 +17,7 @@ from .field import (
     WALL_LEFT,
     WALL_RIGHT,
     WALL_TOP,
+    is_hazard_wall_contact,
     is_in_hazard,
 )
 from .collision import check_robot_forks_in_line, check_robots_in_contact, get_weapon_wall_contacts
@@ -243,7 +244,7 @@ def resolve_feedback_propagation(
     """
     Propagates feedback backwards along the supply graph
     (from weapon/drive back to motors, ESCs, batteries).
-    When sharing among suppliers, round down.
+    When sharing among suppliers, shared equally (rounding up).
     """
     logs: List[str] = []
     feedback_amount = int(feedback_amount)
@@ -932,13 +933,48 @@ def resolve_inert_contact(
     if pushed_into_wall_robot and excess_wall_dist > 5.0:
         wall_throw_str = int(round(excess_wall_dist / DRIVE_UNIT_MM))
         if wall_throw_str > 0:
+            # Check marked Hazard Wall knockout
+            if is_hazard_wall_contact(pushed_into_wall_robot.pose.x, pushed_into_wall_robot.pose.y):
+                pushed_into_wall_robot.is_knocked_out = True
+                pushed_into_wall_robot.is_eliminated = True
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"☠️ {pushed_into_wall_robot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
+                ))
+
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"💥 {pushed_into_wall_robot.name} was pushed into the wall! THROWN with throw strength {wall_throw_str}!",
+                message=f"💥 {pushed_into_wall_robot.name} was pushed into the wall! THROWN with throw strength {wall_throw_str}! (Takes full throw damage {wall_throw_str})",
             ))
             shock_cid = simulate_dropping_card(pushed_into_wall_robot)
             if shock_cid:
                 resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str, phase="wall_feedback", steps=steps)
+
+            # Execute throw away from wall towards arena center
+            roll_2d6 = random.randint(1, 6) + random.randint(1, 6)
+            thrown_units = min(wall_throw_str, roll_2d6)
+            displacement_mm = thrown_units * DRIVE_UNIT_MM
+            dx = 400.0 - pushed_into_wall_robot.pose.x
+            dy = 400.0 - pushed_into_wall_robot.pose.y
+            dist = math.hypot(dx, dy)
+            if dist < 1e-4:
+                dx, dy = 1.0, 0.0
+                dist = 1.0
+            nx, ny = dx / dist, dy / dist
+
+            pushed_into_wall_robot.pose.x += nx * displacement_mm
+            pushed_into_wall_robot.pose.y += ny * displacement_mm
+            spin_rot = random.choice([45.0, 90.0, 135.0, 180.0])
+            pushed_into_wall_robot.pose.theta = (pushed_into_wall_robot.pose.theta + spin_rot) % 360.0
+
+            eff_flip = pushed_into_wall_robot.flip_strength // 2 if pushed_into_wall_robot.is_raised else pushed_into_wall_robot.flip_strength
+            excess_throw = wall_throw_str - thrown_units
+            if excess_throw > eff_flip:
+                pushed_into_wall_robot.is_inverted = not pushed_into_wall_robot.is_inverted
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"🔄 FLIP! (Remaining throw {excess_throw} > Flip value {eff_flip}) -> {pushed_into_wall_robot.name} is now {'INVERTED' if pushed_into_wall_robot.is_inverted else 'UPRIGHT'}!",
+                ))
 
     # Weapon wall contact check: when a weapon contacts a wall it loses all spin counters and suffers feedback
     for rob in (r1, r2):
@@ -950,13 +986,14 @@ def resolve_inert_contact(
     sep_logs = separate_robots_full_unit(r1, r2, round_num, log_prefix="Inertial separation")
     logs.extend(sep_logs)
 
-    # Hazard pit elimination check
+    # Hazard pit / out of arena knockout check
     for robot in (r1, r2):
         if is_in_hazard(robot.pose.x, robot.pose.y):
+            robot.is_knocked_out = True
             robot.is_eliminated = True
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"☠️ {robot.name} fell into the HAZARD PIT during inertial contact! ELIMINATED!",
+                message=f"☠️ {robot.name} fell into the HAZARD PIT during inertial contact! KNOCKED OUT!",
             ))
 
     return logs
@@ -975,7 +1012,7 @@ def resolve_collision_combat(
     logs: List[CombatLogEntry] = []
 
     # Check Ground Game: Forks keyword (applies to both active and inert contact)
-    # Rule: "If any part of the opposing robot is in line with the forks during contact, they become lifted for this contact"
+    # Rule: "If any part of the opposing robot is in line with the forks during contact, they become raised for this contact"
     r1_forks_in_line = check_robot_forks_in_line(
         r1, r2, col.contact_point, (r1.pose.x, r1.pose.y, r1.pose.theta), col.robot1_components, opp_pose=r2.pose
     )
@@ -986,13 +1023,66 @@ def resolve_collision_combat(
         r2.is_raised = True
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: flip strength halved, throw strength reduced by 2, motion does not contribute in inertial contact)",
+            message=f"🔱 {r1.name}'s Forks lift {r2.name}! ({r2.name} is RAISED: flip strength halved, throw strength of attacks reduced by 2, motion does not contribute in inertial contact)",
         ))
     if r2_forks_in_line:
         r1.is_raised = True
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: flip strength halved, throw strength reduced by 2, motion does not contribute in inertial contact)",
+            message=f"🔱 {r2.name}'s Forks lift {r1.name}! ({r1.name} is RAISED: flip strength halved, throw strength of attacks reduced by 2, motion does not contribute in inertial contact)",
+        ))
+
+    # Check Ground Game: Wedge keyword (applies to both active and inert contact)
+    # Rule: "If this component makes contact, the opponent becomes raised for this contact and this component has double absorption against weapon contact (does not work while inverted)"
+    r1_wedge_in_contact = any(
+        cid in r1.components
+        and r1.components[cid].is_wedge
+        and not r1.components[cid].is_destroyed
+        and (not r1.is_inverted or r1.components[cid].is_invertible)
+        for cid in col.robot1_components
+    )
+    r2_wedge_in_contact = any(
+        cid in r2.components
+        and r2.components[cid].is_wedge
+        and not r2.components[cid].is_destroyed
+        and (not r2.is_inverted or r2.components[cid].is_invertible)
+        for cid in col.robot2_components
+    )
+    r1_inverted_wedge_contact = any(
+        cid in r1.components
+        and r1.components[cid].is_wedge
+        and not r1.components[cid].is_destroyed
+        and r1.is_inverted and not r1.components[cid].is_invertible
+        for cid in col.robot1_components
+    )
+    r2_inverted_wedge_contact = any(
+        cid in r2.components
+        and r2.components[cid].is_wedge
+        and not r2.components[cid].is_destroyed
+        and r2.is_inverted and not r2.components[cid].is_invertible
+        for cid in col.robot2_components
+    )
+    if r1_inverted_wedge_contact:
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"🛡️ {r1.name}'s Wedge made contact, but does not function while INVERTED!",
+        ))
+    if r2_inverted_wedge_contact:
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"🛡️ {r2.name}'s Wedge made contact, but does not function while INVERTED!",
+        ))
+    if r1_wedge_in_contact:
+        r2.is_raised = True
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"🛡️ {r1.name}'s Wedge makes contact — {r2.name} is RAISED! (flip strength halved, throw strength of attacks reduced by 2, motion does not contribute in inertial contact)",
+        ))
+    if r2_wedge_in_contact:
+        r1.is_raised = True
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"🛡️ {r2.name}'s Wedge makes contact — {r1.name} is RAISED! (flip strength halved, throw strength of attacks reduced by 2, motion does not contribute in inertial contact)",
         ))
 
     if col.contact_type == "ACTIVE":
@@ -1049,8 +1139,8 @@ def resolve_collision_combat(
             ))
 
             target2_id = col.robot2_components[0] if col.robot2_components else list(r2.components.keys())[0]
-            if dmg1 > 0 and target2_id in r2.components:
-                t2_comp = r2.components[target2_id]
+            t2_comp = r2.components.get(target2_id)
+            if dmg1 > 0 and t2_comp:
                 status, absorbed, excess = apply_damage_to_component(t2_comp, dmg1, is_weapon_damage=True)
                 msg = f"{t2_comp.name} (#{t2_comp.id}) takes {dmg1} dmg -> {status} (absorbed {absorbed}, excess {excess})"
                 logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {msg}"))
@@ -1071,18 +1161,52 @@ def resolve_collision_combat(
             r1.weapon_spin_counters[w1_comp.id] = 0
             w1_comp.spin_counters = 0
 
-            # Base throw strength
-            throw_str_2 = atk_str_1
+            # Base throw strength = attack damage minus absorption of hit component (minimum 0)
+            # Rule: If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
+            # Rule: Wedge has double absorption against weapon contact (does not work while inverted).
+            is_wedge_2 = False
+            if t2_comp:
+                if t2_comp.is_destroyed:
+                    eff_abs_2 = t2_comp.max_durability
+                else:
+                    is_wedge_2 = t2_comp.is_wedge and (not r2.is_inverted or t2_comp.is_invertible)
+                    if t2_comp.is_wedge and (r2.is_inverted and not t2_comp.is_invertible):
+                        logs.append(CombatLogEntry(
+                            round=round_num, phase="collision",
+                            message=f"🛡️ {r2.name}'s {t2_comp.name} was hit, but does not function while INVERTED!",
+                        ))
+                    eff_abs_2 = t2_comp.absorption * 2 if is_wedge_2 else t2_comp.absorption
+            else:
+                eff_abs_2 = 0
+
+            throw_str_2 = max(0, atk_str_1 - eff_abs_2)
+            if eff_abs_2 > 0 and atk_str_1 > 0 and t2_comp:
+                if is_wedge_2:
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"🛡️ {r2.name}'s Wedge was hit — double absorption ({eff_abs_2} vs attack {atk_str_1}) reduces base throw strength to {throw_str_2}!",
+                    ))
+                    if throw_str_2 == 0:
+                        logs.append(CombatLogEntry(
+                            round=round_num, phase="collision",
+                            message=f"🛡️ {r2.name}'s Wedge was hit — {r2.name} is not thrown!",
+                        ))
+                else:
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"  [Absorption] {t2_comp.name} absorbs {eff_abs_2} to reduce base throw strength (was {atk_str_1}, now {throw_str_2}).",
+                    ))
+
             m_throw_1 = re.search(r"increase[s]?\s+throw\s+strength\s+by\s+(\d+)", w1_comp.text, re.IGNORECASE)
             if m_throw_1:
                 throw_str_2 += int(m_throw_1.group(1))
             elif "double the throw strength" in w1_comp.text.lower():
-                throw_str_2 += 2
+                throw_str_2 *= 2
             if r1.is_raised and throw_str_2 > 0:
                 throw_str_2 = max(0, throw_str_2 - 2)
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"  [Raised] {r1.name} is raised: throw strength reduced by 2 (now {throw_str_2}).",
+                    message=f"  [Raised] {r1.name} is raised: throw strength of attack reduced by 2 (now {throw_str_2}).",
                 ))
             if "always inverts" in w1_comp.text.lower():
                 r2.is_inverted = not r2.is_inverted
@@ -1104,8 +1228,8 @@ def resolve_collision_combat(
             ))
 
             target1_id = col.robot1_components[0] if col.robot1_components else list(r1.components.keys())[0]
-            if dmg2 > 0 and target1_id in r1.components:
-                t1_comp = r1.components[target1_id]
+            t1_comp = r1.components.get(target1_id)
+            if dmg2 > 0 and t1_comp:
                 status, absorbed, excess = apply_damage_to_component(t1_comp, dmg2, is_weapon_damage=True)
                 msg = f"{t1_comp.name} (#{t1_comp.id}) takes {dmg2} dmg -> {status} (absorbed {absorbed}, excess {excess})"
                 logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {msg}"))
@@ -1125,17 +1249,52 @@ def resolve_collision_combat(
             r2.weapon_spin_counters[w2_comp.id] = 0
             w2_comp.spin_counters = 0
 
-            throw_str_1 = atk_str_2
+            # Base throw strength = attack damage minus absorption of hit component (minimum 0)
+            # Rule: If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
+            # Rule: Wedge has double absorption against weapon contact (does not work while inverted).
+            is_wedge_1 = False
+            if t1_comp:
+                if t1_comp.is_destroyed:
+                    eff_abs_1 = t1_comp.max_durability
+                else:
+                    is_wedge_1 = t1_comp.is_wedge and (not r1.is_inverted or t1_comp.is_invertible)
+                    if t1_comp.is_wedge and (r1.is_inverted and not t1_comp.is_invertible):
+                        logs.append(CombatLogEntry(
+                            round=round_num, phase="collision",
+                            message=f"🛡️ {r1.name}'s {t1_comp.name} was hit, but does not function while INVERTED!",
+                        ))
+                    eff_abs_1 = t1_comp.absorption * 2 if is_wedge_1 else t1_comp.absorption
+            else:
+                eff_abs_1 = 0
+
+            throw_str_1 = max(0, atk_str_2 - eff_abs_1)
+            if eff_abs_1 > 0 and atk_str_2 > 0 and t1_comp:
+                if is_wedge_1:
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"🛡️ {r1.name}'s Wedge was hit — double absorption ({eff_abs_1} vs attack {atk_str_2}) reduces base throw strength to {throw_str_1}!",
+                    ))
+                    if throw_str_1 == 0:
+                        logs.append(CombatLogEntry(
+                            round=round_num, phase="collision",
+                            message=f"🛡️ {r1.name}'s Wedge was hit — {r1.name} is not thrown!",
+                        ))
+                else:
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"  [Absorption] {t1_comp.name} absorbs {eff_abs_1} to reduce base throw strength (was {atk_str_2}, now {throw_str_1}).",
+                    ))
+
             m_throw_2 = re.search(r"increase[s]?\s+throw\s+strength\s+by\s+(\d+)", w2_comp.text, re.IGNORECASE)
             if m_throw_2:
                 throw_str_1 += int(m_throw_2.group(1))
             elif "double the throw strength" in w2_comp.text.lower():
-                throw_str_1 += 2
+                throw_str_1 *= 2
             if r2.is_raised and throw_str_1 > 0:
                 throw_str_1 = max(0, throw_str_1 - 2)
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"  [Raised] {r2.name} is raised: throw strength reduced by 2 (now {throw_str_1}).",
+                    message=f"  [Raised] {r2.name} is raised: throw strength of attack reduced by 2 (now {throw_str_1}).",
                 ))
             if "always inverts" in w2_comp.text.lower():
                 r1.is_inverted = not r1.is_inverted
@@ -1156,45 +1315,7 @@ def resolve_collision_combat(
                 for fl in fb_logs:
                     logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
 
-        # 4. Check Wedge keyword: If this component is hit this robot is not thrown.
-        # A wedge is only hit if it is the component being hit (the component taking the damage).
-        # Wedges do not function while inverted unless invertible.
-        r1_wedge = bool(
-            target1_id
-            and target1_id in r1.components
-            and r1.components[target1_id].is_wedge
-            and (not r1.is_inverted or r1.components[target1_id].is_invertible)
-        )
-        r2_wedge = bool(
-            target2_id
-            and target2_id in r2.components
-            and r2.components[target2_id].is_wedge
-            and (not r2.is_inverted or r2.components[target2_id].is_invertible)
-        )
-        if target1_id and target1_id in r1.components and r1.components[target1_id].is_wedge and r1.is_inverted and not r1.components[target1_id].is_invertible and throw_str_1 > 0:
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🛡️ {r1.name}'s Wedge was hit, but does not function while INVERTED!",
-            ))
-        if target2_id and target2_id in r2.components and r2.components[target2_id].is_wedge and r2.is_inverted and not r2.components[target2_id].is_invertible and throw_str_2 > 0:
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🛡️ {r2.name}'s Wedge was hit, but does not function while INVERTED!",
-            ))
-        if r1_wedge and throw_str_1 > 0:
-            throw_str_1 = 0
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🛡️ {r1.name}'s Wedge was hit — {r1.name} is not thrown!",
-            ))
-        if r2_wedge and throw_str_2 > 0:
-            throw_str_2 = 0
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🛡️ {r2.name}'s Wedge was hit — {r2.name} is not thrown!",
-            ))
-
-        # 5. Execute Throws away from contact point
+        # 4. Execute Throws away from contact point
         for robot, throw_str, opp in [(r1, throw_str_1, r2), (r2, throw_str_2, r1)]:
             if throw_str <= 0:
                 continue
@@ -1229,10 +1350,18 @@ def resolve_collision_combat(
             spin_rot = random.choice([45.0, 90.0, 135.0, 180.0])
             robot.pose.theta = (robot.pose.theta + spin_rot) % 360.0
 
-            # Throw damage rule: half throw strength (round down) unless robot hits a wall
-            throw_dmg = throw_str if hit_wall else (throw_str // 2)
+            # Throw damage rule: half throw strength (rounding up) unless robot hits a wall (full throw strength)
+            throw_dmg = throw_str if hit_wall else ((throw_str + 1) // 2)
 
             if hit_wall:
+                # Check marked Hazard Wall knockout
+                if is_hazard_wall_contact(robot.pose.x, robot.pose.y):
+                    robot.is_knocked_out = True
+                    robot.is_eliminated = True
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"☠️ {robot.name} was thrown into a marked HAZARD WALL! KNOCKED OUT!",
+                    ))
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
                     message=f"🚀 {robot.name} is THROWN into a WALL! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> hit wall, takes full throw damage {throw_dmg})",
@@ -1268,17 +1397,18 @@ def resolve_collision_combat(
                     for sl in shock_logs:
                         logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Shock Feedback] {sl}"))
 
-            # Hazard pit elimination check
+            # Hazard pit knockout check
             if is_in_hazard(robot.pose.x, robot.pose.y):
+                robot.is_knocked_out = True
                 robot.is_eliminated = True
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"☠️ {robot.name} fell into the HAZARD PIT / out of the arena! ELIMINATED!",
+                    message=f"☠️ {robot.name} fell into the HAZARD PIT / out of the arena! KNOCKED OUT!",
                 ))
 
         # Rule: if after active contact the robots are still in contact,
         # then proceed with inertial contact. If still touching, both robots are moved back a full unit to separate them.
-        if not r1.is_eliminated and not r2.is_eliminated:
+        if not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
             if check_robots_in_contact(r1, r2):
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",

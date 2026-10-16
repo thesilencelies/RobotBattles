@@ -241,6 +241,27 @@ def is_in_hazard(x: float, y: float) -> bool:
     return False
 
 
+def is_hazard_wall_contact(x: float, y: float, tol: float = 35.0) -> bool:
+    """
+    Checks if a contact at or near the arena wall falls on a marked Hazard Wall segment
+    (the yellow-hatched outer edge segments at the four corners of the arena).
+    """
+    if is_in_hazard(x, y):
+        return True
+    near_top = abs(y - WALL_TOP) <= tol
+    near_bottom = abs(y - WALL_BOTTOM) <= tol
+    near_left = abs(x - WALL_LEFT) <= tol
+    near_right = abs(x - WALL_RIGHT) <= tol
+
+    if near_top or near_bottom:
+        if x <= 220.0 or x >= 580.0:
+            return True
+    if near_left or near_right:
+        if y <= 220.0 or y >= 580.0:
+            return True
+    return False
+
+
 def get_chassis_polygon(template_name: str, x: float, y: float, theta: float) -> List[Tuple[float, float]]:
     shape = CHASSIS_MINIATURE_SHAPES.get(template_name, CHASSIS_MINIATURE_SHAPES["Square"])
     return transform_polygon(shape, x, y, theta)

@@ -368,10 +368,10 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot = match.player_robot
         a_bot = match.automaton_robot
 
-        # Ensure player robot has a wedge component hit
+        # Ensure player robot has a wedge component hit with absorption=4 (double absorption = 8)
         wedge_comp = ComponentHealth(
             id="wedge_1", name="Titanium Wedge", card_type="component",
-            max_durability=9, current_durability=9, absorption=1, requirements="",
+            max_durability=9, current_durability=9, absorption=4, requirements="",
             outputs="", keywords="wedge", text="", x=100, y=20, rotation=0,
             box=(100, 20, 144, 84), is_wedge=True,
         )
@@ -393,9 +393,11 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_active_hit=True,
         )
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
-        # Wedge was hit: p_bot is NOT thrown, and no throw reflection to a_bot
+        # Wedge was hit: double absorption (4 * 2 = 8 >= attack 6) reduces throw strength to 0!
+        # Opponent also becomes raised from wedge contact!
         self.assertTrue(any("Wedge was hit" in entry.message for entry in logs))
         self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
+        self.assertTrue(any("is RAISED" in entry.message for entry in logs))
 
     def test_wedge_keyword_when_raised_prevents_throw(self):
         from playtest.engine.combat import resolve_collision_combat
@@ -405,10 +407,10 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot = match.player_robot
         a_bot = match.automaton_robot
 
-        # Ensure player robot has a wedge component hit, and is raised!
+        # Ensure player robot has a wedge component hit with absorption 4, and is raised!
         wedge_comp = ComponentHealth(
             id="wedge_1", name="Titanium Wedge", card_type="component",
-            max_durability=9, current_durability=9, absorption=1, requirements="",
+            max_durability=9, current_durability=9, absorption=4, requirements="",
             outputs="", keywords="wedge", text="", x=100, y=20, rotation=0,
             box=(100, 20, 144, 84), is_wedge=True,
         )
@@ -431,7 +433,7 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_active_hit=True,
         )
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
-        # Wedge was hit: Wedge effect applies even if raised, so p_bot is NOT thrown!
+        # Wedge was hit: Wedge effect applies even if raised, double absorption prevents throw!
         self.assertTrue(any("Wedge was hit" in entry.message for entry in logs))
         self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
 
@@ -887,6 +889,7 @@ class TestPlaytestEngine(unittest.TestCase):
 
         # Non-wedge component on opponent (battery)
         non_wedge_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
+        a_bot.components[non_wedge_cid].absorption = 0
 
         # Contact event where p_bot weapon actively hits opponent
         col = CollisionEvent(
@@ -905,11 +908,11 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_active_hit=False,
         )
 
-        # Case 1: Thrown clear of wall -> takes half throw damage (5 // 2 = 2)
+        # Case 1: Thrown clear of wall -> takes half throw damage rounding up: ceil(5 / 2) = 3
         with patch("random.randint", return_value=1): # 1+1 = 2 roll
             logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
             thrown_logs = [l.message for l in logs if "THROWN" in l.message]
-            self.assertTrue(any("takes half throw damage 2" in msg for msg in thrown_logs))
+            self.assertTrue(any("takes half throw damage 3" in msg for msg in thrown_logs))
 
         # Case 2: Thrown near wall (target lands <= 20mm from wall) -> takes full throw damage (5)
         # Position victim close to top wall (y=25) so thrown displacement hits the wall
@@ -941,8 +944,9 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.is_active = True
 
         # Opponent component contacted is a Wedge! (Titanium Wedge)
-        # The wedge keyword prevents the opponent from being thrown!
+        # The wedge keyword double absorption prevents the opponent from being thrown!
         wedge_cid = [cid for cid, c in a_bot.components.items() if c.is_wedge][0]
+        a_bot.components[wedge_cid].absorption = 4  # double absorption 8 >= 5 attack
 
         col = CollisionEvent(
             time_t=0.5,
@@ -1045,8 +1049,9 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.text = "Deals no damage."
         w_comp.is_active = True
 
-        # Opponent component is a wedge (negates throw)
+        # Opponent component is a wedge (negates throw via double absorption)
         wedge_cid = [cid for cid, c in a_bot.components.items() if c.is_wedge][0]
+        a_bot.components[wedge_cid].absorption = 5  # double absorption 10 >= 8 attack
 
         col = CollisionEvent(
             time_t=0.5,
@@ -1316,7 +1321,8 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.spin_counters = 1
 
         # Case 2: Contact is directly on the wedge itself (wedge takes the damage).
-        # Wedge effect applies: robot is NOT thrown!
+        # Wedge effect applies (double absorption 3 * 2 = 6 >= 5 attack): robot is NOT thrown!
+        a_bot.components[wedge_id].absorption = 3
         col2 = CollisionEvent(
             time_t=0.5,
             contact_point=(400.0, 395.0),
@@ -1422,6 +1428,7 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.weapon_spin_counters[w_comp.id] = 1
 
         non_wedge = [cid for cid, c in a_bot.components.items() if not c.is_wedge and "wheel" in c.name.lower()][0]
+        a_bot.components[non_wedge].absorption = 0
 
         col = CollisionEvent(
             time_t=0.5,
@@ -1940,17 +1947,24 @@ class TestPlaytestEngine(unittest.TestCase):
             r1_active_hit=True,
             r2_active_hit=False,
         )
+        # Ensure hit component has 0 absorption to isolate raised throw reduction
+        a_bot.components[list(a_bot.components.keys())[0]].absorption = 0
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
         self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs))
 
         # Now raised: damage is still 6, but throw strength reduced by 2 (from 6 to 4)!
+        target_cid = list(a_bot.components.keys())[0]
+        a_bot.components[target_cid].is_damaged = False
+        a_bot.components[target_cid].is_destroyed = False
+        a_bot.components[target_cid].current_durability = a_bot.components[target_cid].max_durability
+        a_bot.components[target_cid].absorption = 0
         p_bot.is_raised = True
         wpn.is_active = True
         p_bot.weapon_spin_counters[wpn.id] = 3
         wpn.was_used_this_turn = False
         logs_raised = resolve_collision_combat(col, p_bot, a_bot, round_num=2)
         self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs_raised))
-        self.assertTrue(any("[Raised]" in entry.message and "throw strength reduced by 2 (now 4)" in entry.message for entry in logs_raised))
+        self.assertTrue(any("[Raised]" in entry.message and "throw strength of attack reduced by 2 (now 4)" in entry.message for entry in logs_raised))
 
     def test_feedback_propagation_rounding_up(self):
         """
@@ -2235,6 +2249,85 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(meta_flip["flipped"])
         traj_flip = generate_trajectory(start, MoveChoice(-1, 3), num_steps=20)
         self.assertAlmostEqual(traj_flip[-1].theta, 180.0, places=1)
+
+    def test_hazard_wall_knockout_on_throw(self):
+        """Rule: A marked hazard wall collision causes immediate knockout."""
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Position opponent near corner hazard wall (e.g., top-left near x=25, y=25)
+        a_bot.pose = Pose(x=35.0, y=25.0, theta=180.0)
+        p_bot.pose = Pose(x=50.0, y=50.0, theta=0.0)
+
+        weapon_comps = [c for c in p_bot.components.values() if c.card_type == "weapon"]
+        w_comp = weapon_comps[0]
+        w_comp.outputs = "6W"
+        w_comp.text = "Deals no damage."
+        w_comp.is_active = True
+
+        non_wedge_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
+        a_bot.components[non_wedge_cid].absorption = 0
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(45.0, 40.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[non_wedge_cid],
+            contact_type="ACTIVE",
+            description="Active strike near hazard wall",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(-10.0, -10.0),
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        with patch("random.randint", return_value=3):
+            logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+
+        self.assertTrue(a_bot.is_knocked_out)
+        self.assertTrue(a_bot.is_eliminated)
+        self.assertTrue(any("marked HAZARD WALL! KNOCKED OUT!" in entry.message for entry in logs))
+
+    def test_hazard_wall_knockout_on_push(self):
+        """Rule: Being pushed into a marked hazard wall causes immediate knockout."""
+        from playtest.engine.combat import resolve_inert_contact
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Position opponent close to left hazard wall at y=100
+        a_bot.pose = Pose(x=25.0, y=100.0, theta=0.0)
+        p_bot.pose = Pose(x=45.0, y=100.0, theta=180.0)
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(35.0, 100.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[list(p_bot.components.keys())[0]],
+            robot2_components=[list(a_bot.components.keys())[0]],
+            contact_type="INERTIAL",
+            description="Push into hazard wall",
+            r1_remaining_dist=20.0,
+            r2_remaining_dist=0.0,
+            push_vector=(-20.0, 0.0),
+            r1_active_hit=False,
+            r2_active_hit=False,
+        )
+
+        logs = resolve_inert_contact(col, p_bot, a_bot, round_num=1)
+        self.assertTrue(a_bot.is_knocked_out)
+        self.assertTrue(a_bot.is_eliminated)
+        self.assertTrue(any("marked HAZARD WALL! KNOCKED OUT!" in entry.message for entry in logs))
 
 
 if __name__ == "__main__":

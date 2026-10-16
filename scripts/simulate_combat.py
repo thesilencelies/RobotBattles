@@ -415,11 +415,12 @@ def simulate_weapon_feedback(
             if not valid_suppliers:
                 continue
 
-            split_dmg = rem_dmg / len(valid_suppliers)
+            # Shared equally if multiple components (rounding up)
+            split_dmg = math.ceil(rem_dmg / len(valid_suppliers))
             for sid in valid_suppliers:
                 visited.add(sid)
                 scomp = robot.components[sid]
-                step_res = resolve_single_component_hit(scomp, split_dmg, is_weapon_damage=False)
+                step_res = resolve_single_component_hit(scomp, float(split_dmg), is_weapon_damage=False)
                 results.append(step_res)
                 if step_res.excess_damage > 0:
                     next_layer.append((sid, step_res.excess_damage))
@@ -455,20 +456,20 @@ def simulate_drive_pushing_feedback(
         if step.excess_damage > 0:
             suppliers = [s for s in robot.supply_graph.get(wheel.id, []) if s not in visited]
             if suppliers:
-                split_dmg = step.excess_damage / len(suppliers)
+                split_dmg = math.ceil(step.excess_damage / len(suppliers))
                 for sid in suppliers:
                     visited.add(sid)
                     scomp = robot.components[sid]
-                    sstep = resolve_single_component_hit(scomp, split_dmg, is_weapon_damage=False)
+                    sstep = resolve_single_component_hit(scomp, float(split_dmg), is_weapon_damage=False)
                     results.append(sstep)
                     if sstep.excess_damage > 0:
                         bsuppliers = [b for b in robot.supply_graph.get(sid, []) if b not in visited]
                         if bsuppliers:
-                            bsplit = sstep.excess_damage / len(bsuppliers)
+                            bsplit = math.ceil(sstep.excess_damage / len(bsuppliers))
                             for bid in bsuppliers:
                                 visited.add(bid)
                                 bcomp = robot.components[bid]
-                                bstep = resolve_single_component_hit(bcomp, bsplit, is_weapon_damage=False)
+                                bstep = resolve_single_component_hit(bcomp, float(bsplit), is_weapon_damage=False)
                                 results.append(bstep)
 
     return results
@@ -478,9 +479,27 @@ def simulate_throw_shock(
     robot: RobotModel,
     throw_strength: int,
     hit_on_wedge: bool = False,
+    is_wall_collision: bool = False,
 ) -> Dict[str, List[DamageStepResult]]:
-    # If hit on wedge, robot is not thrown (effective throw strength is 0)
-    eff_throw = 0 if hit_on_wedge else throw_strength
+    """
+    Simulates throw shock damage at each component on the robot.
+    Rules:
+      - Throw damage equals half throw strength (rounding up), unless thrown into a wall (full throw strength).
+      - Base throw strength received is attack damage minus absorption of hit component (minimum 0).
+      - Wedge components have double absorption against weapon contact.
+    """
+    if hit_on_wedge:
+        wedges = [c for c in robot.components.values() if c.is_wedge]
+        if wedges:
+            w = wedges[0]
+            eff_abs = w.durability if throw_strength >= w.durability else w.absorption * 2
+        else:
+            eff_abs = 8  # Fallback double absorption for standard wedge (4 * 2)
+        base_throw = max(0, throw_strength - eff_abs)
+    else:
+        base_throw = throw_strength
+
+    eff_throw = base_throw if is_wall_collision else (base_throw + 1) // 2
     outcomes: Dict[str, List[DamageStepResult]] = {}
 
     if eff_throw <= 0:
@@ -503,11 +522,12 @@ def simulate_throw_shock(
                     suppliers = [sid for sid in robot.supply_graph.get(node_id, []) if sid not in visited]
                     if not suppliers:
                         continue
-                    split_dmg = rem_dmg / len(suppliers)
+                    # Reverse flow into suppliers shared equally (rounding up)
+                    split_dmg = math.ceil(rem_dmg / len(suppliers))
                     for sid in suppliers:
                         visited.add(sid)
                         scomp = robot.components[sid]
-                        sstep = resolve_single_component_hit(scomp, split_dmg, is_weapon_damage=False)
+                        sstep = resolve_single_component_hit(scomp, float(split_dmg), is_weapon_damage=False)
                         results.append(sstep)
                         if sstep.excess_damage > 0:
                             next_layer.append((sid, sstep.excess_damage))

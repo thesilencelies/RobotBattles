@@ -209,6 +209,7 @@ class RobotState:
     is_inverted: bool = False
     is_raised: bool = False
     is_eliminated: bool = False
+    is_knocked_out: bool = False
     left_drive_max: int = 0
     right_drive_max: int = 0
     total_weight: int = 0
@@ -229,7 +230,8 @@ class RobotState:
             "resetting_weapons": list(self.resetting_weapons),
             "is_inverted": self.is_inverted,
             "is_raised": self.is_raised,
-            "is_eliminated": self.is_eliminated,
+            "is_eliminated": self.is_eliminated or self.is_knocked_out,
+            "is_knocked_out": self.is_knocked_out or self.is_eliminated,
             "left_drive_max": self.left_drive_max,
             "right_drive_max": self.right_drive_max,
             "total_weight": self.total_weight,
