@@ -278,7 +278,13 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
 
 A component is only active if its requirements are supplied by connected components. If multiple components supply multiple components, sum up and distribute available supply across connected components. When there is not enough supply to power all connected components, the player chooses which components get supplied during the planning phase each turn.
 
-\clearpage
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{images/automata_vyper_layout.png}
+  \caption{Example Robot layout from the Automata}
+  \label{fig:supply_example}
+\end{figure}
+
 
 \section{The Arena}
 
@@ -344,7 +350,7 @@ Movement units are found on the straight movement template. Where an effect says
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=4.3cm]{images/movement_templates.png}
+    \includegraphics[width=0.8\textwidth]{images/movement_templates.png}
     \caption{Movement Templates}
     \label{fig:movement_templates}
 \end{figure}
@@ -418,30 +424,28 @@ Movement units are found on the straight movement template. Where an effect says
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0) rectangle (16.2, 7.2);
     \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 7.0) {2. Curved Arcs: Right (2/1) \& Left (1/2) Flipped};
 
-% this robot and curve are in the wrong place
     % Right Turn 2/1 (Face-Up)
     \node[font=\scriptsize\bfseries, text=accentBlue] at (10.2, 5.8) {Curve Right (2/1) Face-Up};
     % Actual Curve Template PNG
     \node[anchor=south west] at (8.6, 1.2) {\includegraphics[width=3.6cm]{images/template_curve_ratio_2_1.png}};
     % Ghost Bot C at START FRONT (front line hard up against START FRONT edge)
-    \node at (9.33, 1.53) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
+    \node[name=ghostC] at (9.8, 1.53) [rotate=0] {\includegraphics[width=2.5cm]{images/mini_bot_ghost_triangle_line.png}};
     % End Bot C (front line hard up against line L2 R1, rotated -35 deg CW)
-    \node at (9.35, 2.87) [rotate=-35] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
+    \node[name=endC] at (10.0, 2.67) [rotate=-35] {\includegraphics[width=2.5cm]{images/mini_bot_triangle_line.png}};
     % Curved motion arrow tracking over template path
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (9.33, 1.88) to[bend left=25] (9.35, 2.87);
+    \draw[{Stealth[length=3mm]}-, line width=1.8pt, draw=accentBlue] (ghostC.north) to[bend right=25] (endC.south);
 
-% this robot is in the wrong place 
     % Left Turn 1/2 (FLIP FACE-DOWN)
     \node[font=\scriptsize\bfseries, text=arenaRed] at (14.2, 6.1) {Curve Left (1/2) Flipped};
     \node[draw=noteBorder, fill=noteBg, font=\tiny\bfseries, rounded corners=2pt, inner sep=1.5pt] at (14.2, 5.55) {FLIP FACE-DOWN (R > L)};
     % Actual Flipped Curve Template PNG
     \node[anchor=south east] at (15.9, 1.2) {\includegraphics[width=3.6cm]{images/template_curve_ratio_2_1_flipped.png}};
     % Ghost Bot D at START FRONT (front line hard up against START FRONT edge)
-    \node at (15.17, 1.59) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_square_circle.png}};
+    \node[name=ghostD] at (14.8, 1.59) [rotate=0] {\includegraphics[width=2.5cm]{images/mini_bot_ghost_square_circle.png}};
     % End Bot D (front line hard up against line L1 R2, rotated 35 deg CCW)
-    \node at (15.10, 2.92) [rotate=35] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
+    \node[name=endD] at (14.6, 2.52) [rotate=35] {\includegraphics[width=2.5cm]{images/mini_bot_square_circle.png}};
     % Curved motion arrow tracking over template path
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (15.17, 1.88) to[bend right=25] (15.10, 2.92);
+    \draw[{Stealth[length=3mm]}-, line width=1.8pt, draw=arenaRed] (ghostD.north) to[bend left=25] (endD.south);
   \end{tikzpicture}%
   }
   \caption{Straight Driving, Reverse Maneuvers, and Curved Arcs with Face-Down Flipping}
@@ -570,10 +574,8 @@ For a collision, place both robots as far along their path as they can go withou
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 11.0) {1. Weapon vs Weapon};
 
     % Bot A (Triangle with Circle weapon) moving East
-    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] (0.3, 9.3) -- (1.0, 9.3) node[midway, above=-1pt, font=\tiny\bfseries, text=accentBlue] {Motion};
     \node at (1.72, 9.3) [rotate=-90] {\includegraphics[width=3.4cm]{images/mini_bot_triangle_circle.png}};
     % Bot B (Square with Circle weapon) moving West (weapons in direct contact at x=2.60)
-    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=arenaRed] (4.9, 9.3) -- (4.2, 9.3) node[midway, above=-1pt, font=\tiny\bfseries, text=arenaRed] {Motion};
     \node at (3.45, 9.3) [rotate=90] {\includegraphics[width=3.4cm]{images/mini_bot_square_circle.png}};
     % Scenario 1 label badge
     \node[fill=arenaRed, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (2.6, 7.3) {Active Contact (Mutual)};
@@ -583,10 +585,8 @@ For a collision, place both robots as far along their path as they can go withou
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (5.65, 11.0) {2. Weapon from One Side};
 
     % Bot A (Triangle with Line weapon) strikes flank directly
-    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] (5.7, 9.3) -- (6.3, 9.3) node[midway, above=-1pt, font=\tiny\bfseries, text=accentBlue] {Motion};
     \node at (7.00, 9.3) [rotate=-90] {\includegraphics[width=3.4cm]{images/mini_bot_triangle_line.png}};
     % Bot B moving North (weapon in direct contact with left flank at x=8.00)
-    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=arenaRed] (9.7, 8.2) -- (9.7, 9.0) node[midway, left=1pt, font=\tiny\bfseries, text=arenaRed] {Motion};
     \node at (8.68, 9.3) [rotate=0] {\includegraphics[width=3.4cm]{images/mini_bot_square_circle.png}};
     % Scenario 2 label badge
     \node[fill=arenaRed, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (8.1, 7.3) {Active Contact (One-Sided)};
@@ -596,38 +596,30 @@ For a collision, place both robots as far along their path as they can go withou
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (11.15, 11.0) {3. Inertial Chassis Contact};
 
     % Bot A (Triangle with Line weapon) angled at -30 deg, non-weapon bumper makes contact
-    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] (11.3, 8.0) -- (12.0, 8.5) node[midway, below right=-2pt, font=\tiny\bfseries, text=accentBlue] {Motion};
     \node at (12.75, 9.15) [rotate=-30] {\includegraphics[width=3.2cm]{images/mini_bot_triangle_line.png}};
     % Bot B (Wide with Line weapon) angled at 75 deg, flank makes direct contact
-    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=amberNote!80!black] (15.5, 9.9) -- (14.9, 9.5) node[midway, above=-1pt, font=\tiny\bfseries, text=amberNote!80!black] {Motion};
-    \node at (14.11, 9.15) [rotate=75] {\includegraphics[width=3.2cm]{images/mini_bot_wide_line.png}};
+    \node at (14.11, 9.15) [rotate=60] {\includegraphics[width=3.2cm]{images/mini_bot_wide_line.png}};
     % Scenario 3 label badge
     \node[fill=accentBlue, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (13.6, 7.3) {Inert Contact};
 
     % -------------------------------------------------------------
     % BOTTOM ROW: AUTOMATA CARD SHEET MAPPING (VYPER ON SQUARE CHASSIS)
     % -------------------------------------------------------------
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (16.2, 5.8);
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (16.2, 6.8);
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 5.6) {Automata Card Sheet Mapping};
 
     % Left: Both robots shown in collision - Bot A (Triangle) strikes Vyper (Square)
-    \node at (0.97, 2.94) [rotate=-90] {\includegraphics[width=3.3cm]{images/mini_bot_triangle_line.png}};
-    \node at (2.41, 2.40) [rotate=0] {\includegraphics[width=3.3cm]{images/mini_bot_vyper_square.png}};
+    \node[name=botA] at (0.97, 3.14) [rotate=-120] {\includegraphics[width=3.3cm]{images/mini_bot_triangle_line.png}};
+    \node[name=botB] at (2.41, 2.40) [rotate=0] {\includegraphics[width=3.3cm]{images/mini_bot_vyper_square.png}};
     % Contact line at Front-L shoulder
-    \draw[line width=1.8pt, draw=arenaRed, dashed] (1.6, 2.94) -- (2.8, 2.94);
+    \draw[line width=1.8pt, draw=arenaRed, dashed] (botA.north) -- (botB.center);
     \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (1.85, 0.9) {Align Contact Line};
 
-    % Middle: Bold follow arrow
-    \draw[-{Stealth[length=3.5mm]}, line width=2.5pt, draw=arenaRed] (3.1, 2.94) -- (4.8, 2.94) node[midway, above=1pt, font=\scriptsize\bfseries, text=arenaRed, align=center] {Follow line};
-
     % Right: Actual Automata Card Sheet Layout (Double Size!)
-    \node[anchor=west] at (5.0, 2.6) {\includegraphics[height=4.6cm]{images/automata_vyper_layout.png}};
+    \node[anchor=west] at (7.0, 2.6) {\includegraphics[height=6.6cm]{images/automata_vyper_layout.png}};
 
     % Callout arrow to Titanium Wedge (Front-L)
-    \draw[-{Stealth[length=2.5mm]}, line width=2pt, draw=arenaRed] (6.4, 4.8) -- (6.4, 4.1) node[pos=0, above=1pt, font=\scriptsize\bfseries, text=arenaRed] {Hit: Titanium Wedge};
-
-    % Callout badge on right
-    \node[draw=boxBorder, fill=boxBg, rounded corners=2pt, font=\scriptsize\bfseries, text=primaryDark, align=center, inner sep=4pt] at (13.4, 2.7) {Outermost Card Hit\\(Internals Shielded)};
+    \draw[-{Stealth[length=2.5mm]}, line width=2pt, draw=arenaRed] (6.8, 5.2) -- (8.4, 4.1) node[pos=0, above=1pt, font=\scriptsize\bfseries, text=arenaRed] {Hit: Titanium Wedge};
   \end{tikzpicture}%
   }
   \caption{Determining Contact Point along Movement Paths and Mapping to Automata Sheet}
@@ -656,15 +648,14 @@ Essentially a pushing match between colliding chassis surfaces:
 
     % Templates showing remaining motion
     \node at (2.2, 7.3) [rotate=-25, opacity=0.65] {\includegraphics[width=0.75cm]{images/template_straight.png}};
-    \node at (3.9, 7.2) [rotate=75, opacity=0.65] {\includegraphics[width=0.75cm]{images/template_straight.png}};
+    \node at (3.9, 7.2) [rotate=60, opacity=0.65] {\includegraphics[width=0.75cm]{images/template_straight.png}};
 
     % Bot A (Triangle with Line template)
-    \node at (2.1, 6.4) [rotate=-25] {\includegraphics[width=1.65cm]{images/mini_bot_triangle_line.png}};
+    \node at (2.8, 6.4) [rotate=-25] {\includegraphics[width=1.65cm]{images/mini_bot_triangle_line.png}};
     % Bot B (Wide with Line template) in direct contact
-    \node at (3.6, 6.5) [rotate=75] {\includegraphics[width=1.65cm]{images/mini_bot_wide_line.png}};
+    \node at (3.3, 6.5) [rotate=60] {\includegraphics[width=1.65cm]{images/mini_bot_wide_line.png}};
     % Contact point at shoulder-to-flank
     \fill[primaryDark] (2.95, 6.45) circle (2.2pt);
-    \node[font=\scriptsize\bfseries, text=primaryDark, above=2pt] at (2.95, 6.55) {Contact};
 
     % Remainder arrows
     \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue, dashed] (2.1, 6.4) -- ++(65:1.5) node[above right=-2pt, font=\scriptsize\bfseries, text=accentBlue] {Remainder $\vec{v}_A$};
@@ -675,49 +666,49 @@ Essentially a pushing match between colliding chassis surfaces:
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 9.05) {Step 2: Displace Remainder $\vec{v}_A$ to End of $\vec{v}_B$};
 
     % Contact point
-    \fill[primaryDark] (9.6, 6.2) circle (2.5pt) node[below=2pt, font=\scriptsize\bfseries] {Contact};
+    \fill[primaryDark, name=contact2] (12.6, 5.6) circle (2.5pt) node[below=2pt, font=\scriptsize\bfseries] {Contact};
     % Vector B template & arrow from contact
-    \node at (10.8, 6.55) [rotate=-75, opacity=0.6] {\includegraphics[width=0.65cm]{images/template_straight.png}};
-    \draw[-{Stealth[length=3.5mm]}, line width=2pt, draw=amberNote!80!black] (9.6, 6.2) -- (12.0, 6.9) node[midway, below right=-1pt, font=\scriptsize\bfseries, text=amberNote!80!black] {Remainder $\vec{v}_B$};
+    \node[name=templateB2, anchor=south] at (12.6,5.6) [rotate=60, opacity=0.6] {\includegraphics[width=0.65cm]{images/template_straight.png}};
+    \draw[-{Stealth[length=3.5mm]}, line width=2pt, draw=amberNote!80!black] (templateB2.south) -- (templateB2.north) node[midway, below right=-1pt, font=\scriptsize\bfseries, text=amberNote!80!black] {Remainder $\vec{v}_B$};
     % Displaced Template A attached to end of B
-    \node at (12.7, 7.4) [rotate=-35, opacity=0.6] {\includegraphics[width=0.65cm]{images/template_straight.png}};
-    \draw[-{Stealth[length=3.5mm]}, line width=2pt, draw=accentBlue] (12.0, 6.9) -- (13.4, 7.9) node[midway, below right=-2pt, font=\scriptsize\bfseries, text=accentBlue] {Displaced $\vec{v}_A$};
+    \node[name=templateA2, anchor=south] at (templateB2.north) [rotate=-35, opacity=0.6] {\includegraphics[width=0.65cm]{images/template_straight.png}};
+    \draw[-{Stealth[length=3.5mm]}, line width=2pt, draw=accentBlue] (templateA2.south) -- (templateA2.north) node[midway, below right=-2pt, font=\scriptsize\bfseries, text=accentBlue] {Displaced $\vec{v}_A$};
     % Resultant net vector line
-    \draw[-{Stealth[length=3.5mm]}, line width=2.4pt, draw=arenaRed, dashed] (9.6, 6.2) -- (13.4, 7.9) node[pos=0.45, above=1pt, sloped, font=\footnotesize\bfseries, text=arenaRed] {Net Pushing Vector};
+    \draw[-{Stealth[length=3.5mm]}, line width=2.4pt, draw=arenaRed, dashed] (templateB2.south) -- (templateA2.north) node[pos=0.45, above=1pt, sloped, font=\footnotesize\bfseries, text=arenaRed] {Net Pushing Vector};
 
     % PANEL 3: Step 3 (Joint Push Along Net Vector)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0.0) rectangle (7.9, 4.4);
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 4.25) {Step 3: Joint Push Along Net Vector};
 
     % Net line
-    \draw[-{Stealth[length=3.5mm]}, line width=2.4pt, draw=arenaRed] (1.2, 1.9) -- (5.8, 3.0) node[pos=0.25, above=1pt, sloped, font=\footnotesize\bfseries, text=arenaRed] {Pushing Line};
+    \draw[-{Stealth[length=3.5mm]}, line width=2.4pt, draw=arenaRed] (1.7, 1.2) -- (4.6, 3.0) node[pos=0.25, above=1pt, sloped, font=\footnotesize\bfseries, text=arenaRed] {Pushing Line};
 
     % Initial contact ghosts
-    \node at (1.6, 1.9) [rotate=-25] {\includegraphics[width=1.4cm]{images/mini_bot_ghost_triangle_line.png}};
-    \node at (2.7, 2.2) [rotate=75] {\includegraphics[width=1.4cm]{images/mini_bot_ghost_wide_line.png}};
+    \node at (1.6, 1.2) [rotate=-25] {\includegraphics[width=1.4cm]{images/mini_bot_ghost_triangle_line.png}};
+    \node at (2.4, 1.3) [rotate=75] {\includegraphics[width=1.4cm]{images/mini_bot_ghost_wide_line.png}};
 
     % Pushed final robots
-    \node at (4.3, 2.6) [rotate=-25] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
-    \node at (5.4, 2.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
+    \node at (4.0, 2.6) [rotate=-25] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
+    \node at (4.8, 2.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
 
     % PANEL 4: Step 4 (Wall Impact & 1-Unit Separation)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0.0) rectangle (16.2, 4.4);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 4.25) {Step 4: Wall Impact \& 1-Unit Separation};
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 4.25) {Step 4: 1-Unit Separation};
 
-    % Arena Wall on right
-    \fill[wallBlack] (15.2, 0.1) rectangle (15.8, 4.3);
-    \node[text=white, font=\scriptsize\bfseries, rotate=90] at (15.5, 2.2) {ARENA WALL};
+    % % Arena Wall on right
+    % \fill[wallBlack] (15.2, 0.1) rectangle (15.8, 4.3);
+    % \node[text=white, font=\scriptsize\bfseries, rotate=90] at (15.5, 2.2) {ARENA WALL};
 
-    % Bot B in direct physical contact with wall
-    \node at (14.2, 2.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
-    % Small textless impact star placed above the contact point
-    \node[star, star points=6, star point ratio=1.5, fill=arenaRed, draw=arenaRed!60!black, line width=0.5pt, inner sep=1.8pt] at (15.15, 3.55) {};
-    \node[font=\scriptsize\bfseries, text=arenaRed, align=center] at (11.4, 3.3) {Throw = Lost Distance};
+    % % Bot B in direct physical contact with wall
+    % \node at (14.2, 2.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
+    % % Small textless impact star placed above the contact point
+    % \node[star, star points=6, star point ratio=1.5, fill=arenaRed, draw=arenaRed!60!black, line width=0.5pt, inner sep=1.8pt] at (15.15, 3.55) {};
+    % \node[font=\scriptsize\bfseries, text=arenaRed, align=center] at (11.4, 3.3) {Throw = Lost Distance};
 
     % Separation after collision
-    \draw[{Stealth[length=2.5mm]}-{Stealth[length=2.5mm]}, line width=2pt, draw=accentBlue] (9.6, 1.8) -- (11.8, 1.8) node[midway, below=2pt, font=\scriptsize\bfseries, text=accentBlue] {1 Unit Separation};
-    \node at (9.0, 1.9) [rotate=-25] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
-    \node at (12.4, 1.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
+    \draw[{Stealth[length=2.5mm]}-{Stealth[length=2.5mm]}, line width=2pt, draw=accentBlue] (9.8, 1.8) -- (11.0, 1.8) node[midway, below=2pt, font=\scriptsize\bfseries, text=accentBlue] {1 Unit Separation};
+    \node at (9.6, 1.9) [rotate=-25] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
+    \node at (11.4, 1.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
   \end{tikzpicture}
   \caption{Step-by-Step Resolution of Inert Contact (Pushing Match)}
   \label{fig:diagram_inert_contact}
@@ -806,7 +797,7 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     \draw[-{Stealth[length=3.2mm]}, line width=2.2pt, draw=arenaRed] (11.0, 3.1) -- (12.8, 3.8) node[midway, above=-1pt, sloped, font=\scriptsize\bfseries, text=arenaRed] {Thrown into Wall};
 
     % Bot contacting the hazard wall directly
-    \node at (13.6, 3.8) [rotate=25] {\includegraphics[width=1.85cm]{images/mini_bot_opponent_square.png}};
+    \node at (13.6, 3.9) [rotate=25] {\includegraphics[width=4cm]{images/mini_bot_opponent_square.png}};
     \node[fill=arenaRed, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=3pt] at (12.3, 2.35) {STATUS: KNOCKED OUT};
   \end{tikzpicture}
   \caption{Active Weapon Hits, Center-to-Center Throw Line, and Hazard Wall Elimination}
