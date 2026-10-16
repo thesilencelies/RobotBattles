@@ -2,8 +2,8 @@
   "Card": {
     "1": {
       "name": "Galaxy 120",
-      "description": "",
-      "gm_notes": "weight:1\ncost:$1\nout:EE\ndurability:5",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
+      "gm_notes": "weight:1\ncost:$1\nout:EE\ndurability:4",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -16,7 +16,7 @@
     },
     "2": {
       "name": "Galaxy 300 3S",
-      "description": "",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
       "gm_notes": "weight:1\ncost:$2\nout:EEE\ndurability:6",
       "tags": {
         "1": "Card",
@@ -30,8 +30,8 @@
     },
     "3": {
       "name": "Galaxy 1000 3S",
-      "description": "",
-      "gm_notes": "weight:2\ncost:$3\nout:EEEEEE\ndurability:9",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
+      "gm_notes": "weight:3\ncost:$3\nout:EEEEEE\ndurability:9",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -44,7 +44,7 @@
     },
     "4": {
       "name": "Tattu 450 4S",
-      "description": "",
+      "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
       "gm_notes": "weight:2\ncost:$2\nout:EEEE\ndurability:9",
       "tags": {
         "1": "Card",
@@ -213,7 +213,7 @@
     "16": {
       "name": "20kg Metal Gear Servo",
       "description": "",
-      "gm_notes": "weight:3\ncost:$2\nreq:EEEE\nout:PPPP\ndurability:7\nabsorption:2",
+      "gm_notes": "weight:3\ncost:$3\nreq:EEE\nout:PPPP\ndurability:8\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -227,7 +227,7 @@
     "17": {
       "name": "25kg High Voltage Servo",
       "description": "",
-      "gm_notes": "weight:4\ncost:$2\nreq:EEEEE\nout:PPPPPP\ndurability:9\nabsorption:3",
+      "gm_notes": "weight:4\ncost:$3\nreq:EEEEE\nout:PPPPPP\ndurability:9\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -241,7 +241,7 @@
     "18": {
       "name": "Snap Wheels",
       "description": "Invertible: this component works inverted",
-      "gm_notes": "weight:1\ncost:$1\nreq:SS\nout:D\ndurability:6\nabsorption:2",
+      "gm_notes": "weight:1\ncost:$1\nreq:SS\nout:D\ndurability:5\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -297,7 +297,7 @@
     "22": {
       "name": "Aluminum Plate",
       "description": "",
-      "gm_notes": "weight:2\ncost:$1\ndurability:8\nabsorption:3",
+      "gm_notes": "weight:2\ncost:$1\ndurability:8\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -353,7 +353,7 @@
     "26": {
       "name": "Titanium Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:4\ncost:$5\ndurability:13\nabsorption:1",
+      "gm_notes": "weight:4\ncost:$5\ndurability:13\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -367,7 +367,7 @@
     "27": {
       "name": "Steel Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:5\ncost:$3\ndurability:11\nabsorption:2",
+      "gm_notes": "weight:5\ncost:$3\ndurability:11\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -381,7 +381,7 @@
     "28": {
       "name": "AR500 Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:5\ncost:$4\ndurability:17\nabsorption:2",
+      "gm_notes": "weight:5\ncost:$4\ndurability:17\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -395,7 +395,7 @@
     "29": {
       "name": "Forks",
       "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
-      "gm_notes": "weight:1\ncost:$1\ndurability:7",
+      "gm_notes": "weight:1\ncost:$1\ndurability:6",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -451,7 +451,7 @@
     "33": {
       "name": "Self righting arm",
       "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:1\ncost:$1\nreq:PP\ndurability:9",
+      "gm_notes": "weight:1\ncost:$2\nreq:PP\ndurability:9\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
