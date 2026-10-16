@@ -312,6 +312,39 @@ class MovementTemplate:
                 f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{cx - radius:.1f}" y2="{cy:.1f}" stroke="#2563eb" stroke-width="2.5" stroke-linecap="square" />'
             )
 
+            # 60-degree ticks at edges with numbers 1 to 6 (for thrown robot orientation)
+            tick_len = 5.0
+            label_dist = 8.5
+            for i in range(1, 7):
+                ang = i * 60
+                rad = math.radians(ang)
+                # Outer point at the rim of template
+                x2 = cx + radius * math.sin(rad)
+                y2 = cy - radius * math.cos(rad)
+                # Inner tick point
+                x1 = cx + (radius - tick_len) * math.sin(rad)
+                y1 = cy - (radius - tick_len) * math.cos(rad)
+                # Tick line in distinct amber
+                svg_parts.append(
+                    f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
+                    f'stroke="#d97706" stroke-width="2.2" stroke-linecap="round" />'
+                )
+                # Label positioning: offset slightly from baseline/south lines for i=3 and i=6
+                if i == 3:
+                    xl = cx - 6.5
+                    yl = cy + (radius - label_dist)
+                elif i == 6:
+                    xl = cx + 6.5
+                    yl = cy - (radius - label_dist)
+                else:
+                    xl = cx + (radius - label_dist) * math.sin(rad)
+                    yl = cy - (radius - label_dist) * math.cos(rad)
+                svg_parts.append(
+                    f'<g transform="translate({xl:.1f}, {yl:.1f})">'
+                    f'<text x="0" y="0" font-family="sans-serif" font-size="7.5" font-weight="bold" '
+                    f'fill="#b45309" text-anchor="middle" dominant-baseline="central">{i}</text></g>'
+                )
+
             # Labels placed ON the template in each quadrant, angled to line up with the end line
             # l = 1: along East line, inside top-right quadrant
             svg_parts.append(
@@ -675,7 +708,8 @@ def generate_rulebook_preview_svg(
     <!-- Spin notes -->
     <text x="441" y="785" font-size="15" font-weight="bold" text-anchor="middle">Spin on Spot</text>
     <text x="441" y="805" font-size="12" fill="#64748b" text-anchor="middle">Rotate on center (4 increments)</text>
-    <text x="441" y="822" font-size="10.5" fill="#94a3b8" text-anchor="middle">&gt;4: Spin 360° then use remainder</text>
+    <text x="441" y="820" font-size="10.5" fill="#94a3b8" text-anchor="middle">&gt;4: Spin 360° then use remainder</text>
+    <text x="441" y="836" font-size="10" fill="#b45309" text-anchor="middle">Thrown orientation: d6 ticks (1-6)</text>
 
     <!-- Pivot notes -->
     <text x="722" y="785" font-size="15" font-weight="bold" text-anchor="middle">Pivot Fan</text>

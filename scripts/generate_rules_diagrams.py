@@ -988,7 +988,7 @@ def generate_active_contact(output_path: Path) -> None:
         arrowprops=dict(arrowstyle="->", color=AMBER_NOTE, lw=3.0, mutation_scale=15),
         zorder=12
     )
-    ax1.text(cx + 70, cy + 42, "Throw Vector B\n(2d6 up to Throw Str)", fontsize=8, fontweight="bold", color=AMBER_NOTE, ha="center")
+    ax1.text(cx + 70, cy + 42, "Throw Vector B\n(min(d6, Throw Str))", fontsize=8, fontweight="bold", color=AMBER_NOTE, ha="center")
 
     ax1.text(
         10, 22,
@@ -1016,7 +1016,7 @@ def generate_active_contact(output_path: Path) -> None:
     draw_robot(ax2, 185, 80, -90, chassis="Triangle", color=LIGHT_BLUE, name="A", weapon="Bar")
     ax2.plot(208, 80, "*", color=CRIMSON, markersize=14, zorder=15)
     ax2.text(
-        165, 45, "WALL HIT!\nFull Throw Shock\nFeedback",
+        165, 45, "WALL HIT!\nThrow Shock\nFeedback",
         fontsize=7.5, fontweight="bold", color=CRIMSON, ha="center",
         bbox=dict(boxstyle="round,pad=0.2", facecolor="#FEF2F2", edgecolor=CRIMSON)
     )

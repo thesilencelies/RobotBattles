@@ -944,15 +944,15 @@ def resolve_inert_contact(
 
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"💥 {pushed_into_wall_robot.name} was pushed into the wall! THROWN with throw strength {wall_throw_str}! (Takes full throw damage {wall_throw_str})",
+                message=f"💥 {pushed_into_wall_robot.name} was pushed into the wall! THROWN with throw strength {wall_throw_str}! (Takes throw damage {wall_throw_str})",
             ))
             shock_cid = simulate_dropping_card(pushed_into_wall_robot)
             if shock_cid:
                 resolve_feedback_propagation(pushed_into_wall_robot, shock_cid, wall_throw_str, phase="wall_feedback", steps=steps)
 
             # Execute throw away from wall towards arena center
-            roll_2d6 = random.randint(1, 6) + random.randint(1, 6)
-            thrown_units = min(wall_throw_str, roll_2d6)
+            roll_d6 = random.randint(1, 6)
+            thrown_units = min(wall_throw_str, roll_d6)
             displacement_mm = thrown_units * DRIVE_UNIT_MM
             dx = 400.0 - pushed_into_wall_robot.pose.x
             dy = 400.0 - pushed_into_wall_robot.pose.y
@@ -964,8 +964,13 @@ def resolve_inert_contact(
 
             pushed_into_wall_robot.pose.x += nx * displacement_mm
             pushed_into_wall_robot.pose.y += ny * displacement_mm
-            spin_rot = random.choice([45.0, 90.0, 135.0, 180.0])
+            orientation_roll = random.randint(1, 6)
+            spin_rot = orientation_roll * 60.0
             pushed_into_wall_robot.pose.theta = (pushed_into_wall_robot.pose.theta + spin_rot) % 360.0
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=f"🧭 Thrown orientation: {pushed_into_wall_robot.name} rolled {orientation_roll} -> rotated {int(spin_rot)}° clockwise (now {pushed_into_wall_robot.pose.theta:.0f}°).",
+            ))
 
             eff_flip = pushed_into_wall_robot.flip_strength // 2 if pushed_into_wall_robot.is_raised else pushed_into_wall_robot.flip_strength
             excess_throw = wall_throw_str - thrown_units
@@ -1320,8 +1325,8 @@ def resolve_collision_combat(
             if throw_str <= 0:
                 continue
 
-            roll_2d6 = random.randint(1, 6) + random.randint(1, 6)
-            thrown_units = min(throw_str, roll_2d6)
+            roll_d6 = random.randint(1, 6)
+            thrown_units = min(throw_str, roll_d6)
             displacement_mm = thrown_units * DRIVE_UNIT_MM
 
             # Vector away from contact point
@@ -1346,12 +1351,14 @@ def resolve_collision_combat(
 
             robot.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, target_x))
             robot.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, target_y))
-            # Model rotated by spinning
-            spin_rot = random.choice([45.0, 90.0, 135.0, 180.0])
+
+            # Robot orientation after active contact: decided by throwing a dice and rotating that many 60 degree steps clockwise (only applies to thrown robots)
+            orientation_roll = random.randint(1, 6)
+            spin_rot = orientation_roll * 60.0
             robot.pose.theta = (robot.pose.theta + spin_rot) % 360.0
 
-            # Throw damage rule: half throw strength (rounding up) unless robot hits a wall (full throw strength)
-            throw_dmg = throw_str if hit_wall else ((throw_str + 1) // 2)
+            # Throw damage rule: always equal to throw strength
+            throw_dmg = throw_str
 
             if hit_wall:
                 # Check marked Hazard Wall knockout
@@ -1364,15 +1371,20 @@ def resolve_collision_combat(
                     ))
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"🚀 {robot.name} is THROWN into a WALL! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> hit wall, takes full throw damage {throw_dmg})",
+                    message=f"🚀 {robot.name} is THROWN into a WALL! (Strength {throw_str}, d6 Roll {roll_d6} -> hit wall, takes throw damage {throw_dmg})",
                 ))
                 w_wall_logs = resolve_weapon_wall_contact(robot, throw_strength=throw_str, round_num=round_num, phase="collision", steps=steps)
                 logs.extend(w_wall_logs)
             else:
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"🚀 {robot.name} is THROWN! (Strength {throw_str}, 2d6 Roll {roll_2d6} -> {thrown_units} units / {displacement_mm:.0f}mm away, takes half throw damage {throw_dmg})",
+                    message=f"🚀 {robot.name} is THROWN! (Strength {throw_str}, d6 Roll {roll_d6} -> {thrown_units} units / {displacement_mm:.0f}mm away, takes throw damage {throw_dmg})",
                 ))
+
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=f"🧭 Thrown orientation: {robot.name} rolled {orientation_roll} -> rotated {int(spin_rot)}° clockwise (now {robot.pose.theta:.0f}°).",
+            ))
 
             # Flip check: if throw strength - thrown distance > flip value of chassis
             eff_flip = robot.flip_strength // 2 if robot.is_raised else robot.flip_strength

@@ -484,7 +484,7 @@ def simulate_throw_shock(
     """
     Simulates throw shock damage at each component on the robot.
     Rules:
-      - Throw damage equals half throw strength (rounding up), unless thrown into a wall (full throw strength).
+      - Throw damage equals throw strength.
       - Base throw strength received is attack damage minus absorption of hit component (minimum 0).
       - Wedge components have double absorption against weapon contact.
     """
@@ -499,7 +499,7 @@ def simulate_throw_shock(
     else:
         base_throw = throw_strength
 
-    eff_throw = base_throw if is_wall_collision else (base_throw + 1) // 2
+    eff_throw = base_throw
     outcomes: Dict[str, List[DamageStepResult]] = {}
 
     if eff_throw <= 0:

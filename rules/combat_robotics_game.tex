@@ -497,6 +497,17 @@ Movement units are found on the straight movement template. Where an effect says
     \draw[line width=1.3pt, draw=arenaRed] (12.2, 3.1) -- ++(-90:1.8cm) node[below=1pt, font=\footnotesize\bfseries, text=arenaRed] {L2 R-2 (180$^\circ$)};
     \draw[line width=0.9pt, draw=accentBlue] (12.2, 3.1) -- ++(180:1.8cm) node[left=2pt, font=\footnotesize\bfseries, text=accentBlue] {L3 R-3 (270$^\circ$)};
 
+    % 60-degree ticks at edges with numbers 1 to 6 for thrown robot orientation
+    \foreach \d/\ang in {1/30, 2/-30, 3/-90, 4/-150, 5/150, 6/90} {
+      \draw[line width=1.1pt, draw=amberNote] (12.2, 3.1) ++(\ang:1.55cm) -- ++(\ang:0.25cm);
+    }
+    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (30:1.35cm)$) {1};
+    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (-30:1.35cm)$) {2};
+    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (-105:1.40cm)$) {3};
+    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (-150:1.35cm)$) {4};
+    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (150:1.35cm)$) {5};
+    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (75:1.40cm)$) {6};
+
     % Ghost Bot B at start (centered on disc)
     \node at (12.2, 3.1) [rotate=0, opacity=0.4] {\includegraphics[width=4.5cm]{images/mini_bot_ghost_wide_line.png}};
     % End Bot B rotated 180 deg (facing South, opacity allows markings to show through)
@@ -632,7 +643,7 @@ Essentially a pushing match between colliding chassis surfaces:
   \item Move along templates until contact.
   \item Displace the remainder of robot A's template to the end of robot B's template.
   \item Move both robots along the straight line from the initial contact point to the end of A's displaced template (a raised robot's motion does not contribute).
-  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the remaining distance of the move. If its weapon contacts the wall, it loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$. Because it has already hit the wall, the robot immediately takes throw damage equal to the full throw strength.
+  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the remaining distance of the move. If its weapon contacts the wall, it loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$. The robot takes throw damage equal to the throw strength.
   \item If the robots are still touching, both robots are moved back a full unit to separate them.
 \end{enumerate}
 
@@ -718,6 +729,7 @@ When weapons collide with an opponent's chassis or components:
 \begin{itemize}
   \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the single outermost component contacted (damage does not penetrate inwards).
   \item Then both robots are thrown away from the contact. The base throw strength received is equal to the attack damage minus the absorption of the hit component (minimum 0). Any additions to throw strength are added after that.
+  \item Thrown distance is $\min(\text{d6}, \text{throw strength})$. Thrown robot orientation after active contact is decided by throwing a dice and rotating that many $60^\circ$ steps clockwise (using the numbered ticks on the rim of the Spin Disc template).
   \item Weapons receive feedback equal to half the combined attack strength in the contact. A weapon contacting an arena wall loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$.
   \item If after active contact the robots are still in contact, proceed with inertial contact.
 \end{itemize}
@@ -726,9 +738,9 @@ When weapons collide with an opponent's chassis or components:
 \begin{tabularx}{\textwidth}{l X}
   \textbf{Contact Type} & \textbf{Resolution Mechanism} \\
   \midrule
-  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals damage to outermost component contacted $\rightarrow$ Base throw strength equals attack damage minus absorption of hit component (min 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength. If robots are still in contact, proceed with inertial contact. \\
+  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals damage to outermost component contacted $\rightarrow$ Base throw strength equals attack damage minus absorption of hit component (min 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance is $\min(\text{d6}, \text{strength}) \rightarrow$ Thrown robot orientation rotates d6 $\times 60^\circ$ clockwise $\rightarrow$ Throw damage equals throw strength. If robots are still in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw (takes full throw damage) $\rightarrow$ If still touching, move both back a full unit to separate them. \\
+  \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw (takes throw damage equal to throw strength) $\rightarrow$ If still touching, move both back a full unit to separate them. \\
 \end{tabularx}
 \end{summarybox}
 
@@ -742,9 +754,10 @@ When weapons collide with an opponent's chassis or components:
 
 \subsection{Throws \& Inversion}
 
-A robot that is thrown is moved a random amount (2d6) up to the throw strength away from the contact point along the center-to-center line and rotated by spinning the model.
+A robot that is thrown is moved a distance equal to $\min(\text{d6}, \text{throw strength})$ away from the contact point along the center-to-center line.
+Robot orientation after active contact is decided by throwing a dice and rotating that many $60^\circ$ steps clockwise (using the numbered ticks on the rim of the Spin Disc template).
 If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted} (lower rolled distances represent high-arching vertical throws rather than horizontal displacement).
-After the throw, the thrown robot takes throw damage at a randomly chosen component equal to half the throw strength (rounding up). If the robot is thrown into a normal wall, it instead takes throw damage equal to the full throw strength.
+After the throw, the thrown robot takes throw damage at a randomly chosen component equal to the throw strength.
 If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately knocked out}.
 The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on.
 
@@ -773,7 +786,7 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     % Thrown Bot B
     \node at (7.2, 4.4) [rotate=50] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
     \draw[-{Stealth[length=2.5mm]}, line width=1.5pt, draw=accentBlue] (7.9, 3.9) arc (-40:120:0.6);
-    \node[font=\scriptsize\bfseries, text=accentBlue] at (8.3, 4.7) {Model Spin};
+    \node[font=\scriptsize\bfseries, text=accentBlue] at (8.3, 4.7) {d6 $\times 60^\circ$ Rotation};
 
     % PANEL 2: Hazard Wall Elimination
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (10.2, 1.4) rectangle (16.2, 5.8);
@@ -904,9 +917,9 @@ to each component that supplies it, shared equally if there are multiple compone
 \begin{itemize}[leftmargin=*, itemsep=1.5pt, topsep=1pt, parsep=0pt]
   \item \textbf{Direct Weapon Damage:} Weapon strike damage applies only to the single outermost component hit; excess damage does not penetrate inwards (throw shock covers internals).
   \item \textbf{Damage Conditions:} Damage $\ge$ durability $\implies$ \textbf{Destroyed}. Damage $\ge \frac{1}{2}$ durability $\implies$ \textbf{Damaged}. Absorption reduces base throw strength received during attacks.
-  \item \textbf{Throw Damage:} Throw damage equals half the throw strength (rounding up), unless the robot hits a wall (which inflicts full throw strength).
+  \item \textbf{Throw Distance \& Damage:} Thrown distance is $\min(\text{d6}, \text{throw strength})$. Thrown robot orientation rotates d6 $\times 60^\circ$ clockwise. Throw damage is always equal to the throw strength.
   \item \textbf{Separation:} If robots are still touching after contact resolution, both robots are moved back a full unit to separate them.
-  \item \textbf{Wall Collisions:} Driving into a wall stops the robot without a throw, but any contacting weapon takes feedback $\lfloor \frac{\text{weapon strength}}{2} \rfloor$. Robots thrown into walls take throw damage equal to full throw strength. Robots pushed into walls are thrown with throw strength equal to remaining distance, take weapon feedback if a weapon hits the wall, and take throw damage equal to full throw strength.
+  \item \textbf{Wall Collisions:} Driving into a wall stops the robot without a throw, but any contacting weapon takes feedback $\lfloor \frac{\text{weapon strength}}{2} \rfloor$. Robots pushed into walls are thrown with throw strength equal to remaining distance, take weapon feedback if a weapon hits the wall, and take throw damage equal to throw strength.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounding up).
 \end{itemize}
 \end{summarybox}
