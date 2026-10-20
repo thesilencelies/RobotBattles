@@ -36,6 +36,13 @@
   \end{tikzpicture}%
 }
 \newcommand{\inlineIcon}[1]{\raisebox{-0.22ex}{\resizebox{!}{1.15em}{#1}}}
+\newcommand{\inlineChevron}{%
+  \raisebox{-0.15ex}{\resizebox{!}{0.95em}{%
+    \begin{tikzpicture}
+      \fill[chevronpurple] (0, 0.90) -- (0.85, 0) -- (0, -0.90) -- (0, -0.54) -- (0.51, 0) -- (0, 0.54) -- cycle;
+    \end{tikzpicture}%
+  }}%
+}
 
 % Color definitions
 \definecolor{primaryDark}{HTML}{1A365D}   % Deep navy
@@ -177,13 +184,13 @@ Cards represent the physical components, electronics, mechanical assemblies, and
 
 The anatomy of each card consists of the following key attributes:
 
-\begin{description}[leftmargin=!, labelwidth=2.8cm, font=\bfseries\color{primaryDark}]
-  \item[Price (\$\$):] You cannot have more total price in your pool than your budget.
-  \item[Weight:] Your robot's total weight must be within the weight budget.
-  \item[Requirements:] A component is only active if its requirements are supplied by connected components. (Power, spin, pressure are the resources that need supply.)
-  \item[Durability:] How much damage a component can take before destruction.
-  \item[Absorption:] How much damage a component absorbs to reduce throw strength received during an attack (also absorbs feedback damage).
-  \item[Outputs:] What resources the component supplies. Also includes drive.
+\begin{description}[leftmargin=!, labelwidth=4.2cm, font=\bfseries\color{primaryDark}]
+  \item[Price (\textcolor{costgreen}{\textbf{\$\$}}):] You cannot have more total price in your pool than your budget.
+  \item[Weight (\inlineIcon{\weighticon}):] Your robot's total weight must be within the weight budget.
+  \item[Requirements (\inlineChevron\inlineIcon{\resourceE}):] A component is only active if its requirements are supplied by connected components. (Power, spin, pressure are the resources that need supply.)
+  \item[Durability (\inlineIcon{\durabilityicon}):] How much damage a component can take before destruction.
+  \item[Absorption (\inlineIcon{\absorptionicon}):] How much damage a component absorbs to reduce throw strength received during an attack (also absorbs feedback damage).
+  \item[Outputs (\inlineIcon{\resourceS}\inlineChevron):] What resources the component supplies. Also includes drive.
   \item[Ability Text:] Any special rules or passive traits for the component.
 \end{description}
 
