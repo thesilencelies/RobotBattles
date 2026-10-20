@@ -83,6 +83,20 @@ Reads `cardDefinitions/components.csv` and `cardDefinitions/weapons.csv` (and an
 - `build/card/<Name>.tex`: Individual card TikZ document matching the `pictures/exampleCards/` layout.
 - `build/all_cards.csv`: Manifest of generated `.tex` files.
 
+**Alternative Layout Options:**
+- `--weight-mode {multiple,multiple_no_1t,number}`:
+  - `multiple`: Stacked kettlebells with "1T" mark (default).
+  - `multiple_no_1t` (or `--no-weight-1t`): Stacked kettlebells without "1T" mark.
+  - `number` (or `--weight-number`): Single kettlebell with numeric weight centered on the logo.
+- `--cost-number`: Show single `$` with numeric cost (e.g. `$3`) instead of repeated `$` symbols.
+- `--resource-math`: Show numeric multiplier/count next to resource icon writing out math (e.g. `2X+1`, `4`) instead of repeated icons.
+
+### `generate_permutations.py`
+Generates all 12 permutations of the alternative card layout options, producing individual card PNGs, side-by-side comparison grid images, and an interactive HTML comparison report in `cardCreation/build/permutations/`:
+```bash
+python cardCreation/generate_permutations.py
+```
+
 ### `generate_card_sheet.py`
 Lays out card `.tex` files into a grid:
 - Supports `--a4` mode for centered layout on standard A4 landscape paper.
@@ -92,4 +106,4 @@ Lays out card `.tex` files into a grid:
 Compiles each card on its own page and rasterizes individual cards to high-resolution PNGs in `CardImages/`.
 
 ### `build_cards.py`
-Master orchestration runner that executes the entire pipeline end-to-end.
+Master orchestration runner that executes the entire pipeline end-to-end. Accepts layout flags (`--weight-number`, `--no-weight-1t`, `--cost-number`, `--resource-math`, `--weight-mode`) and forwards them to `generateCards.py`.

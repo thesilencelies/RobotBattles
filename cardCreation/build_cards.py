@@ -48,6 +48,32 @@ def main():
     parser.add_argument("--print", action="store_true", help="Generate printable A4 PDF sheet")
     parser.add_argument("--all", action="store_true", help="Run the complete pipeline (default)")
     parser.add_argument("--density", type=int, default=300, help="Render DPI for image conversion")
+    parser.add_argument(
+        "--weight-mode",
+        choices=["multiple", "multiple_no_1t", "number"],
+        default="multiple",
+        help="Weight icon style: multiple (default with 1T), multiple_no_1t (without 1T), or number (single icon with number)",
+    )
+    parser.add_argument(
+        "--weight-number",
+        action="store_true",
+        help="Use a single weight logo with number on top (removes 1T) instead of multiple symbols",
+    )
+    parser.add_argument(
+        "--no-weight-1t",
+        action="store_true",
+        help="Remove 1T text from the weight symbol",
+    )
+    parser.add_argument(
+        "--cost-number",
+        action="store_true",
+        help="Have a number next to the cost symbol instead of using multiple symbols",
+    )
+    parser.add_argument(
+        "--resource-math",
+        action="store_true",
+        help="Have a number next to the resources writing out the math instead of a count of resources",
+    )
     args = parser.parse_args()
 
     # Default to all if no specific step requested
@@ -62,8 +88,20 @@ def main():
 
     # Step 2: TeX Cards
     if run_all or args.cards:
-        run([sys.executable, str(SCRIPT_DIR / "generateCards.py")],
-            cwd=SCRIPT_DIR, label="Step 2: Generating card TikZ .tex files")
+        cards_cmd = [sys.executable, str(SCRIPT_DIR / "generateCards.py")]
+        if args.weight_number:
+            cards_cmd.append("--weight-number")
+        elif args.no_weight_1t:
+            cards_cmd.append("--no-weight-1t")
+        elif args.weight_mode != "multiple":
+            cards_cmd.extend(["--weight-mode", args.weight_mode])
+
+        if args.cost_number:
+            cards_cmd.append("--cost-number")
+        if args.resource_math:
+            cards_cmd.append("--resource-math")
+
+        run(cards_cmd, cwd=SCRIPT_DIR, label="Step 2: Generating card TikZ .tex files")
 
     # Step 3: Card Images
     if run_all or args.images:

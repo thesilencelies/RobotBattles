@@ -47,12 +47,12 @@ def get_font(size: int, bold: bool = True):
 
 
 def create_weight_icon():
-    im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(im)
+    im_plain = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
+    draw_plain = ImageDraw.Draw(im_plain)
 
     # Top handle (loop)
-    draw.ellipse((135, 15, 265, 145), fill=(20, 20, 15, 255))
-    draw.ellipse((170, 50, 230, 110), fill=(0, 0, 0, 0))
+    draw_plain.ellipse((135, 15, 265, 145), fill=(20, 20, 15, 255))
+    draw_plain.ellipse((170, 50, 230, 110), fill=(0, 0, 0, 0))
 
     # Weight body (trapezoid with rounded base)
     points = [
@@ -61,10 +61,15 @@ def create_weight_icon():
         (370, 360),
         (30, 360),
     ]
-    draw.polygon(points, fill=(20, 20, 15, 255))
-    draw.rounded_rectangle((28, 335, 372, 370), radius=10, fill=(20, 20, 15, 255))
+    draw_plain.polygon(points, fill=(20, 20, 15, 255))
+    draw_plain.rounded_rectangle((28, 335, 372, 370), radius=10, fill=(20, 20, 15, 255))
 
-    # "1T" text in white
+    im_plain.save(ICONS_DIR / "weight_plain.png", "PNG")
+    print(f"Created {ICONS_DIR / 'weight_plain.png'}")
+
+    # Copy plain kettlebell and add "1T" text in white for default weight.png
+    im = im_plain.copy()
+    draw = ImageDraw.Draw(im)
     font = get_font(130, bold=True)
     text = "1T"
     bbox = draw.textbbox((0, 0), text, font=font)

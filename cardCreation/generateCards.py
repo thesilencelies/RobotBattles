@@ -147,59 +147,93 @@ def find_component_image(picture_field: str = "") -> str:
     return ""
 
 
-def format_resource_item(prefix: str, char: str) -> str:
+def format_resource_item(prefix: str, char: str, resource_math: bool = False) -> str:
     """Formats a single resource item, repeated icons, or fixed + multiplier symbols."""
     char = char.upper()
-    if prefix and all(c.upper() == char for c in prefix):
-        count = len(prefix) + 1
-        icons = [f"\\resource{char}" for _ in range(count)]
-        if count <= 2:
-            return r"\hspace{1.5pt}".join(icons)
+    if resource_math:
+        # Number next to the resources writing out the math instead of a count of resources
+        if prefix and all(c.upper() == char for c in prefix):
+            count = len(prefix) + 1
+            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {count}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+        elif prefix:
+            mult_after_match = re.match(r"^(\d*(?:XxX|XX|X|\d+x\d+))([ECSMWPD]*)$", prefix, re.IGNORECASE)
+            mult_before_match = re.match(r"^([ECSMWPD]+)(\d*(?:XxX|XX|X|\d+x\d+))$", prefix, re.IGNORECASE)
+
+            if mult_after_match or mult_before_match:
+                if mult_after_match:
+                    mult_expr, extra_icons = mult_after_match.groups()
+                else:
+                    extra_icons, mult_expr = mult_before_match.groups()
+
+                if mult_expr.upper() == "XX":
+                    mult_expr = "XxX"
+
+                fixed_count = len(extra_icons) if all(c.upper() == char for c in extra_icons) else 0
+                if fixed_count == 0:
+                    esc_mult = escape_latex(mult_expr)
+                    return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+                else:
+                    math_expr = f"{mult_expr}+{fixed_count}"
+                    esc_math = escape_latex(math_expr)
+                    return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_math}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+
+            esc_prefix = escape_latex(prefix)
+            if esc_prefix.upper() == "XX":
+                esc_prefix = "XxX"
+            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_prefix}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
         else:
-            # Spill into two rows if there are too many (>= 3)
-            # e.g. 3 -> 2 top, 1 bottom; 4 -> 2 top, 2 bottom; 5 -> 3 top, 2 bottom
-            top_count = (count + 1) // 2
-            row1 = r"\hspace{1.5pt}".join(icons[:top_count])
-            row2 = r"\hspace{1.5pt}".join(icons[top_count:])
-            return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
-    elif prefix:
-        # Check if prefix contains an algebraic multiplier with fixed symbols, e.g.:
-        # - Multiplier before symbols (e.g. "2XW", "XWW", "XWWW" where char="W")
-        # - Symbols before multiplier (e.g. "W2X", "WWX" where char="W" as in "W2XW", "WWXW")
-        mult_after_match = re.match(r"^(\d*(?:XxX|XX|X|\d+x\d+))([ECSMWPD]*)$", prefix, re.IGNORECASE)
-        mult_before_match = re.match(r"^([ECSMWPD]+)(\d*(?:XxX|XX|X|\d+x\d+))$", prefix, re.IGNORECASE)
-
-        if mult_after_match or mult_before_match:
-            if mult_after_match:
-                mult_expr, extra_icons = mult_after_match.groups()
-            else:
-                extra_icons, mult_expr = mult_before_match.groups()
-
-            if mult_expr.upper() == "XX":
-                mult_expr = "XxX"
-            esc_mult = escape_latex(mult_expr)
-            mult_element = rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
-
-            fixed_count = len(extra_icons) if all(c.upper() == char for c in extra_icons) else 0
-            if fixed_count == 0:
-                return mult_element
-            else:
-                # Additive symbols in top row, math plus symbol in the row below them
-                fixed_icons = [rf"\resource{char}" for _ in range(fixed_count)]
-                row1 = r"\hspace{1.5pt}".join(fixed_icons)
-                row2 = mult_element
-                return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
-
-        # Standard number or algebraic expression followed by letter -> vertical center aligned
-        esc_prefix = escape_latex(prefix)
-        if esc_prefix.upper() == "XX":
-            esc_prefix = "XxX"
-        return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_prefix}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE 1}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
     else:
-        return rf"\resource{char}"
+        if prefix and all(c.upper() == char for c in prefix):
+            count = len(prefix) + 1
+            icons = [f"\\resource{char}" for _ in range(count)]
+            if count <= 2:
+                return r"\hspace{1.5pt}".join(icons)
+            else:
+                # Spill into two rows if there are too many (>= 3)
+                # e.g. 3 -> 2 top, 1 bottom; 4 -> 2 top, 2 bottom; 5 -> 3 top, 2 bottom
+                top_count = (count + 1) // 2
+                row1 = r"\hspace{1.5pt}".join(icons[:top_count])
+                row2 = r"\hspace{1.5pt}".join(icons[top_count:])
+                return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
+        elif prefix:
+            # Check if prefix contains an algebraic multiplier with fixed symbols, e.g.:
+            # - Multiplier before symbols (e.g. "2XW", "XWW", "XWWW" where char="W")
+            # - Symbols before multiplier (e.g. "W2X", "WWX" where char="W" as in "W2XW", "WWXW")
+            mult_after_match = re.match(r"^(\d*(?:XxX|XX|X|\d+x\d+))([ECSMWPD]*)$", prefix, re.IGNORECASE)
+            mult_before_match = re.match(r"^([ECSMWPD]+)(\d*(?:XxX|XX|X|\d+x\d+))$", prefix, re.IGNORECASE)
+
+            if mult_after_match or mult_before_match:
+                if mult_after_match:
+                    mult_expr, extra_icons = mult_after_match.groups()
+                else:
+                    extra_icons, mult_expr = mult_before_match.groups()
+
+                if mult_expr.upper() == "XX":
+                    mult_expr = "XxX"
+                esc_mult = escape_latex(mult_expr)
+                mult_element = rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+
+                fixed_count = len(extra_icons) if all(c.upper() == char for c in extra_icons) else 0
+                if fixed_count == 0:
+                    return mult_element
+                else:
+                    # Additive symbols in top row, math plus symbol in the row below them
+                    fixed_icons = [rf"\resource{char}" for _ in range(fixed_count)]
+                    row1 = r"\hspace{1.5pt}".join(fixed_icons)
+                    row2 = mult_element
+                    return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
+
+            # Standard number or algebraic expression followed by letter -> vertical center aligned
+            esc_prefix = escape_latex(prefix)
+            if esc_prefix.upper() == "XX":
+                esc_prefix = "XxX"
+            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_prefix}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+        else:
+            return rf"\resource{char}"
 
 
-def parse_resources(res_str: str) -> str:
+def parse_resources(res_str: str, resource_math: bool = False) -> str:
     """
     Parses a resource string into TikZ/LaTeX markup.
     Rules from terminology.md:
@@ -210,6 +244,8 @@ def parse_resources(res_str: str) -> str:
       - Multiplier alone (e.g. 2XW, XXW, XE, 6W) ->
         Prefix rendered in sans-serif text vertically center-aligned with the icon in a single row.
       - Multiplier XX is rendered as XxX (X times X).
+      - If resource_math is True:
+        Numbers are written out next to the resource symbol (e.g. 4S, 2X+1W) instead of counts of icons.
     """
     if not res_str:
         return ""
@@ -229,7 +265,7 @@ def parse_resources(res_str: str) -> str:
     match_expr = re.match(r"^([0-9A-Za-z]*)([ECSMWPD])$", cleaned_str)
     if match_expr:
         prefix, char = match_expr.groups()
-        return format_resource_item(prefix, char)
+        return format_resource_item(prefix, char, resource_math=resource_math)
 
     # Multi-token strings
     tokens = re.findall(r"([0-9A-Za-z]*[ECSMWPD]|[A-Za-z0-9+]+)", res_str)
@@ -238,7 +274,7 @@ def parse_resources(res_str: str) -> str:
         submatch = re.match(r"^([0-9A-Za-z]*)([ECSMWPD])$", tok)
         if submatch:
             prefix, char = submatch.groups()
-            out_elements.append(format_resource_item(prefix, char))
+            out_elements.append(format_resource_item(prefix, char, resource_math=resource_math))
         else:
             esc_tok = escape_latex(tok)
             out_elements.append(rf"{{\sffamily\bfseries {esc_tok}}}")
@@ -283,8 +319,8 @@ def create_macros(extra_colors: dict = None):
   \tikz[baseline=-0.6ex]\node[fill=#1, rounded corners=2.0pt, inner xsep=4.0pt, inner ysep=0pt, minimum height=0.46cm, text height=0.24cm, text depth=0.07cm, text=white]{\sffamily\bfseries\scriptsize #2};%
 }
 
-% Global graphicspath so images resolve from build/, cardCreation/, or root
-\graphicspath{{../../}{../}{./}{../../pictures/icons/}{../pictures/icons/}{pictures/icons/}}
+% Global graphicspath so images resolve from build/, permutations/, cardCreation/, or root
+\graphicspath{{../../../../}{../../../}{../../}{../}{./}{../../../../pictures/icons/}{../../../pictures/icons/}{../../pictures/icons/}{../pictures/icons/}{pictures/icons/}}
 
 % Resource icon commands
 \newcommand{\resourceE}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/energy.png}}
@@ -299,11 +335,17 @@ def create_macros(extra_colors: dict = None):
 \newcommand{\durabilityicon}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/durability.png}}
 \newcommand{\absorptionicon}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/absorption.png}}
 \newcommand{\weighticon}[1][0.80cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/weight.png}}
+\newcommand{\weighticonplain}[1][0.80cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/weight_plain.png}}
 """)
     print(f"Wrote {macros_file}")
 
 
-def generate_card_tex(card: dict) -> str:
+def generate_card_tex(
+    card: dict,
+    weight_mode: str = "multiple",
+    cost_number: bool = False,
+    resource_math: bool = False,
+) -> str:
     """Generates the full TikZ code for a single card."""
     name = (card.get("Name") or "Unnamed Card").strip()
     try:
@@ -322,8 +364,8 @@ def generate_card_tex(card: dict) -> str:
     keywords = (card.get("Keywords") or "").strip()
     rules_text = (card.get("Text") or "").strip()
 
-    req_markup = parse_resources(card.get("Requirements") or "")
-    out_markup = parse_resources(card.get("Outputs") or "")
+    req_markup = parse_resources(card.get("Requirements") or "", resource_math=resource_math)
+    out_markup = parse_resources(card.get("Outputs") or "", resource_math=resource_math)
 
     img_rel_path = find_component_image(card.get("Picture") or "")
 
@@ -348,24 +390,45 @@ def generate_card_tex(card: dict) -> str:
     )
 
     # --- TOP ROW: Weights, Title, Cost, Template ---
-    # Stacked Weight Icons (top-left: 1 column if weight <= 3, 2 columns if weight > 3)
+    # Stacked or Numbered Weight Icons
     if weight > 0:
-        if weight <= 3:
-            for w_idx in range(weight):
-                wy = 7.95 - (w_idx * 0.90)
-                lines.append(rf"    \node [anchor=center] at (0.50, {wy:.2f}) {{\weighticon}};")
+        if weight_mode == "number":
+            lines.append(rf"    \node [anchor=center] at (0.50, 7.95) {{\weighticonplain[0.85cm]}};")
+            lines.append(rf"    \node [anchor=center] at (0.50, 7.87) {{\textcolor{{white}}{{\sffamily\bfseries\large {weight}}}}};")
+        elif weight_mode == "multiple_no_1t":
+            if weight <= 3:
+                for w_idx in range(weight):
+                    wy = 7.95 - (w_idx * 0.90)
+                    lines.append(rf"    \node [anchor=center] at (0.50, {wy:.2f}) {{\weighticonplain}};")
+            else:
+                col1_count = (weight + 1) // 2
+                col2_count = weight - col1_count
+                x1, x2 = 0.35, 0.88
+                y_start = 7.95
+                y_spacing = 0.70
+                for i in range(col1_count):
+                    wy = y_start - (i * y_spacing)
+                    lines.append(rf"    \node [anchor=center] at ({x1:.2f}, {wy:.2f}) {{\weighticonplain[0.58cm]}};")
+                for i in range(col2_count):
+                    wy = y_start - (i * y_spacing)
+                    lines.append(rf"    \node [anchor=center] at ({x2:.2f}, {wy:.2f}) {{\weighticonplain[0.58cm]}};")
         else:
-            col1_count = (weight + 1) // 2
-            col2_count = weight - col1_count
-            x1, x2 = 0.35, 0.88
-            y_start = 7.95
-            y_spacing = 0.70
-            for i in range(col1_count):
-                wy = y_start - (i * y_spacing)
-                lines.append(rf"    \node [anchor=center] at ({x1:.2f}, {wy:.2f}) {{\weighticon[0.58cm]}};")
-            for i in range(col2_count):
-                wy = y_start - (i * y_spacing)
-                lines.append(rf"    \node [anchor=center] at ({x2:.2f}, {wy:.2f}) {{\weighticon[0.58cm]}};")
+            if weight <= 3:
+                for w_idx in range(weight):
+                    wy = 7.95 - (w_idx * 0.90)
+                    lines.append(rf"    \node [anchor=center] at (0.50, {wy:.2f}) {{\weighticon}};")
+            else:
+                col1_count = (weight + 1) // 2
+                col2_count = weight - col1_count
+                x1, x2 = 0.35, 0.88
+                y_start = 7.95
+                y_spacing = 0.70
+                for i in range(col1_count):
+                    wy = y_start - (i * y_spacing)
+                    lines.append(rf"    \node [anchor=center] at ({x1:.2f}, {wy:.2f}) {{\weighticon[0.58cm]}};")
+                for i in range(col2_count):
+                    wy = y_start - (i * y_spacing)
+                    lines.append(rf"    \node [anchor=center] at ({x2:.2f}, {wy:.2f}) {{\weighticon[0.58cm]}};")
 
     # Card Title (top-center)
     esc_name = escape_latex(name)
@@ -373,9 +436,13 @@ def generate_card_tex(card: dict) -> str:
         rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 8.00) {{\fontsize{{13pt}}{{15pt}}\sffamily\bfseries {esc_name}}};"
     )
 
-    # Cost (top-right, green dollar signs)
+    # Cost (top-right, green dollar signs or number next to dollar)
     if cost > 0:
-        if cost < 4:
+        if cost_number:
+            lines.append(
+                rf"    \node [anchor=center] at (5.05, 8.00) {{\textcolor{{costgreen}}{{\sffamily\textbf{{\LARGE \${cost}}}}}}};"
+            )
+        elif cost < 4:
             cost_str = r"\$" * cost
             lines.append(
                 rf"    \node [anchor=center] at (5.05, 8.00) {{\textcolor{{costgreen}}{{\sffamily\textbf{{\LARGE {cost_str}}}}}}};"
@@ -418,10 +485,18 @@ def generate_card_tex(card: dict) -> str:
 
     if req_markup and out_markup:
         lines.append(
-            rf"    \node [anchor=center, text width=2.0cm, align=center] at (1.65, 4.40) {{{req_markup}}};"
+            rf"    \node [anchor=center, text width=2.2cm, align=center] at (1.65, 4.40) {{{req_markup}}};"
         )
         lines.append(
-            rf"    \node [anchor=center, text width=2.0cm, align=center] at (3.95, 4.40) {{{out_markup}}};"
+            rf"    \node [anchor=center, text width=2.2cm, align=center] at (3.95, 4.40) {{{out_markup}}};"
+        )
+    elif req_markup:
+        lines.append(
+            rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 4.40) {{{req_markup}}};"
+        )
+    elif out_markup:
+        lines.append(
+            rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 4.40) {{{out_markup}}};"
         )
     elif req_markup:
         lines.append(
@@ -481,7 +556,45 @@ def process_csv(csv_path: Path) -> list[dict]:
 def main():
     parser = argparse.ArgumentParser(description="Generate card TikZ .tex files from CSV definitions.")
     parser.add_argument("--output-dir", type=Path, default=CARD_OUTPUT_DIR, help="Directory to output card .tex files")
+    parser.add_argument(
+        "--weight-mode",
+        choices=["multiple", "multiple_no_1t", "number"],
+        default="multiple",
+        help="Weight icon style: multiple (default with 1T), multiple_no_1t (without 1T), or number (single icon with number)",
+    )
+    parser.add_argument(
+        "--weight-number",
+        action="store_true",
+        help="Use a single weight logo with number on top (removes 1T) instead of multiple symbols",
+    )
+    parser.add_argument(
+        "--no-weight-1t",
+        action="store_true",
+        help="Remove 1T text from the weight symbol",
+    )
+    parser.add_argument(
+        "--cost-number",
+        action="store_true",
+        help="Have a number next to the cost symbol instead of using multiple symbols",
+    )
+    parser.add_argument(
+        "--resource-math",
+        action="store_true",
+        help="Have a number next to the resources writing out the math instead of a count of resources",
+    )
+    parser.add_argument(
+        "--manifest-csv",
+        type=Path,
+        default=None,
+        help="Path to output all_cards.csv manifest (defaults to build/all_cards.csv or output-dir parent)",
+    )
     args = parser.parse_args()
+
+    weight_mode = args.weight_mode
+    if args.weight_number:
+        weight_mode = "number"
+    elif args.no_weight_1t and weight_mode == "multiple":
+        weight_mode = "multiple_no_1t"
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -518,19 +631,25 @@ def main():
         card_name = card["Name"].strip()
         tex_filename = f"{sanitize_filename(card_name)}.tex"
         tex_path = args.output_dir / tex_filename
-        tex_code = generate_card_tex(card)
+        tex_code = generate_card_tex(
+            card,
+            weight_mode=weight_mode,
+            cost_number=args.cost_number,
+            resource_math=args.resource_math,
+        )
         with open(tex_path, "w", encoding="utf-8") as f:
             f.write(tex_code)
+        # Store relative to manifest
         all_tex_filenames.append(f"card/{tex_filename}")
 
-    all_cards_csv = BUILD_DIR / "all_cards.csv"
-    with open(all_cards_csv, "w", newline="", encoding="utf-8") as f:
+    manifest_csv = args.manifest_csv or (args.output_dir.parent / "all_cards.csv")
+    with open(manifest_csv, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         for tex in all_tex_filenames:
             writer.writerow([tex])
 
     print(f"Generated {len(all_cards)} card .tex file(s) in {args.output_dir}")
-    print(f"Card list written to {all_cards_csv}")
+    print(f"Card list written to {manifest_csv}")
 
 
 if __name__ == "__main__":
