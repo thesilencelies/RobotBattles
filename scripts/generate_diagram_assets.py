@@ -10,8 +10,13 @@ from __future__ import annotations
 
 import math
 import os
+import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
+
+WORKSPACE_DIR = Path(__file__).resolve().parent.parent
+if str(WORKSPACE_DIR) not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_DIR))
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib_diagrams")
 import matplotlib
@@ -350,6 +355,52 @@ def create_miniature(
     print(f"Generated sprite: {out_file}")
 
 
+def generate_example_automata_layout() -> None:
+    """Renders and crops the example robot layout (Vyper Spinner) for the rules doc."""
+    import subprocess
+    import tempfile
+    from PIL import Image
+    import scripts.generate_automata_sheets as gas
+
+    vyper_csv = Path("automata/Vyper_Spinner.csv")
+    if not vyper_csv.exists():
+        print(f"Skipping automata layout: {vyper_csv} not found")
+        return
+
+    print("Generating example automata layout from automata/Vyper_Spinner.csv...")
+    vyper = gas.process_robot_csv(vyper_csv)
+    tikz = gas.generate_robot_page_tikz(vyper)
+
+    # Filter out title plate and action table plate so layout is clean
+    lines = tikz.splitlines()
+    filtered = []
+    skip = False
+    for l in lines:
+        if "% Title & Specs Information Plate" in l:
+            skip = True
+        elif "% Component Edge Connections" in l:
+            skip = False
+        if not skip:
+            filtered.append(l)
+
+    clean_tikz = "\n".join(filtered)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        pdf_path = Path(tmpdir) / "vyper_clean.pdf"
+        tex_content = gas.generate_latex_document([clean_tikz])
+        gas.compile_latex_to_pdf(tex_content, pdf_path)
+        subprocess.run(
+            ["pdftoppm", "-png", "-r", "200", str(pdf_path), str(Path(tmpdir) / "vyper_clean_200")],
+            check=True,
+        )
+        rendered_png = Path(tmpdir) / "vyper_clean_200-1.png"
+        sheet = Image.open(rendered_png)
+        # Crop bounds centered on chassis: x=[561, 2747], y=[94, 2271]
+        crop = sheet.crop((561, 94, 2747, 2271))
+        out_file = OUTPUT_DIR / "automata_vyper_layout.png"
+        crop.save(out_file)
+        print(f"Generated automata layout: {out_file} ({crop.size[0]}x{crop.size[1]})")
+
+
 def main():
     print("Generating miniature robot sprites for TikZ diagrams...")
 
@@ -372,7 +423,10 @@ def main():
     create_miniature("mini_bot_nightwing.png", chassis="Wide", color=NIGHTWING_INDIGO, name="A", weapon="Circle", forks=False)
     create_miniature("mini_bot_opponent_square.png", chassis="Square", color=CRIMSON, name="B", weapon="Circle")
 
-    print("All miniature sprites generated successfully!")
+    # Automata layout for rules doc
+    generate_example_automata_layout()
+
+    print("All diagram assets generated successfully!")
 
 
 if __name__ == "__main__":
