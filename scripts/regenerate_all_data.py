@@ -116,6 +116,13 @@ def main() -> None:
             cwd=REPO_ROOT,
         )
 
+    # 6. Print and Play Packages (A4 & A3)
+    run_step(
+        "Print and Play PDF Packages (build/robot_battles_pnp_*.pdf)",
+        [sys.executable, str(REPO_ROOT / "scripts" / "generate_print_and_play.py")],
+        cwd=REPO_ROOT,
+    )
+
     total_duration = time.perf_counter() - total_start
     print("\n" + "=" * 80)
     print(f"✔ ALL DATA REGENERATION COMPLETE in {total_duration:.2f}s")

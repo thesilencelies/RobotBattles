@@ -22,8 +22,8 @@ from pathlib import Path
 DEFAULT_COLS = 10
 DEFAULT_ROWS = 7
 
-CARD_WIDTH_CM  = 6.9
-CARD_HEIGHT_CM = 9.4
+CARD_WIDTH_CM  = 6.10  # 56mm + 2x2.5mm white bleed
+CARD_HEIGHT_CM = 9.20  # 87mm + 2x2.5mm white bleed
 
 TYPE_PREFIXES = {"card": "card/"}
 

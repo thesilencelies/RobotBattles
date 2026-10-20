@@ -44,6 +44,33 @@ Full rules writeup, diagrams, and quick-reference summaries are located in the [
 
 ---
 
+## Print and Play (PnP)
+
+The game provides two complete, publication-ready Print and Play packages:
+
+### 1. A4 Package (`build/robot_battles_pnp_a4.pdf` - 10 Pages Landscape)
+- **Cards (Pages 1–6):** All 44 Component and Weapon cards sized to **56×87mm** (US game card size) with **2.5mm white bleed** and subtle rounded corner cut lines in a 4×2 grid.
+- **Core Movement Templates (Page 7):** Straight Template (220×85mm), Spin Disc Template (90×90mm), and Pivot Fan Template (150×85mm).
+- **Forward Curves 1 (Page 8):** Medium Curve Template (159×150mm) and Sharp Curve Template (195×108mm).
+- **Forward Curves 2 & Weapons (Page 9):** Gentle Curve Template (145×205mm) plus all 5 Weapon Active Area Templates (Circle 44mm, Large Circle 60mm, Bar 48×18mm, Line 8×32mm, Prongs 48×32mm).
+- **Arena Miniatures & Tokens (Page 10):** 6 Robot Miniatures (Player 1 Blue & Player 2 Red for Triangle, Square, and Wide chassis) with forward heading arrows, plus 4 Spin Counters (+1 to +4) and 4 Damage/Destroyed tokens.
+- **True Scale:** All templates and miniatures are strictly 1:1 true scale (65mm wheelbase, 40mm drive units) with a **50mm calibration scale bar** on every page.
+
+### 2. A3 Package (`build/robot_battles_pnp_a3.pdf` - 8 Pages Landscape)
+- **Chassis Mats (Pages 1–3):** Viper Wedge (Triangle), Nautiloid Drum (Square), and SSP 2.0 Billet (Wide) chassis mats.
+- **Automata Mats (Pages 4–8):** Pre-built AI opponent sheets (Nightwing, Chonk, Beater, Vyper Flipper, and Vyper Spinner).
+
+### Generating and Publishing
+```bash
+# Generate both PnP packages
+python3 scripts/generate_print_and_play.py
+
+# Publish to the 'RobotBattles' Google Drive folder (same location as the rules)
+python3 upload_pnp.py
+```
+
+---
+
 ## Code Elements
 
 This repository contains code used to:

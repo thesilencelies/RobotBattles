@@ -83,6 +83,56 @@
                 "panel": "shared"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Build Print and Play PDFs",
+            "command": "python3",
+            "type": "shell",
+            "args": [
+                "scripts/generate_print_and_play.py"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Upload Print and Play",
+            "command": "python3",
+            "type": "shell",
+            "args": [
+                "upload_pnp.py"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build and Upload Print and Play",
+            "type": "shell",
+            "command": "echo 'Print and Play PDFs successfully built and uploaded.'",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Build Print and Play PDFs",
+                "Upload Print and Play"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
         }
     ]
 }

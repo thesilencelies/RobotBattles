@@ -28,13 +28,13 @@ CARD_OUTPUT_DIR = BUILD_DIR / "card"
 import colorsys
 import hashlib
 
-# Geometry constants (in cm)
-CARD_OUTER_W_CM = 6.9
-CARD_OUTER_H_CM = 9.4
-CARD_SAFE_W_CM = 6.4
-CARD_SAFE_H_CM = 8.9
-BLEED_OFFSET_X = (CARD_OUTER_W_CM - CARD_SAFE_W_CM) / 2.0  # 0.25 cm
-BLEED_OFFSET_Y = (CARD_OUTER_H_CM - CARD_SAFE_H_CM) / 2.0  # 0.25 cm
+# Geometry constants for US Game Card size (56mm x 87mm / 5.6cm x 8.7cm) with 2.5mm white bleed
+CARD_SAFE_W_CM = 5.60
+CARD_SAFE_H_CM = 8.70
+BLEED_OFFSET_X = 0.25  # 0.25 cm (2.5mm) white bleed on all sides
+BLEED_OFFSET_Y = 0.25  # 0.25 cm (2.5mm) white bleed on all sides
+CARD_OUTER_W_CM = CARD_SAFE_W_CM + 2.0 * BLEED_OFFSET_X  # 6.10 cm
+CARD_OUTER_H_CM = CARD_SAFE_H_CM + 2.0 * BLEED_OFFSET_Y  # 9.20 cm
 
 KEYWORD_PALETTE = {
     "fragile": (208, 48, 48),       # Crimson Red
@@ -280,25 +280,25 @@ def create_macros(extra_colors: dict = None):
 
 % Keyword badge macro: text in front of colored box (fixed height for all keywords)
 \newcommand{\keywordbadge}[2]{%
-  \tikz[baseline=-0.6ex]\node[fill=#1, rounded corners=2.5pt, inner xsep=4.5pt, inner ysep=0pt, minimum height=0.52cm, text height=0.26cm, text depth=0.08cm, text=white]{\sffamily\bfseries\footnotesize #2};%
+  \tikz[baseline=-0.6ex]\node[fill=#1, rounded corners=2.0pt, inner xsep=4.0pt, inner ysep=0pt, minimum height=0.46cm, text height=0.24cm, text depth=0.07cm, text=white]{\sffamily\bfseries\scriptsize #2};%
 }
 
 % Global graphicspath so images resolve from build/, cardCreation/, or root
 \graphicspath{{../../}{../}{./}{../../pictures/icons/}{../pictures/icons/}{pictures/icons/}}
 
 % Resource icon commands
-\newcommand{\resourceE}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/energy.png}}
-\newcommand{\resourceC}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/control.png}}
-\newcommand{\resourceS}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/spin.png}}
-\newcommand{\resourceP}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/pressure.png}}
-\newcommand{\resourceM}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/drive.png}}
-\newcommand{\resourceD}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/drive.png}}
-\newcommand{\resourceW}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/damage.png}}
+\newcommand{\resourceE}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/energy.png}}
+\newcommand{\resourceC}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/control.png}}
+\newcommand{\resourceS}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/spin.png}}
+\newcommand{\resourceP}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/pressure.png}}
+\newcommand{\resourceM}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/drive.png}}
+\newcommand{\resourceD}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/drive.png}}
+\newcommand{\resourceW}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/damage.png}}
 
 % Card stat icon commands
-\newcommand{\durabilityicon}{\includegraphics[height=0.85cm,keepaspectratio]{pictures/icons/durability.png}}
-\newcommand{\absorptionicon}{\includegraphics[height=0.85cm,keepaspectratio]{pictures/icons/absorption.png}}
-\newcommand{\weighticon}[1][0.92cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/weight.png}}
+\newcommand{\durabilityicon}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/durability.png}}
+\newcommand{\absorptionicon}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/absorption.png}}
+\newcommand{\weighticon}[1][0.80cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/weight.png}}
 """)
     print(f"Wrote {macros_file}")
 
@@ -331,7 +331,7 @@ def generate_card_tex(card: dict) -> str:
 
     lines = [
         r"\begin{tikzpicture}[x=1cm, y=1cm]",
-        rf"  \node (cardbleed) [rectangle, minimum width={CARD_OUTER_W_CM}cm, minimum height={CARD_OUTER_H_CM}cm, fill=white] at ({CARD_OUTER_W_CM/2:.2f}, {CARD_OUTER_H_CM/2:.2f}) {{}};",
+        rf"  \node (cardbleed) [rectangle, minimum width={CARD_OUTER_W_CM:.2f}cm, minimum height={CARD_OUTER_H_CM:.2f}cm, fill=white] at ({CARD_OUTER_W_CM/2:.2f}, {CARD_OUTER_H_CM/2:.2f}) {{}};",
         rf"  \useasboundingbox (0,0) rectangle ({CARD_OUTER_W_CM:.2f}, {CARD_OUTER_H_CM:.2f});",
         rf"  \clip (0,0) rectangle ({CARD_OUTER_W_CM:.2f}, {CARD_OUTER_H_CM:.2f});",
     ]
@@ -342,30 +342,35 @@ def generate_card_tex(card: dict) -> str:
 
     lines.append(rf"  \begin{{scope}}[shift={{({BLEED_OFFSET_X:.3f}, {BLEED_OFFSET_Y:.3f})}}]")
 
+    # Cut guide border (faint cut line at 56mm x 87mm boundary)
+    lines.append(
+        rf"    \draw [draw=gray!35, line width=0.4pt, rounded corners=2.0mm] (0.00, 0.00) rectangle ({CARD_SAFE_W_CM:.2f}, {CARD_SAFE_H_CM:.2f});"
+    )
+
     # --- TOP ROW: Weights, Title, Cost, Template ---
     # Stacked Weight Icons (top-left: 1 column if weight <= 3, 2 columns if weight > 3)
     if weight > 0:
         if weight <= 3:
             for w_idx in range(weight):
-                wy = 8.15 - (w_idx * 0.95)
-                lines.append(rf"    \node [anchor=center] at (0.65, {wy:.2f}) {{\weighticon}};")
+                wy = 7.95 - (w_idx * 0.90)
+                lines.append(rf"    \node [anchor=center] at (0.50, {wy:.2f}) {{\weighticon}};")
         else:
             col1_count = (weight + 1) // 2
             col2_count = weight - col1_count
-            x1, x2 = 0.40, 1.05
-            y_start = 8.18
-            y_spacing = 0.76
+            x1, x2 = 0.35, 0.88
+            y_start = 7.95
+            y_spacing = 0.70
             for i in range(col1_count):
                 wy = y_start - (i * y_spacing)
-                lines.append(rf"    \node [anchor=center] at ({x1:.2f}, {wy:.2f}) {{\weighticon[0.65cm]}};")
+                lines.append(rf"    \node [anchor=center] at ({x1:.2f}, {wy:.2f}) {{\weighticon[0.58cm]}};")
             for i in range(col2_count):
                 wy = y_start - (i * y_spacing)
-                lines.append(rf"    \node [anchor=center] at ({x2:.2f}, {wy:.2f}) {{\weighticon[0.65cm]}};")
+                lines.append(rf"    \node [anchor=center] at ({x2:.2f}, {wy:.2f}) {{\weighticon[0.58cm]}};")
 
     # Card Title (top-center)
     esc_name = escape_latex(name)
     lines.append(
-        rf"    \node [anchor=center, text width=3.8cm, align=center] at (3.20, 8.20) {{\fontsize{{15pt}}{{17pt}}\sffamily\bfseries {esc_name}}};"
+        rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 8.00) {{\fontsize{{13pt}}{{15pt}}\sffamily\bfseries {esc_name}}};"
     )
 
     # Cost (top-right, green dollar signs)
@@ -373,7 +378,7 @@ def generate_card_tex(card: dict) -> str:
         if cost < 4:
             cost_str = r"\$" * cost
             lines.append(
-                rf"    \node [anchor=center] at (5.70, 8.20) {{\textcolor{{costgreen}}{{\sffamily\textbf{{\Huge {cost_str}}}}}}};"
+                rf"    \node [anchor=center] at (5.05, 8.00) {{\textcolor{{costgreen}}{{\sffamily\textbf{{\LARGE {cost_str}}}}}}};"
             )
         else:
             top_count = (cost + 1) // 2
@@ -381,44 +386,50 @@ def generate_card_tex(card: dict) -> str:
             row1 = r"\$" * top_count
             row2 = r"\$" * bot_count
             lines.append(
-                rf"    \node [anchor=center] at (5.70, 8.20) {{\textcolor{{costgreen}}{{\sffamily\bfseries\LARGE\begin{{tabular}}{{@{{}}c@{{}}}}{row1}\\[-6pt]{row2}\end{{tabular}}}}}};"
+                rf"    \node [anchor=center] at (5.05, 8.00) {{\textcolor{{costgreen}}{{\sffamily\bfseries\large\begin{{tabular}}{{@{{}}c@{{}}}}{row1}\\[-4pt]{row2}\end{{tabular}}}}}};"
             )
 
     # Template Icon (below cost, if weapon card)
     if template and template in TEMPLATE_ICONS:
         tmpl_icon = TEMPLATE_ICONS[template]
         lines.append(
-            rf"    \node [anchor=center] at (5.40, 6.70) {{\includegraphics[height=1.05cm, keepaspectratio]{{{tmpl_icon}}}}};"
+            rf"    \node [anchor=center] at (4.75, 6.55) {{\includegraphics[height=0.92cm, keepaspectratio]{{{tmpl_icon}}}}};"
         )
 
     # --- COMPONENT ARTWORK (Center-Upper) ---
-    art_cx = 3.20
-    art_cy = 6.65
+    art_cx = 2.80
+    art_cy = 6.45
     if img_rel_path:
         lines.append(
-            rf"    \node [anchor=center] at ({art_cx:.2f}, {art_cy:.2f}) {{\includegraphics[width=3.6cm, max height=2.1cm, keepaspectratio]{{{img_rel_path}}}}};"
+            rf"    \node [anchor=center] at ({art_cx:.2f}, {art_cy:.2f}) {{\includegraphics[width=3.1cm, max height=1.9cm, keepaspectratio]{{{img_rel_path}}}}};"
         )
     else:
         lines.append(
-            rf"    \node [rectangle, draw=gray!40, rounded corners=0.15cm, dashed, minimum width=3.4cm, minimum height=2.0cm, fill=gray!5] at ({art_cx:.2f}, {art_cy:.2f}) {{\small\color{{gray}}\textsf{{[ {esc_name} ]}}}};"
+            rf"    \node [rectangle, draw=gray!40, rounded corners=0.15cm, dashed, minimum width=3.0cm, minimum height=1.8cm, fill=gray!5] at ({art_cx:.2f}, {art_cy:.2f}) {{\small\color{{gray}}\textsf{{[ {esc_name} ]}}}};"
         )
 
     # --- MIDDLE BAND: Left/Right Pointy Chevrons & Resource Flow ---
     lines.append(
-        r"    \fill [chevronpurple] (0.00, 5.50) -- (0.85, 4.60) -- (0.00, 3.70) -- (0.00, 4.06) -- (0.51, 4.60) -- (0.00, 5.14) -- cycle;"
+        r"    \fill [chevronpurple] (0.00, 5.15) -- (0.75, 4.40) -- (0.00, 3.65) -- (0.00, 3.97) -- (0.45, 4.40) -- (0.00, 4.83) -- cycle;"
     )
     lines.append(
-        r"    \fill [chevronpurple] (5.55, 5.50) -- (6.40, 4.60) -- (5.55, 3.70) -- (5.55, 4.06) -- (6.06, 4.60) -- (5.55, 5.14) -- cycle;"
+        rf"    \fill [chevronpurple] ({CARD_SAFE_W_CM - 0.75:.2f}, 5.15) -- ({CARD_SAFE_W_CM:.2f}, 4.40) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 3.65) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 3.97) -- ({CARD_SAFE_W_CM - 0.45:.2f}, 4.40) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 4.83) -- cycle;"
     )
 
-    if req_markup:
+    if req_markup and out_markup:
         lines.append(
-            rf"    \node [anchor=center, text width=2.6cm, align=center] at (1.95, 4.60) {{{req_markup}}};"
+            rf"    \node [anchor=center, text width=2.0cm, align=center] at (1.65, 4.40) {{{req_markup}}};"
         )
-
-    if out_markup:
         lines.append(
-            rf"    \node [anchor=center, text width=2.6cm, align=center] at (4.50, 4.60) {{{out_markup}}};"
+            rf"    \node [anchor=center, text width=2.0cm, align=center] at (3.95, 4.40) {{{out_markup}}};"
+        )
+    elif req_markup:
+        lines.append(
+            rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 4.40) {{{req_markup}}};"
+        )
+    elif out_markup:
+        lines.append(
+            rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 4.40) {{{out_markup}}};"
         )
 
     # --- TEXT & KEYWORDS AREA (Middle-Lower) ---
@@ -427,29 +438,29 @@ def generate_card_tex(card: dict) -> str:
         text_content.append(kw_markup)
     if rules_text:
         esc_rules = escape_latex(rules_text)
-        text_content.append(rf"{{\sffamily\normalsize {esc_rules}}}")
+        text_content.append(rf"{{\sffamily\small {esc_rules}}}")
 
     if text_content:
-        full_text = r"\par\vspace{4pt}".join(text_content)
+        full_text = r"\par\vspace{3pt}".join(text_content)
         lines.append(
-            rf"    \node [anchor=center, text width=5.4cm, align=center] at (3.20, 2.75) {{{full_text}}};"
+            rf"    \node [anchor=center, text width=4.8cm, align=center] at (2.80, 2.55) {{{full_text}}};"
         )
 
     # --- BOTTOM ROW: Durability (Left), Absorption (Right) & Copyright Line ---
     if durability:
         lines.append(
-            rf"    \node [anchor=center] at (1.95, 0.95) {{$\vcenter{{\hbox{{\durabilityicon}}}}\;\vcenter{{\hbox{{\sffamily\bfseries\Huge {escape_latex(durability)}}}}}$}};"
+            rf"    \node [anchor=center] at (1.60, 0.90) {{$\vcenter{{\hbox{{\durabilityicon}}}}\;\vcenter{{\hbox{{\sffamily\bfseries\huge {escape_latex(durability)}}}}}$}};"
         )
 
     if absorption:
         lines.append(
-            rf"    \node [anchor=center] at (4.55, 0.95) {{$\vcenter{{\hbox{{\absorptionicon}}}}\;\vcenter{{\hbox{{\sffamily\bfseries\Huge {escape_latex(absorption)}}}}}$}};"
+            rf"    \node [anchor=center] at (4.00, 0.90) {{$\vcenter{{\hbox{{\absorptionicon}}}}\;\vcenter{{\hbox{{\sffamily\bfseries\huge {escape_latex(absorption)}}}}}$}};"
         )
 
     artist = (card.get("Artist") or card.get("Art") or "itgresa.com").strip()
     esc_artist = escape_latex(artist)
     lines.append(
-        rf"    \node [anchor=center] at (3.20, 0.22) {{\fontsize{{5pt}}{{6pt}}\selectfont\sffamily\color{{textdark!60}}\textcopyright{{}} LiLiCo \quad Art: {esc_artist}}};"
+        rf"    \node [anchor=center] at (2.80, 0.20) {{\fontsize{{5pt}}{{6pt}}\selectfont\sffamily\color{{textdark!60}}\textcopyright{{}} LiLiCo \quad Art: {esc_artist}}};"
     )
 
     lines.append(r"  \end{scope}")
