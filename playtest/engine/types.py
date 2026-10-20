@@ -66,6 +66,8 @@ class ComponentHealth:
     is_resetting: bool = False
     reset_supplied: bool = False
     was_used_this_turn: bool = False
+    is_overhead: bool = False
+    is_trigger: bool = False
     template: str = ""
     spin_counters: int = 0
 
@@ -95,6 +97,8 @@ class ComponentHealth:
             "is_reset": self.is_reset,
             "is_resetting": self.is_resetting,
             "reset_supplied": self.reset_supplied,
+            "is_overhead": self.is_overhead,
+            "is_trigger": self.is_trigger,
             "template": self.template,
             "spin_counters": self.spin_counters,
         }
@@ -214,6 +218,7 @@ class RobotState:
     right_drive_max: int = 0
     total_weight: int = 0
     total_cost: int = 0
+    grabbed_by: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -236,6 +241,7 @@ class RobotState:
             "right_drive_max": self.right_drive_max,
             "total_weight": self.total_weight,
             "total_cost": self.total_cost,
+            "grabbed_by": self.grabbed_by,
         }
 
 

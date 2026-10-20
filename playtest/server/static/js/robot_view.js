@@ -57,7 +57,10 @@ export class RobotViewRenderer {
       statusBadges.push(`<span class="badge badge-success">⬆️ UPRIGHT</span>`);
     }
     if (robot.is_raised) {
-      statusBadges.push(`<span class="badge badge-purple">🔱 RAISED (Half Flip)</span>`);
+      statusBadges.push(`<span class="badge badge-purple">🔱 RAISED (+2 Throw)</span>`);
+    }
+    if (robot.grabbed_by) {
+      statusBadges.push(`<span class="badge badge-danger" style="background:#e11d48;color:#fff;">🗜️ GRABBED</span>`);
     }
     if (robot.is_knocked_out || robot.is_eliminated) {
       statusBadges.push(`<span class="badge badge-danger">☠️ KNOCKED OUT</span>`);
@@ -424,6 +427,11 @@ export class RobotViewRenderer {
 
     const driveTag = isDrive ? `<span class="badge badge-blue">🛞 Motive Drive Component</span>` : "";
 
+    const isOverhead = comp.is_overhead || (comp.keywords && comp.keywords.toLowerCase().includes("overhead"));
+    const isTrigger = comp.is_trigger || (comp.keywords && comp.keywords.toLowerCase().includes("trigger"));
+    const overheadTag = isOverhead ? `<span class="badge badge-purple" style="background:#8b5cf6;color:#fff;">🎯 OVERHEAD</span>` : "";
+    const triggerTag = isTrigger ? `<span class="badge badge-amber" style="background:#f59e0b;color:#000;font-weight:bold;">⚡ TRIGGER</span>` : "";
+
     // Upstream Suppliers
     const suppliers = (robot.supply_graph[comp.id] || [])
       .map(sid => {
@@ -452,6 +460,8 @@ export class RobotViewRenderer {
             ${statusBadge}
             ${driveTag}
             ${spinTag}
+            ${overheadTag}
+            ${triggerTag}
           </div>
         </div>
 

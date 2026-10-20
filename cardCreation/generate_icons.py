@@ -29,6 +29,16 @@ ICONS_DIR = WORKSPACE / "pictures" / "icons"
 ICONS_DIR.mkdir(parents=True, exist_ok=True)
 
 ICON_SIZE = (400, 400)
+ROOT_ICONS_DIR = WORKSPACE / "icons"
+
+
+def save_icon(im: Image.Image, filename: str):
+    """Saves icon to pictures/icons/ and to root icons/ if the directory exists."""
+    out_path = ICONS_DIR / filename
+    im.save(out_path, "PNG")
+    if ROOT_ICONS_DIR.is_dir():
+        im.save(ROOT_ICONS_DIR / filename, "PNG")
+    print(f"Created {out_path}")
 
 
 def get_font(size: int, bold: bool = True):
@@ -50,7 +60,7 @@ def create_weight_icon():
     im_plain = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
     draw_plain = ImageDraw.Draw(im_plain)
 
-    # Top handle (loop)
+    # Top handle (loop) - kettlebell is already solid dark, maintaining high contrast on white
     draw_plain.ellipse((135, 15, 265, 145), fill=(20, 20, 15, 255))
     draw_plain.ellipse((170, 50, 230, 110), fill=(0, 0, 0, 0))
 
@@ -64,8 +74,7 @@ def create_weight_icon():
     draw_plain.polygon(points, fill=(20, 20, 15, 255))
     draw_plain.rounded_rectangle((28, 335, 372, 370), radius=10, fill=(20, 20, 15, 255))
 
-    im_plain.save(ICONS_DIR / "weight_plain.png", "PNG")
-    print(f"Created {ICONS_DIR / 'weight_plain.png'}")
+    save_icon(im_plain, "weight_plain.png")
 
     # Copy plain kettlebell and add "1T" text in white for default weight.png
     im = im_plain.copy()
@@ -78,16 +87,16 @@ def create_weight_icon():
     ty = 175
     draw.text((tx, ty), text, font=font, fill=(255, 255, 255, 255))
 
-    im.save(ICONS_DIR / "weight.png", "PNG")
-    print(f"Created {ICONS_DIR / 'weight.png'}")
+    save_icon(im, "weight.png")
 
 
 def create_energy_icon():
-    # Cyan lightning bolt (Resource E)
+    # Cyan lightning bolt (Resource E) with bold dark border for high contrast against white card backgrounds
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
     color = (0, 225, 255, 255)
+    dark = (15, 15, 15, 255)
     points = [
         (220, 15),
         (105, 175),
@@ -97,10 +106,12 @@ def create_energy_icon():
         (210, 165),
         (295, 15),
     ]
+    # Bold dark border underlay and inner stroke for high contrast
+    draw.line(points + [points[0]], fill=dark, width=22, joint="curve")
     draw.polygon(points, fill=color)
+    draw.line(points + [points[0]], fill=dark, width=8, joint="curve")
 
-    im.save(ICONS_DIR / "energy.png", "PNG")
-    print(f"Created {ICONS_DIR / 'energy.png'}")
+    save_icon(im, "energy.png")
 
 
 def create_control_icon():
@@ -110,27 +121,28 @@ def create_control_icon():
     draw = ImageDraw.Draw(im)
 
     lw = 24
+    dark = (0, 0, 0, 255)
     # Console box at bottom: x=80..320, y=230..380
-    draw.rectangle((80, 230, 320, 380), fill=(255, 255, 255, 255), outline=(0, 0, 0, 255), width=lw)
+    draw.rectangle((80, 230, 320, 380), fill=(255, 255, 255, 255), outline=dark, width=lw)
 
     # Vertical joystick stem
-    draw.line([(200, 110), (200, 240)], fill=(0, 0, 0, 255), width=lw)
+    draw.line([(200, 110), (200, 240)], fill=dark, width=lw)
 
-    # Joystick red ball knob
+    # Joystick red ball knob with dark outline for high contrast
     red = (235, 15, 15, 255)
     r = 75
-    draw.ellipse((200 - r, 110 - r, 200 + r, 110 + r), fill=red)
+    draw.ellipse((200 - r, 110 - r, 200 + r, 110 + r), fill=red, outline=dark, width=16)
 
-    im.save(ICONS_DIR / "control.png", "PNG")
-    print(f"Created {ICONS_DIR / 'control.png'}")
+    save_icon(im, "control.png")
 
 
 def create_spin_icon():
-    # Orange spiral (Resource S)
+    # Orange spiral (Resource S) with high-contrast dark border
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
     color = (245, 120, 0, 255)
+    dark = (15, 15, 15, 255)
     cx, cy = 200, 200
     points = []
     turns = 2.4
@@ -142,23 +154,37 @@ def create_spin_icon():
         y = cy + r * math.sin(theta)
         points.append((x, y))
 
+    border_extra = 14
+    # Dark border underlay
+    for i in range(len(points) - 1):
+        w = int(24 + (i / steps) * 16) + border_extra
+        draw.line([points[i], points[i + 1]], fill=dark, width=w)
+    w_start_dark = (24 + border_extra) / 2
+    draw.ellipse((points[0][0] - w_start_dark, points[0][1] - w_start_dark, points[0][0] + w_start_dark, points[0][1] + w_start_dark), fill=dark)
+    w_end_dark = (40 + border_extra) / 2
+    draw.ellipse((points[-1][0] - w_end_dark, points[-1][1] - w_end_dark, points[-1][0] + w_end_dark, points[-1][1] + w_end_dark), fill=dark)
+
+    # Orange spiral overlay
     for i in range(len(points) - 1):
         w = int(24 + (i / steps) * 16)
         draw.line([points[i], points[i + 1]], fill=color, width=w)
+    w_start_color = 24 / 2
+    draw.ellipse((points[0][0] - w_start_color, points[0][1] - w_start_color, points[0][0] + w_start_color, points[0][1] + w_start_color), fill=color)
+    w_end_color = 40 / 2
+    draw.ellipse((points[-1][0] - w_end_color, points[-1][1] - w_end_color, points[-1][0] + w_end_color, points[-1][1] + w_end_color), fill=color)
 
-    im.save(ICONS_DIR / "spin.png", "PNG")
-    print(f"Created {ICONS_DIR / 'spin.png'}")
+    save_icon(im, "spin.png")
 
 
 def create_damage_icon():
-    # Red/orange blast/explosion star (Resource W)
+    # Red/orange blast/explosion star (Resource W) with high-contrast dark border
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
     cx, cy = 200, 200
     num_points = 16
-    outer_r = 185
-    inner_r = 120
+    outer_r = 182
+    inner_r = 118
 
     points = []
     for i in range(num_points * 2):
@@ -168,7 +194,11 @@ def create_damage_icon():
         py = cy + r * math.sin(angle)
         points.append((px, py))
 
+    dark = (15, 15, 15, 255)
+    # Dark border underlay
+    draw.line(points + [points[0]], fill=dark, width=18, joint="curve")
     draw.polygon(points, fill=(230, 20, 10, 255))
+    draw.line(points + [points[0]], fill=dark, width=6, joint="curve")
 
     inner_points = []
     for i in range(num_points * 2):
@@ -179,8 +209,7 @@ def create_damage_icon():
         inner_points.append((px, py))
     draw.polygon(inner_points, fill=(255, 145, 0, 255))
 
-    im.save(ICONS_DIR / "damage.png", "PNG")
-    print(f"Created {ICONS_DIR / 'damage.png'}")
+    save_icon(im, "damage.png")
 
 
 def create_drive_icon():
@@ -190,8 +219,10 @@ def create_drive_icon():
 
     cx, cy = 200, 200
     color = (40, 45, 55, 255)
+    dark = (15, 15, 15, 255)
     draw.ellipse((40, 40, 360, 360), fill=color)
-    draw.ellipse((90, 90, 310, 310), fill=(255, 255, 255, 255))
+    # Give the white rim a dark outline so it does not blend into white card backgrounds
+    draw.ellipse((90, 90, 310, 310), fill=(255, 255, 255, 255), outline=dark, width=8)
     draw.ellipse((140, 140, 260, 260), fill=color)
 
     for i in range(8):
@@ -202,8 +233,7 @@ def create_drive_icon():
         y2 = cy + 180 * math.sin(angle)
         draw.line([(x1, y1), (x2, y2)], fill=(255, 255, 255, 255), width=18)
 
-    im.save(ICONS_DIR / "drive.png", "PNG")
-    print(f"Created {ICONS_DIR / 'drive.png'}")
+    save_icon(im, "drive.png")
 
 
 def create_durability_icon():
@@ -212,7 +242,8 @@ def create_durability_icon():
     draw = ImageDraw.Draw(im)
 
     red = (185, 0, 0, 255)
-    draw.rectangle((60, 20, 340, 380), fill=red)
+    dark = (15, 15, 15, 255)
+    draw.rectangle((60, 20, 340, 380), fill=red, outline=dark, width=16)
 
     crack_points = [
         (60, 250),
@@ -247,21 +278,18 @@ def create_durability_icon():
         right_pts.append((crack_points[i][0] - miter[0] * miter_scale, crack_points[i][1] - miter[1] * miter_scale))
 
     left_pts.append((crack_points[-1][0] + normals[-1][0] * half_w, crack_points[-1][1] + normals[-1][1] * half_w))
-    right_pts.append((crack_points[-1][0] - normals[-1][0] * half_w, crack_points[-1][1] - normals[-1][1] * half_w))
+    right_pts.append((crack_points[-1][0] - normals[-1][0] * half_w, crack_points[-1][1] - normals[-1][0] * half_w))
 
     crack_poly = left_pts + right_pts[::-1]
-    draw.polygon(crack_poly, fill=(255, 255, 255, 255))
+    draw.polygon(crack_poly, fill=(255, 255, 255, 255), outline=dark, width=5)
+    # Redraw outer box outline to seal the edges
+    draw.rectangle((60, 20, 340, 380), fill=None, outline=dark, width=16)
 
-    out_path = ICONS_DIR / "durability.png"
-    im.save(out_path, "PNG")
-    root_icons = WORKSPACE / "icons"
-    if root_icons.is_dir():
-        im.save(root_icons / "durability.png", "PNG")
-    print(f"Created {out_path}")
+    save_icon(im, "durability.png")
 
 
 def create_absorption_icon():
-    # Black armor shield / plate (trapezoid with angled bottom)
+    # Black armor shield / plate (trapezoid with angled bottom) - already dark, stands out from white background
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
@@ -276,22 +304,29 @@ def create_absorption_icon():
     ]
     draw.polygon(points, fill=black)
 
-    im.save(ICONS_DIR / "absorption.png", "PNG")
-    print(f"Created {ICONS_DIR / 'absorption.png'}")
+    save_icon(im, "absorption.png")
 
 
 def create_template_circle():
-    # Red circle with black center dot
+    # Red circle with black center dot, with dark borders for high contrast
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
     red = (235, 10, 10, 255)
-    lw = 40
-    draw.ellipse((40, 40, 360, 360), outline=red, width=lw)
-    draw.ellipse((160, 160, 240, 240), fill=(10, 10, 10, 255))
+    dark = (15, 15, 15, 255)
+    lw = 36
+    b = 8
 
-    im.save(ICONS_DIR / "template_circle.png", "PNG")
-    print(f"Created {ICONS_DIR / 'template_circle.png'}")
+    # Red ring
+    draw.ellipse((40, 40, 360, 360), outline=red, width=lw)
+    # Outer dark border
+    draw.ellipse((40 - b, 40 - b, 360 + b, 360 + b), outline=dark, width=b)
+    # Inner dark border
+    draw.ellipse((40 + lw, 40 + lw, 360 - lw, 360 - lw), outline=dark, width=b)
+    # Center dot
+    draw.ellipse((160, 160, 240, 240), fill=dark)
+
+    save_icon(im, "template_circle.png")
 
 
 def create_template_large_circle():
@@ -302,45 +337,56 @@ def create_template_large_circle():
     draw = ImageDraw.Draw(im)
 
     red = (235, 10, 10, 255)
-    black = (10, 10, 10, 255)
+    dark = (10, 10, 10, 255)
 
     # 1. Robot chassis body in the center (square with rounded corners)
-    draw.rounded_rectangle((135, 135, 265, 265), radius=16, fill=black)
+    draw.rounded_rectangle((135, 135, 265, 265), radius=16, fill=dark)
     # Center pivot core dot
     draw.ellipse((185, 185, 215, 215), fill=(240, 240, 240, 255))
 
-    # 2. Outer large circle extending close to edge
-    lw_outer = 34
+    # 2. Outer large circle with high-contrast dark borders
+    lw_outer = 32
+    b = 8
     draw.ellipse((16, 16, 384, 384), outline=red, width=lw_outer)
+    draw.ellipse((16 - b, 16 - b, 384 + b, 384 + b), outline=dark, width=b)
+    draw.ellipse((16 + lw_outer, 16 + lw_outer, 384 - lw_outer, 384 - lw_outer), outline=dark, width=b)
 
-    # 3. Inner concentric dashed ring to show expansion / large spinner sweep
+    # 3. Inner concentric dashed ring with dark contrast
     for deg in range(0, 360, 20):
-        rad_start = math.radians(deg)
-        rad_end = math.radians(deg + 12)
         r_dash = 145
         cx, cy = 200, 200
-        # Draw arc segment
+        bbox_dark = (cx - r_dash - 2, cy - r_dash - 2, cx + r_dash + 2, cy + r_dash + 2)
+        draw.arc(bbox_dark, start=deg - 1, end=deg + 13, fill=dark, width=14)
         bbox = (cx - r_dash, cy - r_dash, cx + r_dash, cy + r_dash)
         draw.arc(bbox, start=deg, end=deg + 12, fill=red, width=10)
 
-    im.save(ICONS_DIR / "template_large_circle.png", "PNG")
-    root_icons = WORKSPACE / "icons"
-    if root_icons.is_dir():
-        im.save(root_icons / "template_large_circle.png", "PNG")
-    print(f"Created {ICONS_DIR / 'template_large_circle.png'}")
+    save_icon(im, "template_large_circle.png")
 
 
 def create_template_line():
-    # Single line template
+    # Single line template with high-contrast dark border
     im = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(im)
 
     red = (235, 10, 10, 255)
+    dark = (15, 15, 15, 255)
     lw = 45
-    draw.line([(200, 40), (200, 360)], fill=red, width=lw)
+    b = 8
 
-    im.save(ICONS_DIR / "template_line.png", "PNG")
-    print(f"Created {ICONS_DIR / 'template_line.png'}")
+    p1, p2 = (200, 40), (200, 360)
+    # Dark border underlay with rounded ends
+    draw.line([p1, p2], fill=dark, width=lw + 2 * b)
+    r_dark = (lw + 2 * b) / 2
+    draw.ellipse((p1[0] - r_dark, p1[1] - r_dark, p1[0] + r_dark, p1[1] + r_dark), fill=dark)
+    draw.ellipse((p2[0] - r_dark, p2[1] - r_dark, p2[0] + r_dark, p2[1] + r_dark), fill=dark)
+
+    # Red line with rounded ends
+    draw.line([p1, p2], fill=red, width=lw)
+    r_red = lw / 2
+    draw.ellipse((p1[0] - r_red, p1[1] - r_red, p1[0] + r_red, p1[1] + r_red), fill=red)
+    draw.ellipse((p2[0] - r_red, p2[1] - r_red, p2[0] + r_red, p2[1] + r_red), fill=red)
+
+    save_icon(im, "template_line.png")
 
 
 def create_template_bar():
@@ -350,11 +396,11 @@ def create_template_bar():
 
     black = (10, 10, 10, 255)
     red = (235, 10, 10, 255)
+    dark = (15, 15, 15, 255)
     draw.rectangle((40, 140, 360, 320), fill=black)
-    draw.rectangle((40, 80, 360, 130), fill=red)
+    draw.rectangle((40, 80, 360, 130), fill=red, outline=dark, width=10)
 
-    im.save(ICONS_DIR / "template_bar.png", "PNG")
-    print(f"Created {ICONS_DIR / 'template_bar.png'}")
+    save_icon(im, "template_bar.png")
 
 
 def create_template_prongs():
@@ -364,13 +410,13 @@ def create_template_prongs():
 
     black = (10, 10, 10, 255)
     red = (235, 10, 10, 255)
+    dark = (15, 15, 15, 255)
 
     draw.rectangle((50, 80, 130, 320), fill=black)
-    draw.rectangle((120, 100, 350, 128), fill=red)
-    draw.rectangle((120, 272, 350, 300), fill=red)
+    draw.rectangle((120, 100, 350, 128), fill=red, outline=dark, width=8)
+    draw.rectangle((120, 272, 350, 300), fill=red, outline=dark, width=8)
 
-    im.save(ICONS_DIR / "template_prongs.png", "PNG")
-    print(f"Created {ICONS_DIR / 'template_prongs.png'}")
+    save_icon(im, "template_prongs.png")
 
 
 def create_template_square():
@@ -387,11 +433,7 @@ def create_template_square():
     draw.line([(200, 110), (200, 60)], fill=green, width=10)
     draw.polygon([(185, 75), (200, 52), (215, 75)], fill=green)
 
-    im.save(ICONS_DIR / "template_square.png", "PNG")
-    root_icons = WORKSPACE / "icons"
-    if root_icons.is_dir():
-        im.save(root_icons / "template_square.png", "PNG")
-    print(f"Created {ICONS_DIR / 'template_square.png'}")
+    save_icon(im, "template_square.png")
 
 
 def create_template_triangle():
@@ -419,11 +461,7 @@ def create_template_triangle():
     draw.line([(200, 150), (200, 85)], fill=green, width=10)
     draw.polygon([(185, 100), (200, 75), (215, 100)], fill=green)
 
-    im.save(ICONS_DIR / "template_triangle.png", "PNG")
-    root_icons = WORKSPACE / "icons"
-    if root_icons.is_dir():
-        im.save(root_icons / "template_triangle.png", "PNG")
-    print(f"Created {ICONS_DIR / 'template_triangle.png'}")
+    save_icon(im, "template_triangle.png")
 
 
 def create_template_wide():
@@ -440,11 +478,7 @@ def create_template_wide():
     draw.line([(200, 170), (200, 115)], fill=green, width=10)
     draw.polygon([(185, 130), (200, 105), (215, 130)], fill=green)
 
-    im.save(ICONS_DIR / "template_wide.png", "PNG")
-    root_icons = WORKSPACE / "icons"
-    if root_icons.is_dir():
-        im.save(root_icons / "template_wide.png", "PNG")
-    print(f"Created {ICONS_DIR / 'template_wide.png'}")
+    save_icon(im, "template_wide.png")
 
 
 def create_pressure_icon():
@@ -490,7 +524,7 @@ def create_pressure_icon():
     arc_bbox = (cx - r_inner + 12, cy - r_inner + 12, cx + r_inner - 12, cy + r_inner - 12)
     draw.arc(arc_bbox, start=330, end=405, fill=(220, 35, 35, 255), width=10)
 
-    # Gauge needle (red, pointing up-right at ~315 degrees / high pressure)
+    # Gauge needle (red, pointing up-right at ~315 degrees / high pressure) with dark outline for contrast
     needle_ang = math.radians(315)
     nx_tip = cx + 115 * math.cos(needle_ang)
     ny_tip = cy + 115 * math.sin(needle_ang)
@@ -500,19 +534,13 @@ def create_pressure_icon():
     p1 = (cx - 20 * math.cos(needle_ang) + pw * math.cos(perp_ang), cy - 20 * math.sin(needle_ang) + pw * math.sin(perp_ang))
     p2 = (cx - 20 * math.cos(needle_ang) - pw * math.cos(perp_ang), cy - 20 * math.sin(needle_ang) - pw * math.sin(perp_ang))
     p3 = (nx_tip, ny_tip)
-    draw.polygon([p1, p2, p3], fill=(225, 25, 25, 255))
+    draw.polygon([p1, p2, p3], fill=(225, 25, 25, 255), outline=(20, 20, 25, 255), width=3)
 
     # Center hub
     draw.ellipse((cx - 22, cy - 22, cx + 22, cy + 22), fill=(40, 45, 55, 255))
     draw.ellipse((cx - 10, cy - 10, cx + 10, cy + 10), fill=(200, 205, 215, 255))
 
-    out_path = ICONS_DIR / "pressure.png"
-    im.save(out_path, "PNG")
-    # Also save to icons/ directory
-    root_icons = WORKSPACE / "icons"
-    if root_icons.is_dir():
-        im.save(root_icons / "pressure.png", "PNG")
-    print(f"Created {out_path}")
+    save_icon(im, "pressure.png")
 
 
 def main():

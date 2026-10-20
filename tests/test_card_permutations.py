@@ -117,6 +117,46 @@ class TestCardPermutations(unittest.TestCase):
         self.assertIn("6", out_w6)
         self.assertIn(r"\resourceW", out_w6)
 
+    def test_single_ended_card_chevrons_and_positioning(self):
+        left_chevron_sub = r"\fill [chevronpurple] (0.00, 5.15)"
+        right_chevron_sub = r"\fill [chevronpurple] (4.85, 5.15)"
+
+        # 1. Supply only (e.g. Battery)
+        battery = {"Name": "Galaxy 120", "Outputs": "EE"}
+        battery_tex = generate_card_tex(battery)
+        self.assertNotIn(left_chevron_sub, battery_tex, "Supply-only card should not have left chevron")
+        self.assertIn(right_chevron_sub, battery_tex, "Supply-only card should have right chevron")
+        self.assertIn(r"at (3.95, 4.40)", battery_tex, "Supply icons must stay at the right side (3.95, 4.40)")
+        self.assertNotIn(r"at (2.80, 4.40)", battery_tex, "Icons should not be placed in the middle (2.80, 4.40)")
+        self.assertNotIn(r"at (1.65, 4.40)", battery_tex, "Supply-only card should have no node at (1.65, 4.40)")
+
+        # 2. Requirements only (e.g. Self righting arm)
+        arm = {"Name": "Self righting arm", "Requirements": "PP"}
+        arm_tex = generate_card_tex(arm)
+        self.assertIn(left_chevron_sub, arm_tex, "Requirements-only card should have left chevron")
+        self.assertNotIn(right_chevron_sub, arm_tex, "Requirements-only card should not have right chevron")
+        self.assertIn(r"at (1.65, 4.40)", arm_tex, "Requirement icons must stay at the left side (1.65, 4.40)")
+        self.assertNotIn(r"at (2.80, 4.40)", arm_tex, "Icons should not be placed in the middle (2.80, 4.40)")
+        self.assertNotIn(r"at (3.95, 4.40)", arm_tex, "Requirements-only card should have no node at (3.95, 4.40)")
+
+        # 3. Both supply and requirements (e.g. Motor)
+        motor = {"Name": "Brushless Motor", "Requirements": "EE", "Outputs": "SSS"}
+        motor_tex = generate_card_tex(motor)
+        self.assertIn(left_chevron_sub, motor_tex, "Card with both should have left chevron")
+        self.assertIn(right_chevron_sub, motor_tex, "Card with both should have right chevron")
+        self.assertIn(r"at (1.65, 4.40)", motor_tex)
+        self.assertIn(r"at (3.95, 4.40)", motor_tex)
+        self.assertNotIn(r"at (2.80, 4.40)", motor_tex)
+
+        # 4. Neither supply nor requirements (e.g. Armor)
+        armor = {"Name": "Aluminum Plate"}
+        armor_tex = generate_card_tex(armor)
+        self.assertNotIn(left_chevron_sub, armor_tex, "Armor card should have no left chevron")
+        self.assertNotIn(right_chevron_sub, armor_tex, "Armor card should have no right chevron")
+        self.assertNotIn(r"at (1.65, 4.40)", armor_tex)
+        self.assertNotIn(r"at (3.95, 4.40)", armor_tex)
+        self.assertNotIn(r"at (2.80, 4.40)", armor_tex)
+
 
 if __name__ == "__main__":
     unittest.main()

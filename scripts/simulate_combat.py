@@ -102,11 +102,12 @@ def parse_weapon_spin_and_damage(weapon: Dict[str, Any]) -> Tuple[int, Dict[int,
         elif outputs.upper() in ("XXW", "XXXW", "X*XW"):
             damage_map[s] = s ** 2
             formula_desc = "X^2 (XxX * W)"
-        elif re.match(r"^(\d*)X(W+)$", outputs):
-            m = re.match(r"^(\d*)X(W+)$", outputs)
-            k = int(m.group(1)) if m.group(1) else 1
-            w_count = len(m.group(2))
-            extra_w = w_count - 1
+        elif re.match(r"^(W*)(\d*)X(W*)$", outputs):
+            m = re.match(r"^(W*)(\d*)X(W*)$", outputs)
+            prefix_w = len(m.group(1))
+            k = int(m.group(2)) if m.group(2) else 1
+            suffix_w = len(m.group(3))
+            extra_w = prefix_w + max(0, suffix_w - 1)
             damage_map[s] = k * s + extra_w
             k_str = f"{k}X" if k > 1 else "X"
             if extra_w > 0:

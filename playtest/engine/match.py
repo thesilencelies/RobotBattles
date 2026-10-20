@@ -136,10 +136,12 @@ def build_robot_state(
             is_wedge="wedge" in kw,
             is_forks="forks" in kw,
             is_invertible="invertible" in kw,
-            is_reset="reset" in kw,
+            is_reset="reset" in kw or "crushing claw" in str(cdata.get("name", "")).lower(),
             is_resetting=False,
             reset_supplied=False,
             was_used_this_turn=False,
+            is_overhead="overhead" in kw,
+            is_trigger="trigger" in kw,
             template=str(cdata.get("template", "")),
             spin_counters=0,
         )
@@ -405,8 +407,40 @@ def execute_turn(
     match.automaton_template = get_template_metadata(a_choice.left, a_choice.right)
 
     # 2. Movement Phase
-    p_traj = generate_trajectory(p_bot.pose, p_choice)
-    a_traj = generate_trajectory(a_bot.pose, a_choice)
+    # Crushing Claw Grab Effect:
+    # Rule: "Following a successful hit with the Crushing Claw, on the next turn the target moves along with this robot during the movement phase as if in inertial contact and as if raised (contributing zero motion)."
+    if p_bot.grabbed_by == a_bot.id:
+        p_choice = MoveChoice(0, 0)
+        a_traj = generate_trajectory(a_bot.pose, a_choice)
+        dx = p_bot.pose.x - a_start.x
+        dy = p_bot.pose.y - a_start.y
+        p_traj = [Pose(pt.x + dx, pt.y + dy, p_bot.pose.theta) for pt in a_traj]
+        p_bot.grabbed_by = None
+        a_claw = next((c for c in a_bot.components.values() if "crushing claw" in c.name.lower()), None)
+        if a_claw:
+            a_claw.was_used_this_turn = True
+        match.log.append(CombatLogEntry(
+            round=r_num, phase="movement",
+            message=f"🗜️ {p_bot.name} is grabbed by {a_bot.name}'s Crushing Claw: moves with {a_bot.name} and contributes 0 motion!",
+        ))
+    elif a_bot.grabbed_by == p_bot.id:
+        a_choice = MoveChoice(0, 0)
+        p_traj = generate_trajectory(p_bot.pose, p_choice)
+        dx = a_bot.pose.x - p_start.x
+        dy = a_bot.pose.y - p_start.y
+        a_traj = [Pose(pt.x + dx, pt.y + dy, a_bot.pose.theta) for pt in p_traj]
+        a_bot.grabbed_by = None
+        p_claw = next((c for c in p_bot.components.values() if "crushing claw" in c.name.lower()), None)
+        if p_claw:
+            p_claw.was_used_this_turn = True
+        match.log.append(CombatLogEntry(
+            round=r_num, phase="movement",
+            message=f"🗜️ {a_bot.name} is grabbed by {p_bot.name}'s Crushing Claw: moves with {p_bot.name} and contributes 0 motion!",
+        ))
+    else:
+        p_traj = generate_trajectory(p_bot.pose, p_choice)
+        a_traj = generate_trajectory(a_bot.pose, a_choice)
+
     match.player_trajectory = p_traj
     match.automaton_trajectory = a_traj
 

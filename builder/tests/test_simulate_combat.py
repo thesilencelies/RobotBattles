@@ -26,20 +26,20 @@ class TestCombatSimulation(unittest.TestCase):
     def test_weapon_damage_parsing(self):
         by_name = {w["name"]: w for w in self.catalog["weapons"]}
 
-        # Horizontal Spinner: 2XW, max spin 4
+        # Horizontal Spinner: 2XWW, max spin 4
         h_spin = by_name["Horizontal Spinner"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(h_spin)
         self.assertEqual(max_s, 4)
-        self.assertEqual(d_map[1], 2)
-        self.assertEqual(d_map[2], 4)
-        self.assertEqual(d_map[3], 6)
-        self.assertEqual(d_map[4], 8)
+        self.assertEqual(d_map[1], 3)
+        self.assertEqual(d_map[2], 5)
+        self.assertEqual(d_map[3], 7)
+        self.assertEqual(d_map[4], 9)
 
-        # Bloodsport Bar: 2XWW, max spin 4 -> 2*4 + 1 = 9
+        # Bloodsport Bar: 3XW, max spin 4 -> 3*4 = 12
         bb = by_name["Bloodsport Bar"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(bb)
         self.assertEqual(max_s, 4)
-        self.assertEqual(d_map[4], 9)
+        self.assertEqual(d_map[4], 12)
 
         # Beater Bar: XWW -> X*W + W = X + 1
         beater = by_name["Beater Bar"]

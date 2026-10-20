@@ -477,35 +477,20 @@ def generate_card_tex(
         )
 
     # --- MIDDLE BAND: Left/Right Pointy Chevrons & Resource Flow ---
-    lines.append(
-        r"    \fill [chevronpurple] (0.00, 5.15) -- (0.75, 4.40) -- (0.00, 3.65) -- (0.00, 3.97) -- (0.45, 4.40) -- (0.00, 4.83) -- cycle;"
-    )
-    lines.append(
-        rf"    \fill [chevronpurple] ({CARD_SAFE_W_CM - 0.75:.2f}, 5.15) -- ({CARD_SAFE_W_CM:.2f}, 4.40) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 3.65) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 3.97) -- ({CARD_SAFE_W_CM - 0.45:.2f}, 4.40) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 4.83) -- cycle;"
-    )
-
-    if req_markup and out_markup:
+    if req_markup:
+        lines.append(
+            r"    \fill [chevronpurple] (0.00, 5.15) -- (0.75, 4.40) -- (0.00, 3.65) -- (0.00, 3.97) -- (0.45, 4.40) -- (0.00, 4.83) -- cycle;"
+        )
         lines.append(
             rf"    \node [anchor=center, text width=2.2cm, align=center] at (1.65, 4.40) {{{req_markup}}};"
         )
+
+    if out_markup:
+        lines.append(
+            rf"    \fill [chevronpurple] ({CARD_SAFE_W_CM - 0.75:.2f}, 5.15) -- ({CARD_SAFE_W_CM:.2f}, 4.40) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 3.65) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 3.97) -- ({CARD_SAFE_W_CM - 0.45:.2f}, 4.40) -- ({CARD_SAFE_W_CM - 0.75:.2f}, 4.83) -- cycle;"
+        )
         lines.append(
             rf"    \node [anchor=center, text width=2.2cm, align=center] at (3.95, 4.40) {{{out_markup}}};"
-        )
-    elif req_markup:
-        lines.append(
-            rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 4.40) {{{req_markup}}};"
-        )
-    elif out_markup:
-        lines.append(
-            rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 4.40) {{{out_markup}}};"
-        )
-    elif req_markup:
-        lines.append(
-            rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 4.40) {{{req_markup}}};"
-        )
-    elif out_markup:
-        lines.append(
-            rf"    \node [anchor=center, text width=3.2cm, align=center] at (2.80, 4.40) {{{out_markup}}};"
         )
 
     # --- TEXT & KEYWORDS AREA (Middle-Lower) ---
