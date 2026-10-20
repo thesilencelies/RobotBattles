@@ -50,28 +50,29 @@ def main():
     parser.add_argument("--density", type=int, default=300, help="Render DPI for image conversion")
     parser.add_argument(
         "--weight-mode",
-        choices=["multiple", "multiple_no_1t", "number"],
-        default="multiple",
-        help="Weight icon style: multiple (default with 1T), multiple_no_1t (without 1T), or number (single icon with number)",
+        choices=["number", "multiple", "multiple_no_1t"],
+        default="number",
+        help="Weight icon style: number (default: single icon with number), multiple (with 1T), or multiple_no_1t (without 1T)",
     )
     parser.add_argument(
-        "--weight-number",
+        "--multiple-weights",
         action="store_true",
-        help="Use a single weight logo with number on top (removes 1T) instead of multiple symbols",
+        help="Use multiple stacked weight logos with 1T instead of single numbered logo",
     )
     parser.add_argument(
         "--no-weight-1t",
         action="store_true",
-        help="Remove 1T text from the weight symbol",
+        help="Use multiple stacked weight logos without 1T text",
     )
     parser.add_argument(
-        "--cost-number",
+        "--multiple-cost",
         action="store_true",
-        help="Have a number next to the cost symbol instead of using multiple symbols",
+        help="Use multiple dollar signs instead of single $ with number",
     )
     parser.add_argument(
         "--resource-math",
         action="store_true",
+        default=False,
         help="Have a number next to the resources writing out the math instead of a count of resources",
     )
     args = parser.parse_args()
@@ -89,15 +90,15 @@ def main():
     # Step 2: TeX Cards
     if run_all or args.cards:
         cards_cmd = [sys.executable, str(SCRIPT_DIR / "generateCards.py")]
-        if args.weight_number:
-            cards_cmd.append("--weight-number")
+        if args.multiple_weights:
+            cards_cmd.append("--multiple-weights")
         elif args.no_weight_1t:
             cards_cmd.append("--no-weight-1t")
-        elif args.weight_mode != "multiple":
+        elif args.weight_mode != "number":
             cards_cmd.extend(["--weight-mode", args.weight_mode])
 
-        if args.cost_number:
-            cards_cmd.append("--cost-number")
+        if args.multiple_cost:
+            cards_cmd.append("--multiple-cost")
         if args.resource_math:
             cards_cmd.append("--resource-math")
 

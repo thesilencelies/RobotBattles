@@ -189,6 +189,8 @@ def generate_single_permutation(perm: dict, target_cards: list[str], density: in
     ]
     if perm["cost_number"]:
         gen_cmd.append("--cost-number")
+    else:
+        gen_cmd.append("--multiple-cost")
     if perm["resource_math"]:
         gen_cmd.append("--resource-math")
 

@@ -186,7 +186,8 @@ def format_resource_item(prefix: str, char: str, resource_math: bool = False) ->
     else:
         if prefix and all(c.upper() == char for c in prefix):
             count = len(prefix) + 1
-            icons = [f"\\resource{char}" for _ in range(count)]
+            icon_size = "[0.52cm]" if count >= 5 else ""
+            icons = [f"\\resource{char}{icon_size}" for _ in range(count)]
             if count <= 2:
                 return r"\hspace{1.5pt}".join(icons)
             else:
@@ -323,13 +324,13 @@ def create_macros(extra_colors: dict = None):
 \graphicspath{{../../../../}{../../../}{../../}{../}{./}{../../../../pictures/icons/}{../../../pictures/icons/}{../../pictures/icons/}{../pictures/icons/}{pictures/icons/}}
 
 % Resource icon commands
-\newcommand{\resourceE}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/energy.png}}
-\newcommand{\resourceC}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/control.png}}
-\newcommand{\resourceS}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/spin.png}}
-\newcommand{\resourceP}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/pressure.png}}
-\newcommand{\resourceM}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/drive.png}}
-\newcommand{\resourceD}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/drive.png}}
-\newcommand{\resourceW}{\includegraphics[height=0.68cm,keepaspectratio]{pictures/icons/damage.png}}
+\newcommand{\resourceE}[1][0.68cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/energy.png}}
+\newcommand{\resourceC}[1][0.68cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/control.png}}
+\newcommand{\resourceS}[1][0.68cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/spin.png}}
+\newcommand{\resourceP}[1][0.68cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/pressure.png}}
+\newcommand{\resourceM}[1][0.68cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/drive.png}}
+\newcommand{\resourceD}[1][0.68cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/drive.png}}
+\newcommand{\resourceW}[1][0.68cm]{\includegraphics[height=#1,keepaspectratio]{pictures/icons/damage.png}}
 
 % Card stat icon commands
 \newcommand{\durabilityicon}{\includegraphics[height=0.76cm,keepaspectratio]{pictures/icons/durability.png}}
@@ -342,8 +343,8 @@ def create_macros(extra_colors: dict = None):
 
 def generate_card_tex(
     card: dict,
-    weight_mode: str = "multiple",
-    cost_number: bool = False,
+    weight_mode: str = "number",
+    cost_number: bool = True,
     resource_math: bool = False,
 ) -> str:
     """Generates the full TikZ code for a single card."""
@@ -558,28 +559,42 @@ def main():
     parser.add_argument("--output-dir", type=Path, default=CARD_OUTPUT_DIR, help="Directory to output card .tex files")
     parser.add_argument(
         "--weight-mode",
-        choices=["multiple", "multiple_no_1t", "number"],
-        default="multiple",
-        help="Weight icon style: multiple (default with 1T), multiple_no_1t (without 1T), or number (single icon with number)",
+        choices=["number", "multiple", "multiple_no_1t"],
+        default="number",
+        help="Weight icon style: number (default: single icon with number), multiple (with 1T), or multiple_no_1t (without 1T)",
     )
     parser.add_argument(
         "--weight-number",
         action="store_true",
-        help="Use a single weight logo with number on top (removes 1T) instead of multiple symbols",
+        help="Use a single weight logo with number on top (default)",
+    )
+    parser.add_argument(
+        "--multiple-weights",
+        "--stacked-weights",
+        action="store_true",
+        help="Use multiple stacked weight logos with 1T instead of single numbered logo",
     )
     parser.add_argument(
         "--no-weight-1t",
         action="store_true",
-        help="Remove 1T text from the weight symbol",
+        help="Use multiple stacked weight logos without 1T text",
     )
     parser.add_argument(
         "--cost-number",
         action="store_true",
-        help="Have a number next to the cost symbol instead of using multiple symbols",
+        default=True,
+        help="Have a number next to the cost symbol (default: True)",
+    )
+    parser.add_argument(
+        "--multiple-cost",
+        "--cost-symbols",
+        action="store_true",
+        help="Use multiple dollar signs instead of single $ with number",
     )
     parser.add_argument(
         "--resource-math",
         action="store_true",
+        default=False,
         help="Have a number next to the resources writing out the math instead of a count of resources",
     )
     parser.add_argument(
@@ -591,10 +606,16 @@ def main():
     args = parser.parse_args()
 
     weight_mode = args.weight_mode
-    if args.weight_number:
-        weight_mode = "number"
-    elif args.no_weight_1t and weight_mode == "multiple":
+    if args.multiple_weights:
+        weight_mode = "multiple"
+    elif args.no_weight_1t:
         weight_mode = "multiple_no_1t"
+    elif args.weight_number:
+        weight_mode = "number"
+
+    cost_number = True
+    if args.multiple_cost:
+        cost_number = False
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 

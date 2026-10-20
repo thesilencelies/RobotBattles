@@ -17,8 +17,8 @@ class TestCardPermutations(unittest.TestCase):
         self.assertIn("p01_baseline", perm_ids)
         self.assertIn("p12_all_features", perm_ids)
 
-    def test_baseline_defaults(self):
-        # Bloodsport Bar
+    def test_p11_defaults(self):
+        # Bloodsport Bar with P11 default: single weight number and $3
         card = {
             "Name": "Bloodsport Bar",
             "Weight": "6",
@@ -30,10 +30,39 @@ class TestCardPermutations(unittest.TestCase):
             "Absorption": "1",
         }
         tex_default = generate_card_tex(card)
-        self.assertIn(r"\weighticon", tex_default)
-        self.assertNotIn(r"\weighticonplain", tex_default)
-        self.assertIn(r"\$\$\$", tex_default)
-        self.assertNotIn(r"\$3", tex_default)
+        self.assertIn(r"\weighticonplain[0.85cm]", tex_default)
+        self.assertIn(r"\textcolor{white}{\sffamily\bfseries\large 6}", tex_default)
+        self.assertIn(r"\$3", tex_default)
+        self.assertNotIn(r"\$\$\$", tex_default)
+
+    def test_legacy_multiple_symbols_option(self):
+        card = {
+            "Name": "Bloodsport Bar",
+            "Weight": "6",
+            "Cost": "3",
+            "Template": "Large Circle",
+            "Requirements": "SSSSS",
+            "Outputs": "2XWW",
+            "Durability": "12",
+            "Absorption": "1",
+        }
+        tex_mult = generate_card_tex(card, weight_mode="multiple", cost_number=False)
+        self.assertIn(r"\weighticon", tex_mult)
+        self.assertIn(r"\$\$\$", tex_mult)
+
+    def test_resource_icon_sizing_5_or_more(self):
+        # 5 icons (SSSSS) -> size [0.52cm]
+        out_5s = parse_resources("SSSSS")
+        self.assertIn(r"\resourceS[0.52cm]", out_5s)
+
+        # 6 icons (WWWWWW) -> size [0.52cm]
+        out_6w = parse_resources("WWWWWW")
+        self.assertIn(r"\resourceW[0.52cm]", out_6w)
+
+        # 4 icons (SSSS) -> standard size (no [0.52cm])
+        out_4s = parse_resources("SSSS")
+        self.assertNotIn(r"[0.52cm]", out_4s)
+        self.assertIn(r"\resourceS", out_4s)
 
     def test_weight_options(self):
         card = {"Name": "Four-Bar Lifter", "Weight": "5", "Cost": "4", "Requirements": "PPPP", "Outputs": "WWWWWW"}
