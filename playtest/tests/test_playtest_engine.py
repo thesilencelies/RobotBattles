@@ -433,9 +433,9 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_active_hit=True,
         )
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
-        # Wedge was hit: Wedge effect applies even if raised, double absorption prevents throw!
-        self.assertTrue(any("Wedge was hit" in entry.message for entry in logs))
-        self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
+        # Wedge was hit: Wedge loses double absorption while RAISED, and raised robot receives +2 throw strength!
+        self.assertTrue(any("does not double absorption while RAISED" in entry.message for entry in logs))
+        self.assertTrue(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
 
     def test_wedge_does_not_work_when_inverted(self):
         """Tests that wedges do not prevent throws while inverted unless the component is invertible."""
@@ -946,10 +946,9 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.text = "Deals no damage."
         w_comp.is_active = True
 
-        # Opponent component contacted is a Wedge! (Titanium Wedge)
-        # The wedge keyword double absorption prevents the opponent from being thrown!
-        wedge_cid = [cid for cid, c in a_bot.components.items() if c.is_wedge][0]
-        a_bot.components[wedge_cid].absorption = 4  # double absorption 8 >= 5 attack
+        # Opponent component contacted has absorption >= attack strength (prevents throw without raising attacker)
+        target_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
+        a_bot.components[target_cid].absorption = 10  # 10 >= 5 attack
 
         col = CollisionEvent(
             time_t=0.5,
@@ -957,9 +956,9 @@ class TestPlaytestEngine(unittest.TestCase):
             robot1_octant="Front",
             robot2_octant="Front",
             robot1_components=[w_comp.id],
-            robot2_components=[wedge_cid],
+            robot2_components=[target_cid],
             contact_type="ACTIVE",
-            description="Active strike into wedge",
+            description="Active strike absorbed by armor",
             r1_remaining_dist=20.0,
             r2_remaining_dist=20.0,
             push_vector=(0.0, -10.0),
@@ -975,8 +974,8 @@ class TestPlaytestEngine(unittest.TestCase):
 
         # 1. Active contact occurred
         self.assertTrue(any("ACTIVE WEAPON HIT" in msg for msg in log_messages))
-        # 2. Wedge prevented throw
-        self.assertTrue(any("is not thrown" in msg for msg in log_messages))
+        # 2. Absorption prevented throw
+        self.assertFalse(any(f"{a_bot.name} is THROWN" in msg for msg in log_messages))
         # 3. Because robots remain in contact, inertial contact proceeded
         self.assertTrue(any("proceeding with inertial contact" in msg for msg in log_messages))
         # 4. Pushing match occurred
@@ -1052,9 +1051,9 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.text = "Deals no damage."
         w_comp.is_active = True
 
-        # Opponent component is a wedge (negates throw via double absorption)
-        wedge_cid = [cid for cid, c in a_bot.components.items() if c.is_wedge][0]
-        a_bot.components[wedge_cid].absorption = 5  # double absorption 10 >= 8 attack
+        # Opponent component contacted has absorption >= attack strength (prevents throw without raising attacker)
+        target_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
+        a_bot.components[target_cid].absorption = 10  # 10 >= 8 attack
 
         col = CollisionEvent(
             time_t=0.5,
@@ -1062,9 +1061,9 @@ class TestPlaytestEngine(unittest.TestCase):
             robot1_octant="Front",
             robot2_octant="Front",
             robot1_components=[w_comp.id],
-            robot2_components=[wedge_cid],
+            robot2_components=[target_cid],
             contact_type="ACTIVE",
-            description="Active strike into wedge with zero remaining distance",
+            description="Active strike into armor with zero remaining distance",
             r1_remaining_dist=0.0,
             r2_remaining_dist=0.0,
             push_vector=(0.0, 0.0),
@@ -1268,6 +1267,7 @@ class TestPlaytestEngine(unittest.TestCase):
 
     def test_wedge_only_hit_if_component_being_hit(self):
         """Rule: A wedge is only hit if it is the component being hit (taking damage)."""
+        from playtest.engine.collision import check_robots_in_contact
         csv_text = read_saved_robot("Vyper_Spinner.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
         p_bot = match.player_robot
@@ -1284,7 +1284,7 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.spin_counters = 1
 
         wedge_cids = [cid for cid, c in a_bot.components.items() if c.is_wedge]
-        non_wedge_cids = [cid for cid, c in a_bot.components.items() if not c.is_wedge and "wheel" in c.name.lower()]
+        non_wedge_cids = [cid for cid, c in a_bot.components.items() if not c.is_wedge and ("wheel" in c.name.lower() or "tire" in c.name.lower())]
         self.assertTrue(len(wedge_cids) > 0)
         self.assertTrue(len(non_wedge_cids) > 0)
 
@@ -1345,8 +1345,10 @@ class TestPlaytestEngine(unittest.TestCase):
         logs2 = resolve_collision_combat(col2, p_bot, a_bot, round_num=1)
         log_msgs2 = [l.message for l in logs2]
         self.assertTrue(any("Wedge was hit —" in m for m in log_msgs2))
-        self.assertFalse(any("THROWN" in m for m in log_msgs2))
-        self.assertTrue(any("Inertial separation" in m for m in log_msgs2))
+        self.assertTrue(any(f"{a_bot.name} is not thrown" in m for m in log_msgs2))
+        self.assertFalse(any(f"{a_bot.name} is THROWN" in m for m in log_msgs2))
+        # Player Bot was raised and thrown, so robots are separated
+        self.assertFalse(check_robots_in_contact(p_bot, a_bot))
 
     def test_weapon_damage_applies_only_to_contacted_component(self):
         """Rule: Weapon strike damage applies to just the one contacted component, while recoil feedback uses the chain."""
@@ -1429,7 +1431,7 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.is_active = True
         p_bot.weapon_spin_counters[w_comp.id] = 1
 
-        non_wedge = [cid for cid, c in a_bot.components.items() if not c.is_wedge and "wheel" in c.name.lower()][0]
+        non_wedge = [cid for cid, c in a_bot.components.items() if not c.is_wedge and ("wheel" in c.name.lower() or "tire" in c.name.lower())][0]
         a_bot.components[non_wedge].absorption = 0
 
         col = CollisionEvent(
@@ -1953,9 +1955,10 @@ class TestPlaytestEngine(unittest.TestCase):
         # Ensure hit component has 0 absorption to isolate raised throw reduction
         a_bot.components[list(a_bot.components.keys())[0]].absorption = 0
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
-        self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs))
+        self.assertTrue(any("dealing 7 dmg" in entry.message for entry in logs))
+        self.assertTrue(any("Strength 7" in entry.message for entry in logs))
 
-        # Now raised: damage is still 6, and throw strength is NOT reduced (remains 6)!
+        # Now raised: damage is still 7, but its attacks do not throw, and it receives +2 throw strength!
         target_cid = list(a_bot.components.keys())[0]
         a_bot.components[target_cid].is_damaged = False
         a_bot.components[target_cid].is_destroyed = False
@@ -1966,9 +1969,9 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.weapon_spin_counters[wpn.id] = 3
         wpn.was_used_this_turn = False
         logs_raised = resolve_collision_combat(col, p_bot, a_bot, round_num=2)
-        self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs_raised))
-        self.assertFalse(any("throw strength of attack reduced by 2" in entry.message for entry in logs_raised))
-        self.assertTrue(any("Strength 6" in entry.message for entry in logs_raised))
+        self.assertTrue(any("dealing 7 dmg" in entry.message for entry in logs_raised))
+        self.assertTrue(any("attacks do not throw" in entry.message for entry in logs_raised))
+        self.assertTrue(any("Strength 2" in entry.message for entry in logs_raised))
 
     def test_feedback_propagation_rounding_up(self):
         """
@@ -2334,6 +2337,285 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(a_bot.is_knocked_out)
         self.assertTrue(a_bot.is_eliminated)
         self.assertTrue(any("marked HAZARD WALL! KNOCKED OUT!" in entry.message for entry in logs))
+
+
+    def test_ground_game_mutual_raised_tie_breaker(self):
+        """
+        Rule: 'When both robots would be raised in the same contact,
+        randomly choose one by rolling a dice: that one is raised and the other isn't.'
+        Roll <= 3 -> robot 1 is raised, robot 2 is not.
+        Roll >= 4 -> robot 2 is raised, robot 1 is not.
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Give both robots wedges in contact
+        p_wedge = ComponentHealth(
+            id="p_w", name="Player Wedge", card_type="armour", max_durability=10, current_durability=10,
+            absorption=2, requirements="", outputs="", keywords="Wedge", text="", x=100, y=20, rotation=0,
+            box=(100, 20, 140, 60), is_wedge=True,
+        )
+        a_wedge = ComponentHealth(
+            id="a_w", name="Auto Wedge", card_type="armour", max_durability=10, current_durability=10,
+            absorption=2, requirements="", outputs="", keywords="Wedge", text="", x=100, y=20, rotation=0,
+            box=(100, 20, 140, 60), is_wedge=True,
+        )
+        p_bot.components["p_w"] = p_wedge
+        a_bot.components["a_w"] = a_wedge
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["p_w"],
+            robot2_components=["a_w"],
+            contact_type="INERT",
+            description="Wedge vs Wedge clash",
+            push_vector=(0.0, 0.0),
+        )
+
+        with patch("random.randint", return_value=2):
+            logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+            self.assertTrue(any("Ground Game Clash" in e.message for e in logs))
+            self.assertTrue(any(f"{p_bot.name} to be RAISED ({a_bot.name} stays grounded)" in e.message for e in logs))
+
+        with patch("random.randint", return_value=5):
+            logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+            self.assertTrue(any("Ground Game Clash" in e.message for e in logs))
+            self.assertTrue(any(f"{a_bot.name} to be RAISED ({p_bot.name} stays grounded)" in e.message for e in logs))
+
+    def test_trigger_weapon_suppression_and_recoil_feedback(self):
+        """
+        Rule: 'Trigger: If an opposing weapon makes contact this weapon does not attack.'
+        'Trigger weapons don't get feedback if they don't attack.'
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # p_bot has a Trigger weapon
+        p_trig = ComponentHealth(
+            id="trig_wpn", name="Trigger Lifter", card_type="weapon", max_durability=8, current_durability=8,
+            absorption=0, requirements="", outputs="6W", keywords="Trigger", text="Deals no damage only throws",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_trigger=True, is_active=True,
+        )
+        p_bot.components["trig_wpn"] = p_trig
+        p_bot.weapon_spin_counters["trig_wpn"] = 1
+
+        # a_bot has active spinner without trigger
+        a_spin = next(c for c in a_bot.components.values() if c.card_type == "weapon")
+        a_spin.is_trigger = False
+        a_spin.is_active = True
+        a_bot.weapon_spin_counters[a_spin.id] = 2
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["trig_wpn"],
+            robot2_components=[a_spin.id],
+            contact_type="ACTIVE",
+            description="Active clash",
+            r1_active_hit=True,
+            r2_active_hit=True,
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        # Trigger weapon should be suppressed
+        self.assertTrue(any("has TRIGGER: does not attack" in e.message for e in logs))
+        # Trigger weapon was NOT used and took no recoil feedback
+        self.assertFalse(p_trig.was_used_this_turn)
+        self.assertFalse(any(f"[Recoil Feedback] Feedback on {p_trig.name}" in e.message for e in logs))
+        # Opposing weapon did attack
+        self.assertTrue(any(f"{a_bot.name} attacks with {a_spin.name}" in e.message for e in logs))
+
+    def test_trigger_vs_trigger_both_attack(self):
+        """
+        Rule: 'If they both have Trigger they both will attack.'
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        p_trig = ComponentHealth(
+            id="t1", name="Lifter 1", card_type="weapon", max_durability=8, current_durability=8,
+            absorption=0, requirements="", outputs="4W", keywords="Trigger", text="Deals no damage only throws",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_trigger=True, is_active=True,
+        )
+        a_trig = ComponentHealth(
+            id="t2", name="Lifter 2", card_type="weapon", max_durability=8, current_durability=8,
+            absorption=0, requirements="", outputs="4W", keywords="Trigger", text="Deals no damage only throws",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_trigger=True, is_active=True,
+        )
+        p_bot.components["t1"] = p_trig
+        a_bot.components["t2"] = a_trig
+        p_bot.weapon_spin_counters["t1"] = 1
+        a_bot.weapon_spin_counters["t2"] = 1
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["t1"],
+            robot2_components=["t2"],
+            contact_type="ACTIVE",
+            description="Trigger vs Trigger clash",
+            r1_active_hit=True,
+            r2_active_hit=True,
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        self.assertFalse(any("has TRIGGER: does not attack" in e.message for e in logs))
+        self.assertTrue(any(f"attacks with {p_trig.name}" in e.message for e in logs))
+        self.assertTrue(any(f"attacks with {a_trig.name}" in e.message for e in logs))
+
+    def test_overhead_weapon_causes_no_throw_and_receives_recoil(self):
+        """
+        Rule: 'Overhead: This weapon hits a random component along the contact line instead of the outermost.
+        Does not cause a throw.'
+        'Overhead weapons still receive feedback.'
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        oh_wpn = ComponentHealth(
+            id="oh1", name="Hammer Saw", card_type="weapon", max_durability=8, current_durability=8,
+            absorption=0, requirements="", outputs="6W", keywords="Overhead", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_overhead=True, is_active=True,
+        )
+        p_bot.components["oh1"] = oh_wpn
+        p_bot.weapon_spin_counters["oh1"] = 2
+
+        target_cid = list(a_bot.components.keys())[0]
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["oh1"],
+            robot2_components=[target_cid],
+            contact_type="ACTIVE",
+            description="Overhead weapon strike",
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        # Overhead causes no throw on opponent
+        self.assertTrue(any("causes no throw" in e.message for e in logs))
+        self.assertFalse(any(f"{a_bot.name} is THROWN" in e.message for e in logs))
+        # Attacking Overhead weapon DOES receive recoil feedback
+        self.assertTrue(any(f"Feedback on {oh_wpn.name}" in e.message for e in logs))
+
+    def test_overhead_intercepted_by_titanium_top_plate(self):
+        """
+        Rule: 'If the defending robot has an active upright Titanium Top Plate,
+        it intercepts the attack even if not on the ray.'
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        oh_wpn = ComponentHealth(
+            id="oh1", name="Hammer Saw", card_type="weapon", max_durability=8, current_durability=8,
+            absorption=0, requirements="", outputs="4W", keywords="Overhead", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_overhead=True, is_active=True,
+        )
+        p_bot.components["oh1"] = oh_wpn
+        p_bot.weapon_spin_counters["oh1"] = 1
+
+        top_plate = ComponentHealth(
+            id="tp", name="Titanium Top Plate", card_type="armour", max_durability=10, current_durability=10,
+            absorption=2, requirements="", outputs="", keywords="", text="overhead attacks hit this component instead unless inverted",
+            x=200, y=150, rotation=0, box=(180, 130, 220, 170),
+        )
+        a_bot.components["tp"] = top_plate
+
+        other_cid = [cid for cid in a_bot.components if cid != "tp"][0]
+
+        # Attack ray targets other_cid, but Top Plate should intercept!
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["oh1"],
+            robot2_components=[other_cid],
+            contact_type="ACTIVE",
+            description="Overhead strike aiming at bumper",
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        self.assertTrue(any("Titanium Top Plate intercepts the Overhead attack" in e.message for e in logs))
+        self.assertTrue(any("Titanium Top Plate (#tp) takes 4 dmg" in e.message for e in logs))
+
+        # When defending robot is inverted, Top Plate does NOT intercept
+        a_bot.is_inverted = True
+        p_bot.weapon_spin_counters["oh1"] = 1
+        logs_inv = resolve_collision_combat(col, p_bot, a_bot, round_num=2)
+        self.assertFalse(any("Titanium Top Plate intercepts" in e.message for e in logs_inv))
+
+    def test_crushing_claw_pins_and_moves_opponent_on_next_turn(self):
+        """
+        Rule: 'For crushing claw, the next turn they move like inertial contact as if they were raised.
+        Then the turn after [the claw is disabled due to Reset].'
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        claw = ComponentHealth(
+            id="claw1", name="Crushing Claw", card_type="weapon", max_durability=10, current_durability=10,
+            absorption=1, requirements="", outputs="4W", keywords="Trigger;Overhead",
+            text="next turn target moves with this robot instead", x=100, y=20, rotation=0, box=(100, 20, 140, 60),
+            is_overhead=True, is_trigger=True, is_reset=True, is_active=True,
+        )
+        p_bot.components["claw1"] = claw
+        p_bot.weapon_spin_counters["claw1"] = 1
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["claw1"],
+            robot2_components=[list(a_bot.components.keys())[0]],
+            contact_type="ACTIVE",
+            description="Claw strike",
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+
+        # 1. Active contact grabs automaton
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        self.assertEqual(a_bot.grabbed_by, p_bot.id)
+        self.assertTrue(any("Crushing Claw grabs" in e.message for e in logs))
+
+        # 2. Next turn (turn 2): automaton moves with player
+        p_bot.pose = Pose(x=400.0, y=400.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=360.0, theta=180.0)
+        # Execute turn 2: player moves forward 2 units (80mm)
+        match = execute_turn(match, MoveChoice(2, 2), fixed_automaton_roll=1)
+        self.assertIsNone(a_bot.grabbed_by)
+        self.assertTrue(any("is grabbed by Player Bot's Crushing Claw" in e.message for e in match.log))
+
+        # 3. Turn 3: Claw is resetting (inactive due to Reset)
+        self.assertTrue(claw.is_resetting)
+        self.assertFalse(claw.is_active)
 
 
 if __name__ == "__main__":

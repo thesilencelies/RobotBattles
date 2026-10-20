@@ -255,7 +255,7 @@
     "19": {
       "name": "Banebots Compliant Wheels",
       "description": "",
-      "gm_notes": "weight:2\ncost:$2\nreq:SSS\nout:DD\ndurability:7\nabsorption:3",
+      "gm_notes": "weight:1\ncost:$2\nreq:SSS\nout:DD\ndurability:7\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -269,7 +269,7 @@
     "20": {
       "name": "Banebots T81 Heavy Wheels",
       "description": "Invertible: this component works inverted",
-      "gm_notes": "weight:3\ncost:$2\nreq:SSSS\nout:DDD\ndurability:7\nabsorption:2",
+      "gm_notes": "weight:2\ncost:$2\nreq:SSSS\nout:DDD\ndurability:7\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -325,7 +325,7 @@
     "24": {
       "name": "Titanium Top Plate",
       "description": "",
-      "gm_notes": "weight:3\ncost:$3\ndurability:10\nabsorption:2\ncovers the top",
+      "gm_notes": "weight:3\ncost:$3\ndurability:10\nabsorption:2\noverhead attacks hit this component instead unless inverted",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -339,7 +339,7 @@
     "25": {
       "name": "UHMW Wraparound Armor",
       "description": "",
-      "gm_notes": "weight:3\ncost:$2\ndurability:8\nabsorption:2\ncovers a whole side",
+      "gm_notes": "weight:3\ncost:$2\ndurability:8\nabsorption:2\nattacks that hit this components side hit this instead",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -353,7 +353,7 @@
     "26": {
       "name": "Titanium Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:4\ncost:$5\ndurability:13\nabsorption:3",
+      "gm_notes": "weight:3\ncost:$5\ndurability:13\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -367,7 +367,7 @@
     "27": {
       "name": "Steel Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:5\ncost:$3\ndurability:11\nabsorption:3",
+      "gm_notes": "weight:4\ncost:$3\ndurability:11\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -381,7 +381,7 @@
     "28": {
       "name": "AR500 Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:5\ncost:$4\ndurability:17\nabsorption:3",
+      "gm_notes": "weight:4\ncost:$4\ndurability:17\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -465,7 +465,7 @@
     "34": {
       "name": "Horizontal Spinner",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nInvertible: this component works inverted",
-      "gm_notes": "weight:5\ncost:$3\ntemplate:Circle\nreq:SSSS\nout:2XW\ndurability:12\nabsorption:1",
+      "gm_notes": "weight:5\ncost:$3\ntemplate:Circle\nreq:SSSS\nout:2XWW\ndurability:12\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -480,7 +480,7 @@
     "35": {
       "name": "Bloodsport Bar",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
-      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSS\nout:2XWW\ndurability:12\nabsorption:1",
+      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSS\nout:3XW\ndurability:12\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -495,7 +495,7 @@
     "36": {
       "name": "Titanium Spinner Blade",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nInvertible: this component works inverted",
-      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:2XW\ndurability:14\nabsorption:2",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:3XW\ndurability:14\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -555,7 +555,7 @@
     "40": {
       "name": "Beater Bar",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:11\nabsorption:2\nIncreases throw strength by 3",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:9\nabsorption:2\nIncreases throw strength by 3",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -599,8 +599,8 @@
     },
     "43": {
       "name": "Four-Bar Lifter",
-      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it\nWedge: if this component is hit this robot is not thrown\nReset: this weapon is inactive the turn after it is used. (this does not cause the robot to be considered stuck if it is also a self righter)",
-      "gm_notes": "weight:5\ncost:$4\ntemplate:Line\nreq:PPPP\nout:WWWWWW\ndurability:9\nabsorption:1\nDeals no damage only throws",
+      "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it\nReset: this weapon is inactive the turn after it is used. (this does not cause the robot to be considered stuck if it is also a self righter)",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Line\nreq:PPPP\nout:WWWWWW\ndurability:10\nabsorption:1\nDeals no damage only throws",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -615,7 +615,7 @@
     "44": {
       "name": "Lifter Claw",
       "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
-      "gm_notes": "weight:3\ncost:$3\ntemplate:Prongs\nreq:PPP\nout:WWW\ndurability:8\nabsorption:2\nDeals no damage. Always inverts.",
+      "gm_notes": "weight:3\ncost:$3\ntemplate:Prongs\nreq:PPP\nout:WWW\ndurability:9\nabsorption:2\nDeals no damage. Always inverts.",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -623,6 +623,51 @@
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Lifter_Claw.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "45": {
+      "name": "Nautilus Drum",
+      "description": "Reset: this weapon is inactive the turn after it is used. (this does not cause the robot to be considered stuck if it is also a self righter)",
+      "gm_notes": "weight:5\ncost:$3\ntemplate:Bar\nreq:SSSS\nout:WWWWW\ndurability:12\nabsorption:3\nIncreases Throw strength by 1",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Bar"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Nautilus_Drum.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "46": {
+      "name": "Crushing Claw",
+      "description": "",
+      "gm_notes": "weight:3\ncost:$3\ntemplate:Line\nreq:PPPPP\nout:WWWWW\ndurability:10\nabsorption:1\nnext turn target moves with this robot instead",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Crushing_Claw.png",
+      "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
+      "type": "0",
+      "sideways": "false"
+    },
+    "47": {
+      "name": "Hammer Saw",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
+      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSPP\nout:WWW2XW\ndurability:8\nabsorption:1",
+      "tags": {
+        "1": "Card",
+        "2": "Weapon",
+        "3": "Line"
+      },
+      "lua_script": "",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Hammer_Saw.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
@@ -717,7 +762,7 @@
     "6": {
       "name": "Line Weapon Template",
       "description": "Line weapon active area template: narrow frontal line contact",
-      "gm_notes": "template:Line\nactive_area:narrow frontal line contact\nweapons:Vertical Spinner, Single Tooth Disc, NightWing AR500 Disc, Four-Bar Lifter",
+      "gm_notes": "template:Line\nactive_area:narrow frontal line contact\nweapons:Vertical Spinner, Single Tooth Disc, NightWing AR500 Disc, Four-Bar Lifter, Crushing Claw, Hammer Saw",
       "tags": {
         "1": "Tile",
         "2": "Template",
@@ -734,7 +779,7 @@
     "7": {
       "name": "Bar Weapon Template",
       "description": "Bar weapon active area template: wide frontal bar contact",
-      "gm_notes": "template:Bar\nactive_area:wide frontal bar contact\nweapons:Beater Bar",
+      "gm_notes": "template:Bar\nactive_area:wide frontal bar contact\nweapons:Beater Bar, Nautilus Drum",
       "tags": {
         "1": "Tile",
         "2": "Template",

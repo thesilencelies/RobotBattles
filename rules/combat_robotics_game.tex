@@ -237,10 +237,12 @@ Components may have keywords that define specific mechanical rules and interacti
   \keywordbadge{kw_fragile}{Fragile} & If this component takes weapon damage it is destroyed as if it had a durability of 1 \\
   \keywordbadge{kw_spin_up}{Spin up X} & Add a spin counter at turn start (max X); cleared on attack, hitting a wall or becoming inactive. \\
   \keywordbadge{kw_forks}{Forks} & If the opposing robot is in line with the forks during contact, they become raised for this contact (does not work while inverted)  \\
-  \keywordbadge{kw_wedge}{Wedge} & If this component makes contact, the opponent becomes raised for this contact and this component has double absorption against weapon contact (does not work while inverted) \\
+  \keywordbadge{kw_wedge}{Wedge} & If this component makes contact, the opponent becomes raised for this contact and this component has double absorption against weapon contact (does not work while inverted or raised) \\
   \keywordbadge{kw_invertible}{Invertible} & Component functions normally while inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & Inverts upright at turn end without contact if active. \\
   \keywordbadge{kw_reset}{Reset} & This weapon is inactive the turn after it is used. (this does not cause the robot to be considered knocked out if it is also a self righter) \\
+  \keywordbadge{kw_overhead}{Overhead} & This weapon hits a random component along the contact line instead of the outermost. Does not cause a throw. \\
+  \keywordbadge{kw_trigger}{Trigger} & If an opposing weapon makes contact this weapon does not attack. \\
   \bottomrule
 \end{tabularx}
 \end{center}
@@ -725,7 +727,7 @@ Essentially a pushing match between colliding chassis surfaces:
 
 When weapons collide with an opponent's chassis or components:
 \begin{itemize}
-  \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the single outermost component contacted (damage does not penetrate inwards).
+  \item All weapons involved in the contact are assumed to hit, and they deal damage according to their damage level to the single outermost component contacted (damage does not penetrate inwards), unless a weapon has \textbf{Overhead} (which hits a random component along the contact line instead of the outermost and causes no throw) or \textbf{Trigger} (which does not attack if an opposing weapon makes contact).
   \item Then both robots are thrown away from the contact. The base throw strength received is equal to the attack damage minus the absorption of the hit component (minimum 0). Any additions to throw strength are added after that.
   \item Thrown distance is $\min(\text{d6}, \text{throw strength})$. Thrown robot orientation after active contact is decided by throwing a dice and rotating that many $60^\circ$ steps clockwise (using the numbered ticks on the rim of the Spin Disc template).
   \item Weapons receive feedback equal to half the combined attack strength in the contact. A weapon contacting an arena wall loses all spin counters and takes feedback $\lfloor \frac{\text{weapon strength} + \text{throw strength}}{2} \rfloor$.
@@ -741,6 +743,12 @@ When weapons collide with an opponent's chassis or components:
   \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw (takes throw damage equal to throw strength) $\rightarrow$ If still touching, move both back a full unit to separate them. \\
 \end{tabularx}
 \end{summarybox}
+
+\subsection{The Ground Game}
+
+Wedges and forks can both inflict the raised status on opponents when they hit. A raised robot does not contribute any motion to the pushing in inert contact. It receives an additional throw strength of 2 after any active contact (even if it is the only one whose weapon hit) and its attacks do not throw.
+
+When both robots would be raised in the same contact, randomly choose one by rolling a dice: that one is raised and the other isn't.
 
 \clearpage
 
@@ -833,7 +841,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons, drive, and component abilities (such as wedges and forks) without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Some components (mostly forks) will make the opponent raised during contact if any part of the opposing robot is in line with them. A robot that is raised has its flip strength halved, and its motion does not contribute to the motion in inertial contact.
+  \item[Raised:] Inflicted by wedges or forks during contact. A raised robot does not contribute any motion to pushing in inert contact, loses the double absorption of its wedges, its attacks do not cause a throw, and it receives an additional throw strength of 2 after active contact. Its flip strength is also halved.
 \end{description}
 
 \begin{figure}[H]
@@ -921,6 +929,14 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounding up).
 \end{itemize}
 \end{summarybox}
+
+\subsection{Rules Clarifications}
+\begin{itemize}[leftmargin=*, itemsep=2pt, topsep=1pt, parsep=0pt]
+  \item \textbf{Ground Game \& Wedges while Raised:} A raised robot loses the double absorption of its wedges and cannot inflict the raised status. When both robots would be raised in the same contact, randomly roll a die to determine which one is raised (that one is raised and the other is not).
+  \item \textbf{Overhead Weapons:} An Overhead weapon targets a random component along the contact ray rather than the single outermost component. If the target robot has an active upright \textit{Titanium Top Plate}, it is hit instead, even if not on the ray. Overhead weapons cause no throw on the target, but the attacking weapon still receives recoil feedback normally.
+  \item \textbf{Trigger Weapons:} A weapon with \textit{Trigger} does not attack if the opposing robot's active weapon hits anywhere, unless the robots remain in contact after that contact resolves. If both combatants have Trigger weapons, both will attack. A Trigger weapon that does not attack does not suffer recoil feedback.
+  \item \textbf{Crushing Claw:} Following a successful hit with the Crushing Claw, on the next turn the target moves along with this robot during the movement phase as if in inertial contact and as if raised (contributing zero motion). On the subsequent turn, the claw is inactive due to its \textit{Reset} keyword.
+\end{itemize}
 
 \clearpage
 
