@@ -20,6 +20,7 @@ sys.path.insert(0, str(WORKSPACE_DIR))
 from scripts.generate_automata_sheets import (
     AUTOMATA_DIR,
     compile_latex_to_pdf,
+    components_supply_each_other,
     compute_connection_segment,
     extract_connected_pairs,
     generate_action_table_tex,
@@ -108,23 +109,47 @@ class TestAutomataSheets(unittest.TestCase):
                 self.assertLessEqual(b["cy"] + b["h"] / 2.0, 297.0)
 
     def test_connection_lines_generated(self):
-        """Verifies connected pairs are extracted and segments computed."""
+        """Verifies connected pairs are strictly supply links and styled as continuous thick lines."""
+        # 1. Component supply logic unit checks
+        batt = {"card": "Galaxy 120", "card_data": {"outputs": "EE", "requirements": ""}}
+        motor = {"card": "Brushless Motor", "card_data": {"outputs": "SSS", "requirements": "EE"}}
+        wheel = {"card": "Snap Wheels", "card_data": {"outputs": "D", "requirements": "SS"}}
+        armor = {"card": "TPU Plate", "card_data": {"outputs": "", "requirements": ""}}
+        servo = {"card": "20kg Metal Gear Servo", "card_data": {"outputs": "PPPP", "requirements": "EEE"}}
+        lifter = {"card": "Four-Bar Lifter", "card_data": {"outputs": "WWWWWW", "requirements": "PPPP"}}
+
+        self.assertTrue(components_supply_each_other(batt, motor))
+        self.assertTrue(components_supply_each_other(motor, wheel))
+        self.assertTrue(components_supply_each_other(servo, lifter))
+        self.assertFalse(components_supply_each_other(armor, wheel))
+        self.assertFalse(components_supply_each_other(armor, batt))
+        self.assertFalse(components_supply_each_other(batt, batt))
+
+        # 2. Extract pairs for Vyper Flipper
         b_info = process_robot_csv(AUTOMATA_DIR / "Vyper_flipper.csv")
         conns = b_info["connected_pairs"]
         self.assertGreater(len(conns), 0)
 
         box_map = {b["id"]: b for b in b_info["resolved_boxes"]}
-        computed_segs = 0
-        for id_a, id_b in conns:
-            b1 = box_map.get(id_a)
-            b2 = box_map.get(id_b)
-            if b1 and b2:
-                x1, y1, x2, y2 = compute_connection_segment(b1, b2)
-                seg_len = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
-                if seg_len > 0.1:
-                    computed_segs += 1
+        card_names = {b["id"]: b["card"] for b in b_info["resolved_boxes"]}
 
-        self.assertGreater(computed_segs, 0)
+        # Armor and wedges should never be connected
+        for id_a, id_b in conns:
+            name_a = card_names.get(id_a, "")
+            name_b = card_names.get(id_b, "")
+            self.assertNotIn("Wedge", name_a)
+            self.assertNotIn("Wedge", name_b)
+            self.assertNotIn("Plate", name_a)
+            self.assertNotIn("Plate", name_b)
+            self.assertNotIn("Armor", name_a)
+            self.assertNotIn("Armor", name_b)
+
+        # 3. TikZ styling check
+        page_tikz = generate_robot_page_tikz(b_info)
+        conn_section = page_tikz.split("% Component Edge Connections")[1].split("% Robot Component Cards")[0]
+        self.assertIn(r"\draw[line width=5.5pt, teal!80!black, line cap=round]", conn_section)
+        self.assertNotIn("Circle", conn_section)
+        self.assertNotIn("dashed", conn_section)
 
     def test_single_bot_pdf_compilation(self):
         """Verifies end-to-end PDF generation for one bot."""

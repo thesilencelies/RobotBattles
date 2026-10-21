@@ -329,10 +329,41 @@ def resolve_layout(
 # Component Connection Line Computation
 # ---------------------------------------------------------------------------
 
-def extract_connected_pairs(placed: List[Dict[str, Any]], raw_rows: List[Dict[str, Any]]) -> Set[Tuple[str, str]]:
+SUPPLY_RESOURCES: Set[str] = {"E", "S", "P", "D", "M"}
+
+
+def components_supply_each_other(
+    card_a: Dict[str, Any],
+    card_b: Dict[str, Any],
+    by_name: Optional[Dict[str, Any]] = None,
+) -> bool:
+    """
+    Returns True if component A can supply component B or component B can supply component A.
+    Checks whether outputs of one component provide supply resources ('E', 'S', 'P', 'D', 'M')
+    required by the other.
+    """
+    name_a = card_a.get("card") or card_a.get("name", "")
+    name_b = card_b.get("card") or card_b.get("name", "")
+    data_a = card_a.get("card_data") or (by_name.get(name_a) if by_name else {}) or {}
+    data_b = card_b.get("card_data") or (by_name.get(name_b) if by_name else {}) or {}
+
+    outs_a = set(str(data_a.get("outputs", "")).upper()) & SUPPLY_RESOURCES
+    reqs_a = set(str(data_a.get("requirements", "")).upper()) & SUPPLY_RESOURCES
+    outs_b = set(str(data_b.get("outputs", "")).upper()) & SUPPLY_RESOURCES
+    reqs_b = set(str(data_b.get("requirements", "")).upper()) & SUPPLY_RESOURCES
+
+    return bool((outs_a & reqs_b) or (outs_b & reqs_a))
+
+
+def extract_connected_pairs(
+    placed: List[Dict[str, Any]],
+    raw_rows: List[Dict[str, Any]],
+    supply_only: bool = True,
+) -> Set[Tuple[str, str]]:
     """
     Identifies all pairs of placed cards that are physically adjacent or
-    connected in the robot definition.
+    connected in the robot definition, filtered to components that supply
+    one another if supply_only is True.
     """
     pairs: Set[Tuple[str, str]] = set()
 
@@ -370,6 +401,13 @@ def extract_connected_pairs(placed: List[Dict[str, Any]], raw_rows: List[Dict[st
         for i in range(len(m_list)):
             for j in range(i + 1, len(m_list)):
                 pairs.add(tuple(sorted([m_list[i], m_list[j]])))
+
+    if supply_only:
+        card_map = {str(c.get("id")): c for c in placed}
+        pairs = {
+            p for p in pairs
+            if p[0] in card_map and p[1] in card_map and components_supply_each_other(card_map[p[0]], card_map[p[1]])
+        }
 
     return pairs
 
@@ -554,9 +592,15 @@ def generate_robot_page_tikz(bot_info: Dict[str, Any], scale: float = 0.80, min_
         if not (is_ortho and seg_len <= 8.5 or (not is_ortho and seg_len <= 4.0)):
             continue
 
+        # Extend line segment by 1.0mm under adjacent card borders so there is no gap
+        dx = (x2 - x1) / seg_len
+        dy = (y2 - y1) / seg_len
+        ex1, ey1 = x1 - dx * 1.0, y1 - dy * 1.0
+        ex2, ey2 = x2 + dx * 1.0, y2 + dy * 1.0
+
         lines.append(
-            rf"  \draw[line width=1.5pt, teal!85!black, {{Circle[length=1.4mm]}}-{{Circle[length=1.4mm]}}] "
-            rf"({x1:.2f}, {y1:.2f}) -- ({x2:.2f}, {y2:.2f});"
+            rf"  \draw[line width=5.5pt, teal!80!black, line cap=round] "
+            rf"({ex1:.2f}, {ey1:.2f}) -- ({ex2:.2f}, {ey2:.2f});"
         )
 
     # 7. Card Nodes
