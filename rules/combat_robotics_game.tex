@@ -226,6 +226,9 @@ Components produce and require various resource types. The primary resources use
 \end{tabularx}
 \end{center}
 
+A component that supplies a resource is called an X component. For example a component that supplies drive is called 
+a drive component.
+
 \subsection{Keywords}
 
 Components may have keywords that define specific mechanical rules and interactions:
@@ -288,8 +291,10 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
 
 The chassis determines the model used for play, and all components must be within the bounds of the chassis.
 
-A card is considered connected to any other card it is touching. Cards may overlap, but each car must be clearly visible.
+A card is considered connected to any other card it is touching. Cards may overlap, but each card must be clearly visible.
 
+Weapon templates are placed on the model centered on the location of the card. Weapon templates may not overlap each other,
+and they must not pass through a location that corresponds to an invertible drive component or another component with self-right.
 
 You may submit up to two robots (e.g., clusterbots); the total weight across all robots must be within the weight limit.
 A clusterbot team is knocked out only when both robots are knocked out.
@@ -301,7 +306,7 @@ Each robot must have active drive \inlineIcon{\resourceM} (that is, active compo
 A component is only active if its requirements are supplied by connected components.
 Components can supply and be supplied by multiple components, but the total amount a component can supply is it's output.
 
-A component only supplies downstream components if it is active, and it is only active if it has it's requirememts supplied.
+A component only supplies downstream components if it is active, and it is only active if it has it's requirements supplied.
 
 When there is not enough supply for all connected components, the player chooses which components get supplied during the planning phase each turn.
 
@@ -399,11 +404,11 @@ Movement details:
 \begingroup
 \emergencystretch=1.5em
 \begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=0.5pt]
-      \item \textbf{Forward Alignment \& Stop Lines:} Front bumper starts flush at black baseline. On curved templates, target stop lines are drawn at the robot's intended bumper angle; align the bumper flush against the target line to achieve the correct position and facing.
-      \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns (where left drive \inlineIcon{\resourceM} is greater than or equal to right drive \inlineIcon{\resourceM}). If turning left (where right drive \inlineIcon{\resourceM} is greater than left drive \inlineIcon{\resourceM}), flip the template face-down.
-      \item \textbf{Reverse Maneuvers (Rear Placement):} If drive \inlineIcon{\resourceM} is negative, place the template baseline against the \textbf{back} (rear) of the robot; move backward to the target line.
+      \item \textbf{Forward Alignment \& Stop Lines:} Front bumper starts flush at black baseline. Align the bumper flush against the target line to achieve the correct position and facing.
+      \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns (where left is greater than right). If turning left (where right is greater than left), flip the template face-down.
+      \item \textbf{Reverse Maneuvers (Rear Placement):} If both drive values are negative, place the template baseline against the \textbf{back} of the robot; move backward to the target line.
       \item \textbf{Asymmetric Drive \inlineIcon{\resourceM} with a Negative:} When drive \inlineIcon{\resourceM} choices have opposite signs with unequal magnitudes (for example, \texttt{3/\allowbreak-1} or \texttt{3/\allowbreak-2}), resolve the movement in two steps: first spin on the spot using the Spin Disc for the shared magnitude, then from that new heading use the Pivot Fan for the remainder.
-      \item \textbf{Movements Beyond the Template:} If drive \inlineIcon{\resourceM} exceeds template markings (for example, \texttt{5/0}, \texttt{5/-5}, or boosted drive \inlineIcon{\resourceM}), move to the template end, then place another template for the remainder.
+      \item \textbf{Movements Beyond the Template:} If the chosen drive values exceeds the template markings, move to the template end of the closest fitting one, then place another template for the remainder.
       \item \textbf{Path Overlap \& Collision Check:} Overlapping paths cause collisions at contact.
 \end{enumerate}
 \endgroup
@@ -415,19 +420,19 @@ Movement details:
 
 \subsubsection{Movement Examples}
 
-\vspace{0.2em}
-\noindent\textbf{1. Straight Driving and Reverse Maneuvers (\texttt{3/3} vs \texttt{-2/-2})}
-\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-  \item \textbf{(\texttt{3/3}):} Align Straight Template baseline flush against the \textbf{front bumper}. Advance straight forward until the front bumper aligns with the blue \textbf{L3 R3} line. Heading is unchanged.
-  \item \textbf{(\texttt{-2/-2}):} Negative drive \inlineIcon{\resourceM} moves backward. Align baseline flush against the \textbf{rear bumper} pointing backward. Reverse until the rear bumper aligns with \textbf{L2 R2}. Heading is unchanged.
-\end{itemize}
+%\vspace{0.2em}
+%\noindent\textbf{1. Straight Driving and Reverse Maneuvers (\texttt{3/3} vs \texttt{-2/-2})}
+%\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+%  \item \textbf{(\texttt{3/3}):} Align Straight Template baseline flush against the \textbf{front bumper}. Advance straight forward until the front bumper aligns with the blue \textbf{L3 R3} line. Heading is unchanged.
+%  \item \textbf{(\texttt{-2/-2}):} Negative drive \inlineIcon{\resourceM} moves backward. Align baseline flush against the \textbf{rear bumper} pointing backward. Reverse until the rear bumper aligns with \textbf{L2 R2}. Heading is unchanged.
+%\end{itemize}
 
-\vspace{0.2em}
-\noindent\textbf{2. Curved Arcs and Left/Right Flipping (\texttt{2/1} vs \texttt{1/2})}
-\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-  \item \textbf{(\texttt{2/1}):} Place the Medium Curve Template face-up with baseline at the front bumper. Advance along the curve until the front bumper aligns with line \textbf{L2 R1}.
-  \item \textbf{(\texttt{1/2}):} Turning left. Take the Medium Curve Template and \textbf{flip it face-down}. Advance along the arc to line \textbf{L2 R1}, sweeping counter-clockwise.
-\end{itemize}
+%\vspace{0.2em}
+%\noindent\textbf{2. Curved Arcs and Left/Right Flipping (\texttt{2/1} vs \texttt{1/2})}
+%\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+%  \item \textbf{(\texttt{2/1}):} Place the Medium Curve Template face-up with baseline at the front bumper. Advance along the curve until the front bumper aligns with line \textbf{L2 R1}.
+%  \item \textbf{(\texttt{1/2}):} Turning left. Take the Medium Curve Template and \textbf{flip it face-down}. Advance along the arc to line \textbf{L2 R1}, sweeping counter-clockwise.
+%\end{itemize}
 
 \begin{figure}[H]
   \centering
@@ -491,13 +496,11 @@ Movement details:
   \label{fig:diagram_movement_straight_curve}
 \end{figure}
 
-\clearpage
-
-\noindent\textbf{3. Pivot Fan vs. Spin Disc Rotations (\texttt{2/0} vs \texttt{2/-2})}
-\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-  \item \textbf{(\texttt{2/0}):} Right wheel is locked. Place Pivot Fan red marker on the \textbf{right wheel}. Robot swings clockwise around that wheel by 90 degrees (two 45-degree steps) to line \textbf{L2 R0}.
-  \item \textbf{(\texttt{2/-2}):} Tracks counter-rotate equally. Center the Spin Disc under the chassis. Robot rotates 180 degrees clockwise (two 90-degree steps) to line \textbf{L2 R-2} on the spot with zero displacement.
-\end{itemize}
+%\noindent\textbf{3. Pivot Fan vs. Spin Disc Rotations (\texttt{2/0} vs \texttt{2/-2})}
+%\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+%  \item \textbf{(\texttt{2/0}):} Right wheel is locked. Place Pivot Fan red marker on the \textbf{right wheel}. Robot swings clockwise around that wheel by 90 degrees (two 45-degree steps) to line \textbf{L2 R0}.
+%  \item \textbf{(\texttt{2/-2}):} Tracks counter-rotate equally. Center the Spin Disc under the chassis. Robot rotates 180 degrees clockwise (two 90-degree steps) to line \textbf{L2 R-2} on the spot with zero displacement.
+%\end{itemize}
 
 \begin{figure}[H]
   \centering
@@ -586,6 +589,8 @@ For a collision, place both robots as far along their path as they can go withou
 If the parts of either robot that is touching is the weapon's active area (the red zone on the template), then the contact is active.
  Otherwise, it is an inert contact.
 
+The first remaining component on the robot along the line corresponding to the contact point is the component hit.
+
 \begin{figure}[H]
   \centering
   \adjustbox{max width=\linewidth}{%
@@ -659,7 +664,7 @@ Essentially a pushing match between colliding chassis surfaces:
   \item Move along templates until contact.
   \item Displace the remainder of robot A's template to the end of robot B's template.
   \item Move both robots along the straight line from the initial contact point to the end of A's displaced template (a raised robot's motion does not contribute).
-  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the largest drive \inlineIcon{\resourceM} value the other robot chose. If its weapon contacts the wall, it loses all spin counters and takes feedback equal to half the sum of its weapon strength and throw strength, rounded down. The robot takes throw damage equal to the throw strength.
+  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the largest drive \inlineIcon{\resourceM} value the other robot chose. If its weapon contacts the wall, it loses all spin counters and takes feedback equal to half the sum of its weapon strength and that throw strenth, rounded up.
   \item If the robots are still touching, both robots are moved back a full unit to separate them.
 \end{enumerate}
 
@@ -730,14 +735,17 @@ Essentially a pushing match between colliding chassis surfaces:
 
 \subsection{Active Contact (Weapon Hits)}
 
-When weapons collide with an opponent's chassis or components:
+When weapons collide with an opponent:
 \begin{itemize}
   \item All weapons involved in the contact are assumed to hit, and they deal weapon damage \inlineIcon{\resourceW} according to their damage level to the single outermost component contacted (damage does not penetrate inwards), unless a weapon has \textbf{Overhead} (which hits a random component along the contact line instead of the outermost and causes no throw) or \textbf{Trigger} (which does not attack if an opposing weapon makes contact).
   \item Then both robots are thrown away from the contact. The base throw strength received is equal to the weapon damage \inlineIcon{\resourceW} minus the absorption of the hit component (minimum 0). Any additions to throw strength are added after that.
   \item Thrown distance is the roll of a six-sided die or the throw strength, whichever is lower. Thrown robot orientation after active contact is decided by rolling a die and rotating that many 60-degree steps clockwise (using the numbered ticks on the rim of the Spin Disc template).
-  \item Weapons receive feedback equal to half the combined attack strength in the contact. A weapon contacting an arena wall loses all spin counters and takes feedback equal to half the sum of its weapon strength and throw strength, rounded down.
+  \item Weapons receive feedback equal to half the combined attack strength in the contact.
   \item If after active contact the robots are still in contact, proceed with inertial contact.
 \end{itemize}
+
+If a robot has multiple weapons that make contact, determine which component each hits independently, the throw strength is the maximum throw transferred, and each recieves the full feedback.
+Similarly if a weapons contacts multiple components at once, each component is damaged, and the throw strength recieved is the maximum that would be transferred. 
 
 \begin{summarybox}{Contact Classification Quick Reference}
 \begin{tabularx}{\textwidth}{l X}
@@ -765,12 +773,15 @@ When both robots would be raised in the same contact, randomly choose one by rol
 
 \subsection{Throws \& Inversion}
 
-A robot that is thrown is moved a distance equal to the lower of a die roll or the throw strength away from the contact point along the center-to-center line.
+A robot that is thrown is moved a distance equal to the lower of a die roll or the throw strength away from the contact point along the center-to-center line. (in the case of contact with a wall its thrown away from the wall.
 Robot orientation after active contact is decided by rolling a die and rotating that many 60-degree steps clockwise (using the numbered ticks on the rim of the Spin Disc template).
 If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted} (lower rolled distances represent high-arching vertical throws rather than horizontal displacement).
 After the throw, the thrown robot takes throw damage at a randomly chosen component equal to the throw strength.
 If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately knocked out}.
-The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on.
+If its weapon hits a wall it takes feedback to the weapon equal to half the sum of its weapon strength \inlineIcon{\resourceW} and the throw strength and then any spin counters it has are removed.
+The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on (try again if it bounces off altogether)
+
+If a thrown robot would end up in contact with another robot, separate them by 1 unit.
 
 \begin{figure}[H]
   \centering
@@ -839,8 +850,6 @@ Weapon damage \inlineIcon{\resourceW} applies only to the single outermost compo
 
 Feedback represents components over-straining themselves under combat loads. It is damage that progresses back from the source component 
 to each component that supplies it, shared equally if there are multiple components (rounding up), down the tree until the damage is all absorbed.
-
-\clearpage
 
 \subsection{Status Effects}
 

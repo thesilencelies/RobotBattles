@@ -4,12 +4,13 @@ Bloodsport Bar,6,3,Large Circle,SSSSS,3XW,12,1,Spin up (4),,components/weapons/b
 Titanium Spinner Blade,4,4,Circle,SSSS,3XW,14,2,Spin up (3);Invertible,,components/weapons/viper-horizontal-spinner-titanium-blade.jpg,itgresa.com
 Vertical Spinner,2,3,Line,SS,2XWW,7,1,Spin up (2),Increases throw strength by 2,components/weapons/viper-vertical-spinner-clamping-drum.jpeg,itgresa.com
 Single Tooth Disc,2,3,Line,SSS,WWWW,8,2,Self-right;Reset,Increases throw strength by 2,components/weapons/baby-nautiloid-weapon-disc-single-tooth-ar500.jpeg,itgresa.com
-NightWing AR500 Disc,3,4,Line,SSSS,2XWW,9,1,Spin up (3),Increases throw strength by 2,components/weapons/fingertech-nightwing-ar500-weapon-disc-10in.jpg,itgresa.com
-Beater Bar,4,3,Bar,SSS,XWW,9,2,Spin up (3);Self-right,Increases throw strength by 3,components/weapons/1lb-beater-bar.png,itgresa.com
+NightWing AR500 Disc,4,4,Circle,SSSS,2XWW,9,1,Spin up (3);Invertible,unless inverted this components attacks skip past components without wedge, fork or drive,components/weapons/fingertech-nightwing-ar500-weapon-disc-10in.jpg,itgresa.com
+Beater Bar,4,4,Bar,SSS,XWW,9,2,Spin up (3);Self-right,Increases throw strength by 3,components/weapons/1lb-beater-bar.png,itgresa.com
 Cronos Scythe,4,3,Prongs,SSS,XWWW,7,1,Spin up (3);Self-right,Increases throw strength by 2,components/weapons/cronos-scythe.jpg,itgresa.com
 Chonk Key Blade,6,3,Circle,SSSSSS,XXW,16,1,Spin up (4),,components/weapons/just-cuz-robotics-chonk-key-blade.jpg,itgresa.com
 Four-Bar Lifter,4,4,Line,PPPP,WWWWWW,10,1,Trigger;Self-right;Reset,Deals no damage only throws,components/weapons/viper-lifter-weapon.png,itgresa.com
-Lifter Claw,3,3,Prongs,PPP,WWW,9,2,Forks,Deals no damage. Always inverts.,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-claw-forks.jpg,itgresa.com
-Nautilus Drum,5,3,Bar,SSSS,WWWWW,12,3,Reset,Increases Throw strength by 1,,
+Lifter Claw,2,3,Prongs,PPP,WWW,9,2,Forks;Self-right,Deals no damage. Always inverts.,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-claw-forks.jpg,itgresa.com
+Nautilus Drum,5,3,Bar,SSSS,WWWW,12,3,,Increases Throw strength by 2,,
 Crushing Claw,3,3,Line,PPPPP,WWWWW,10,1,Trigger;Overhead, next turn target moves with this robot instead,,
 Hammer Saw,3,4,Line,SSSPP,WWW2XW,8,1,Trigger;Overhead;Spin up (2),,,
+
