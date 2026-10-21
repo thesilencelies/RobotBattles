@@ -131,6 +131,10 @@ class CollisionEvent:
     step_index: int = 0
     r1_active_hit: bool = False
     r2_active_hit: bool = False
+    r1_active_weapons: List[str] = field(default_factory=list)
+    r2_active_weapons: List[str] = field(default_factory=list)
+    r1_weapon_targets: Dict[str, List[str]] = field(default_factory=dict)
+    r2_weapon_targets: Dict[str, List[str]] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -150,6 +154,10 @@ class CollisionEvent:
             "push_vector": list(self.push_vector),
             "r1_active_hit": self.r1_active_hit,
             "r2_active_hit": self.r2_active_hit,
+            "r1_active_weapons": list(self.r1_active_weapons),
+            "r2_active_weapons": list(self.r2_active_weapons),
+            "r1_weapon_targets": {k: list(v) for k, v in self.r1_weapon_targets.items()},
+            "r2_weapon_targets": {k: list(v) for k, v in self.r2_weapon_targets.items()},
         }
 
 

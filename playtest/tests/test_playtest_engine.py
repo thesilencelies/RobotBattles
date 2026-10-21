@@ -2618,6 +2618,233 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertFalse(claw.is_active)
 
 
+    def test_multi_weapon_contact_independent_targets_max_throw_full_feedback(self):
+        """
+        Rule: 'If a robot has multiple weapons that make contact, determine which component
+        each hits independently, the throw strength is the maximum throw transferred,
+        and each receives the full feedback.'
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Give Player Bot two active weapons
+        w1 = ComponentHealth(
+            id="w1", name="NightWing Disc", card_type="weapon", max_durability=8, current_durability=8,
+            absorption=0, requirements="", outputs="5W", keywords="", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
+        )
+        w2 = ComponentHealth(
+            id="w2", name="Single Tooth Disc", card_type="weapon", max_durability=8, current_durability=8,
+            absorption=0, requirements="", outputs="3W", keywords="", text="",
+            x=150, y=20, rotation=0, box=(150, 20, 190, 60), is_active=True,
+        )
+        p_bot.components["w1"] = w1
+        p_bot.components["w2"] = w2
+        p_bot.weapon_spin_counters["w1"] = 1
+        p_bot.weapon_spin_counters["w2"] = 1
+
+        # Automaton target components
+        target1 = ComponentHealth(
+            id="t1", name="Front Armor", card_type="component", max_durability=10, current_durability=10,
+            absorption=1, requirements="", outputs="", keywords="", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
+        )
+        target2 = ComponentHealth(
+            id="t2", name="Front Wheel", card_type="component", max_durability=6, current_durability=6,
+            absorption=0, requirements="", outputs="D", keywords="", text="",
+            x=150, y=20, rotation=0, box=(150, 20, 190, 60), is_active=True,
+        )
+        a_bot.components["t1"] = target1
+        a_bot.components["t2"] = target2
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["w1", "w2"],
+            robot2_components=["t1", "t2"],
+            contact_type="ACTIVE",
+            description="Multi-weapon strike",
+            r1_active_hit=True,
+            r2_active_hit=False,
+            r1_active_weapons=["w1", "w2"],
+            r2_active_weapons=[],
+            r1_weapon_targets={"w1": ["t1"], "w2": ["t2"]},
+            r2_weapon_targets={},
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+
+        # 1. Target 1 took 5 dmg (from w1): 10 - (5 - 1) = 6 dur remaining
+        self.assertEqual(target1.current_durability, 6)
+        # 2. Target 2 took 3 dmg (from w2): 6 - 3 = 3 dur remaining
+        self.assertEqual(target2.current_durability, 3)
+
+        # 3. Throw: w1 throw = 5 - 1 = 4; w2 throw = 3 - 0 = 3; max throw transferred is 4
+        self.assertTrue(any(f"{a_bot.name} is THROWN" in e.message and "Strength 4" in e.message for e in logs))
+
+        # 4. Feedback: total attack = 5 + 3 = 8; recoil feedback = 8 // 2 = 4
+        # Each weapon receives full feedback: w1 dur 8 -> 4, w2 dur 8 -> 4
+        self.assertEqual(w1.current_durability, 4)
+        self.assertEqual(w2.current_durability, 4)
+
+    def test_multi_component_contact_each_damaged_max_throw(self):
+        """
+        Rule: 'Similarly if a weapon contacts multiple components at once, each component
+        is damaged, and the throw strength received is the maximum that would be transferred.'
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        w1 = ComponentHealth(
+            id="w1", name="Heavy Spinner", card_type="weapon", max_durability=10, current_durability=10,
+            absorption=0, requirements="", outputs="6W", keywords="", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
+        )
+        p_bot.components["w1"] = w1
+        p_bot.weapon_spin_counters["w1"] = 1
+
+        target1 = ComponentHealth(
+            id="t1", name="Front Armor Plate", card_type="component", max_durability=10, current_durability=10,
+            absorption=1, requirements="", outputs="", keywords="", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
+        )
+        target2 = ComponentHealth(
+            id="t2", name="Heavy Bumper", card_type="component", max_durability=10, current_durability=10,
+            absorption=4, requirements="", outputs="", keywords="", text="",
+            x=140, y=20, rotation=0, box=(140, 20, 180, 60), is_active=True,
+        )
+        a_bot.components["t1"] = target1
+        a_bot.components["t2"] = target2
+
+        # Weapon contacts both components at once
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=["w1"],
+            robot2_components=["t1", "t2"],
+            contact_type="ACTIVE",
+            description="Multi-component seam hit",
+            r1_active_hit=True,
+            r2_active_hit=False,
+            r1_active_weapons=["w1"],
+            r2_active_weapons=[],
+            r1_weapon_targets={"w1": ["t1", "t2"]},
+            r2_weapon_targets={},
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+
+        # Both components take damage 6
+        # t1: 6 dmg - 1 abs = 5 net dmg -> 10 - 5 = 5 dur
+        self.assertEqual(target1.current_durability, 5)
+        # t2: 6 dmg - 4 abs = 2 net dmg -> 10 - 2 = 8 dur
+        self.assertEqual(target2.current_durability, 8)
+
+        # Max throw transferred: max(6 - 1, 6 - 4) = max(5, 2) = 5
+        self.assertTrue(any(f"{a_bot.name} is THROWN" in e.message and "Strength 5" in e.message for e in logs))
+
+    def test_nightwing_skip_components_without_wedge_fork_drive(self):
+        """
+        Rule: 'unless inverted this component's attacks skip past components without wedge, fork or drive'
+        """
+        from playtest.engine.collision import find_components_along_contact_line
+        from playtest.engine.field import MAT_CENTER_X, MAT_CENTER_Y, MAT_TO_MINI_SCALE
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        bot = match.player_robot
+        bot.components.clear()
+
+        # Place armor plate in front along North axis (y = 50, center x = MAT_CENTER_X)
+        armor = ComponentHealth(
+            id="c_armor", name="Armor Plate", card_type="armor", max_durability=10, current_durability=10,
+            absorption=2, requirements="", outputs="", keywords="", text="",
+            x=MAT_CENTER_X - 20, y=50, rotation=0, box=(MAT_CENTER_X - 20, 50, MAT_CENTER_X + 20, 90), is_active=True,
+        )
+        # Place wheel behind armor (y = 95)
+        wheel = ComponentHealth(
+            id="c_wheel", name="Snap Wheels", card_type="drive", max_durability=8, current_durability=8,
+            absorption=0, requirements="", outputs="2D", keywords="", text="",
+            x=MAT_CENTER_X - 20, y=95, rotation=0, box=(MAT_CENTER_X - 20, 95, MAT_CENTER_X + 20, 135), is_active=True,
+        )
+        bot.components["c_armor"] = armor
+        bot.components["c_wheel"] = wheel
+
+        # World pose: center (400, 400), heading 0 (facing North).
+        # Contact point right on North front of bot inside armor plate (y = 70 on mat)
+        contact_pt = (400.0, 400.0 - 80.0 * MAT_TO_MINI_SCALE)
+
+        # 1. Upright NightWing: skip_without_wedge_fork_drive=True -> skips armor, targets wheel!
+        hit_upright = find_components_along_contact_line(
+            bot, contact_pt, 400.0, 400.0, 0.0, "Front", skip_without_wedge_fork_drive=True
+        )
+        self.assertEqual(hit_upright, ["c_wheel"])
+
+        # 2. Inverted NightWing (or normal weapon): skip_without_wedge_fork_drive=False -> hits outermost armor!
+        hit_inverted = find_components_along_contact_line(
+            bot, contact_pt, 400.0, 400.0, 0.0, "Front", skip_without_wedge_fork_drive=False
+        )
+        self.assertEqual(hit_inverted, ["c_armor"])
+
+    def test_weapon_wall_contact_feedback_rounded_up(self):
+        """
+        Rule: 'If its weapon hits a wall it takes feedback to the weapon equal to half the sum
+        of its weapon strength and the throw strength, rounded up, and then any spin counters
+        it has are removed.'
+        """
+        from playtest.engine.combat import resolve_weapon_wall_contact
+        from playtest.engine.field import WALL_LEFT
+        from playtest.engine.movement import MINIATURE_RADIUS
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        bot = match.player_robot
+
+        w = ComponentHealth(
+            id="w1", name="Wall Striker", card_type="weapon", template="disc_standard", max_durability=6, current_durability=6,
+            absorption=0, requirements="", outputs="3W", keywords="", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
+        )
+        bot.components["w1"] = w
+        bot.weapon_spin_counters["w1"] = 1
+
+        # Position robot facing left wall so weapon crosses wall
+        bot.pose = Pose(x=WALL_LEFT + 10.0, y=400.0, theta=270.0)
+
+        # Attack strength = 3, throw_strength = 2 -> sum = 5 -> feedback = (5 + 1) // 2 = 3
+        logs = resolve_weapon_wall_contact(bot, throw_strength=2, round_num=1)
+        self.assertTrue(any("suffered 3 feedback ((weapon strength 3 + throw strength 2) / 2, rounded up)" in e.message for e in logs))
+        self.assertEqual(w.current_durability, 3)
+        self.assertEqual(bot.weapon_spin_counters["w1"], 0)
+
+    def test_post_throw_separation_by_one_unit(self):
+        """
+        Rule: 'If a thrown robot would end up in contact with another robot, separate them by 1 unit.'
+        """
+        from playtest.engine.collision import check_robots_in_contact
+        from playtest.engine.combat import separate_robots_full_unit
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        r1 = match.player_robot
+        r2 = match.automaton_robot
+
+        # Place robots overlapping / in contact
+        r1.pose = Pose(x=400.0, y=400.0, theta=0.0)
+        r2.pose = Pose(x=400.0, y=410.0, theta=180.0)
+        self.assertTrue(check_robots_in_contact(r1, r2))
+
+        sep_logs = separate_robots_full_unit(r1, r2, round_num=1, log_prefix="Post-throw separation")
+        self.assertTrue(any("Post-throw separation" in e.message for e in sep_logs))
+        self.assertFalse(check_robots_in_contact(r1, r2))
+
+
 if __name__ == "__main__":
     unittest.main()
 

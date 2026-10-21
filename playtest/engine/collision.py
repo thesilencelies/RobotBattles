@@ -180,6 +180,117 @@ def get_robot_miniature_parts(
     }
 
 
+def is_wedge_fork_or_drive(c: ComponentHealth) -> bool:
+    kw = (c.keywords or "").upper()
+    nm = (c.name or "").upper()
+    out = (c.outputs or "").upper()
+    has_wedge = c.is_wedge or "WEDGE" in kw or "WEDGE" in nm
+    has_fork = c.is_forks or "FORK" in kw or "FORK" in nm
+    has_drive = out.count("D") > 0 or out.count("M") > 0 or "DRIVE" in kw or "DRIVE" in nm or "WHEEL" in nm
+    return has_wedge or has_fork or has_drive
+
+
+def ray_aabb_distance(ox: float, oy: float, dx: float, dy: float, box: Tuple[float, float, float, float]) -> Optional[float]:
+    """
+    Computes entry distance t >= 0 along ray (ox, oy) + t * (dx, dy) to axis-aligned box (bmin_x, bmin_y, bmax_x, bmax_y).
+    Returns t >= 0 if intersects, or None. If (ox, oy) is inside, returns 0.0.
+    """
+    bmin_x, bmin_y, bmax_x, bmax_y = box
+    if bmin_x <= ox <= bmax_x and bmin_y <= oy <= bmax_y:
+        return 0.0
+
+    tmin = 0.0
+    tmax = float("inf")
+    for o, d, bmin, bmax in [(ox, dx, bmin_x, bmax_x), (oy, dy, bmin_y, bmax_y)]:
+        if abs(d) < 1e-6:
+            if o < bmin or o > bmax:
+                return None
+        else:
+            t1 = (bmin - o) / d
+            t2 = (bmax - o) / d
+            if t1 > t2:
+                t1, t2 = t2, t1
+            tmin = max(tmin, t1)
+            tmax = min(tmax, t2)
+            if tmin > tmax:
+                return None
+    return tmin if tmin >= 0.0 else None
+
+
+def find_components_along_contact_line(
+    robot: RobotState,
+    contact_pt: Tuple[float, float],
+    robot_x: float,
+    robot_y: float,
+    robot_theta: float,
+    octant: str,
+    skip_without_wedge_fork_drive: bool = False,
+    active_cid: Optional[str] = None,
+) -> List[str]:
+    """
+    Maps world contact point onto the A3 chassis sheet to determine which
+    component(s) along the contact line were contacted.
+    Rule: 'The first remaining component on the robot along the line corresponding to the contact point is the component hit.'
+    Rule: 'Where ambiguous, both components make contact.'
+    Rule: 'Similarly if a weapon contacts multiple components at once, each component is damaged...'
+    Rule: 'unless inverted this component's attacks skip past components without wedge, fork or drive'
+    """
+    if active_cid and active_cid in robot.components and not robot.components[active_cid].is_destroyed:
+        return [active_cid]
+
+    active_comps = [c for c in robot.components.values() if not c.is_destroyed]
+    if not active_comps:
+        return []
+
+    lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], robot_x, robot_y, robot_theta)
+    mx, my = local_miniature_to_mat_point(lx, ly)
+
+    # Ray pointing inward toward chassis center
+    dx = MAT_CENTER_X - mx
+    dy = MAT_CENTER_Y - my
+    dist = math.hypot(dx, dy)
+    ux, uy = (dx / dist, dy / dist) if dist > 1e-4 else (0.0, -1.0)
+
+    def dist_point_to_box(px: float, py: float, box: Tuple[float, float, float, float]) -> float:
+        clamped_x = max(box[0], min(box[2], px))
+        clamped_y = max(box[1], min(box[3], py))
+        return math.hypot(px - clamped_x, py - clamped_y)
+
+    intersections: List[Tuple[float, ComponentHealth]] = []
+    for c in active_comps:
+        if c.box[0] <= mx <= c.box[2] and c.box[1] <= my <= c.box[3]:
+            intersections.append((0.0, c))
+        else:
+            t_enter = ray_aabb_distance(mx, my, ux, uy, c.box)
+            if t_enter is not None and t_enter >= 0:
+                intersections.append((t_enter, c))
+
+    intersections.sort(key=lambda item: item[0])
+
+    if not intersections:
+        closest_comps = sorted(active_comps, key=lambda c: dist_point_to_box(mx, my, c.box))
+        intersections = [(dist_point_to_box(mx, my, c.box), c) for c in closest_comps]
+
+    # NightWing skip rule
+    if skip_without_wedge_fork_drive:
+        filtered = [item for item in intersections if is_wedge_fork_or_drive(item[1])]
+        if filtered:
+            intersections = filtered
+
+    if not intersections:
+        return [active_comps[0].id]
+
+    min_t = intersections[0][0]
+    # Include components whose boundary is within 4mm of first contact (seam / multi-contact)
+    hit_cids: List[str] = []
+    for t_val, comp in intersections:
+        if abs(t_val - min_t) <= 4.0:
+            if comp.id not in hit_cids:
+                hit_cids.append(comp.id)
+
+    return hit_cids if hit_cids else [intersections[0][1].id]
+
+
 def find_contacted_components_on_mat(
     robot: RobotState,
     contact_pt: Tuple[float, float],
@@ -189,44 +300,11 @@ def find_contacted_components_on_mat(
     octant: str,
     active_cid: Optional[str] = None,
 ) -> List[str]:
-    """
-    Maps world contact point onto the A3 chassis sheet to determine which
-    outermost card(s) were contacted.
-    """
-    if active_cid and active_cid in robot.components and not robot.components[active_cid].is_destroyed:
-        return [active_cid]
-
-    lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], robot_x, robot_y, robot_theta)
-    mx, my = local_miniature_to_mat_point(lx, ly)
-
-    active_comps = [c for c in robot.components.values() if not c.is_destroyed]
-    if not active_comps:
-        return []
-
-    def dist_point_to_box(px: float, py: float, box: Tuple[float, float, float, float]) -> float:
-        clamped_x = max(box[0], min(box[2], px))
-        clamped_y = max(box[1], min(box[3], py))
-        return math.hypot(px - clamped_x, py - clamped_y)
-
-    # 1. Exact inside-box check
-    inside_comps = [
-        c for c in active_comps
-        if c.box[0] <= mx <= c.box[2] and c.box[1] <= my <= c.box[3]
-    ]
-    if inside_comps:
-        # If multiple overlap, pick the one with center closest to (mx, my)
-        best = min(
-            inside_comps,
-            key=lambda c: math.hypot(
-                mx - (c.box[0] + c.box[2]) / 2.0,
-                my - (c.box[1] + c.box[3]) / 2.0,
-            ),
-        )
-        return [best.id]
-
-    # 2. Outside all boxes: find the active card whose box boundary is closest to (mx, my)
-    best = min(active_comps, key=lambda c: dist_point_to_box(mx, my, c.box))
-    return [best.id]
+    """Backward-compatible wrapper for mapping world contact point to contacted component."""
+    return find_components_along_contact_line(
+        robot, contact_pt, robot_x, robot_y, robot_theta, octant,
+        skip_without_wedge_fork_drive=False, active_cid=active_cid
+    )
 
 
 def detect_collision(
@@ -263,35 +341,62 @@ def detect_collision(
                 break
 
         if has_contact:
-            # Check Active weapon contact:
-            # Does R1 active weapon touch any part of R2?
-            r1_active_cid = None
+            # Check Active weapon contact across ALL active weapons:
+            # Does R1 active weapons touch any part of R2?
+            r1_active_weapons: List[str] = []
+            r1_weapon_targets: Dict[str, List[str]] = {}
             for act in parts1["active_weapon_parts"]:
-                for polyB in parts2["all_body_polygons"]:
-                    if polygons_intersect(act["polygon"], polyB):
-                        r1_active_cid = act["cid"]
-                        break
-                if r1_active_cid:
-                    break
+                w_cid = act["cid"]
+                w_comp = r1.components.get(w_cid)
+                if not w_comp or w_comp.is_destroyed:
+                    continue
+                intersecting_polys = [polyB for polyB in parts2["all_body_polygons"] if polygons_intersect(act["polygon"], polyB)]
+                if intersecting_polys:
+                    r1_active_weapons.append(w_cid)
+                    wpn_contact_pt = find_polygon_contact_center(act["polygon"], intersecting_polys[0])
+                    skip_rule = ("skip past components without wedge, fork or drive" in (w_comp.text or "").lower() and not r1.is_inverted)
+                    oct_r2 = get_octant(p2.x, p2.y, wpn_contact_pt[0], wpn_contact_pt[1], p2.theta)
+                    targets = find_components_along_contact_line(
+                        r2, wpn_contact_pt, p2.x, p2.y, p2.theta, oct_r2,
+                        skip_without_wedge_fork_drive=skip_rule
+                    )
+                    r1_weapon_targets[w_cid] = targets
 
-            # Does R2 active weapon touch any part of R1?
-            r2_active_cid = None
+            # Does R2 active weapons touch any part of R1?
+            r2_active_weapons: List[str] = []
+            r2_weapon_targets: Dict[str, List[str]] = {}
             for act in parts2["active_weapon_parts"]:
-                for polyA in parts1["all_body_polygons"]:
-                    if polygons_intersect(act["polygon"], polyA):
-                        r2_active_cid = act["cid"]
-                        break
-                if r2_active_cid:
-                    break
+                w_cid = act["cid"]
+                w_comp = r2.components.get(w_cid)
+                if not w_comp or w_comp.is_destroyed:
+                    continue
+                intersecting_polys = [polyA for polyA in parts1["all_body_polygons"] if polygons_intersect(act["polygon"], polyA)]
+                if intersecting_polys:
+                    r2_active_weapons.append(w_cid)
+                    wpn_contact_pt = find_polygon_contact_center(act["polygon"], intersecting_polys[0])
+                    skip_rule = ("skip past components without wedge, fork or drive" in (w_comp.text or "").lower() and not r2.is_inverted)
+                    oct_r1 = get_octant(p1.x, p1.y, wpn_contact_pt[0], wpn_contact_pt[1], p1.theta)
+                    targets = find_components_along_contact_line(
+                        r1, wpn_contact_pt, p1.x, p1.y, p1.theta, oct_r1,
+                        skip_without_wedge_fork_drive=skip_rule
+                    )
+                    r2_weapon_targets[w_cid] = targets
 
-            is_active_hit = bool(r1_active_cid or r2_active_cid)
+            is_active_hit = bool(r1_active_weapons or r2_active_weapons)
             contact_type = "ACTIVE" if is_active_hit else "INERT"
 
             oct1 = get_octant(p1.x, p1.y, contact_pt[0], contact_pt[1], p1.theta)
             oct2 = get_octant(p2.x, p2.y, contact_pt[0], contact_pt[1], p2.theta)
 
-            comps1 = find_contacted_components_on_mat(r1, contact_pt, p1.x, p1.y, p1.theta, oct1, r1_active_cid)
-            comps2 = find_contacted_components_on_mat(r2, contact_pt, p2.x, p2.y, p2.theta, oct2, r2_active_cid)
+            if r1_active_weapons:
+                comps1 = list(r1_active_weapons)
+            else:
+                comps1 = find_contacted_components_on_mat(r1, contact_pt, p1.x, p1.y, p1.theta, oct1, active_cid=None)
+
+            if r2_active_weapons:
+                comps2 = list(r2_active_weapons)
+            else:
+                comps2 = find_contacted_components_on_mat(r2, contact_pt, p2.x, p2.y, p2.theta, oct2, active_cid=None)
 
             # Remaining motion vectors from contact step k to destination t=1.0
             dest1 = traj1[-1]
@@ -309,14 +414,14 @@ def detect_collision(
 
             desc_parts = []
             if contact_type == "ACTIVE":
-                if r1_active_cid and r2_active_cid:
+                if r1_active_weapons and r2_active_weapons:
                     desc_parts.append(f"Head-on active weapon clash! ({r1.name} and {r2.name})")
-                elif r1_active_cid:
-                    wname = r1.components[r1_active_cid].name
-                    desc_parts.append(f"{r1.name}'s active {wname} strikes {r2.name}'s {oct2} octant!")
+                elif r1_active_weapons:
+                    w_names = ", ".join(r1.components[w].name for w in r1_active_weapons if w in r1.components)
+                    desc_parts.append(f"{r1.name}'s active {w_names} strikes {r2.name}'s {oct2} octant!")
                 else:
-                    wname = r2.components[r2_active_cid].name
-                    desc_parts.append(f"{r2.name}'s active {wname} strikes {r1.name}'s {oct1} octant!")
+                    w_names = ", ".join(r2.components[w].name for w in r2_active_weapons if w in r2.components)
+                    desc_parts.append(f"{r2.name}'s active {w_names} strikes {r1.name}'s {oct1} octant!")
             else:
                 desc_parts.append(f"Inert pushing contact: {r1.name} ({oct1}) vs {r2.name} ({oct2})")
 
@@ -335,8 +440,12 @@ def detect_collision(
                 r1_rem_vector=(v1_rem_x, v1_rem_y),
                 r2_rem_vector=(v2_rem_x, v2_rem_y),
                 push_vector=push_vec,
-                r1_active_hit=bool(r1_active_cid),
-                r2_active_hit=bool(r2_active_cid),
+                r1_active_hit=bool(r1_active_weapons),
+                r2_active_hit=bool(r2_active_weapons),
+                r1_active_weapons=r1_active_weapons,
+                r2_active_weapons=r2_active_weapons,
+                r1_weapon_targets=r1_weapon_targets,
+                r2_weapon_targets=r2_weapon_targets,
             )
 
     return None

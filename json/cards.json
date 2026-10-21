@@ -539,12 +539,12 @@
     },
     "39": {
       "name": "NightWing AR500 Disc",
-      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
-      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSS\nout:2XWW\ndurability:9\nabsorption:1\nIncreases throw strength by 2",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nInvertible: this component works inverted\nWedge: if this component is hit this robot is not thrown",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:2XWW\ndurability:9\nabsorption:1\nunless inverted this component's attacks skip past components without wedge, fork or drive",
       "tags": {
         "1": "Card",
         "2": "Weapon",
-        "3": "Line"
+        "3": "Circle"
       },
       "lua_script": "",
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/NightWing_AR500_Disc.png",
@@ -555,7 +555,7 @@
     "40": {
       "name": "Beater Bar",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:9\nabsorption:2\nIncreases throw strength by 3",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Bar\nreq:SSS\nout:XWW\ndurability:9\nabsorption:2\nIncreases throw strength by 3",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -614,8 +614,8 @@
     },
     "44": {
       "name": "Lifter Claw",
-      "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
-      "gm_notes": "weight:3\ncost:$3\ntemplate:Prongs\nreq:PPP\nout:WWW\ndurability:9\nabsorption:2\nDeals no damage. Always inverts.",
+      "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
+      "gm_notes": "weight:2\ncost:$3\ntemplate:Prongs\nreq:PPP\nout:WWW\ndurability:9\nabsorption:2\nDeals no damage. Always inverts.",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -629,8 +629,8 @@
     },
     "45": {
       "name": "Nautilus Drum",
-      "description": "Reset: this weapon is inactive the turn after it is used. (this does not cause the robot to be considered stuck if it is also a self righter)",
-      "gm_notes": "weight:5\ncost:$3\ntemplate:Bar\nreq:SSSS\nout:WWWWW\ndurability:12\nabsorption:3\nIncreases Throw strength by 1",
+      "description": "",
+      "gm_notes": "weight:5\ncost:$3\ntemplate:Bar\nreq:SSSS\nout:WWWW\ndurability:12\nabsorption:3\nIncreases Throw strength by 2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -728,7 +728,7 @@
     "4": {
       "name": "Circle Weapon Template",
       "description": "Circle weapon active area template: 360-degree radial contact",
-      "gm_notes": "template:Circle\nactive_area:360-degree radial contact\nweapons:Horizontal Spinner, Titanium Spinner Blade, Chonk Key Blade",
+      "gm_notes": "template:Circle\nactive_area:360-degree radial contact\nweapons:Horizontal Spinner, Titanium Spinner Blade, NightWing AR500 Disc, Chonk Key Blade",
       "tags": {
         "1": "Tile",
         "2": "Template",
@@ -762,7 +762,7 @@
     "6": {
       "name": "Line Weapon Template",
       "description": "Line weapon active area template: narrow frontal line contact",
-      "gm_notes": "template:Line\nactive_area:narrow frontal line contact\nweapons:Vertical Spinner, Single Tooth Disc, NightWing AR500 Disc, Four-Bar Lifter, Crushing Claw, Hammer Saw",
+      "gm_notes": "template:Line\nactive_area:narrow frontal line contact\nweapons:Vertical Spinner, Single Tooth Disc, Four-Bar Lifter, Crushing Claw, Hammer Saw",
       "tags": {
         "1": "Tile",
         "2": "Template",

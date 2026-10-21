@@ -408,7 +408,7 @@ Movement details:
       \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns (where left is greater than right). If turning left (where right is greater than left), flip the template face-down.
       \item \textbf{Reverse Maneuvers (Rear Placement):} If both drive values are negative, place the template baseline against the \textbf{back} of the robot; move backward to the target line.
       \item \textbf{Asymmetric Drive \inlineIcon{\resourceM} with a Negative:} When drive \inlineIcon{\resourceM} choices have opposite signs with unequal magnitudes (for example, \texttt{3/\allowbreak-1} or \texttt{3/\allowbreak-2}), resolve the movement in two steps: first spin on the spot using the Spin Disc for the shared magnitude, then from that new heading use the Pivot Fan for the remainder.
-      \item \textbf{Movements Beyond the Template:} If the chosen drive values exceeds the template markings, move to the template end of the closest fitting one, then place another template for the remainder.
+      \item \textbf{Movements Beyond the Template:} If the chosen drive values exceed the template markings, move to the template end of the closest fitting one, then place another template for the remainder.
       \item \textbf{Path Overlap \& Collision Check:} Overlapping paths cause collisions at contact.
 \end{enumerate}
 \endgroup
@@ -664,7 +664,7 @@ Essentially a pushing match between colliding chassis surfaces:
   \item Move along templates until contact.
   \item Displace the remainder of robot A's template to the end of robot B's template.
   \item Move both robots along the straight line from the initial contact point to the end of A's displaced template (a raised robot's motion does not contribute).
-  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the largest drive \inlineIcon{\resourceM} value the other robot chose. If its weapon contacts the wall, it loses all spin counters and takes feedback equal to half the sum of its weapon strength and that throw strenth, rounded up.
+  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the largest drive \inlineIcon{\resourceM} value the other robot chose. If its weapon contacts the wall, it loses all spin counters and takes feedback equal to half the sum of its weapon strength and that throw strength, rounded up.
   \item If the robots are still touching, both robots are moved back a full unit to separate them.
 \end{enumerate}
 
@@ -744,8 +744,8 @@ When weapons collide with an opponent:
   \item If after active contact the robots are still in contact, proceed with inertial contact.
 \end{itemize}
 
-If a robot has multiple weapons that make contact, determine which component each hits independently, the throw strength is the maximum throw transferred, and each recieves the full feedback.
-Similarly if a weapons contacts multiple components at once, each component is damaged, and the throw strength recieved is the maximum that would be transferred. 
+If a robot has multiple weapons that make contact, determine which component each hits independently, the throw strength is the maximum throw transferred, and each receives the full feedback.
+Similarly if a weapon contacts multiple components at once, each component is damaged, and the throw strength received is the maximum that would be transferred. 
 
 \begin{summarybox}{Contact Classification Quick Reference}
 \begin{tabularx}{\textwidth}{l X}
@@ -773,13 +773,13 @@ When both robots would be raised in the same contact, randomly choose one by rol
 
 \subsection{Throws \& Inversion}
 
-A robot that is thrown is moved a distance equal to the lower of a die roll or the throw strength away from the contact point along the center-to-center line. (in the case of contact with a wall its thrown away from the wall.
+A robot that is thrown is moved a distance equal to the lower of a die roll or the throw strength away from the contact point along the center-to-center line (in the case of contact with a wall it's thrown away from the wall).
 Robot orientation after active contact is decided by rolling a die and rotating that many 60-degree steps clockwise (using the numbered ticks on the rim of the Spin Disc template).
 If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted} (lower rolled distances represent high-arching vertical throws rather than horizontal displacement).
 After the throw, the thrown robot takes throw damage at a randomly chosen component equal to the throw strength.
 If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately knocked out}.
-If its weapon hits a wall it takes feedback to the weapon equal to half the sum of its weapon strength \inlineIcon{\resourceW} and the throw strength and then any spin counters it has are removed.
-The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on (try again if it bounces off altogether)
+If its weapon hits a wall it takes feedback to the weapon equal to half the sum of its weapon strength \inlineIcon{\resourceW} and the throw strength, rounded up, and then any spin counters it has are removed.
+The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on (try again if it bounces off altogether).
 
 If a thrown robot would end up in contact with another robot, separate them by 1 unit.
 

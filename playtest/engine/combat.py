@@ -327,7 +327,7 @@ def resolve_weapon_wall_contact(
     Checks if any weapon on the robot contacts an arena wall at its current pose.
     When a weapon contacts a wall:
     - It loses all spin counters.
-    - Suffers feedback = (weapon attack strength + throw strength) // 2.
+    - Suffers feedback = (weapon attack strength + throw strength + 1) // 2 (half the sum, rounded up).
     """
     logs: List[CombatLogEntry] = []
     contacting_cids = get_weapon_wall_contacts(robot, robot.pose)
@@ -336,7 +336,7 @@ def resolve_weapon_wall_contact(
             w_comp = robot.components[cid]
             spin = robot.weapon_spin_counters.get(cid, 0)
             w_atk = get_weapon_attack_strength(w_comp, spin)
-            feedback = (w_atk + throw_strength) // 2
+            feedback = (w_atk + throw_strength + 1) // 2
 
             # Reset spin counters
             robot.weapon_spin_counters[cid] = 0
@@ -347,7 +347,7 @@ def resolve_weapon_wall_contact(
                 message=(
                     f"💥 {robot.name}'s weapon {w_comp.name} contacted the wall! "
                     f"Lost all spin counters (was {spin}) and suffered {feedback} feedback "
-                    f"((weapon strength {w_atk} + throw strength {throw_strength}) // 2)."
+                    f"((weapon strength {w_atk} + throw strength {throw_strength}) / 2, rounded up)."
                 ),
             ))
             if feedback > 0:
@@ -1030,6 +1030,11 @@ def _resolve_single_weapon_attack(
     """
     Executes a single weapon attack from attacker against defender.
     Returns (atk_str, throw_str_on_defender).
+    Adheres to:
+    - Multi-component contact: each contacted component is damaged, and throw strength received is the maximum transferred.
+    - Overhead: targets Titanium Top Plate or random component along contact line, causes no throw.
+    - Double absorption on Wedge (unless inverted or raised).
+    - Destroyed component absorbs durability instead of absorption.
     """
     weapon.was_used_this_turn = True
     spin = attacker.weapon_spin_counters.get(weapon.id, 0)
@@ -1041,7 +1046,7 @@ def _resolve_single_weapon_attack(
     ))
 
     # Target Selection
-    target_id = None
+    target_cids: List[str] = []
     if weapon.is_overhead:
         # Rule: "An Overhead weapon targets a random component along the contact ray rather than the single outermost component.
         # If the target robot has an active upright Titanium Top Plate, it is hit instead, even if not on the ray."
@@ -1051,7 +1056,7 @@ def _resolve_single_weapon_attack(
         ), None) if not defender.is_inverted else None
 
         if top_plate:
-            target_id = top_plate.id
+            target_cids = [top_plate.id]
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
                 message=f"🛡️ {defender.name}'s Titanium Top Plate intercepts the Overhead attack!",
@@ -1068,41 +1073,47 @@ def _resolve_single_weapon_attack(
             if not ray_candidates:
                 ray_candidates = list(defender.components.keys())
 
-            target_id = random.choice(ray_candidates)
+            picked_id = random.choice(ray_candidates)
+            target_cids = [picked_id]
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🎯 Overhead strike: randomly hits {defender.components[target_id].name} along the contact ray!",
+                message=f"🎯 Overhead strike: randomly hits {defender.components[picked_id].name} along the contact ray!",
             ))
     else:
-        target_id = defender_ray_cids[0] if defender_ray_cids else list(defender.components.keys())[0]
+        # Outermost contacted component(s)
+        # Rule: "Similarly if a weapon contacts multiple components at once, each component is damaged, and the throw strength received is the maximum that would be transferred."
+        if defender_ray_cids:
+            target_cids = [cid for cid in defender_ray_cids if cid in defender.components]
+        if not target_cids:
+            target_cids = [list(defender.components.keys())[0]] if defender.components else []
 
-    t_comp = defender.components.get(target_id)
-    if dmg > 0 and t_comp:
-        status, absorbed, excess = apply_damage_to_component(t_comp, dmg, is_weapon_damage=True)
-        msg = f"{t_comp.name} (#{t_comp.id}) takes {dmg} dmg -> {status} (absorbed {absorbed}, excess {excess})"
-        logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {msg}"))
-        if steps is not None:
-            steps.append(DamageTrainStep(
-                phase="damage",
-                robot_id=defender.id,
-                target_cid=t_comp.id,
-                from_cid=None,
-                amount=dmg,
-                absorbed=absorbed,
-                excess=excess,
-                new_status=status,
-                message=msg,
-            ))
+    # Apply damage to each contacted component and calculate throw strength against each
+    comp_throw_strs: List[int] = []
+    for target_id in target_cids:
+        t_comp = defender.components.get(target_id)
+        if not t_comp:
+            continue
+        if dmg > 0:
+            status, absorbed, excess = apply_damage_to_component(t_comp, dmg, is_weapon_damage=True)
+            msg = f"{t_comp.name} (#{t_comp.id}) takes {dmg} dmg -> {status} (absorbed {absorbed}, excess {excess})"
+            logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {msg}"))
+            if steps is not None:
+                steps.append(DamageTrainStep(
+                    phase="damage",
+                    robot_id=defender.id,
+                    target_cid=t_comp.id,
+                    from_cid=None,
+                    amount=dmg,
+                    absorbed=absorbed,
+                    excess=excess,
+                    new_status=status,
+                    message=msg,
+                ))
 
-    # Consume spin counters
-    attacker.weapon_spin_counters[weapon.id] = 0
-    weapon.spin_counters = 0
-
-    # Base throw strength = attack damage minus absorption of hit component (minimum 0)
-    # Rule: If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
-    # Rule: Wedge has double absorption against weapon contact (does not work while inverted or raised).
-    is_wedge = False
-    if t_comp:
+        # Base throw strength = attack damage minus absorption of hit component (minimum 0)
+        # Rule: If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
+        # Rule: Wedge has double absorption against weapon contact (does not work while inverted or raised).
+        is_wedge = False
         if t_comp.is_destroyed:
             eff_abs = t_comp.max_durability
         else:
@@ -1118,37 +1129,38 @@ def _resolve_single_weapon_attack(
                     message=f"🛡️ {defender.name}'s {t_comp.name} was hit, but does not double absorption while RAISED!",
                 ))
             eff_abs = t_comp.absorption * 2 if is_wedge else t_comp.absorption
-    else:
-        eff_abs = 0
 
-    throw_str = max(0, atk_str - eff_abs)
-    if eff_abs > 0 and atk_str > 0 and t_comp:
-        if is_wedge:
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"🛡️ {defender.name}'s Wedge was hit — double absorption ({eff_abs} vs attack {atk_str}) reduces base throw strength to {throw_str}!",
-            ))
-            if throw_str == 0:
+        comp_throw = max(0, atk_str - eff_abs)
+        if eff_abs > 0 and atk_str > 0:
+            if is_wedge:
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"🛡️ {defender.name}'s Wedge was hit — {defender.name} is not thrown!",
+                    message=f"🛡️ {defender.name}'s Wedge was hit — double absorption ({eff_abs} vs attack {atk_str}) reduces base throw strength to {comp_throw}!",
                 ))
-        else:
-            logs.append(CombatLogEntry(
-                round=round_num, phase="collision",
-                message=f"  [Absorption] {t_comp.name} absorbs {eff_abs} to reduce base throw strength (was {atk_str}, now {throw_str}).",
-            ))
+                if comp_throw == 0:
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"🛡️ {defender.name}'s Wedge was hit — {defender.name} is not thrown!",
+                    ))
+            else:
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"  [Absorption] {t_comp.name} absorbs {eff_abs} to reduce base throw strength (was {atk_str}, now {comp_throw}).",
+                ))
 
-    m_throw = re.search(r"increase[s]?\s+throw\s+strength\s+by\s+(\d+)", weapon.text, re.IGNORECASE)
-    if m_throw:
-        throw_str += int(m_throw.group(1))
-    elif "double the throw strength" in weapon.text.lower():
-        throw_str *= 2
-    if "always inverts" in weapon.text.lower():
-        defender.is_inverted = not defender.is_inverted
+        m_throw = re.search(r"increase[s]?\s+throw\s+strength\s+by\s+(\d+)", weapon.text, re.IGNORECASE)
+        if m_throw:
+            comp_throw += int(m_throw.group(1))
+        elif "double the throw strength" in weapon.text.lower():
+            comp_throw *= 2
+
+        comp_throw_strs.append(comp_throw)
+
+    throw_str = max(comp_throw_strs, default=0)
+    if len(target_cids) > 1:
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔄 {weapon.name} always inverts: {defender.name} is now {'INVERTED' if defender.is_inverted else 'UPRIGHT'}!",
+            message=f"💥 Multi-component contact: {weapon.name} contacted {len(target_cids)} components ({', '.join(defender.components[c].name for c in target_cids if c in defender.components)}) -> maximum throw transferred is {throw_str}!",
         ))
 
     # Calculate throw strength overrides
@@ -1167,6 +1179,13 @@ def _resolve_single_weapon_attack(
             message=f"🔱 {attacker.name} is RAISED — its attacks do not throw!",
         ))
 
+    if "always inverts" in weapon.text.lower():
+        defender.is_inverted = not defender.is_inverted
+        logs.append(CombatLogEntry(
+            round=round_num, phase="collision",
+            message=f"🔄 {weapon.name} always inverts: {defender.name} is now {'INVERTED' if defender.is_inverted else 'UPRIGHT'}!",
+        ))
+
     if "crushing claw" in weapon.name.lower() or "target moves with this robot" in weapon.text.lower():
         defender.grabbed_by = attacker.id
         weapon.was_used_this_turn = False  # Holds opponent next turn, then resets
@@ -1174,6 +1193,10 @@ def _resolve_single_weapon_attack(
             round=round_num, phase="collision",
             message=f"🗜️ {attacker.name}'s Crushing Claw grabs {defender.name}! Next turn {defender.name} will move with {attacker.name} as if raised.",
         ))
+
+    # Consume spin counters
+    attacker.weapon_spin_counters[weapon.id] = 0
+    weapon.spin_counters = 0
 
     return atk_str, throw_str
 
@@ -1407,76 +1430,103 @@ def resolve_collision_combat(
         ))
 
         # Identify attacking weapons involved
-        w1_attacking = [
-            r1.components[cid] for cid in col.robot1_components
+        w1_cand_ids = col.r1_active_weapons if col.r1_active_weapons else [
+            cid for cid in col.robot1_components
             if cid in r1.components and r1.components[cid].card_type == "weapon" and not r1.components[cid].is_destroyed
             and r1.components[cid].is_active
             and col.r1_active_hit
         ]
-        w2_attacking = [
-            r2.components[cid] for cid in col.robot2_components
+        w2_cand_ids = col.r2_active_weapons if col.r2_active_weapons else [
+            cid for cid in col.robot2_components
             if cid in r2.components and r2.components[cid].card_type == "weapon" and not r2.components[cid].is_destroyed
             and r2.components[cid].is_active
             and col.r2_active_hit
         ]
 
-        w1_cand = w1_attacking[0] if w1_attacking else None
-        w2_cand = w2_attacking[0] if w2_attacking else None
-
         # Trigger keyword handling:
         # Rule: "Trigger does not attack if the opposing robot's active weapon hits anywhere unless it is still in contact after that contact resolves. If they both have Trigger, they both will attack. Trigger weapons don't get feedback if they don't attack."
-        w1_suppressed_trigger = False
-        w2_suppressed_trigger = False
+        all_w1_trigger = bool(w1_cand_ids) and all(r1.components[wid].is_trigger for wid in w1_cand_ids if wid in r1.components)
+        all_w2_trigger = bool(w2_cand_ids) and all(r2.components[wid].is_trigger for wid in w2_cand_ids if wid in r2.components)
+        both_sides_only_trigger = all_w1_trigger and all_w2_trigger
 
-        if w1_cand and w1_cand.is_trigger and col.r2_active_hit:
-            both_trigger = (w2_cand is not None and w2_cand.is_trigger)
-            if not both_trigger:
-                w1_suppressed_trigger = True
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"⚡ {w1_cand.name} has TRIGGER: does not attack because {r2.name}'s active weapon made contact!",
-                ))
+        r1_suppressed_trigger: List[str] = []
+        r2_suppressed_trigger: List[str] = []
 
-        if w2_cand and w2_cand.is_trigger and col.r1_active_hit:
-            both_trigger = (w1_cand is not None and w1_cand.is_trigger)
-            if not both_trigger:
-                w2_suppressed_trigger = True
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"⚡ {w2_cand.name} has TRIGGER: does not attack because {r1.name}'s active weapon made contact!",
-                ))
+        if bool(w2_cand_ids) and not both_sides_only_trigger:
+            for wid in w1_cand_ids:
+                if wid in r1.components and r1.components[wid].is_trigger:
+                    r1_suppressed_trigger.append(wid)
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"⚡ {r1.components[wid].name} has TRIGGER: does not attack because {r2.name}'s active weapon made contact!",
+                    ))
 
-        w1_comp = None if w1_suppressed_trigger else w1_cand
-        w2_comp = None if w2_suppressed_trigger else w2_cand
+        if bool(w1_cand_ids) and not both_sides_only_trigger:
+            for wid in w2_cand_ids:
+                if wid in r2.components and r2.components[wid].is_trigger:
+                    r2_suppressed_trigger.append(wid)
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"⚡ {r2.components[wid].name} has TRIGGER: does not attack because {r1.name}'s active weapon made contact!",
+                    ))
 
-        atk_str_1, throw_str_2 = 0, 0
-        if w1_comp:
-            atk_str_1, throw_str_2 = _resolve_single_weapon_attack(
-                attacker=r1, defender=r2, weapon=w1_comp, col=col,
-                defender_ray_cids=col.robot2_components, round_num=round_num,
+        w1_active_ids = [wid for wid in w1_cand_ids if wid not in r1_suppressed_trigger]
+        w2_active_ids = [wid for wid in w2_cand_ids if wid not in r2_suppressed_trigger]
+
+        # Rule: "If a robot has multiple weapons that make contact, determine which component each hits independently, the throw strength is the maximum throw transferred, and each receives the full feedback."
+        r1_atk_results: List[Tuple[str, int, int]] = []
+        for wid in w1_active_ids:
+            w_comp = r1.components.get(wid)
+            if not w_comp:
+                continue
+            targets = col.r1_weapon_targets.get(wid) if col.r1_weapon_targets else None
+            if targets is None:
+                if w_comp.is_overhead:
+                    targets = col.robot2_components
+                else:
+                    targets = [col.robot2_components[0]] if col.robot2_components else []
+            atk_str, throw_transferred = _resolve_single_weapon_attack(
+                attacker=r1, defender=r2, weapon=w_comp, col=col,
+                defender_ray_cids=targets, round_num=round_num,
                 logs=logs, steps=steps
             )
+            r1_atk_results.append((wid, atk_str, throw_transferred))
 
-        atk_str_2, throw_str_1 = 0, 0
-        if w2_comp:
-            atk_str_2, throw_str_1 = _resolve_single_weapon_attack(
-                attacker=r2, defender=r1, weapon=w2_comp, col=col,
-                defender_ray_cids=col.robot1_components, round_num=round_num,
+        r2_atk_results: List[Tuple[str, int, int]] = []
+        for wid in w2_active_ids:
+            w_comp = r2.components.get(wid)
+            if not w_comp:
+                continue
+            targets = col.r2_weapon_targets.get(wid) if col.r2_weapon_targets else None
+            if targets is None:
+                if w_comp.is_overhead:
+                    targets = col.robot1_components
+                else:
+                    targets = [col.robot1_components[0]] if col.robot1_components else []
+            atk_str, throw_transferred = _resolve_single_weapon_attack(
+                attacker=r2, defender=r1, weapon=w_comp, col=col,
+                defender_ray_cids=targets, round_num=round_num,
                 logs=logs, steps=steps
             )
+            r2_atk_results.append((wid, atk_str, throw_transferred))
 
-        # Recoil feedback: weapons receive feedback equal to half the total attack strength in the contact
-        total_contact_atk = atk_str_1 + atk_str_2
+        throw_str_2 = max([throw for _, _, throw in r1_atk_results], default=0)
+        throw_str_1 = max([throw for _, _, throw in r2_atk_results], default=0)
+
+        # Recoil feedback: weapons receive feedback equal to half the combined attack strength in the contact
+        # "and each receives the full feedback"
+        total_contact_atk = sum(atk for _, atk, _ in r1_atk_results) + sum(atk for _, atk, _ in r2_atk_results)
         if total_contact_atk > 0:
             recoil_fb = total_contact_atk // 2
-            if w1_comp and recoil_fb > 0:
-                fb_logs = resolve_feedback_propagation(r1, w1_comp.id, recoil_fb, phase="recoil_feedback", steps=steps)
-                for fl in fb_logs:
-                    logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
-            if w2_comp and recoil_fb > 0:
-                fb_logs = resolve_feedback_propagation(r2, w2_comp.id, recoil_fb, phase="recoil_feedback", steps=steps)
-                for fl in fb_logs:
-                    logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
+            if recoil_fb > 0:
+                for wid, _, _ in r1_atk_results:
+                    fb_logs = resolve_feedback_propagation(r1, wid, recoil_fb, phase="recoil_feedback", steps=steps)
+                    for fl in fb_logs:
+                        logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
+                for wid, _, _ in r2_atk_results:
+                    fb_logs = resolve_feedback_propagation(r2, wid, recoil_fb, phase="recoil_feedback", steps=steps)
+                    for fl in fb_logs:
+                        logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
 
         # Ground Game rule: A raised robot receives an additional throw strength of 2 after any active contact
         # (even if it is the only one whose weapon hit).
@@ -1497,42 +1547,87 @@ def resolve_collision_combat(
         _execute_throw(r1, throw_str_1, col.contact_point, round_num, logs, steps)
         _execute_throw(r2, throw_str_2, col.contact_point, round_num, logs, steps)
 
-        # Check deferred Trigger weapons if still in contact
-        if w1_suppressed_trigger and w1_cand and not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
+        # Post-throw separation rule:
+        # "If a thrown robot would end up in contact with another robot, separate them by 1 unit."
+        if (throw_str_1 > 0 or throw_str_2 > 0) and not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
             if check_robots_in_contact(r1, r2):
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"⚡ Robots are still in contact! Suppressed Trigger weapon {w1_cand.name} now attacks {r2.name}!",
-                ))
-                atk1_def, thr2_def = _resolve_single_weapon_attack(
-                    attacker=r1, defender=r2, weapon=w1_cand, col=col,
-                    defender_ray_cids=col.robot2_components, round_num=round_num,
-                    logs=logs, steps=steps
-                )
-                if atk1_def > 0:
-                    fb_logs = resolve_feedback_propagation(r1, w1_cand.id, atk1_def // 2, phase="recoil_feedback", steps=steps)
-                    for fl in fb_logs:
-                        logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
+                sep_logs = separate_robots_full_unit(r1, r2, round_num, log_prefix="Post-throw separation")
+                logs.extend(sep_logs)
+
+        # Check deferred Trigger weapons if still in contact
+        if r1_suppressed_trigger and not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
+            if check_robots_in_contact(r1, r2):
+                r1_trig_results: List[Tuple[str, int, int]] = []
+                for wid in r1_suppressed_trigger:
+                    w_comp = r1.components.get(wid)
+                    if not w_comp or w_comp.is_destroyed:
+                        continue
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"⚡ Robots are still in contact! Suppressed Trigger weapon {w_comp.name} now attacks {r2.name}!",
+                    ))
+                    targets = col.r1_weapon_targets.get(wid) if col.r1_weapon_targets else None
+                    if targets is None:
+                        if w_comp.is_overhead:
+                            targets = col.robot2_components
+                        else:
+                            targets = [col.robot2_components[0]] if col.robot2_components else []
+                    atk_def, thr_def = _resolve_single_weapon_attack(
+                        attacker=r1, defender=r2, weapon=w_comp, col=col,
+                        defender_ray_cids=targets, round_num=round_num,
+                        logs=logs, steps=steps
+                    )
+                    r1_trig_results.append((wid, atk_def, thr_def))
+                total_trig_atk = sum(a for _, a, _ in r1_trig_results)
+                thr2_def = max([t for _, _, t in r1_trig_results], default=0)
+                if total_trig_atk > 0:
+                    fb = total_trig_atk // 2
+                    for wid, _, _ in r1_trig_results:
+                        fb_logs = resolve_feedback_propagation(r1, wid, fb, phase="recoil_feedback", steps=steps)
+                        for fl in fb_logs:
+                            logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
                 if thr2_def > 0:
                     _execute_throw(r2, thr2_def, col.contact_point, round_num, logs, steps)
+                    if check_robots_in_contact(r1, r2):
+                        sep_logs = separate_robots_full_unit(r1, r2, round_num, log_prefix="Post-throw separation")
+                        logs.extend(sep_logs)
 
-        if w2_suppressed_trigger and w2_cand and not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
+        if r2_suppressed_trigger and not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
             if check_robots_in_contact(r1, r2):
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"⚡ Robots are still in contact! Suppressed Trigger weapon {w2_cand.name} now attacks {r1.name}!",
-                ))
-                atk2_def, thr1_def = _resolve_single_weapon_attack(
-                    attacker=r2, defender=r1, weapon=w2_cand, col=col,
-                    defender_ray_cids=col.robot1_components, round_num=round_num,
-                    logs=logs, steps=steps
-                )
-                if atk2_def > 0:
-                    fb_logs = resolve_feedback_propagation(r2, w2_cand.id, atk2_def // 2, phase="recoil_feedback", steps=steps)
-                    for fl in fb_logs:
-                        logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
+                r2_trig_results: List[Tuple[str, int, int]] = []
+                for wid in r2_suppressed_trigger:
+                    w_comp = r2.components.get(wid)
+                    if not w_comp or w_comp.is_destroyed:
+                        continue
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"⚡ Robots are still in contact! Suppressed Trigger weapon {w_comp.name} now attacks {r1.name}!",
+                    ))
+                    targets = col.r2_weapon_targets.get(wid) if col.r2_weapon_targets else None
+                    if targets is None:
+                        if w_comp.is_overhead:
+                            targets = col.robot1_components
+                        else:
+                            targets = [col.robot1_components[0]] if col.robot1_components else []
+                    atk_def, thr_def = _resolve_single_weapon_attack(
+                        attacker=r2, defender=r1, weapon=w_comp, col=col,
+                        defender_ray_cids=targets, round_num=round_num,
+                        logs=logs, steps=steps
+                    )
+                    r2_trig_results.append((wid, atk_def, thr_def))
+                total_trig_atk = sum(a for _, a, _ in r2_trig_results)
+                thr1_def = max([t for _, _, t in r2_trig_results], default=0)
+                if total_trig_atk > 0:
+                    fb = total_trig_atk // 2
+                    for wid, _, _ in r2_trig_results:
+                        fb_logs = resolve_feedback_propagation(r2, wid, fb, phase="recoil_feedback", steps=steps)
+                        for fl in fb_logs:
+                            logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Recoil Feedback] {fl}"))
                 if thr1_def > 0:
                     _execute_throw(r1, thr1_def, col.contact_point, round_num, logs, steps)
+                    if check_robots_in_contact(r1, r2):
+                        sep_logs = separate_robots_full_unit(r1, r2, round_num, log_prefix="Post-throw separation")
+                        logs.extend(sep_logs)
 
         # Rule: if after active contact the robots are still in contact,
         # then proceed with inertial contact. If still touching, both robots are moved back a full unit to separate them.
