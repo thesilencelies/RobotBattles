@@ -142,6 +142,20 @@ def local_miniature_to_mat_point(lx: float, ly: float) -> Tuple[float, float]:
     return (mx, my)
 
 
+def rotate_point_around(
+    pt: Tuple[float, float], center: Tuple[float, float], angle_deg: float
+) -> Tuple[float, float]:
+    """Rotates a 2D point around center by angle_deg (clockwise in y-down coords)."""
+    if abs(angle_deg) < 1e-4:
+        return pt
+    rad = math.radians(angle_deg)
+    cos_t = math.cos(rad)
+    sin_t = math.sin(rad)
+    dx = pt[0] - center[0]
+    dy = pt[1] - center[1]
+    return (center[0] + dx * cos_t - dy * sin_t, center[1] + dx * sin_t + dy * cos_t)
+
+
 def get_robot_miniature_parts(
     robot: RobotState, px: float, py: float, theta: float
 ) -> Dict[str, Any]:
@@ -161,11 +175,16 @@ def get_robot_miniature_parts(
         if robot.is_inverted and not comp.is_invertible:
             continue
 
-        offset = card_to_miniature_offset(comp.x, comp.y)
+        cw = 64.0 if comp.rotation in (90, 270) else 44.0
+        ch = 44.0 if comp.rotation in (90, 270) else 64.0
+        offset = card_to_miniature_offset(comp.x, comp.y, cw, ch)
         geom = get_weapon_template_geometry(comp.template, offset)
 
-        w_poly = transform_polygon(geom["polygon"], px, py, theta)
-        act_poly = transform_polygon(geom["active_polygon"], px, py, theta)
+        w_poly_local = [rotate_point_around(p, offset, comp.rotation) for p in geom["polygon"]]
+        act_poly_local = [rotate_point_around(p, offset, comp.rotation) for p in geom["active_polygon"]]
+
+        w_poly = transform_polygon(w_poly_local, px, py, theta)
+        act_poly = transform_polygon(act_poly_local, px, py, theta)
 
         weapon_parts.append({"cid": cid, "polygon": w_poly})
         active_weapon_parts.append({"cid": cid, "polygon": act_poly})

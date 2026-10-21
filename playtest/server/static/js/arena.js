@@ -943,9 +943,9 @@ export class ArenaRenderer {
     chassisPoly.setAttribute("stroke-linejoin", "round");
     g.appendChild(chassisPoly);
 
-    // 2. Weapon Overlay (Miniature Weapon Template on top)
-    const weaponComp = Object.values(robot.components).find(c => c.card_type === "weapon" && !c.is_destroyed);
-    if (weaponComp) {
+    // 2. Weapon Overlays (Miniature Weapon Templates on top of chassis)
+    const weaponComps = Object.values(robot.components).filter(c => c.card_type === "weapon" && !c.is_destroyed);
+    for (const weaponComp of weaponComps) {
       this._appendWeaponOverlay(g, weaponComp);
     }
 
@@ -1057,7 +1057,7 @@ export class ArenaRenderer {
   }
 
   _appendWeaponOverlay(parentG, weaponComp) {
-    const wName = weaponComp.name;
+    const wName = weaponComp.name || "";
     const wKeywords = weaponComp.keywords || "";
     const wTemplate = weaponComp.template || (wName.includes("Spinner") ? "Circle" : "Bar");
 
@@ -1065,8 +1065,9 @@ export class ArenaRenderer {
     const MAT_CENTER_Y = 150.0;
     const MAT_TO_MINI_SCALE = 0.273;
 
-    const cardW = 44.0;
-    const cardH = 64.0;
+    const rot = Number(weaponComp.rotation) || 0;
+    const cardW = (rot === 90 || rot === 270) ? 64.0 : 44.0;
+    const cardH = (rot === 90 || rot === 270) ? 44.0 : 64.0;
     const rawX = Number(weaponComp.x);
     const rawY = Number(weaponComp.y);
     const cardCx = (Number.isFinite(rawX) ? rawX : 100.0) + cardW / 2.0;
@@ -1076,10 +1077,14 @@ export class ArenaRenderer {
 
     const wg = document.createElementNS("http://www.w3.org/2000/svg", "g");
     wg.setAttribute("class", "miniature-weapon");
+    wg.setAttribute("data-cid", weaponComp.id || "");
+    if (rot !== 0) {
+      wg.setAttribute("transform", `rotate(${rot}, ${lx}, ${ly})`);
+    }
 
     const spinCount = weaponComp.spin_counters || 0;
 
-    if (wTemplate.includes("Circle") || wName.includes("Spinner") || wName.includes("Blade") || wName.includes("Disc")) {
+    if (wTemplate.includes("Circle") || (!weaponComp.template && (wName.includes("Spinner") || wName.includes("Blade") || wName.includes("Disc")))) {
       // Circle spinner template: centered on equivalent card location
       const isLargeCircle = wTemplate.toLowerCase().includes("large") || wName.includes("Bloodsport");
       const radius = isLargeCircle ? 30 : 22;
@@ -1116,7 +1121,7 @@ export class ArenaRenderer {
       // Spin Counter visual badge if spun up
       if (spinCount > 0) {
         const sBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        sBadge.setAttribute("transform", `translate(${lx}, ${ly})`);
+        sBadge.setAttribute("transform", `translate(${lx}, ${ly}) rotate(${-rot})`);
 
         const sCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         sCircle.setAttribute("r", "7.5");
@@ -1138,7 +1143,7 @@ export class ArenaRenderer {
         wg.appendChild(sBadge);
       }
 
-    } else if (wTemplate.includes("Prongs") || wName.includes("Scythe") || wName.includes("Claw")) {
+    } else if (wTemplate.includes("Prongs") || (!weaponComp.template && (wName.includes("Scythe") || wName.includes("Claw")))) {
       // Dual prongs template centered around lx, ly
       const prongL = document.createElementNS("http://www.w3.org/2000/svg", "line");
       prongL.setAttribute("x1", `${lx - 16}`);
@@ -1160,7 +1165,7 @@ export class ArenaRenderer {
       prongR.setAttribute("stroke-linecap", "round");
       wg.appendChild(prongR);
 
-    } else if (wTemplate.includes("Line") || wName.includes("Vertical")) {
+    } else if (wTemplate.includes("Line") || (!weaponComp.template && wName.includes("Vertical"))) {
       // Single line drum / vertical spinner centered at lx, ly
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
       line.setAttribute("x1", `${lx}`);
@@ -1174,7 +1179,7 @@ export class ArenaRenderer {
 
       if (spinCount > 0) {
         const sBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        sBadge.setAttribute("transform", `translate(${lx + 9}, ${ly - 8})`);
+        sBadge.setAttribute("transform", `translate(${lx + 9}, ${ly - 8}) rotate(${-rot})`);
         const sCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         sCircle.setAttribute("r", "6.5");
         sCircle.setAttribute("fill", "#0284c7");
@@ -1206,7 +1211,7 @@ export class ArenaRenderer {
 
       if (spinCount > 0) {
         const sBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        sBadge.setAttribute("transform", `translate(${lx}, ${ly - 14})`);
+        sBadge.setAttribute("transform", `translate(${lx}, ${ly - 14}) rotate(${-rot})`);
         const sCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         sCircle.setAttribute("r", "6.5");
         sCircle.setAttribute("fill", "#0284c7");

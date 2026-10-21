@@ -940,18 +940,33 @@ export class RobotViewRenderer {
         ];
       }
     } else if (archetype === "Balanced") {
-      let maxSpin = 3;
+      let isFull = true;
+      let totalMaxSpin = 0;
+      let hasSpinWeapon = false;
       if (robot.components) {
-        for (const comp of Object.values(robot.components)) {
-          if (comp.card_type === "weapon" && comp.keywords) {
-            const m = comp.keywords.match(/Spin up\s*\(\s*(\d+)/i);
-            if (m) maxSpin = parseInt(m[1], 10);
+        for (const [cid, comp] of Object.entries(robot.components)) {
+          if (comp.card_type === "weapon" && !comp.is_destroyed && comp.is_active) {
+            if (robot.is_inverted && !comp.is_invertible) continue;
+            let weaponMax = 0;
+            if (comp.keywords) {
+              const m = comp.keywords.match(/Spin up\s*\(\s*(\d+)/i);
+              if (m) weaponMax = parseInt(m[1], 10);
+            }
+            if (weaponMax > 0) {
+              hasSpinWeapon = true;
+              totalMaxSpin += weaponMax;
+              const curSpin = (robot.weapon_spin_counters && robot.weapon_spin_counters[cid]) || 0;
+              if (curSpin < weaponMax) {
+                isFull = false;
+              }
+            }
           }
         }
       }
-      const isFull = spinCount >= maxSpin;
+      if (!hasSpinWeapon) isFull = true;
+      const displayMax = totalMaxSpin > 0 ? totalMaxSpin : 3;
       if (isFull) {
-        tableNote = `Balanced (Full Spin: ${spinCount}/${maxSpin})`;
+        tableNote = `Balanced (Full Spin: ${spinCount}/${displayMax})`;
         rows = [
           { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
           { roll: "2", action: "Face", desc: "Rotate on spot to face opponent" },
@@ -959,7 +974,7 @@ export class RobotViewRenderer {
           { roll: "4–6", action: "Rush", desc: "Drive at opponent at full speed" },
         ];
       } else {
-        tableNote = `Balanced (Spinning Up: ${spinCount}/${maxSpin})`;
+        tableNote = `Balanced (Spinning Up: ${spinCount}/${displayMax})`;
         rows = [
           { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
           { roll: "2–3", action: "Evade", desc: "Move forwards perpendicular to opponent" },

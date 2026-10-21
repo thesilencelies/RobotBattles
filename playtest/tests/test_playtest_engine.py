@@ -2844,6 +2844,23 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("Post-throw separation" in e.message for e in sep_logs))
         self.assertFalse(check_robots_in_contact(r1, r2))
 
+    def test_multi_weapon_miniature_geometry(self):
+        from playtest.engine.collision import get_robot_miniature_parts
+        csv_text = read_saved_robot("Beater_wide.csv")
+        match = create_match(csv_text, "Nightwing_wide", "Player Bot")
+        auto = match.automaton_robot
+
+        # Nightwing has 2 weapons: NightWing AR500 Disc (id '7') and Single Tooth Disc (id '8')
+        weapons = [c for c in auto.components.values() if c.card_type == "weapon"]
+        self.assertEqual(len(weapons), 2)
+
+        parts = get_robot_miniature_parts(auto, px=400.0, py=200.0, theta=180.0)
+        self.assertEqual(len(parts["weapon_parts"]), 2)
+        self.assertEqual(len(parts["active_weapon_parts"]), 2)
+
+        weapon_cids = {wp["cid"] for wp in parts["weapon_parts"]}
+        self.assertEqual(weapon_cids, {"7", "8"})
+
 
 if __name__ == "__main__":
     unittest.main()

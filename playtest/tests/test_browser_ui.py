@@ -520,6 +520,37 @@ class TestBrowserUI(unittest.TestCase):
         self.assertTrue(asym_res["hasPivot"], "Asymmetric counter should render Phase 2: Pivot Fan")
         self.assertIn("Spin Disc + Pivot Fan", asym_res["badgeText"])
 
+    def test_08_multi_weapon_rendering_on_chassis(self):
+        self.js_eval("window.app.switchTab('arena')")
+        res = self.js_eval("""
+        (async () => {
+          const resp = await fetch("/api/battle/new", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              automaton: "Nightwing_wide"
+            })
+          });
+          const data = await resp.json();
+          const matchData = data.match;
+          window.app.currentMatch = matchData;
+          window.app.arenaRenderer.render(matchData);
+
+          const autoEl = document.querySelector("#layer-robots .miniature.automaton");
+          if (!autoEl) return { count: 0, cids: [] };
+          const weaponEls = autoEl.querySelectorAll(".miniature-weapon");
+          const cids = Array.from(weaponEls).map(el => el.getAttribute("data-cid"));
+          return {
+            count: weaponEls.length,
+            cids: cids
+          };
+        })()
+        """)
+        self.assertGreaterEqual(res["count"], 2, "Robot with multiple weapons must render all weapons on the chassis")
+        self.assertIn("7", res["cids"], "NightWing AR500 Disc should be rendered")
+        self.assertIn("8", res["cids"], "Single Tooth Disc should be rendered")
+
 
 if __name__ == "__main__":
     unittest.main()
+
