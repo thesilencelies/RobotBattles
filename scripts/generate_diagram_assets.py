@@ -378,7 +378,7 @@ def generate_example_automata_layout() -> None:
     for l in lines:
         if "% Title & Specs Information Plate" in l:
             skip = True
-        elif "% Component Edge Connections" in l:
+        elif "% Robot Component Cards" in l or "% Component Edge Connections" in l:
             skip = False
         if not skip:
             filtered.append(l)

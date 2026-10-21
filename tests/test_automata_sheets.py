@@ -146,7 +146,7 @@ class TestAutomataSheets(unittest.TestCase):
 
         # 3. TikZ styling check
         page_tikz = generate_robot_page_tikz(b_info)
-        conn_section = page_tikz.split("% Component Edge Connections")[1].split("% Robot Component Cards")[0]
+        conn_section = page_tikz.split("% Component Edge Connections")[1].split(r"\end{tikzpicture}")[0]
         self.assertIn(r"\draw[line width=5.5pt, teal!80!black, line cap=round]", conn_section)
         self.assertNotIn("Circle", conn_section)
         self.assertNotIn("dashed", conn_section)

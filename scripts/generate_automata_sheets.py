@@ -200,7 +200,7 @@ def get_action_table_for_bot(bot_stem: str) -> Dict[str, Any]:
 def resolve_layout(
     placed: List[Dict[str, Any]],
     scale: float = 0.80,
-    min_gap: float = 3.0,
+    min_gap: float = 3.5,
     sheet_w: float = A3_WIDTH_MM,
     sheet_h: float = A3_HEIGHT_MM,
     iterations: int = 150,
@@ -294,15 +294,15 @@ def resolve_layout(
             b1["cx"] += 0.05 * (b1["target_cx"] - b1["cx"])
             b1["cy"] += 0.05 * (b1["target_cy"] - b1["cy"])
 
-    # 4. Final strict pass to guarantee strictly 0 overlaps
-    for _ in range(40):
+    # 4. Final strict pass to guarantee strictly 0 overlaps with min_gap
+    for _ in range(60):
         moved = 0
         for i in range(len(boxes)):
             b1 = boxes[i]
             for j in range(i + 1, len(boxes)):
                 b2 = boxes[j]
-                req_dx = (b1["w"] + b2["w"]) / 2.0 + 0.5
-                req_dy = (b1["h"] + b2["h"]) / 2.0 + 0.5
+                req_dx = (b1["w"] + b2["w"]) / 2.0 + min_gap
+                req_dy = (b1["h"] + b2["h"]) / 2.0 + min_gap
                 dx = b2["cx"] - b1["cx"]
                 dy = b2["cy"] - b1["cy"]
                 ox = req_dx - abs(dx)
@@ -504,7 +504,7 @@ def generate_action_table_tex(action_data: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def generate_robot_page_tikz(bot_info: Dict[str, Any], scale: float = 0.80, min_gap: float = 3.0) -> str:
+def generate_robot_page_tikz(bot_info: Dict[str, Any], scale: float = 0.80, min_gap: float = 3.5) -> str:
     """Generates the TikZ environment for a single robot's A3 landscape page."""
     bot_name = bot_info["bot_name"]
     display_name = normalize_robot_name(bot_name)
@@ -568,7 +568,49 @@ def generate_robot_page_tikz(bot_info: Dict[str, Any], scale: float = 0.80, min_
     lines.append(f"    {action_table_tex}")
     lines.append(r"  };")
 
-    # 6. Component Connection Lines
+    # 6. Card Nodes
+    lines.append(r"  % Robot Component Cards")
+    unrot_w = CARD_WIDTH_MM * scale
+    unrot_h = CARD_HEIGHT_MM * scale
+
+    for b in boxes:
+        card_name = b["card"]
+        cx = b["cx"]
+        cy = b["cy"]
+        w = b["w"]
+        h = b["h"]
+        rot = b["rotation"]
+
+        # Check image availability
+        url = get_card_image_url(card_name)
+        if url:
+            img_filename = Path(url).name
+            if rot == 0:
+                angle_opt = ""
+            else:
+                angle_opt = f", angle=-{rot}"
+
+            lines.append(
+                rf"  \node[inner sep=0, anchor=center] at ({cx:.2f}, {cy:.2f}) "
+                rf"{{\includegraphics[width={unrot_w:.2f}mm, height={unrot_h:.2f}mm{angle_opt}]{{{img_filename}}}}};"
+            )
+            # Subtle card boundary frame
+            lines.append(
+                rf"  \draw[rounded corners=1mm, line width=0.5pt, black!40] "
+                rf"({cx - w / 2.0:.2f}, {cy - h / 2.0:.2f}) rectangle ({cx + w / 2.0:.2f}, {cy + h / 2.0:.2f});"
+            )
+        else:
+            # Fallback vector card block
+            lines.append(
+                rf"  \filldraw[fill=blue!5!white, draw=blue!40!black, rounded corners=1mm, line width=0.6pt] "
+                rf"({cx - w / 2.0:.2f}, {cy - h / 2.0:.2f}) rectangle ({cx + w / 2.0:.2f}, {cy + h / 2.0:.2f});"
+            )
+            lines.append(
+                rf"  \node[align=center, font=\footnotesize\sffamily\bfseries, text width={w - 4:.2f}mm] "
+                rf"at ({cx:.2f}, {cy:.2f}) {{{tex_escape(card_name)}}};"
+            )
+
+    # 7. Component Connection Lines (drawn after cards so they sit clearly on top of card borders)
     lines.append(r"  % Component Edge Connections")
     drawn_pairs: Set[Tuple[str, str]] = set()
     for id_a, id_b in connected_pairs:
@@ -592,7 +634,7 @@ def generate_robot_page_tikz(bot_info: Dict[str, Any], scale: float = 0.80, min_
         if not (is_ortho and seg_len <= 8.5 or (not is_ortho and seg_len <= 4.0)):
             continue
 
-        # Extend line segment by 1.0mm under adjacent card borders so there is no gap
+        # Extend line segment by 1.0mm onto adjacent card borders so there is no gap
         dx = (x2 - x1) / seg_len
         dy = (y2 - y1) / seg_len
         ex1, ey1 = x1 - dx * 1.0, y1 - dy * 1.0
@@ -602,52 +644,6 @@ def generate_robot_page_tikz(bot_info: Dict[str, Any], scale: float = 0.80, min_
             rf"  \draw[line width=5.5pt, teal!80!black, line cap=round] "
             rf"({ex1:.2f}, {ey1:.2f}) -- ({ex2:.2f}, {ey2:.2f});"
         )
-
-    # 7. Card Nodes
-    lines.append(r"  % Robot Component Cards")
-    for b in boxes:
-        card_name = b["card"]
-        cx = b["cx"]
-        cy = b["cy"]
-        w = b["w"]
-        h = b["h"]
-        rot = b["rotation"]
-
-        # Check image availability
-        url = get_card_image_url(card_name)
-        if url:
-            img_filename = Path(url).name
-            # Handle graphicx angle key: clockwise in SVG is negative angle in graphicx
-            if rot == 0:
-                angle_opt = ""
-            elif rot == 90:
-                angle_opt = "angle=-90, "
-            elif rot == 180:
-                angle_opt = "angle=180, "
-            elif rot == 270:
-                angle_opt = "angle=-270, "
-            else:
-                angle_opt = f"angle=-{rot}, "
-
-            lines.append(
-                rf"  \node[inner sep=0, anchor=center] at ({cx:.2f}, {cy:.2f}) "
-                rf"{{\includegraphics[{angle_opt}width={w:.2f}mm]{{{img_filename}}}}};"
-            )
-            # Subtle card boundary frame
-            lines.append(
-                rf"  \draw[rounded corners=1mm, line width=0.5pt, black!40] "
-                rf"({cx - w / 2.0:.2f}, {cy - h / 2.0:.2f}) rectangle ({cx + w / 2.0:.2f}, {cy + h / 2.0:.2f});"
-            )
-        else:
-            # Fallback vector card block
-            lines.append(
-                rf"  \filldraw[fill=blue!5!white, draw=blue!40!black, rounded corners=1mm, line width=0.6pt] "
-                rf"({cx - w / 2.0:.2f}, {cy - h / 2.0:.2f}) rectangle ({cx + w / 2.0:.2f}, {cy + h / 2.0:.2f});"
-            )
-            lines.append(
-                rf"  \node[align=center, font=\footnotesize\sffamily\bfseries, text width={w - 4:.2f}mm] "
-                rf"at ({cx:.2f}, {cy:.2f}) {{{tex_escape(card_name)}}};"
-            )
 
     lines.append(r"\end{tikzpicture}")
     return "\n".join(lines)
@@ -677,7 +673,7 @@ def generate_latex_document(robot_pages_tikz: List[str]) -> str:
 # ---------------------------------------------------------------------------
 
 def process_robot_csv(
-    csv_file: Path | str, scale: float = 0.80, min_gap: float = 3.0
+    csv_file: Path | str, scale: float = 0.80, min_gap: float = 3.5
 ) -> Dict[str, Any]:
     """Loads an automaton CSV and calculates layout and connections."""
     csv_path = Path(csv_file)
