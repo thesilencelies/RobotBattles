@@ -147,91 +147,168 @@ def find_component_image(picture_field: str = "") -> str:
     return ""
 
 
-def format_resource_item(prefix: str, char: str, resource_math: bool = False) -> str:
-    """Formats a single resource item, repeated icons, or fixed + multiplier symbols."""
-    char = char.upper()
-    if resource_math:
-        # Number next to the resources writing out the math instead of a count of resources
-        if prefix and all(c.upper() == char for c in prefix):
-            count = len(prefix) + 1
-            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {count}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
-        elif prefix:
-            mult_after_match = re.match(r"^(\d*(?:XxX|XX|X|\d+x\d+))([ECSMWPD]*)$", prefix, re.IGNORECASE)
-            mult_before_match = re.match(r"^([ECSMWPD]+)(\d*(?:XxX|XX|X|\d+x\d+))$", prefix, re.IGNORECASE)
+RESOURCE_CHARS = set("ECSMWPD")
+MATH_VARS = set("XYxy")
 
-            if mult_after_match or mult_before_match:
-                if mult_after_match:
-                    mult_expr, extra_icons = mult_after_match.groups()
-                else:
-                    extra_icons, mult_expr = mult_before_match.groups()
 
-                if mult_expr.upper() == "XX":
-                    mult_expr = "XxX"
+def tokenize_resources(res_str: str) -> list[str]:
+    """
+    Splits a resource string into individual resource tokens.
+    Single-resource strings (e.g. SSSSS, WWW2XW, 2XWW, XS) remain a single token.
+    Mixed-resource strings (e.g. SSSPP, 3S 2P, 2XS 2YP) are split by delimiters or resource transitions.
+    """
+    s = res_str.strip().strip('"')
+    if not s:
+        return []
 
-                fixed_count = len(extra_icons) if all(c.upper() == char for c in extra_icons) else 0
-                if fixed_count == 0:
-                    esc_mult = escape_latex(mult_expr)
-                    return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
-                else:
-                    math_expr = f"{mult_expr}+{fixed_count}"
-                    esc_math = escape_latex(math_expr)
-                    return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_math}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+    res_in_s = [c.upper() for c in s if c.upper() in RESOURCE_CHARS]
+    unique_res = set(res_in_s)
 
-            esc_prefix = escape_latex(prefix)
-            if esc_prefix.upper() == "XX":
-                esc_prefix = "XxX"
-            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_prefix}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+    # If at most one resource type exists in the entire string, keep as single token
+    if len(unique_res) <= 1:
+        if len(unique_res) == 1 and re.search(r"[XxYy]", s):
+            return [re.sub(r"[\s+]+", "", s)]
+        return [s]
+
+    tokens = []
+    current_token = []
+    current_res = None
+
+    i = 0
+    while i < len(s):
+        c = s[i]
+        c_upper = c.upper()
+
+        if c in " ,\t\r\n":
+            if current_token:
+                tokens.append("".join(current_token))
+                current_token = []
+                current_res = None
+            i += 1
+            continue
+
+        if c_upper in RESOURCE_CHARS:
+            if current_res is not None and current_res != c_upper:
+                # Transition to a different resource type (e.g. SSS -> PP)
+                tokens.append("".join(current_token))
+                current_token = [c]
+                current_res = c_upper
+            else:
+                current_token.append(c)
+                current_res = c_upper
+        elif c_upper in MATH_VARS or c.isdigit() or c in "+*x/-":
+            if current_res is not None:
+                # Transition from completed resource to a new number/math prefix
+                tokens.append("".join(current_token))
+                current_token = [c]
+                current_res = None
+            else:
+                current_token.append(c)
         else:
-            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE 1}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+            current_token.append(c)
+        i += 1
+
+    if current_token:
+        tokens.append("".join(current_token))
+
+    return tokens
+
+
+def parse_token_info(tok: str) -> dict | None:
+    """Parses a resource token into prefix, char, count, math_expr, and fixed_count."""
+    tok = tok.strip()
+    match = re.match(r"^(.*?)([ECSMWPD])$", tok, re.IGNORECASE)
+    if not match:
+        return None
+    prefix, char = match.groups()
+    char = char.upper()
+
+    if not prefix:
+        return {"prefix": "", "char": char, "count": 1, "is_repeat": True, "math_expr": None}
+    if all(c.upper() == char for c in prefix):
+        return {"prefix": prefix, "char": char, "count": len(prefix) + 1, "is_repeat": True, "math_expr": None}
+    if prefix.isdigit():
+        return {"prefix": prefix, "char": char, "count": int(prefix), "is_repeat": True, "math_expr": None}
+
+    # Math prefix: math letters are strictly X and Y
+    mult_after_match = re.match(r"^(\d*(?:XxX|XX|YxY|YY|XY|YX|[XY]|\d+x\d+))(" + char + r"*)$", prefix, re.IGNORECASE)
+    mult_before_match = re.match(r"^(" + char + r"+)(\d*(?:XxX|XX|YxY|YY|XY|YX|[XY]|\d+x\d+))$", prefix, re.IGNORECASE)
+
+    if mult_after_match:
+        mult_expr, extra_icons = mult_after_match.groups()
+        fixed_count = len(extra_icons)
+        return {"prefix": prefix, "char": char, "count": fixed_count + 1, "is_repeat": False, "mult_expr": mult_expr, "fixed_count": fixed_count}
+    elif mult_before_match:
+        extra_icons, mult_expr = mult_before_match.groups()
+        fixed_count = len(extra_icons)
+        return {"prefix": prefix, "char": char, "count": fixed_count + 1, "is_repeat": False, "mult_expr": mult_expr, "fixed_count": fixed_count}
+
+    return {"prefix": prefix, "char": char, "count": 1, "is_repeat": False, "mult_expr": prefix, "fixed_count": 0}
+
+
+def format_single_resource_item(tok_info: dict, resource_math: bool = False, icon_size: str = "") -> str:
+    """Formats a parsed single resource item token into TikZ/LaTeX markup."""
+    char = tok_info["char"]
+    prefix = tok_info["prefix"]
+
+    if resource_math:
+        if tok_info["is_repeat"]:
+            count = tok_info["count"]
+            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {count}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+        else:
+            mult_expr = tok_info.get("mult_expr", prefix)
+            fixed_count = tok_info.get("fixed_count", 0)
+            if mult_expr.upper() == "XX":
+                mult_expr = "XxX"
+            elif mult_expr.upper() == "YY":
+                mult_expr = "YxY"
+
+            if fixed_count == 0:
+                esc_mult = escape_latex(mult_expr)
+                return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+            else:
+                math_expr = f"{mult_expr}+{fixed_count}"
+                esc_math = escape_latex(math_expr)
+                return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_math}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
     else:
-        if prefix and all(c.upper() == char for c in prefix):
-            count = len(prefix) + 1
-            icon_size = "[0.52cm]" if count >= 5 else ""
-            icons = [f"\\resource{char}{icon_size}" for _ in range(count)]
+        if tok_info["is_repeat"]:
+            count = tok_info["count"]
+            sz = icon_size if icon_size else ("[0.52cm]" if count >= 5 else "")
+            icons = [f"\\resource{char}{sz}" for _ in range(count)]
             if count <= 2:
                 return r"\hspace{1.5pt}".join(icons)
             else:
-                # Spill into two rows if there are too many (>= 3)
-                # e.g. 3 -> 2 top, 1 bottom; 4 -> 2 top, 2 bottom; 5 -> 3 top, 2 bottom
                 top_count = (count + 1) // 2
                 row1 = r"\hspace{1.5pt}".join(icons[:top_count])
                 row2 = r"\hspace{1.5pt}".join(icons[top_count:])
                 return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
-        elif prefix:
-            # Check if prefix contains an algebraic multiplier with fixed symbols, e.g.:
-            # - Multiplier before symbols (e.g. "2XW", "XWW", "XWWW" where char="W")
-            # - Symbols before multiplier (e.g. "W2X", "WWX" where char="W" as in "W2XW", "WWXW")
-            mult_after_match = re.match(r"^(\d*(?:XxX|XX|X|\d+x\d+))([ECSMWPD]*)$", prefix, re.IGNORECASE)
-            mult_before_match = re.match(r"^([ECSMWPD]+)(\d*(?:XxX|XX|X|\d+x\d+))$", prefix, re.IGNORECASE)
-
-            if mult_after_match or mult_before_match:
-                if mult_after_match:
-                    mult_expr, extra_icons = mult_after_match.groups()
-                else:
-                    extra_icons, mult_expr = mult_before_match.groups()
-
-                if mult_expr.upper() == "XX":
-                    mult_expr = "XxX"
-                esc_mult = escape_latex(mult_expr)
-                mult_element = rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
-
-                fixed_count = len(extra_icons) if all(c.upper() == char for c in extra_icons) else 0
-                if fixed_count == 0:
-                    return mult_element
-                else:
-                    # Additive symbols in top row, math plus symbol in the row below them
-                    fixed_icons = [rf"\resource{char}" for _ in range(fixed_count)]
-                    row1 = r"\hspace{1.5pt}".join(fixed_icons)
-                    row2 = mult_element
-                    return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
-
-            # Standard number or algebraic expression followed by letter -> vertical center aligned
-            esc_prefix = escape_latex(prefix)
-            if esc_prefix.upper() == "XX":
-                esc_prefix = "XxX"
-            return rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_prefix}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
         else:
-            return rf"\resource{char}"
+            mult_expr = tok_info.get("mult_expr", prefix)
+            fixed_count = tok_info.get("fixed_count", 0)
+            if mult_expr.upper() == "XX":
+                mult_expr = "XxX"
+            elif mult_expr.upper() == "YY":
+                mult_expr = "YxY"
+            esc_mult = escape_latex(mult_expr)
+            mult_element = rf"$\vcenter{{\hbox{{\sffamily\bfseries\LARGE {esc_mult}}}}}\;\vcenter{{\hbox{{\resource{char}}}}}$"
+
+            if fixed_count == 0:
+                return mult_element
+            else:
+                fixed_icons = [rf"\resource{char}" for _ in range(fixed_count)]
+                row1 = r"\hspace{1.5pt}".join(fixed_icons)
+                row2 = mult_element
+                return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
+
+
+def format_resource_item(prefix: str, char: str, resource_math: bool = False, icon_size: str = "") -> str:
+    """Formats a single resource item, repeated icons, or fixed + multiplier symbols."""
+    raw_tok = f"{prefix}{char}"
+    info = parse_token_info(raw_tok)
+    if info:
+        return format_single_resource_item(info, resource_math=resource_math, icon_size=icon_size)
+    esc_tok = escape_latex(raw_tok)
+    return rf"{{\sffamily\bfseries {esc_tok}}}"
 
 
 def parse_resources(res_str: str, resource_math: bool = False) -> str:
@@ -244,43 +321,87 @@ def parse_resources(res_str: str, resource_math: bool = False) -> str:
         Pure symbols drawn in row 1, math plus symbol drawn in row 2 below them.
       - Multiplier alone (e.g. 2XW, XXW, XE, 6W) ->
         Prefix rendered in sans-serif text vertically center-aligned with the icon in a single row.
-      - Multiplier XX is rendered as XxX (X times X).
+      - Multiplier XX is rendered as XxX, YY is rendered as YxY. Math letters are strictly X and Y.
+      - Mixed requirements (e.g. SSSPP -> 3 Spin, 2 Pressure) ->
+        Icons grouped by resource type across two rows.
       - If resource_math is True:
         Numbers are written out next to the resource symbol (e.g. 4S, 2X+1W) instead of counts of icons.
     """
     if not res_str:
         return ""
 
-    res_str = res_str.strip().strip('"')
-    if not res_str:
+    tokens = tokenize_resources(res_str)
+    if not tokens:
         return ""
 
-    # Normalize if it contains math (X or x) and optional + / spaces, all referring to same resource
-    # e.g. "W + 2XW" -> "W2XW", "2XW + W" -> "2XWW"
-    resource_chars = set(re.findall(r"[ECSMWPD]", res_str, re.IGNORECASE))
-    cleaned_str = res_str
-    if len(resource_chars) <= 1 and re.search(r"[Xx]", res_str):
-        cleaned_str = re.sub(r"[\s+]+", "", res_str)
+    if len(tokens) == 1:
+        info = parse_token_info(tokens[0])
+        if info:
+            return format_single_resource_item(info, resource_math=resource_math)
+        return rf"{{\sffamily\bfseries {escape_latex(tokens[0])}}}"
 
-    # Check for single token like "EE", "CC", "SSS", "4XW", "XE", "E", "PP", "DD", "2XWW", "W2XW", "XWWW"
-    match_expr = re.match(r"^([0-9A-Za-z]*)([ECSMWPD])$", cleaned_str)
-    if match_expr:
-        prefix, char = match_expr.groups()
-        return format_resource_item(prefix, char, resource_math=resource_math)
-
-    # Multi-token strings
-    tokens = re.findall(r"([0-9A-Za-z]*[ECSMWPD]|[A-Za-z0-9+]+)", res_str)
-    out_elements = []
-    for tok in tokens:
-        submatch = re.match(r"^([0-9A-Za-z]*)([ECSMWPD])$", tok)
-        if submatch:
-            prefix, char = submatch.groups()
-            out_elements.append(format_resource_item(prefix, char, resource_math=resource_math))
+    # Multiple tokens (mixed resources, e.g. ["SSS", "PP"])
+    parsed_infos = []
+    for t in tokens:
+        info = parse_token_info(t)
+        if info:
+            parsed_infos.append(info)
         else:
-            esc_tok = escape_latex(tok)
-            out_elements.append(rf"{{\sffamily\bfseries {esc_tok}}}")
+            parsed_infos.append({"raw": t})
 
-    return r"\hspace{2pt}".join(out_elements)
+    total_icons = sum(info.get("count", 1) for info in parsed_infos)
+
+    if resource_math:
+        elements = []
+        for info in parsed_infos:
+            if "raw" in info:
+                raw_text = info["raw"]
+                elements.append(rf"{{\sffamily\bfseries {escape_latex(raw_text)}}}")
+            else:
+                elements.append(format_single_resource_item(info, resource_math=True))
+        if len(elements) == 2:
+            return rf"\parbox{{2.5cm}}{{\centering {elements[0]}\par\vspace{{1.5pt}}{elements[1]}}}"
+        else:
+            return r"\hspace{2pt}".join(elements)
+    else:
+        # Icon representation: scale down to [0.52cm] if 5 or more icons total
+        icon_size = "[0.52cm]" if total_icons >= 5 else ""
+
+        # If total_icons <= 2, render side-by-side on 1 row
+        if total_icons <= 2:
+            icons = []
+            for info in parsed_infos:
+                ch = info["char"]
+                if info.get("is_repeat"):
+                    icons.extend([f"\\resource{ch}{icon_size}" for _ in range(info["count"])])
+                else:
+                    icons.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size))
+            return r"\hspace{1.5pt}".join(icons)
+
+        # If 2 distinct resource groups (like SSS and PP):
+        if len(parsed_infos) == 2:
+            row_items = []
+            for info in parsed_infos:
+                ch = info["char"]
+                if info.get("is_repeat"):
+                    c_icons = [f"\\resource{ch}{icon_size}" for _ in range(info["count"])]
+                    row_items.append(r"\hspace{1.5pt}".join(c_icons))
+                else:
+                    row_items.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size))
+            return rf"\parbox{{2.5cm}}{{\centering {row_items[0]}\par\vspace{{1.5pt}}{row_items[1]}}}"
+
+        # General fallback for > 2 resource groups
+        row_items = []
+        for info in parsed_infos:
+            ch = info["char"]
+            if info.get("is_repeat"):
+                c_icons = [f"\\resource{ch}{icon_size}" for _ in range(info["count"])]
+                row_items.append(r"\hspace{1.5pt}".join(c_icons))
+            else:
+                row_items.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size))
+        top = row_items[0]
+        bot = r"\hspace{2pt}".join(row_items[1:])
+        return rf"\parbox{{2.5cm}}{{\centering {top}\par\vspace{{1.5pt}}{bot}}}"
 
 
 def create_macros(extra_colors: dict = None):

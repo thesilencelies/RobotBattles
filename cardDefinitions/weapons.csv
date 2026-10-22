@@ -10,7 +10,7 @@ Cronos Scythe,4,3,Prongs,SSS,XWWW,7,1,Spin up (3);Self-right,Increases throw str
 Chonk Key Blade,6,3,Circle,SSSSSS,XXW,16,1,Spin up (4),,components/weapons/just-cuz-robotics-chonk-key-blade.jpg,itgresa.com
 Four-Bar Lifter,4,4,Line,PPPP,WWWWWW,10,1,Trigger;Self-right;Reset,Deals no damage only throws,components/weapons/viper-lifter-weapon.png,itgresa.com
 Lifter Claw,2,3,Prongs,PPP,WWW,9,2,Forks;Self-right,Deals no damage. Always inverts.,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-claw-forks.jpg,itgresa.com
-Nautilus Drum,5,3,Bar,SSSS,WWWW,12,3,,Increases Throw strength by 2,,
-Crushing Claw,3,3,Line,PPPPP,WWWWW,10,1,Trigger;Overhead, next turn target moves with this robot instead,,
-Hammer Saw,3,4,Line,SSSPP,WWW2XW,8,1,Trigger;Overhead;Spin up (2),,,
+Scarab Drum,5,3,Bar,SSSS,WWWW,12,3,,Increases Throw strength by 2,components/manual_downloads/Scarab_drum.jpg,justcuz robotics
+Crushing Claw,3,3,Line,PPPPP,WWWWW,10,1,Trigger;Overhead, next turn target moves with this robot instead,components/manual_downloads/Swallow_crusher.jpeg,Craig Jones
+Hammer Saw,3,4,Line,SSSPP,WWW2XW,8,1,Trigger;Overhead;Spin up (2),,components/manual_downloads/Schizm_hammersaw.jpeg,Tweedy
 

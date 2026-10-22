@@ -64,6 +64,20 @@ class TestCardPermutations(unittest.TestCase):
         self.assertNotIn(r"[0.52cm]", out_4s)
         self.assertIn(r"\resourceS", out_4s)
 
+    def test_mixed_resource_requirements(self):
+        # Hammer Saw: SSSPP (3 Spin, 2 Pressure) -> 5 icons total ([0.52cm]), 2 rows, no raw text SSSP
+        out_ssspp = parse_resources("SSSPP")
+        self.assertEqual(out_ssspp.count(r"\resourceS[0.52cm]"), 3)
+        self.assertEqual(out_ssspp.count(r"\resourceP[0.52cm]"), 2)
+        self.assertIn(r"\parbox{2.5cm}", out_ssspp)
+        self.assertNotIn("SSSP", out_ssspp)
+
+        # SP: 1 Spin, 1 Pressure -> single row, no parbox
+        out_sp = parse_resources("SP")
+        self.assertIn(r"\resourceS", out_sp)
+        self.assertIn(r"\resourceP", out_sp)
+        self.assertNotIn(r"\parbox", out_sp)
+
     def test_weight_options(self):
         card = {"Name": "Four-Bar Lifter", "Weight": "5", "Cost": "4", "Requirements": "PPPP", "Outputs": "WWWWWW"}
         
@@ -116,6 +130,22 @@ class TestCardPermutations(unittest.TestCase):
         out_w6 = parse_resources("WWWWWW", resource_math=True)
         self.assertIn("6", out_w6)
         self.assertIn(r"\resourceW", out_w6)
+
+        # Mixed requirements: SSSPP -> 3 S, 2 P in 2 rows
+        out_ssspp_math = parse_resources("SSSPP", resource_math=True)
+        self.assertIn("3", out_ssspp_math)
+        self.assertIn(r"\resourceS", out_ssspp_math)
+        self.assertIn("2", out_ssspp_math)
+        self.assertIn(r"\resourceP", out_ssspp_math)
+        self.assertIn(r"\parbox{2.5cm}", out_ssspp_math)
+        self.assertNotIn("SSSP", out_ssspp_math)
+
+        # Math variable Y
+        out_2yw = parse_resources("2YW")
+        self.assertIn("2Y", out_2yw)
+        self.assertIn(r"\resourceW", out_2yw)
+        out_yyw = parse_resources("YYW")
+        self.assertIn("YxY", out_yyw)
 
     def test_single_ended_card_chevrons_and_positioning(self):
         left_chevron_sub = r"\fill [chevronpurple] (0.00, 5.15)"
