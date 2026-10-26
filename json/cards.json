@@ -628,7 +628,7 @@
       "sideways": "false"
     },
     "45": {
-      "name": "Nautilus Drum",
+      "name": "Scarab Drum",
       "description": "",
       "gm_notes": "weight:5\ncost:$3\ntemplate:Bar\nreq:SSSS\nout:WWWW\ndurability:12\nabsorption:3\nIncreases Throw strength by 2",
       "tags": {
@@ -637,7 +637,7 @@
         "3": "Bar"
       },
       "lua_script": "",
-      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Nautilus_Drum.png",
+      "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/CardImages/Scarab_Drum.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/backs/CardBack.png",
       "type": "0",
       "sideways": "false"
@@ -779,7 +779,7 @@
     "7": {
       "name": "Bar Weapon Template",
       "description": "Bar weapon active area template: wide frontal bar contact",
-      "gm_notes": "template:Bar\nactive_area:wide frontal bar contact\nweapons:Beater Bar, Nautilus Drum",
+      "gm_notes": "template:Bar\nactive_area:wide frontal bar contact\nweapons:Beater Bar, Scarab Drum",
       "tags": {
         "1": "Tile",
         "2": "Template",
