@@ -88,6 +88,11 @@ def parse_resource_string(raw: str) -> Tuple[str, float]:
     if raw.upper() in ("XE", "XS"):
         return (raw[-1].upper(), 1.0)
 
+    # Number + resource letter (e.g., 9E, 6W, 4S)
+    num_match = re.match(r"^(\d+)\s*([ESPDMW])$", raw, re.IGNORECASE)
+    if num_match:
+        return (num_match.group(2).upper(), float(num_match.group(1)))
+
     # Mixed inputs (e.g., SSSPP -> 3 Spin, 2 Pressure)
     # Count frequency of resource characters
     counts: Dict[str, int] = {}

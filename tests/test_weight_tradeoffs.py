@@ -92,33 +92,33 @@ class TestWeightTradeoffAnalysis(unittest.TestCase):
     def test_weight_and_input_output_tradeoffs(self):
         cards_by_name = {c.name: c for c in self.cards}
 
-        # Brushless Motor: Weight 2, In: 2E, Out: 3S
+        # Brushless Motor: Weight 1, In: 2E, Out: 2S
         bm = cards_by_name["Brushless Motor"]
-        self.assertEqual(bm.weight, 2)
+        self.assertEqual(bm.weight, 1)
         self.assertEqual(bm.input_resource, "E")
         self.assertEqual(bm.input_qty, 2.0)
         self.assertEqual(bm.output_resource, "S")
-        self.assertEqual(bm.output_qty_base, 3.0)
-        self.assertEqual(bm.efficiency_ratio(0), 1.5)
-        self.assertEqual(bm.weight_efficiency(0), 1.5)
+        self.assertEqual(bm.output_qty_base, 2.0)
+        self.assertEqual(bm.efficiency_ratio(0), 1.0)
+        self.assertEqual(bm.weight_efficiency(0), 2.0)
 
-        # Four-Bar Lifter: Weight 4, In: 4P, Out: 6W
+        # Four-Bar Lifter: Weight 4, In: 5P, Out: 6W
         fbl = cards_by_name["Four-Bar Lifter"]
         self.assertEqual(fbl.weight, 4)
         self.assertEqual(fbl.input_resource, "P")
-        self.assertEqual(fbl.input_qty, 4.0)
+        self.assertEqual(fbl.input_qty, 5.0)
         self.assertEqual(fbl.output_resource, "W")
         self.assertEqual(fbl.output_qty_base, 6.0)
-        self.assertEqual(fbl.efficiency_ratio(0), 1.5)
+        self.assertEqual(fbl.efficiency_ratio(0), 1.2)
         self.assertEqual(fbl.weight_efficiency(0), 1.5)
 
-        # Horizontal Spinner: Weight 5, In: 4S, Out: 2XWW (base 2, max spinup 4 -> 10)
+        # Horizontal Spinner: Weight 5, In: 5S, Out: 2XW (base 1, max spinup 4 -> 9)
         hs = cards_by_name["Horizontal Spinner"]
         self.assertEqual(hs.weight, 5)
         self.assertEqual(hs.input_resource, "S")
-        self.assertEqual(hs.input_qty, 4.0)
-        self.assertEqual(hs.output_at_x(0), 2.0)
-        self.assertEqual(hs.output_at_x(4), 10.0)
+        self.assertEqual(hs.input_qty, 5.0)
+        self.assertEqual(hs.output_at_x(0), 1.0)
+        self.assertEqual(hs.output_at_x(4), 9.0)
 
     def test_html_dashboard_generation(self):
         output_dir = WORKSPACE_DIR / "scripts" / "output"
