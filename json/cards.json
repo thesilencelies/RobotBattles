@@ -115,7 +115,7 @@
     "9": {
       "name": "Brushless Motor",
       "description": "",
-      "gm_notes": "weight:1\ncost:$2\nreq:EE\nout:SS\ndurability:4\nabsorption:1",
+      "gm_notes": "weight:1\ncost:$1\nreq:E\nout:S\ndurability:4\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -129,7 +129,7 @@
     "10": {
       "name": "N20 Spark Gearmotor",
       "description": "",
-      "gm_notes": "weight:2\ncost:$1\nreq:EEE\nout:SSSS\ndurability:5\nabsorption:2",
+      "gm_notes": "weight:2\ncost:$1\nreq:EE\nout:SS\ndurability:5\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -143,7 +143,7 @@
     "11": {
       "name": "22mm Beetle Gearmotor",
       "description": "",
-      "gm_notes": "weight:3\ncost:$2\nreq:EEE\nout:SSSSS\ndurability:6\nabsorption:1",
+      "gm_notes": "weight:3\ncost:$2\nreq:EEE\nout:SSSS\ndurability:6\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -171,7 +171,7 @@
     "13": {
       "name": "Repeat 2207 Hubmotor",
       "description": "",
-      "gm_notes": "weight:3\ncost:$3\nreq:EEEE\nout:SSSSSS\ndurability:7\nabsorption:2",
+      "gm_notes": "weight:3\ncost:$3\nreq:EEEE\nout:SSSSS\ndurability:7\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -241,7 +241,7 @@
     "18": {
       "name": "Snap Wheels",
       "description": "Invertible: this component works inverted",
-      "gm_notes": "weight:1\ncost:$1\nreq:SS\nout:D\ndurability:4\nabsorption:2",
+      "gm_notes": "weight:1\ncost:$1\nreq:S\nout:D\ndurability:4\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -255,7 +255,7 @@
     "19": {
       "name": "Banebots Compliant Wheels",
       "description": "",
-      "gm_notes": "weight:1\ncost:$2\nreq:SSS\nout:DD\ndurability:6\nabsorption:3",
+      "gm_notes": "weight:1\ncost:$2\nreq:SS\nout:DD\ndurability:6\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -269,7 +269,7 @@
     "20": {
       "name": "Banebots T81 Heavy Wheels",
       "description": "Invertible: this component works inverted",
-      "gm_notes": "weight:2\ncost:$2\nreq:SSSS\nout:DDD\ndurability:6\nabsorption:2",
+      "gm_notes": "weight:2\ncost:$2\nreq:SSS\nout:DDD\ndurability:6\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -283,7 +283,7 @@
     "21": {
       "name": "High Grip Tires",
       "description": "",
-      "gm_notes": "weight:2\ncost:$3\nreq:SSSS\nout:DDDD\ndurability:5\nabsorption:1",
+      "gm_notes": "weight:2\ncost:$3\nreq:SSS\nout:DDDD\ndurability:5\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -353,7 +353,7 @@
     "26": {
       "name": "Titanium Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:3\ncost:$5\ndurability:13\nabsorption:3",
+      "gm_notes": "weight:3\ncost:$5\ndurability:10\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -367,7 +367,7 @@
     "27": {
       "name": "Steel Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:4\ncost:$3\ndurability:10\nabsorption:3",
+      "gm_notes": "weight:4\ncost:$3\ndurability:12\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -381,7 +381,7 @@
     "28": {
       "name": "AR500 Wedge",
       "description": "Wedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:4\ncost:$4\ndurability:16\nabsorption:3",
+      "gm_notes": "weight:5\ncost:$4\ndurability:16\nabsorption:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -480,7 +480,7 @@
     "35": {
       "name": "Bloodsport Bar",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
-      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSSS\nout:2XWW\ndurability:12\nabsorption:1",
+      "gm_notes": "weight:6\ncost:$3\ntemplate:Large Circle\nreq:SSSSSS\nout:3XW\ndurability:12\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -495,7 +495,7 @@
     "36": {
       "name": "Titanium Spinner Blade",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nInvertible: this component works inverted",
-      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:3XW\ndurability:14\nabsorption:2",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSS\nout:2XWW\ndurability:14\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -540,7 +540,7 @@
     "39": {
       "name": "NightWing AR500 Disc",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nInvertible: this component works inverted\nWedge: if this component is hit this robot is not thrown",
-      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSSS\nout:2XW\ndurability:9\nabsorption:1\nunless inverted this component's attacks skip past components without wedge, fork or drive",
+      "gm_notes": "weight:4\ncost:$4\ntemplate:Circle\nreq:SSSSS\nout:2XW\ndurability:9\nabsorption:1\nUnless inverted, this component's attacks skip past components without wedge, fork or drive",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -570,7 +570,7 @@
     "41": {
       "name": "Cronos Scythe",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSSS\nout:XWW\ndurability:7\nabsorption:1\nIncreases throw strength by 2",
+      "gm_notes": "weight:4\ncost:$3\ntemplate:Prongs\nreq:SSSS\nout:2XW\ndurability:7\nabsorption:1\nIncreases throw strength by 2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -630,7 +630,7 @@
     "45": {
       "name": "Scarab Drum",
       "description": "",
-      "gm_notes": "weight:5\ncost:$3\ntemplate:Bar\nreq:SSSS\nout:WWWW\ndurability:12\nabsorption:3\nIncreases Throw strength by 2",
+      "gm_notes": "weight:5\ncost:$3\ntemplate:Bar\nreq:SSSSS\nout:WWW\ndurability:12\nabsorption:3\nIncreases Throw strength by 2",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -645,7 +645,7 @@
     "46": {
       "name": "Crushing Claw",
       "description": "",
-      "gm_notes": "weight:3\ncost:$3\ntemplate:Line\nreq:PPPPPP\nout:WWWWW\ndurability:10\nabsorption:1\nnext turn target moves with this robot instead",
+      "gm_notes": "weight:3\ncost:$3\ntemplate:Line\nreq:PPPPPP\nout:WWWWW\ndurability:10\nabsorption:1\nNext turn target moves with this robot instead",
       "tags": {
         "1": "Card",
         "2": "Weapon",

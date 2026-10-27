@@ -7,26 +7,26 @@ Power Switch Protector,0,1,XE,XE,7,4,fragile,,components/batteries_and_power/pow
 Wires,0,0,XE,XE,4,0,fragile,,components/connectors_and_wiring/saifu-3-antweight-combat-robot-wire-harness.jpg,itgresa.com
 Heavy Gauge Wire,0,1,XE,XE,7,2,fragile,,components/connectors_and_wiring/silicone-wire-14awg-red-and-black.jpeg,itgresa.com
 Simple ESC,1,1,EEE,EEEE,8,3,fragile,,components/electronics_and_escs/flycolor-francy2-30a-blheli-brushless-esc-w-bec.jpeg,itgresa.com
-Brushless Motor,1,2,EE,SS,4,1,,,components/motors/repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg,itgresa.com
-N20 Spark Gearmotor,2,1,EEE,SSSS,5,2,,,components/motors/fingertech-n20-mini-spark-gearmotor.jpg,itgresa.com
-22mm Beetle Gearmotor,3,2,EEE,SSSSS,6,1,,,components/motors/22mm-beetleweight-gearmotor.png,itgresa.com
+Brushless Motor,1,1,E,S,4,1,,,components/motors/repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg,itgresa.com
+N20 Spark Gearmotor,2,1,EE,SS,5,2,,,components/motors/fingertech-n20-mini-spark-gearmotor.jpg,itgresa.com
+22mm Beetle Gearmotor,3,2,EEE,SSSS,6,1,,,components/motors/22mm-beetleweight-gearmotor.png,itgresa.com
 D2830 Weapon Motor,4,4,EEEEE,SSSSSS,10,3,,,components/motors/d2830evo-brushless-1300kv-motor.jpeg,itgresa.com
-Repeat 2207 Hubmotor,3,3,EEEE,SSSSSS,7,2,,,components/motors/repeat-2207-hubmotor-1200kv.jpg,itgresa.com
+Repeat 2207 Hubmotor,3,3,EEEE,SSSSS,7,2,,,components/motors/repeat-2207-hubmotor-1200kv.jpg,itgresa.com
 Micro Servo,1,1,EE,PP,4,2,,,components/servos_and_actuators/turnabot-startabot-micro-servo.jpg,itgresa.com
 15kg Analog Servo,2,2,EEE,PPP,6,2,,,components/servos_and_actuators/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg,itgresa.com
 20kg Metal Gear Servo,3,3,EEE,PPPP,7,2,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg,itgresa.com
 25kg High Voltage Servo,4,3,EEEEE,PPPPPP,9,3,,,components/servos_and_actuators/25kg-9v-digital-servo-ccw.png,itgresa.com
-Snap Wheels,1,1,SS,D,4,2,invertible,,components/wheels_and_drive/snap-wheels.jpg,itgresa.com
-Banebots Compliant Wheels,1,2,SSS,DD,6,3,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg,itgresa.com
-Banebots T81 Heavy Wheels,2,2,SSSS,DDD,6,2,invertible,,components/wheels_and_drive/banebots-t81-wheels.jpeg,itgresa.com
-High Grip Tires,2,3,SSSS,DDDD,5,1,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg,itgresa.com
+Snap Wheels,1,1,S,D,4,2,invertible,,components/wheels_and_drive/snap-wheels.jpg,itgresa.com
+Banebots Compliant Wheels,1,2,SS,DD,6,3,,,components/wheels_and_drive/banebots-t61-compliant-wheels.jpg,itgresa.com
+Banebots T81 Heavy Wheels,2,2,SSS,DDD,6,2,invertible,,components/wheels_and_drive/banebots-t81-wheels.jpeg,itgresa.com
+High Grip Tires,2,3,SSS,DDDD,5,1,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg,itgresa.com
 Aluminum Plate,2,1,,,8,2,,,components/mechanicals_and_armor/viper-horizontal-spinner-armor-panels.jpeg,itgresa.com
 TPU Plate,1,0,,,6,2,,,components/mechanicals_and_armor/repeat-robotics-scalar-tpu-chassis.jpg,itgresa.com
 Titanium Top Plate,3,3,,,9,2,,overhead attacks hit this component instead unless inverted,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-titanium-lid.jpg,itgresa.com
 UHMW Wraparound Armor,3,2,,,8,2,,attacks that hit this components side hit this instead,components/mechanicals_and_armor/saifu-wraparound-armor.jpg,itgresa.com
-Titanium Wedge,3,5,,,13,3,wedge,,components/mechanicals_and_armor/baby-nautiloid-titanium-wedge.jpeg,itgresa.com
-Steel Wedge,4,3,,,10,3,wedge,,components/mechanicals_and_armor/vertical-spinner-bent-steel-wedge.jpeg,itgresa.com
-AR500 Wedge,4,4,,,16,3,wedge,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg,itgresa.com
+Titanium Wedge,3,5,,,10,2,wedge,,components/mechanicals_and_armor/baby-nautiloid-titanium-wedge.jpeg,itgresa.com
+Steel Wedge,4,3,,,12,3,wedge,,components/mechanicals_and_armor/vertical-spinner-bent-steel-wedge.jpeg,itgresa.com
+AR500 Wedge,5,4,,,16,3,wedge,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg,itgresa.com
 Forks,1,1,,,6,0,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg,itgresa.com
 Titanium Horns,2,3,,,11,2,forks,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg,itgresa.com
 Belt,0,0,XS,XS,5,2,fragile,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg,itgresa.com
