@@ -29,6 +29,7 @@ from scripts.generate_automata_sheets import (
     get_action_table_for_bot,
     normalize_robot_name,
     process_robot_csv,
+    render_pdf_to_png,
     resolve_layout,
     tex_escape,
 )
@@ -162,6 +163,22 @@ class TestAutomataSheets(unittest.TestCase):
             compile_latex_to_pdf(doc_tex, out_pdf)
             self.assertTrue(out_pdf.exists())
             self.assertGreater(out_pdf.stat().st_size, 10000)
+
+    def test_render_automata_pdf_to_png(self):
+        """Verifies rendering single bot PDF to PNG."""
+        b_info = process_robot_csv(AUTOMATA_DIR / "Vyper_flipper.csv")
+        page_tikz = generate_robot_page_tikz(b_info)
+        doc_tex = generate_latex_document([page_tikz])
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out_pdf = Path(tmp_dir) / "Vyper_flipper_sheet.pdf"
+            compile_latex_to_pdf(doc_tex, out_pdf)
+            self.assertTrue(out_pdf.exists())
+
+            out_png = Path(tmp_dir) / "Vyper_flipper_sheet.png"
+            render_pdf_to_png(out_pdf, out_png, dpi=100)
+            self.assertTrue(out_png.exists())
+            self.assertGreater(out_png.stat().st_size, 5000)
 
 
 if __name__ == "__main__":

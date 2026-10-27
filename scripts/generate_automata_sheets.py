@@ -27,6 +27,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORKSPACE_DIR))
 
+from builder.server.chassis_sheets import render_pdf_to_png
 from builder.server.data import (
     A3_HEIGHT_MM,
     A3_WIDTH_MM,
@@ -44,6 +45,7 @@ from builder.server.data import (
 AUTOMATA_DIR = WORKSPACE_DIR / "automata"
 ACTION_TABLES_MD = AUTOMATA_DIR / "Action_tables.md"
 CARD_IMAGES_DIR = WORKSPACE_DIR / "CardImages"
+TTS_ASSETS_DIR = WORKSPACE_DIR / "tts_assets"
 
 
 # ---------------------------------------------------------------------------
@@ -801,17 +803,36 @@ def main() -> None:
     parser.add_argument(
         "--individual",
         action="store_true",
-        help="Generate separate individual PDFs for each bot in addition to/instead of combined.",
+        default=True,
+        help="Generate separate individual PDFs for each bot in addition to combined (default: True).",
     )
     parser.add_argument(
         "--combined-only",
         action="store_true",
-        help="Generate only the combined multi-page PDF.",
+        help="Generate only the combined multi-page PDF (skip individual PDFs and TTS PNGs).",
+    )
+    parser.add_argument(
+        "--tts-dir",
+        type=Path,
+        default=TTS_ASSETS_DIR,
+        help="Destination directory for TTS asset images (default: tts_assets/).",
+    )
+    parser.add_argument(
+        "--skip-tts",
+        action="store_true",
+        help="Skip rendering individual sheets to TTS PNG images in tts_assets/.",
+    )
+    parser.add_argument(
+        "--dpi",
+        type=int,
+        default=150,
+        help="Render DPI for PNG images (default: 150).",
     )
     args = parser.parse_args()
 
     out_dir = args.output_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+    tts_dir = args.tts_dir.resolve() if args.tts_dir else None
 
     # Discover target CSV files
     all_csvs = sorted(AUTOMATA_DIR.glob("*.csv"))
@@ -833,8 +854,18 @@ def main() -> None:
         b_info = process_robot_csv(f, scale=args.scale, min_gap=args.gap)
         processed_bots.append(b_info)
 
-    # 1. Individual PDFs if requested
-    if args.individual or args.bot:
+    if args.bot:
+        generate_individual = True
+        generate_combined = False
+    elif args.combined_only:
+        generate_individual = False
+        generate_combined = True
+    else:
+        generate_individual = True
+        generate_combined = True
+
+    # 1. Individual PDFs and TTS PNGs
+    if generate_individual:
         for b_info in processed_bots:
             pdf_path = out_dir / f"{b_info['bot_name']}_sheet.pdf"
             print(f"Generating individual PDF: {pdf_path.name}...")
@@ -843,8 +874,15 @@ def main() -> None:
             compile_latex_to_pdf(doc_tex, pdf_path)
             print(f"  + Created: {pdf_path}")
 
-    # 2. Combined PDF (unless only individual bot requested)
-    if not args.bot or not args.individual:
+            if not args.skip_tts and tts_dir:
+                tts_dir.mkdir(parents=True, exist_ok=True)
+                out_png = tts_dir / f"{b_info['bot_name']}_sheet.png"
+                print(f"  * Rendering TTS PNG: {pdf_path.name} -> {out_png.name}...")
+                render_pdf_to_png(pdf_path, out_png, dpi=args.dpi)
+                print(f"  + Created: {out_png}")
+
+    # 2. Combined PDF
+    if generate_combined:
         combined_pdf_path = out_dir / "automata_sheets.pdf"
         print(f"Generating combined multi-page PDF: {combined_pdf_path.name}...")
         all_pages_tikz = [

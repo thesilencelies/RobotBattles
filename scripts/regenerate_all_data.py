@@ -10,9 +10,11 @@ Executes the full data generation and export pipeline in one command:
      - Standalone PNG card images (CardImages/*.png)
      - Printable A4 card sheets (cardCreation/build/print_sheet_a4.pdf)
   2. Tabletop Simulator JSON (generate_card_json.py -> json/cards.json)
-  3. A3 Chassis Sheets (scripts/generate_chassis_sheets.py -> chassisSheets/)
-  4. Movement Templates (generate_movement_templates.py -> movement_templates/)
-  5. Combat Simulation Report (scripts/simulate_combat.py -> scripts/output/)
+  3. A3 Automata Sheets & TTS Mats (scripts/generate_automata_sheets.py -> automata/, tts_assets/)
+  4. A3 Chassis Sheets & TTS Mats (scripts/generate_chassis_sheets.py -> chassisSheets/, tts_assets/)
+  5. Movement Templates (generate_movement_templates.py -> movement_templates/)
+  6. Combat Simulation Report (scripts/simulate_combat.py -> scripts/output/)
+  7. Print and Play Packages (scripts/generate_print_and_play.py -> build/)
 
 Usage:
   python scripts/regenerate_all_data.py            # Complete regeneration
@@ -58,6 +60,11 @@ def main() -> None:
         action="store_true",
         help="Skip running the combat simulation report.",
     )
+    parser.add_argument(
+        "--skip-automata",
+        action="store_true",
+        help="Skip regenerating automata sheets.",
+    )
     args = parser.parse_args()
 
     total_start = time.perf_counter()
@@ -94,21 +101,32 @@ def main() -> None:
         cwd=REPO_ROOT,
     )
 
-    # 3. Chassis Sheets
+    # 3. Automata Sheets
+    if not args.skip_automata:
+        run_step(
+            "A3 Automata Sheets & TTS Mats (automata/, tts_assets/)",
+            [sys.executable, str(REPO_ROOT / "scripts" / "generate_automata_sheets.py"), "--individual"],
+            cwd=REPO_ROOT,
+        )
+
+    # 4. Chassis Sheets
+    chassis_cmd = [sys.executable, str(REPO_ROOT / "scripts" / "generate_chassis_sheets.py")]
+    if args.skip_automata:
+        chassis_cmd.append("--skip-automata")
     run_step(
-        "A3 Chassis Sheets (chassisSheets/)",
-        [sys.executable, str(REPO_ROOT / "scripts" / "generate_chassis_sheets.py")],
+        "A3 Chassis Sheets & TTS Mats (chassisSheets/, tts_assets/)",
+        chassis_cmd,
         cwd=REPO_ROOT,
     )
 
-    # 4. Movement Templates
+    # 5. Movement Templates
     run_step(
         "Movement Templates & Rulebook Graphic",
         [sys.executable, str(REPO_ROOT / "generate_movement_templates.py")],
         cwd=REPO_ROOT,
     )
 
-    # 5. Combat Simulation
+    # 6. Combat Simulation
     if not args.skip_simulation:
         run_step(
             "Combat Simulation Report (scripts/output/)",
@@ -116,7 +134,7 @@ def main() -> None:
             cwd=REPO_ROOT,
         )
 
-    # 6. Print and Play Packages (A4 & A3)
+    # 7. Print and Play Packages (A4 & A3)
     run_step(
         "Print and Play PDF Packages (build/robot_battles_pnp_*.pdf)",
         [sys.executable, str(REPO_ROOT / "scripts" / "generate_print_and_play.py")],
