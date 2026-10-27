@@ -3,7 +3,7 @@
     "1": {
       "name": "Galaxy 120",
       "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
-      "gm_notes": "weight:1\ncost:$1\nout:EE\ndurability:3",
+      "gm_notes": "weight:2\ncost:$2\nout:EEEE\ndurability:3",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -17,7 +17,7 @@
     "2": {
       "name": "Galaxy 300 3S",
       "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
-      "gm_notes": "weight:2\ncost:$2\nout:EEEE\ndurability:5",
+      "gm_notes": "weight:3\ncost:$3\nout:EEEEEE\ndurability:5",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -31,7 +31,7 @@
     "3": {
       "name": "Galaxy 1000 3S",
       "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
-      "gm_notes": "weight:4\ncost:$3\nout:9E\ndurability:7",
+      "gm_notes": "weight:5\ncost:$5\nout:10E\ndurability:7",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -45,7 +45,7 @@
     "4": {
       "name": "Tattu 450 4S",
       "description": "Fragile: if this component takes weapon damage it is destroyed as if it had a durability of 1",
-      "gm_notes": "weight:3\ncost:$2\nout:EEEEEE\ndurability:8",
+      "gm_notes": "weight:4\ncost:$4\nout:8E\ndurability:7",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -185,7 +185,7 @@
     "14": {
       "name": "Micro Servo",
       "description": "",
-      "gm_notes": "weight:1\ncost:$1\nreq:EE\nout:PP\ndurability:4\nabsorption:2",
+      "gm_notes": "weight:1\ncost:$1\nreq:E\nout:P\ndurability:4\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -199,7 +199,7 @@
     "15": {
       "name": "15kg Analog Servo",
       "description": "",
-      "gm_notes": "weight:2\ncost:$2\nreq:EEE\nout:PPP\ndurability:6\nabsorption:2",
+      "gm_notes": "weight:2\ncost:$2\nreq:EE\nout:PP\ndurability:6\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -451,7 +451,7 @@
     "33": {
       "name": "Self righting arm",
       "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:1\ncost:$2\nreq:PP\ndurability:9\nabsorption:1",
+      "gm_notes": "weight:1\ncost:$2\nreq:P\ndurability:9\nabsorption:1",
       "tags": {
         "1": "Card",
         "2": "Component"

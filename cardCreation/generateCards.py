@@ -246,7 +246,7 @@ def parse_token_info(tok: str) -> dict | None:
     return {"prefix": prefix, "char": char, "count": 1, "is_repeat": False, "mult_expr": prefix, "fixed_count": 0}
 
 
-def format_single_resource_item(tok_info: dict, resource_math: bool = False, icon_size: str = "") -> str:
+def format_single_resource_item(tok_info: dict, resource_math: bool = False, icon_size: str = "", hspace: str = "") -> str:
     """Formats a parsed single resource item token into TikZ/LaTeX markup."""
     char = tok_info["char"]
     prefix = tok_info["prefix"]
@@ -274,16 +274,18 @@ def format_single_resource_item(tok_info: dict, resource_math: bool = False, ico
         if tok_info["is_repeat"]:
             count = tok_info["count"]
             sz = icon_size if icon_size else ("[0.52cm]" if count >= 5 else "")
+            hs = hspace if hspace else "1.5pt"
             icons = [f"\\resource{char}{sz}" for _ in range(count)]
             if count <= 2:
-                return r"\hspace{1.5pt}".join(icons)
+                return rf"\hspace{{{hs}}}".join(icons)
             else:
                 top_count = (count + 1) // 2
-                row1 = r"\hspace{1.5pt}".join(icons[:top_count])
-                row2 = r"\hspace{1.5pt}".join(icons[top_count:])
+                row1 = rf"\hspace{{{hs}}}".join(icons[:top_count])
+                row2 = rf"\hspace{{{hs}}}".join(icons[top_count:])
                 return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
         else:
             mult_expr = tok_info.get("mult_expr", prefix)
+            hs = hspace if hspace else "1.5pt"
             fixed_count = tok_info.get("fixed_count", 0)
             if mult_expr.upper() == "XX":
                 mult_expr = "XxX"
@@ -296,7 +298,7 @@ def format_single_resource_item(tok_info: dict, resource_math: bool = False, ico
                 return mult_element
             else:
                 fixed_icons = [rf"\resource{char}" for _ in range(fixed_count)]
-                row1 = r"\hspace{1.5pt}".join(fixed_icons)
+                row1 = rf"\hspace{{{hs}}}".join(fixed_icons)
                 row2 = mult_element
                 return rf"\parbox{{2.5cm}}{{\centering {row1}\par\vspace{{1.5pt}}{row2}}}"
 
@@ -333,11 +335,20 @@ def parse_resources(res_str: str, resource_math: bool = False) -> str:
     tokens = tokenize_resources(res_str)
     if not tokens:
         return ""
+    # Icon representation: scale down to [0.52cm] if 5 or more icons total
+    icon_size = ""
+    hspace = "1.5pt"
 
     if len(tokens) == 1:
-        info = parse_token_info(tokens[0])
+        info = parse_token_info(tokens[0])    
+        if info["count"] >= 5:
+            icon_size = "[0.52cm]"
+        if info["count"] >= 7:
+            icon_size = "[0.35cm]"
+            hspace = "1.0pt"
+
         if info:
-            return format_single_resource_item(info, resource_math=resource_math)
+            return format_single_resource_item(info, resource_math=resource_math, icon_size=icon_size, hspace=hspace)
         return rf"{{\sffamily\bfseries {escape_latex(tokens[0])}}}"
 
     # Multiple tokens (mixed resources, e.g. ["SSS", "PP"])
@@ -350,6 +361,12 @@ def parse_resources(res_str: str, resource_math: bool = False) -> str:
             parsed_infos.append({"raw": t})
 
     total_icons = sum(info.get("count", 1) for info in parsed_infos)
+    if total_icons >= 5:
+        icon_size = "[0.52cm]"
+
+    if total_icons >= 7:
+        icon_size = "[0.35cm]"
+        hspace = "1.0pt"
 
     if resource_math:
         elements = []
@@ -364,8 +381,6 @@ def parse_resources(res_str: str, resource_math: bool = False) -> str:
         else:
             return r"\hspace{2pt}".join(elements)
     else:
-        # Icon representation: scale down to [0.52cm] if 5 or more icons total
-        icon_size = "[0.52cm]" if total_icons >= 5 else ""
 
         # If total_icons <= 2, render side-by-side on 1 row
         if total_icons <= 2:
@@ -375,8 +390,8 @@ def parse_resources(res_str: str, resource_math: bool = False) -> str:
                 if info.get("is_repeat"):
                     icons.extend([f"\\resource{ch}{icon_size}" for _ in range(info["count"])])
                 else:
-                    icons.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size))
-            return r"\hspace{1.5pt}".join(icons)
+                    icons.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size, hspace=hspace))
+            return rf"\hspace{{{hspace}}}".join(icons)
 
         # If 2 distinct resource groups (like SSS and PP):
         if len(parsed_infos) == 2:
@@ -385,9 +400,9 @@ def parse_resources(res_str: str, resource_math: bool = False) -> str:
                 ch = info["char"]
                 if info.get("is_repeat"):
                     c_icons = [f"\\resource{ch}{icon_size}" for _ in range(info["count"])]
-                    row_items.append(r"\hspace{1.5pt}".join(c_icons))
+                    row_items.append(rf"\hspace{{{hspace}}}".join(c_icons))
                 else:
-                    row_items.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size))
+                    row_items.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size, hspace=hspace))
             return rf"\parbox{{2.5cm}}{{\centering {row_items[0]}\par\vspace{{1.5pt}}{row_items[1]}}}"
 
         # General fallback for > 2 resource groups
@@ -398,7 +413,7 @@ def parse_resources(res_str: str, resource_math: bool = False) -> str:
                 c_icons = [f"\\resource{ch}{icon_size}" for _ in range(info["count"])]
                 row_items.append(r"\hspace{1.5pt}".join(c_icons))
             else:
-                row_items.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size))
+                row_items.append(format_single_resource_item(info, resource_math=False, icon_size=icon_size, hspace=hspace))
         top = row_items[0]
         bot = r"\hspace{2pt}".join(row_items[1:])
         return rf"\parbox{{2.5cm}}{{\centering {top}\par\vspace{{1.5pt}}{bot}}}"

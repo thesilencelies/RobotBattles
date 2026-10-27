@@ -1,8 +1,8 @@
 Name,Weight,Cost,Requirements,Outputs,Durability,Absorption,Keywords,Text,Picture,Artist
-Galaxy 120,1,1,,EE,3,0,fragile,,components/batteries_and_power/galaxy-120mah-2s-lipoly-pack.jpeg,itgresa.com
-Galaxy 300 3S,2,2,,EEEE,5,0,fragile,,components/batteries_and_power/galaxy-300mah-3s-lipoly-pack-xt30.jpg,itgresa.com
-Galaxy 1000 3S,4,3,,9E,7,0,fragile,,components/batteries_and_power/galaxy-1000mah-3s-lipoly-pack.jpeg,itgresa.com
-Tattu 450 4S,3,2,,EEEEEE,8,0,fragile,,components/batteries_and_power/gens-ace-tattu-450mah-4s-lipoly-pack.jpeg,itgresa.com
+Galaxy 120,2,2,,EEEE,3,0,fragile,,components/batteries_and_power/galaxy-120mah-2s-lipoly-pack.jpeg,itgresa.com
+Galaxy 300 3S,3,3,,EEEEEE,5,0,fragile,,components/batteries_and_power/galaxy-300mah-3s-lipoly-pack-xt30.jpg,itgresa.com
+Galaxy 1000 3S,5,5,,10E,7,0,fragile,,components/batteries_and_power/galaxy-1000mah-3s-lipoly-pack.jpeg,itgresa.com
+Tattu 450 4S,4,4,,8E,7,0,fragile,,components/batteries_and_power/gens-ace-tattu-450mah-4s-lipoly-pack.jpeg,itgresa.com
 Power Switch Protector,0,1,XE,XE,7,4,fragile,,components/batteries_and_power/power-supply-protector-small.jpeg,itgresa.com
 Wires,0,0,XE,XE,4,0,fragile,,components/connectors_and_wiring/saifu-3-antweight-combat-robot-wire-harness.jpg,itgresa.com
 Heavy Gauge Wire,0,1,XE,XE,7,2,fragile,,components/connectors_and_wiring/silicone-wire-14awg-red-and-black.jpeg,itgresa.com
@@ -12,8 +12,8 @@ N20 Spark Gearmotor,2,1,EE,SS,5,2,,,components/motors/fingertech-n20-mini-spark-
 22mm Beetle Gearmotor,3,2,EEE,SSSS,6,1,,,components/motors/22mm-beetleweight-gearmotor.png,itgresa.com
 D2830 Weapon Motor,4,4,EEEEE,SSSSSS,10,3,,,components/motors/d2830evo-brushless-1300kv-motor.jpeg,itgresa.com
 Repeat 2207 Hubmotor,3,3,EEEE,SSSSS,7,2,,,components/motors/repeat-2207-hubmotor-1200kv.jpg,itgresa.com
-Micro Servo,1,1,EE,PP,4,2,,,components/servos_and_actuators/turnabot-startabot-micro-servo.jpg,itgresa.com
-15kg Analog Servo,2,2,EEE,PPP,6,2,,,components/servos_and_actuators/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg,itgresa.com
+Micro Servo,1,1,E,P,4,2,,,components/servos_and_actuators/turnabot-startabot-micro-servo.jpg,itgresa.com
+15kg Analog Servo,2,2,EE,PP,6,2,,,components/servos_and_actuators/gs-5515mg-analog-servo-15kg-cw-rotation.jpeg,itgresa.com
 20kg Metal Gear Servo,3,3,EEE,PPPP,7,2,,,components/servos_and_actuators/ds-servo-pro-20kg-combat-robot-servo.jpg,itgresa.com
 25kg High Voltage Servo,4,3,EEEEE,PPPPPP,9,3,,,components/servos_and_actuators/25kg-9v-digital-servo-ccw.png,itgresa.com
 Snap Wheels,1,1,S,D,4,2,invertible,,components/wheels_and_drive/snap-wheels.jpg,itgresa.com
@@ -31,4 +31,4 @@ Forks,1,1,,,6,0,forks,,components/mechanicals_and_armor/black-frost-front-forks.
 Titanium Horns,2,3,,,11,2,forks,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg,itgresa.com
 Belt,0,0,XS,XS,5,2,fragile,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg,itgresa.com
 Timing Pulley,1,1,SS,SSS,5,2,fragile,,components/mechanicals_and_armor/fingertech-pulley.jpg,itgresa.com
-Self righting arm,1,2,PP,,9,1,Self-right,,,itgresa.com
+Self righting arm,1,2,P,,9,1,Self-right,,,itgresa.com
