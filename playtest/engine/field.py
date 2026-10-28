@@ -102,6 +102,7 @@ def get_weapon_template_geometry(
             "radius": radius,
             "polygon": pts,
             "active_polygon": active_pts,
+            "active_polygons": [active_pts],
         }
 
     elif "Circle" in tname:
@@ -121,6 +122,7 @@ def get_weapon_template_geometry(
             "radius": radius,
             "polygon": pts,
             "active_polygon": active_pts,
+            "active_polygons": [active_pts],
         }
 
     elif "Bar" in tname:
@@ -147,6 +149,7 @@ def get_weapon_template_geometry(
             "center": (ox, oy),
             "polygon": poly,
             "active_polygon": active_poly,
+            "active_polygons": [active_poly],
         }
 
     elif "Prongs" in tname:
@@ -160,6 +163,18 @@ def get_weapon_template_geometry(
             (ox + 24.0, oy - 28.0),
             (ox + 24.0, oy + 6.0),
             (ox - 24.0, oy + 6.0),
+        ]
+        active_prong_left = [
+            (ox - 24.0, oy - 28.0),
+            (ox - 12.0, oy - 28.0),
+            (ox - 12.0, oy - 16.0),
+            (ox - 24.0, oy - 16.0),
+        ]
+        active_prong_right = [
+            (ox + 12.0, oy - 28.0),
+            (ox + 24.0, oy - 28.0),
+            (ox + 24.0, oy - 16.0),
+            (ox + 12.0, oy - 16.0),
         ]
         active_poly = [
             (ox - 24.0, oy - 28.0),
@@ -176,6 +191,7 @@ def get_weapon_template_geometry(
             "center": (ox, oy),
             "polygon": poly,
             "active_polygon": active_poly,
+            "active_polygons": [active_prong_left, active_prong_right],
         }
 
     else:
@@ -200,6 +216,7 @@ def get_weapon_template_geometry(
             "center": (ox, oy),
             "polygon": poly,
             "active_polygon": active_poly,
+            "active_polygons": [active_poly],
         }
 
 

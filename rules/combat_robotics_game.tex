@@ -589,7 +589,7 @@ For a collision, place both robots as far along their path as they can go withou
 If the parts of either robot that is touching is the weapon's active area (the red zone on the template), then the contact is active.
  Otherwise, it is an inert contact.
 
-The first remaining component on the robot along the line corresponding to the contact point is the component hit.
+The first remaining component on the robot along the line corresponding to the contact point is the component hit. When working out what component is hit, if a template is crossed that weapon is the component hit in that contact.
 
 \begin{figure}[H]
   \centering
@@ -745,7 +745,7 @@ When weapons collide with an opponent:
 \end{itemize}
 
 If a robot has multiple weapons that make contact, determine which component each hits independently, the throw strength is the maximum throw transferred, and each receives the full feedback.
-Similarly if a weapon contacts multiple components at once, each component is damaged, and the throw strength received is the maximum that would be transferred. 
+Similarly if a weapon contacts multiple components at once, each component is damaged, and the throw strength received is the maximum that would be transferred. For weapons with multiple points of contact they can both hit the same thing, but they only deal damage once.
 
 \begin{summarybox}{Contact Classification Quick Reference}
 \begin{tabularx}{\textwidth}{l X}
@@ -759,7 +759,7 @@ Similarly if a weapon contacts multiple components at once, each component is da
 
 \subsection{The Ground Game}
 
-Wedges and forks can both inflict the raised status on opponents when they hit. A raised robot does not contribute any motion to the pushing in inert contact. It receives an additional throw strength of 2 after any active contact (even if it is the only one whose weapon hit) and its attacks do not throw.
+Wedges and forks can both inflict the raised status on opponents when they hit. A raised robot does not contribute any motion to the pushing in inert contact. It receives an additional throw strength of 2 after any active contact (even if it is the only one whose weapon hit), and the throw strength of its attacks is reduced by 2.
 
 When both robots would be raised in the same contact, randomly choose one by rolling a dice: that one is raised and the other isn't.
 
@@ -855,7 +855,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons, drive \inlineIcon{\resourceM}, and component abilities (such as wedges and forks) without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Inflicted by wedges or forks during contact. A raised robot does not contribute any motion to pushing in inert contact, loses the double absorption of its wedges, its attacks do not cause a throw, and it receives an additional throw strength of 2 after active contact. Its flip strength is also halved.
+  \item[Raised:] Inflicted by wedges or forks during contact. A raised robot does not contribute any motion to pushing in inert contact, loses the double absorption of its wedges, reduces the throw strength of its attacks by 2, and receives an additional throw strength of 2 after active contact.
 \end{description}
 
 \begin{figure}[H]

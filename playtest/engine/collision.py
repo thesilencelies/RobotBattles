@@ -182,12 +182,17 @@ def get_robot_miniature_parts(
 
         w_poly_local = [rotate_point_around(p, offset, comp.rotation) for p in geom["polygon"]]
         act_poly_local = [rotate_point_around(p, offset, comp.rotation) for p in geom["active_polygon"]]
+        act_polys_local = [
+            [rotate_point_around(p, offset, comp.rotation) for p in ap]
+            for ap in geom.get("active_polygons", [geom["active_polygon"]])
+        ]
 
         w_poly = transform_polygon(w_poly_local, px, py, theta)
         act_poly = transform_polygon(act_poly_local, px, py, theta)
+        act_polys = [transform_polygon(ap, px, py, theta) for ap in act_polys_local]
 
         weapon_parts.append({"cid": cid, "polygon": w_poly})
-        active_weapon_parts.append({"cid": cid, "polygon": act_poly})
+        active_weapon_parts.append({"cid": cid, "polygon": act_poly, "polygons": act_polys})
 
     all_body_polygons = [chassis_poly] + [wp["polygon"] for wp in weapon_parts]
 
@@ -236,6 +241,49 @@ def ray_aabb_distance(ox: float, oy: float, dx: float, dy: float, box: Tuple[flo
     return tmin if tmin >= 0.0 else None
 
 
+def ray_segment_intersection(
+    ox: float, oy: float, dx: float, dy: float,
+    x1: float, y1: float, x2: float, y2: float
+) -> Optional[float]:
+    """
+    Finds intersection parameter t >= 0 along ray (ox, oy) + t * (dx, dy)
+    with line segment from (x1, y1) to (x2, y2).
+    """
+    sx = x2 - x1
+    sy = y2 - y1
+    denom = dx * sy - dy * sx
+    if abs(denom) < 1e-7:
+        return None  # Parallel or collinear
+
+    t = ((x1 - ox) * sy - (y1 - oy) * sx) / denom
+    s = ((x1 - ox) * dy - (y1 - oy) * dx) / denom
+    if t >= -1e-4 and -1e-4 <= s <= 1.0 + 1e-4:
+        return max(0.0, t)
+    return None
+
+
+def ray_polygon_distance(
+    ox: float, oy: float, dx: float, dy: float, polygon: List[Tuple[float, float]]
+) -> Optional[float]:
+    """
+    Returns entry distance t >= 0 along ray into polygon.
+    If (ox, oy) is inside the polygon (or on its boundary), returns 0.0.
+    """
+    if point_in_polygon(ox, oy, polygon):
+        return 0.0
+
+    n = len(polygon)
+    min_t: Optional[float] = None
+    for i in range(n):
+        p1 = polygon[i]
+        p2 = polygon[(i + 1) % n]
+        t = ray_segment_intersection(ox, oy, dx, dy, p1[0], p1[1], p2[0], p2[1])
+        if t is not None:
+            if min_t is None or t < min_t:
+                min_t = t
+    return min_t
+
+
 def find_components_along_contact_line(
     robot: RobotState,
     contact_pt: Tuple[float, float],
@@ -250,6 +298,7 @@ def find_components_along_contact_line(
     Maps world contact point onto the A3 chassis sheet to determine which
     component(s) along the contact line were contacted.
     Rule: 'The first remaining component on the robot along the line corresponding to the contact point is the component hit.'
+    Rule: 'When working out what component is hit, if a template is crossed that weapon is the component hit in that contact.'
     Rule: 'Where ambiguous, both components make contact.'
     Rule: 'Similarly if a weapon contacts multiple components at once, each component is damaged...'
     Rule: 'unless inverted this component's attacks skip past components without wedge, fork or drive'
@@ -264,7 +313,44 @@ def find_components_along_contact_line(
     lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], robot_x, robot_y, robot_theta)
     mx, my = local_miniature_to_mat_point(lx, ly)
 
-    # Ray pointing inward toward chassis center
+    # Inward ray in local miniature coordinates from (lx, ly) towards robot center (0.0, 0.0)
+    ldx = -lx
+    ldy = -ly
+    ldist = math.hypot(ldx, ldy)
+    lux, luy = (ldx / ldist, ldy / ldist) if ldist > 1e-4 else (0.0, -1.0)
+
+    # Rule: "When working out what component is hit, if a template is crossed that weapon is the component hit in that contact."
+    active_weapons = [
+        c for c in active_comps
+        if c.card_type == "weapon" and (not robot.is_inverted or c.is_invertible)
+    ]
+    if skip_without_wedge_fork_drive:
+        active_weapons = [c for c in active_weapons if is_wedge_fork_or_drive(c)]
+
+    crossed_weapon_templates: List[Tuple[float, ComponentHealth]] = []
+    for w_comp in active_weapons:
+        cw = 64.0 if w_comp.rotation in (90, 270) else 44.0
+        ch = 44.0 if w_comp.rotation in (90, 270) else 64.0
+        offset = card_to_miniature_offset(w_comp.x, w_comp.y, cw, ch)
+        geom = get_weapon_template_geometry(w_comp.template, offset)
+        w_poly_local = [rotate_point_around(p, offset, w_comp.rotation) for p in geom["polygon"]]
+
+        t_enter = ray_polygon_distance(lx, ly, lux, luy, w_poly_local)
+        if t_enter is not None and t_enter <= ldist + 5.0:
+            crossed_weapon_templates.append((t_enter, w_comp))
+
+    if crossed_weapon_templates:
+        crossed_weapon_templates.sort(key=lambda item: item[0])
+        min_wt = crossed_weapon_templates[0][0]
+        hit_wpn_cids: List[str] = []
+        for t_val, w_comp in crossed_weapon_templates:
+            if abs(t_val - min_wt) <= 1.5:
+                if w_comp.id not in hit_wpn_cids:
+                    hit_wpn_cids.append(w_comp.id)
+        if hit_wpn_cids:
+            return hit_wpn_cids
+
+    # Ray pointing inward toward chassis center on A3 mat
     dx = MAT_CENTER_X - mx
     dy = MAT_CENTER_Y - my
     dist = math.hypot(dx, dy)
@@ -369,17 +455,25 @@ def detect_collision(
                 w_comp = r1.components.get(w_cid)
                 if not w_comp or w_comp.is_destroyed:
                     continue
-                intersecting_polys = [polyB for polyB in parts2["all_body_polygons"] if polygons_intersect(act["polygon"], polyB)]
-                if intersecting_polys:
+                sub_polys = act.get("polygons", [act["polygon"]])
+                w_targets: List[str] = []
+                w_hit = False
+                for sub_poly in sub_polys:
+                    intersecting_polys = [polyB for polyB in parts2["all_body_polygons"] if polygons_intersect(sub_poly, polyB)]
+                    if intersecting_polys:
+                        w_hit = True
+                        wpn_contact_pt = find_polygon_contact_center(sub_poly, intersecting_polys[0])
+                        skip_rule = ("skip past components without wedge, fork or drive" in (w_comp.text or "").lower() and not r1.is_inverted)
+                        oct_r2 = get_octant(p2.x, p2.y, wpn_contact_pt[0], wpn_contact_pt[1], p2.theta)
+                        targets = find_components_along_contact_line(
+                            r2, wpn_contact_pt, p2.x, p2.y, p2.theta, oct_r2,
+                            skip_without_wedge_fork_drive=skip_rule
+                        )
+                        for t in targets:
+                            w_targets.append(t)
+                if w_hit:
                     r1_active_weapons.append(w_cid)
-                    wpn_contact_pt = find_polygon_contact_center(act["polygon"], intersecting_polys[0])
-                    skip_rule = ("skip past components without wedge, fork or drive" in (w_comp.text or "").lower() and not r1.is_inverted)
-                    oct_r2 = get_octant(p2.x, p2.y, wpn_contact_pt[0], wpn_contact_pt[1], p2.theta)
-                    targets = find_components_along_contact_line(
-                        r2, wpn_contact_pt, p2.x, p2.y, p2.theta, oct_r2,
-                        skip_without_wedge_fork_drive=skip_rule
-                    )
-                    r1_weapon_targets[w_cid] = targets
+                    r1_weapon_targets[w_cid] = w_targets
 
             # Does R2 active weapons touch any part of R1?
             r2_active_weapons: List[str] = []
@@ -389,17 +483,25 @@ def detect_collision(
                 w_comp = r2.components.get(w_cid)
                 if not w_comp or w_comp.is_destroyed:
                     continue
-                intersecting_polys = [polyA for polyA in parts1["all_body_polygons"] if polygons_intersect(act["polygon"], polyA)]
-                if intersecting_polys:
+                sub_polys = act.get("polygons", [act["polygon"]])
+                w_targets: List[str] = []
+                w_hit = False
+                for sub_poly in sub_polys:
+                    intersecting_polys = [polyA for polyA in parts1["all_body_polygons"] if polygons_intersect(sub_poly, polyA)]
+                    if intersecting_polys:
+                        w_hit = True
+                        wpn_contact_pt = find_polygon_contact_center(sub_poly, intersecting_polys[0])
+                        skip_rule = ("skip past components without wedge, fork or drive" in (w_comp.text or "").lower() and not r2.is_inverted)
+                        oct_r1 = get_octant(p1.x, p1.y, wpn_contact_pt[0], wpn_contact_pt[1], p1.theta)
+                        targets = find_components_along_contact_line(
+                            r1, wpn_contact_pt, p1.x, p1.y, p1.theta, oct_r1,
+                            skip_without_wedge_fork_drive=skip_rule
+                        )
+                        for t in targets:
+                            w_targets.append(t)
+                if w_hit:
                     r2_active_weapons.append(w_cid)
-                    wpn_contact_pt = find_polygon_contact_center(act["polygon"], intersecting_polys[0])
-                    skip_rule = ("skip past components without wedge, fork or drive" in (w_comp.text or "").lower() and not r2.is_inverted)
-                    oct_r1 = get_octant(p1.x, p1.y, wpn_contact_pt[0], wpn_contact_pt[1], p1.theta)
-                    targets = find_components_along_contact_line(
-                        r1, wpn_contact_pt, p1.x, p1.y, p1.theta, oct_r1,
-                        skip_without_wedge_fork_drive=skip_rule
-                    )
-                    r2_weapon_targets[w_cid] = targets
+                    r2_weapon_targets[w_cid] = w_targets
 
             is_active_hit = bool(r1_active_weapons or r2_active_weapons)
             contact_type = "ACTIVE" if is_active_hit else "INERT"

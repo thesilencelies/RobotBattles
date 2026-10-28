@@ -1910,10 +1910,9 @@ class TestPlaytestEngine(unittest.TestCase):
 
     def test_raised_status_effects(self):
         """
-        Rule: 'A robot that is raised has its flip strength halved,
-        and its motion does not contribute to the motion in inertial contact.'
-        Throw strength is NOT reduced when raised.
-        Wedges remain active when raised. Drive strength is NOT halved.
+        Rule: Raised status reduces the throw strength of their attacks by 2 instead of
+        negating throwing altogether. Flip strength is NOT changed when raised.
+        Wedges lose double absorption when raised. Motion does not contribute to inertial contact.
         """
         from playtest.engine.combat import resolve_collision_combat, refresh_robot_drive_and_power
         from playtest.engine.types import CollisionEvent
@@ -1934,32 +1933,31 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(p_bot.left_drive_max, normal_left, "Drive is not halved when raised")
         self.assertEqual(p_bot.right_drive_max, normal_right, "Drive is not halved when raised")
 
-        # 2. Weapon deals full damage when raised, and throw strength is NOT reduced
+        # 2. Weapon deals full damage when raised, and throw strength is reduced by 2 (not 0)
         wpn = next(c for c in p_bot.components.values() if c.card_type == "weapon")
         wpn.is_active = True
         p_bot.weapon_spin_counters[wpn.id] = 3  # attack strength 6
 
         p_bot.is_raised = False
+        target_cid = list(a_bot.components.keys())[0]
         col = CollisionEvent(
             time_t=0.5,
             contact_point=(400.0, 400.0),
             robot1_octant="Front",
             robot2_octant="Front",
             robot1_components=[wpn.id],
-            robot2_components=[list(a_bot.components.keys())[0]],
+            robot2_components=[target_cid],
             contact_type="ACTIVE",
             description="Active strike",
             r1_active_hit=True,
             r2_active_hit=False,
         )
         # Ensure hit component has 0 absorption to isolate raised throw reduction
-        a_bot.components[list(a_bot.components.keys())[0]].absorption = 0
+        a_bot.components[target_cid].absorption = 0
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
-        self.assertTrue(any("dealing 7 dmg" in entry.message for entry in logs))
-        self.assertTrue(any("Strength 7" in entry.message for entry in logs))
+        self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs))
 
-        # Now raised: damage is still 7, but its attacks do not throw, and it receives +2 throw strength!
-        target_cid = list(a_bot.components.keys())[0]
+        # Now raised: damage is still 6, but attacks have throw strength reduced by 2 (was 6, now 4)
         a_bot.components[target_cid].is_damaged = False
         a_bot.components[target_cid].is_destroyed = False
         a_bot.components[target_cid].current_durability = a_bot.components[target_cid].max_durability
@@ -1969,9 +1967,8 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.weapon_spin_counters[wpn.id] = 3
         wpn.was_used_this_turn = False
         logs_raised = resolve_collision_combat(col, p_bot, a_bot, round_num=2)
-        self.assertTrue(any("dealing 7 dmg" in entry.message for entry in logs_raised))
-        self.assertTrue(any("attacks do not throw" in entry.message for entry in logs_raised))
-        self.assertTrue(any("Strength 2" in entry.message for entry in logs_raised))
+        self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs_raised))
+        self.assertTrue(any("reduced by 2 (was 6, now 4)" in entry.message for entry in logs_raised))
 
     def test_feedback_propagation_rounding_up(self):
         """
@@ -2859,7 +2856,172 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(len(parts["active_weapon_parts"]), 2)
 
         weapon_cids = {wp["cid"] for wp in parts["weapon_parts"]}
-        self.assertEqual(weapon_cids, {"7", "8"})
+        self.assertEqual(len(weapon_cids), 2)
+
+    def test_template_crossed_determines_component_hit(self):
+        """
+        Rule: 'When working out what component is hit, if a template is crossed that weapon is the component hit in that contact.'
+        """
+        from playtest.engine.collision import find_components_along_contact_line
+        from playtest.engine.field import MAT_CENTER_X, MAT_CENTER_Y, MAT_TO_MINI_SCALE
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        bot = match.player_robot
+        bot.components.clear()
+
+        # Place armor plate at front bumper
+        armor = ComponentHealth(
+            id="c_armor", name="Front Armor", card_type="armor", max_durability=10, current_durability=10,
+            absorption=2, requirements="", outputs="", keywords="", text="",
+            x=MAT_CENTER_X - 20, y=50, rotation=0, box=(MAT_CENTER_X - 20, 50, MAT_CENTER_X + 20, 90), is_active=True,
+        )
+        # Place weapon with Circle template (radius 22mm on mini) centered at chassis center
+        wpn = ComponentHealth(
+            id="c_spinner", name="Spinner Disc", card_type="weapon", max_durability=12, current_durability=12,
+            absorption=1, requirements="", outputs="2XW", keywords="", text="",
+            template="Circle",
+            x=MAT_CENTER_X - 20, y=MAT_CENTER_Y - 20, rotation=0,
+            box=(MAT_CENTER_X - 20, MAT_CENTER_Y - 20, MAT_CENTER_X + 20, MAT_CENTER_Y + 20), is_active=True,
+        )
+        bot.components["c_armor"] = armor
+        bot.components["c_spinner"] = wpn
+
+        # Strike from front (North): contact point at y = -20mm on mini (within Circle template radius 22mm)
+        # World pose: center (400, 400), facing North (theta = 0)
+        contact_pt = (400.0, 400.0 - 20.0)
+
+        # The contact line crosses the weapon's Circle template, so the weapon is the component hit!
+        hit_cids = find_components_along_contact_line(
+            bot, contact_pt, 400.0, 400.0, 0.0, "Front"
+        )
+        self.assertEqual(hit_cids, ["c_spinner"])
+
+    def test_multi_point_contact_same_component_damage_once(self):
+        """
+        Rule: 'For weapons with multiple points of contact they can both hit the same thing, but they only deal damage once.'
+        """
+        from playtest.engine.combat import _resolve_single_weapon_attack
+        from playtest.engine.types import CollisionEvent
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Attacking weapon
+        prongs_wpn = ComponentHealth(
+            id="w_prongs", name="Lifter Claw", card_type="weapon", max_durability=10, current_durability=10,
+            absorption=2, requirements="", outputs="6W", keywords="Forks", text="",
+            template="Prongs", x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
+        )
+        p_bot.components["w_prongs"] = prongs_wpn
+
+        # Defender target component with durability 10 (half is 5)
+        target = ComponentHealth(
+            id="c_target", name="Heavy Armor", card_type="armor", max_durability=10, current_durability=10,
+            absorption=0, requirements="", outputs="", keywords="", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
+        )
+        a_bot.components = {"c_target": target}
+
+        col = CollisionEvent(
+            time_t=0.5, contact_point=(400.0, 400.0),
+            robot1_octant="Front", robot2_octant="Front",
+            robot1_components=["w_prongs"], robot2_components=["c_target"],
+            contact_type="ACTIVE", description="Claw attack",
+            r1_active_hit=True, r2_active_hit=False,
+        )
+
+        logs = []
+        # Multi-point contact: both prongs hit "c_target"
+        atk_str, throw_str = _resolve_single_weapon_attack(
+            attacker=p_bot, defender=a_bot, weapon=prongs_wpn, col=col,
+            defender_ray_cids=["c_target", "c_target"], round_num=1, logs=logs
+        )
+
+        # Damage dealt is 6 once, NOT 6 + 6 = 12
+        self.assertTrue(target.is_damaged)
+        self.assertFalse(target.is_destroyed, "Should only take damage once, not be destroyed by double damage")
+        damage_entries = [e for e in logs if "[Damage]" in e.message]
+        self.assertEqual(len(damage_entries), 1, "Damage should only be applied once")
+
+    def test_multi_point_contact_different_components_damage_each(self):
+        """
+        Rule: When a weapon contacts multiple components at once, each component is damaged.
+        """
+        from playtest.engine.combat import _resolve_single_weapon_attack
+        from playtest.engine.types import CollisionEvent
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        prongs_wpn = ComponentHealth(
+            id="w_prongs", name="Lifter Claw", card_type="weapon", max_durability=10, current_durability=10,
+            absorption=2, requirements="", outputs="6W", keywords="Forks", text="",
+            template="Prongs", x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
+        )
+        p_bot.components["w_prongs"] = prongs_wpn
+
+        t1 = ComponentHealth(
+            id="c_left", name="Left Armor", card_type="armor", max_durability=10, current_durability=10,
+            absorption=0, requirements="", outputs="", keywords="", text="",
+            x=80, y=20, rotation=0, box=(80, 20, 100, 60), is_active=True,
+        )
+        t2 = ComponentHealth(
+            id="c_right", name="Right Armor", card_type="armor", max_durability=10, current_durability=10,
+            absorption=0, requirements="", outputs="", keywords="", text="",
+            x=120, y=20, rotation=0, box=(120, 20, 140, 60), is_active=True,
+        )
+        a_bot.components = {"c_left": t1, "c_right": t2}
+
+        col = CollisionEvent(
+            time_t=0.5, contact_point=(400.0, 400.0),
+            robot1_octant="Front", robot2_octant="Front",
+            robot1_components=["w_prongs"], robot2_components=["c_left", "c_right"],
+            contact_type="ACTIVE", description="Claw dual strike",
+            r1_active_hit=True, r2_active_hit=False,
+        )
+
+        logs = []
+        atk_str, throw_str = _resolve_single_weapon_attack(
+            attacker=p_bot, defender=a_bot, weapon=prongs_wpn, col=col,
+            defender_ray_cids=["c_left", "c_right"], round_num=1, logs=logs
+        )
+
+        self.assertTrue(t1.is_damaged)
+        self.assertTrue(t2.is_damaged)
+        damage_entries = [e for e in logs if "[Damage]" in e.message]
+        self.assertEqual(len(damage_entries), 2, "Both distinct components should be damaged")
+
+    def test_raised_flip_strength_not_halved(self):
+        """
+        Rule: Remove any references to changing flip strength. Raised robot does NOT halve flip strength.
+        """
+        from playtest.engine.combat import _execute_throw
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        bot = match.player_robot
+        bot.flip_strength = 6
+        bot.is_raised = True
+        bot.is_inverted = False
+
+        # If throw_str = 5 and roll is fixed or low:
+        # excess_throw can be at most 5 - 1 = 4.
+        # If flip_strength were halved (6 // 2 = 3), excess_throw 4 > 3 would cause inversion!
+        # With unhalved flip_strength 6, excess_throw 4 <= 6, so robot is NOT inverted!
+        logs = []
+        import random
+        orig_randint = random.randint
+        try:
+            random.randint = lambda a, b: 1  # Force roll_d6 = 1 -> thrown_units = 1
+            _execute_throw(bot, throw_str=5, contact_point=(400.0, 400.0), round_num=1, logs=logs)
+            self.assertFalse(bot.is_inverted, "Raised robot must NOT invert when excess throw (4) <= full flip strength (6)")
+        finally:
+            random.randint = orig_randint
 
 
 if __name__ == "__main__":

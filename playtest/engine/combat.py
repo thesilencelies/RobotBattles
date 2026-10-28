@@ -985,7 +985,7 @@ def resolve_inert_contact(
                 message=f"🧭 Thrown orientation: {pushed_into_wall_robot.name} rolled {orientation_roll} -> rotated {int(spin_rot)}° clockwise (now {pushed_into_wall_robot.pose.theta:.0f}°).",
             ))
 
-            eff_flip = pushed_into_wall_robot.flip_strength // 2 if pushed_into_wall_robot.is_raised else pushed_into_wall_robot.flip_strength
+            eff_flip = pushed_into_wall_robot.flip_strength
             excess_throw = wall_throw_str - thrown_units
             if excess_throw > eff_flip:
                 pushed_into_wall_robot.is_inverted = not pushed_into_wall_robot.is_inverted
@@ -1088,12 +1088,15 @@ def _resolve_single_weapon_attack(
             target_cids = [list(defender.components.keys())[0]] if defender.components else []
 
     # Apply damage to each contacted component and calculate throw strength against each
+    # Rule: "For weapons with multiple points of contact they can both hit the same thing, but they only deal damage once."
     comp_throw_strs: List[int] = []
+    damaged_cids: Set[str] = set()
     for target_id in target_cids:
         t_comp = defender.components.get(target_id)
         if not t_comp:
             continue
-        if dmg > 0:
+        if dmg > 0 and target_id not in damaged_cids:
+            damaged_cids.add(target_id)
             status, absorbed, excess = apply_damage_to_component(t_comp, dmg, is_weapon_damage=True)
             msg = f"{t_comp.name} (#{t_comp.id}) takes {dmg} dmg -> {status} (absorbed {absorbed}, excess {excess})"
             logs.append(CombatLogEntry(round=round_num, phase="collision", message=f"  [Damage] {msg}"))
@@ -1172,11 +1175,12 @@ def _resolve_single_weapon_attack(
             message=f"🎯 Overhead strike: {weapon.name} causes no throw on {defender.name}!",
         ))
     elif attacker.is_raised:
-        # Rule: A raised robot's attacks do not throw
-        throw_str = 0
+        # Rule: Raised status reduces the throw strength of their attacks by 2 instead of negating throwing altogether
+        old_throw = throw_str
+        throw_str = max(0, throw_str - 2)
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {attacker.name} is RAISED — its attacks do not throw!",
+            message=f"🔱 {attacker.name} is RAISED — attacks have throw strength reduced by 2 (was {old_throw}, now {throw_str})!",
         ))
 
     if "always inverts" in weapon.text.lower():
@@ -1274,7 +1278,7 @@ def _execute_throw(
     ))
 
     # Flip check: if throw strength - thrown distance > flip value of chassis
-    eff_flip = robot.flip_strength // 2 if robot.is_raised else robot.flip_strength
+    eff_flip = robot.flip_strength
     excess_throw = throw_str - thrown_units
     if excess_throw > eff_flip:
         robot.is_inverted = not robot.is_inverted
@@ -1409,14 +1413,14 @@ def resolve_collision_combat(
         cause = "Forks lift" if r1_forks_lift else "Wedge lifts"
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r1.name}'s {cause} {r2.name}! ({r2.name} is RAISED: flip strength halved, no inert push, attacks don't throw, +2 throw str received)",
+            message=f"🔱 {r1.name}'s {cause} {r2.name}! ({r2.name} is RAISED: no inert push, attacks throw str -2, +2 throw str received)",
         ))
     elif r2_would_raise_r1:
         r1.is_raised = True
         cause = "Forks lift" if r2_forks_lift else "Wedge lifts"
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r2.name}'s {cause} {r1.name}! ({r1.name} is RAISED: flip strength halved, no inert push, attacks don't throw, +2 throw str received)",
+            message=f"🔱 {r2.name}'s {cause} {r1.name}! ({r1.name} is RAISED: no inert push, attacks throw str -2, +2 throw str received)",
         ))
 
     if col.contact_type == "ACTIVE":
