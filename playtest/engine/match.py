@@ -387,6 +387,8 @@ def execute_turn(
     match.automaton_choice = a_choice
 
     # Refresh active components taking into account movement and power choices
+    p_bot.current_choice = p_choice
+    a_bot.current_choice = a_choice
     refresh_robot_drive_and_power(p_bot, p_choice, chosen_components=player_supplied_components)
     refresh_robot_drive_and_power(a_bot, a_choice, is_automaton=True)
 
@@ -457,7 +459,7 @@ def execute_turn(
             a_bot.pose = Pose(a_traj[col_idx].x, a_traj[col_idx].y, a_traj[col_idx].theta)
 
         # Resolve combat and record structured damage steps
-        c_logs = resolve_collision_combat(col, p_bot, a_bot, r_num, steps=match.damage_steps)
+        c_logs = resolve_collision_combat(col, p_bot, a_bot, r_num, steps=match.damage_steps, r1_choice=p_choice, r2_choice=a_choice)
         match.log.extend(c_logs)
 
 

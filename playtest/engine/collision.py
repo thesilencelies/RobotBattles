@@ -192,7 +192,9 @@ def get_robot_miniature_parts(
         act_polys = [transform_polygon(ap, px, py, theta) for ap in act_polys_local]
 
         weapon_parts.append({"cid": cid, "polygon": w_poly})
-        active_weapon_parts.append({"cid": cid, "polygon": act_poly, "polygons": act_polys})
+        # Rule: weapons that have reset cannot attack while they are inactive due to reset
+        if comp.is_active and not comp.is_resetting and not (comp.is_reset and not comp.is_active):
+            active_weapon_parts.append({"cid": cid, "polygon": act_poly, "polygons": act_polys})
 
     all_body_polygons = [chassis_poly] + [wp["polygon"] for wp in weapon_parts]
 
@@ -284,6 +286,28 @@ def ray_polygon_distance(
     return min_t
 
 
+def get_component_side(comp: ComponentHealth) -> str:
+    """
+    Determines which side of the robot the component is on:
+    'front', 'back', 'left', or 'right'.
+    Uses the center of the component relative to the chassis center (MAT_CENTER_X, MAT_CENTER_Y).
+    """
+    card_cx = (comp.box[0] + comp.box[2]) / 2.0
+    card_cy = (comp.box[1] + comp.box[3]) / 2.0
+    dx = card_cx - MAT_CENTER_X
+    dy = card_cy - MAT_CENTER_Y
+    if abs(dy) >= abs(dx):
+        return "back" if dy > 0 else "front"
+    else:
+        return "right" if dx > 0 else "left"
+
+
+def is_uhmw_wraparound_armor(comp: ComponentHealth) -> bool:
+    nm = (comp.name or "").lower()
+    txt = (comp.text or "").lower()
+    return ("wraparound" in nm and "uhm" in nm) or ("attacks that hit this components side hit this instead" in txt)
+
+
 def find_components_along_contact_line(
     robot: RobotState,
     contact_pt: Tuple[float, float],
@@ -302,6 +326,7 @@ def find_components_along_contact_line(
     Rule: 'Where ambiguous, both components make contact.'
     Rule: 'Similarly if a weapon contacts multiple components at once, each component is damaged...'
     Rule: 'unless inverted this component's attacks skip past components without wedge, fork or drive'
+    Rule: 'UHM wraparound armor should be hit instead of any other component on its side of the robot when that side is hit.'
     """
     if active_cid and active_cid in robot.components and not robot.components[active_cid].is_destroyed:
         return [active_cid]
@@ -312,6 +337,30 @@ def find_components_along_contact_line(
 
     lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], robot_x, robot_y, robot_theta)
     mx, my = local_miniature_to_mat_point(lx, ly)
+
+    # Rule: UHM wraparound armor should be hit instead of any other component on its side of the robot when that side is hit.
+    if abs(ly) >= abs(lx):
+        contact_side = "back" if ly > 0 else "front"
+    else:
+        contact_side = "right" if lx > 0 else "left"
+
+    uhmw_armors = [
+        c for c in active_comps
+        if is_uhmw_wraparound_armor(c) and (
+            get_component_side(c) == contact_side or get_component_side(c) in (octant or "").lower()
+        )
+    ]
+    if uhmw_armors:
+        if len(uhmw_armors) == 1:
+            return [uhmw_armors[0].id]
+        closest_armor = min(
+            uhmw_armors,
+            key=lambda c: math.hypot(
+                mx - max(c.box[0], min(c.box[2], mx)),
+                my - max(c.box[1], min(c.box[3], my))
+            )
+        )
+        return [closest_armor.id]
 
     # Inward ray in local miniature coordinates from (lx, ly) towards robot center (0.0, 0.0)
     ldx = -lx

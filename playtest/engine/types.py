@@ -227,6 +227,7 @@ class RobotState:
     total_weight: int = 0
     total_cost: int = 0
     grabbed_by: Optional[str] = None
+    current_choice: Optional[MoveChoice] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -250,6 +251,7 @@ class RobotState:
             "total_weight": self.total_weight,
             "total_cost": self.total_cost,
             "grabbed_by": self.grabbed_by,
+            "current_choice": self.current_choice.to_dict() if self.current_choice else None,
         }
 
 
