@@ -31,7 +31,7 @@ The schema matches the TTS custom-object import format:
           "face":        "<raw.githubusercontent URL of token/template image>",
           "back":        "<raw.githubusercontent URL of token/template image>",
           "type":        "0",
-          "thickness":   "0.5",
+          "thickness":   "0.1",
           "stackable":   "true"
         }, ...
       },
@@ -370,7 +370,7 @@ def enumerate_tiles() -> list[dict]:
             "face": icon_url,
             "back": icon_url,
             "type": "0",
-            "thickness": "0.5",
+            "thickness": "0.2",
             "stackable": "true",
             "_local_images": (icon_path,),
         })
@@ -401,7 +401,7 @@ def enumerate_tiles() -> list[dict]:
             "face": icon_url,
             "back": icon_url,
             "type": tpl_data["type"],
-            "thickness": "0.5",
+            "thickness": "0.1",
             "stackable": "true",
             "_local_images": (icon_path,),
         })
