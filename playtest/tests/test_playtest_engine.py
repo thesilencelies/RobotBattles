@@ -14,6 +14,8 @@ from builder.server.data import read_saved_robot
 from playtest.engine.automata import (
     compute_automaton_drive,
     get_automaton_action,
+    get_automaton_archetype,
+    is_robot_facing_target,
     roll_d6,
 )
 from playtest.engine.collision import detect_collision, get_octant
@@ -160,6 +162,53 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(get_automaton_action("Nightwing_wide", robot, 2), "Face")
         self.assertEqual(get_automaton_action("Nightwing_wide", robot, 3), "Evade")
         self.assertEqual(get_automaton_action("Nightwing_wide", robot, 5), "Rush")
+
+        # Flank Archetype (Billet_HammerSaw and Sparrow_crusher):
+        self.assertEqual(get_automaton_archetype("Billet_HammerSaw"), "Flank")
+        self.assertEqual(get_automaton_archetype("Sparrow_crusher"), "Flank")
+        self.assertEqual(get_automaton_archetype("billet_hammersaw"), "Flank")
+        self.assertEqual(get_automaton_archetype("sparrow_crusher"), "Flank")
+
+        # Opponent facing toward automaton (opponent at 400, 500, theta=0 facing North toward automaton at 400, 200)
+        opp_facing = RobotState(
+            id="p_facing", name="Opponent Facing", chassis_name="", chassis_template="Square",
+            flip_strength=5, pose=Pose(400, 500, 0), components={}, connections={},
+            supply_graph={}, reverse_supply={},
+        )
+        self.assertTrue(is_robot_facing_target(opp_facing.pose, robot.pose, 45.0))
+        # When opponent IS facing toward it:
+        # 1 = Retreat, 2..4 = Evade, 5 = Face, 6 = Rush
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 1, opponent=opp_facing), "Retreat")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 2, opponent=opp_facing), "Evade")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 3, opponent=opp_facing), "Evade")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 4, opponent=opp_facing), "Evade")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 5, opponent=opp_facing), "Face")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 6, opponent=opp_facing), "Rush")
+
+        # Opponent NOT facing toward automaton (opponent at 400, 500, theta=180 facing South away from automaton)
+        opp_not_facing = RobotState(
+            id="p_not_facing", name="Opponent Away", chassis_name="", chassis_template="Square",
+            flip_strength=5, pose=Pose(400, 500, 180), components={}, connections={},
+            supply_graph={}, reverse_supply={},
+        )
+        self.assertFalse(is_robot_facing_target(opp_not_facing.pose, robot.pose, 45.0))
+        # When opposing robot is NOT facing toward it:
+        # 1 = Retreat, 2..3 = Evade, 4..6 = Rush
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 1, opponent=opp_not_facing), "Retreat")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 2, opponent=opp_not_facing), "Evade")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 3, opponent=opp_not_facing), "Evade")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 4, opponent=opp_not_facing), "Rush")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 5, opponent=opp_not_facing), "Rush")
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 6, opponent=opp_not_facing), "Rush")
+
+        # Sparrow_crusher behaves identically under Flank archetype
+        self.assertEqual(get_automaton_action("Sparrow_crusher", robot, 1, opponent=opp_facing), "Retreat")
+        self.assertEqual(get_automaton_action("Sparrow_crusher", robot, 3, opponent=opp_facing), "Evade")
+        self.assertEqual(get_automaton_action("Sparrow_crusher", robot, 5, opponent=opp_facing), "Face")
+        self.assertEqual(get_automaton_action("Sparrow_crusher", robot, 4, opponent=opp_not_facing), "Rush")
+
+        # Fallback when opponent is None (defaults to target_facing)
+        self.assertEqual(get_automaton_action("Billet_HammerSaw", robot, 5, opponent=None), "Face")
 
     def test_automata_drive_calculation(self):
         player = RobotState(
@@ -3022,6 +3071,33 @@ class TestPlaytestEngine(unittest.TestCase):
             self.assertFalse(bot.is_inverted, "Raised robot must NOT invert when excess throw (4) <= full flip strength (6)")
         finally:
             random.randint = orig_randint
+
+    def test_match_creation_and_planning_with_new_flank_automata(self):
+        """Verifies creating matches with Billet_HammerSaw and Sparrow_crusher and executing planning phase."""
+        from playtest.engine.match import create_match, execute_turn
+        from playtest.engine.types import MoveChoice
+
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+
+        # 1. Billet_HammerSaw match
+        match_bh = create_match(csv_text, "Billet_HammerSaw", "Player Bot")
+        self.assertEqual(match_bh.automaton_robot.name, "Billet HammerSaw")
+        self.assertGreater(len(match_bh.automaton_robot.components), 0)
+
+        # Execute turn with fixed roll 6 -> Rush
+        execute_turn(match_bh, MoveChoice(0, 0), fixed_automaton_roll=6)
+        self.assertEqual(match_bh.automaton_action, "Rush")
+        self.assertEqual(match_bh.automaton_roll, 6)
+
+        # 2. Sparrow_crusher match
+        match_sc = create_match(csv_text, "Sparrow_crusher", "Player Bot")
+        self.assertEqual(match_sc.automaton_robot.name, "Sparrow crusher")
+        self.assertGreater(len(match_sc.automaton_robot.components), 0)
+
+        # Player is facing automaton at start pose -> roll 1 = Retreat
+        execute_turn(match_sc, MoveChoice(0, 0), fixed_automaton_roll=1)
+        self.assertEqual(match_sc.automaton_action, "Retreat")
+        self.assertEqual(match_sc.automaton_roll, 1)
 
 
 if __name__ == "__main__":

@@ -42,6 +42,8 @@ class TestAutomataSheets(unittest.TestCase):
         self.assertEqual(normalize_robot_name("Vyper_Spinner"), "Vyper Spinner")
         self.assertEqual(normalize_robot_name("Vyper_flipper"), "Vyper Flipper")
         self.assertEqual(normalize_robot_name("Chonk"), "Chonk")
+        self.assertEqual(normalize_robot_name("Billet_HammerSaw"), "Billet HammerSaw")
+        self.assertEqual(normalize_robot_name("Sparrow_crusher"), "Sparrow Crusher")
 
     def test_tex_escape(self):
         self.assertEqual(tex_escape("Viper & Wedge"), r"Viper \& Wedge")
@@ -66,6 +68,14 @@ class TestAutomataSheets(unittest.TestCase):
         ck = get_action_table_for_bot("Chonk")
         self.assertEqual(ck["archetype_name"], "Spin Up")
 
+        bh = get_action_table_for_bot("Billet_HammerSaw")
+        self.assertEqual(bh["archetype_name"], "Flank")
+        self.assertIn("Flank", bh["title"])
+
+        sc = get_action_table_for_bot("Sparrow_crusher")
+        self.assertEqual(sc["archetype_name"], "Flank")
+        self.assertIn("Flank", sc["title"])
+
     def test_generate_action_table_tex(self):
         vf = get_action_table_for_bot("Vyper_flipper")
         tex = generate_action_table_tex(vf)
@@ -74,6 +84,14 @@ class TestAutomataSheets(unittest.TestCase):
         self.assertIn("Face", tex)
         self.assertIn("Evade", tex)
         self.assertIn("Rush", tex)
+
+        flank = get_action_table_for_bot("Billet_HammerSaw")
+        flank_tex = generate_action_table_tex(flank)
+        self.assertIn("Flank Action Table", flank_tex)
+        self.assertIn("If opposing robot is not facing toward it", flank_tex)
+        self.assertIn("Otherwise (opposing robot facing toward it)", flank_tex)
+        self.assertIn("Face", flank_tex)
+        self.assertIn("Rush", flank_tex)
 
     def test_zero_overlap_all_automata(self):
         """Verifies that resolve_layout produces strictly 0 overlapping card pairs for all 5 bots."""

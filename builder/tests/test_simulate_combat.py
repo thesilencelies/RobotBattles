@@ -26,14 +26,14 @@ class TestCombatSimulation(unittest.TestCase):
     def test_weapon_damage_parsing(self):
         by_name = {w["name"]: w for w in self.catalog["weapons"]}
 
-        # Horizontal Spinner: 2XWW, max spin 4
+        # Horizontal Spinner: 2XW, max spin 4
         h_spin = by_name["Horizontal Spinner"]
         max_s, d_map, _ = parse_weapon_spin_and_damage(h_spin)
         self.assertEqual(max_s, 4)
-        self.assertEqual(d_map[1], 3)
-        self.assertEqual(d_map[2], 5)
-        self.assertEqual(d_map[3], 7)
-        self.assertEqual(d_map[4], 9)
+        self.assertEqual(d_map[1], 2)
+        self.assertEqual(d_map[2], 4)
+        self.assertEqual(d_map[3], 6)
+        self.assertEqual(d_map[4], 8)
 
         # Bloodsport Bar: 3XW, max spin 4 -> 3*4 = 12
         bb = by_name["Bloodsport Bar"]
@@ -49,13 +49,13 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(d_map[2], 3)
         self.assertEqual(d_map[3], 4)
 
-        # Cronos Scythe: XWWW -> X*W + 2W = X + 2
+        # Cronos Scythe: 2XW -> 2*X
         scythe = by_name["Cronos Scythe"]
         max_s, d_map, desc = parse_weapon_spin_and_damage(scythe)
         self.assertEqual(max_s, 3)
-        self.assertEqual(d_map[1], 3)
+        self.assertEqual(d_map[1], 2)
         self.assertEqual(d_map[2], 4)
-        self.assertEqual(d_map[3], 5)
+        self.assertEqual(d_map[3], 6)
 
         # Chonk Key Blade: XXW -> X^2 * W = X^2
         chonk = by_name["Chonk Key Blade"]
@@ -173,10 +173,10 @@ class TestCombatSimulation(unittest.TestCase):
 
         self.assertEqual(robot.name, "Vyper_Spinner")
         self.assertGreater(len(robot.components), 10)
-        self.assertIn("19", robot.components)  # Horizontal Spinner
+        self.assertIn("2", robot.components)  # Horizontal Spinner
 
         # Test weapon recoil feedback
-        h_spin = robot.components["19"]
+        h_spin = robot.components["2"]
         # Spin 4 with high damage -> 20 attack damage -> 10 feedback -> destroys Horizontal Spinner (dur 9)
         fb_steps = simulate_weapon_feedback(robot, h_spin, 20)
         self.assertTrue(any(s.status == "DESTROYED" for s in fb_steps))
@@ -197,7 +197,7 @@ class TestCombatSimulation(unittest.TestCase):
         self.assertEqual(len(shock_on_wedge_10), len(robot.components))
 
     def test_load_all_automata(self):
-        for name in ["Beater_wide.csv", "Nightwing_wide.csv", "Chonk.csv", "Vyper_flipper.csv", "Vyper_Spinner.csv"]:
+        for name in ["Beater_wide.csv", "Nightwing_wide.csv", "Chonk.csv", "Vyper_flipper.csv", "Vyper_Spinner.csv", "Billet_HammerSaw.csv", "Sparrow_crusher.csv"]:
             csv_path = REPO_ROOT / "automata" / name
             self.assertTrue(csv_path.exists(), f"{name} should exist")
             robot = build_robot_model(csv_path, self.catalog)

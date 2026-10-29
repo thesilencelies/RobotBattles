@@ -1,13 +1,13 @@
 ## Automata actions
 The actions available to the automata are:
-- Rush - Drive at the opponent at full speed
+- Rush - Drive at the opponent at full speed (turning towards the opponent as required)
 - Face - Rotate on the spot to face their opponent
 - Retreat - Move away from opponent while facing them
 - Evade - move forwards and perpendicular to the line between the robots - if both ways are clear choose at random
 
 There are several archetypes, from which automata normally choose.
 
-*Note on weapon spin:* Automata consider themselves at full spin unless they have an active weapon with spin up that is not at max spin (e.g. if their weapons are down or at max spin, they use the charged / full spin action tables).
+*Note on weapon spin:* Automata consider themselves at full spin unless they have an active weapon with spin up that is not at max spin (e.g. if their weapons are down they use the full spin action tables).
 
 ## Full rush
 No flow chart - always same table
@@ -44,6 +44,21 @@ else
 | 4 | Face |
 | 5-6 | Rush  |
 
+## Flank
+If opposing robot is not facing toward it
+| Roll | Action |
+| 1 | Retreat |
+| 2-3 | Evade |
+| 4-6 | Rush  |
+else
+| Roll | Action |
+| 1 | Retreat |
+| 2-4 | Evade |
+| 5 | Face |
+| 6 | Rush  |
+
+
+
 
 # Per automata allocation
 | Bot | Archetype |
@@ -53,6 +68,6 @@ else
 | Beater_wide | Balanced |
 | Nightwing_wide | Balanced |
 | Chonk | Spin Up |
-
-
+| Billet HammerSaw | Flank |
+| Sparrow Crusher | Flank |
 

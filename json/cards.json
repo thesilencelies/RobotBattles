@@ -311,7 +311,7 @@
     "23": {
       "name": "TPU Plate",
       "description": "",
-      "gm_notes": "weight:1\ndurability:6\nabsorption:2",
+      "gm_notes": "weight:1\ndurability:5\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -395,7 +395,7 @@
     "29": {
       "name": "Forks",
       "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
-      "gm_notes": "weight:1\ncost:$1\ndurability:6",
+      "gm_notes": "weight:2\ncost:$1\ndurability:6",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -409,7 +409,7 @@
     "30": {
       "name": "Titanium Horns",
       "description": "Forks: if component with forks makes contact and the opponents forks do not make contact, the opponent becomes lifted",
-      "gm_notes": "weight:2\ncost:$3\ndurability:11\nabsorption:2",
+      "gm_notes": "weight:3\ncost:$3\ndurability:11\nabsorption:2",
       "tags": {
         "1": "Card",
         "2": "Component"
@@ -451,7 +451,7 @@
     "33": {
       "name": "Self righting arm",
       "description": "Self-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:1\ncost:$2\nreq:P\ndurability:9\nabsorption:1",
+      "gm_notes": "weight:1\ncost:$2\nreq:P\ndurability:6",
       "tags": {
         "1": "Card",
         "2": "Component"

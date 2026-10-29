@@ -55,6 +55,8 @@ TTS_ASSETS_DIR = WORKSPACE_DIR / "tts_assets"
 def normalize_robot_name(name: str) -> str:
     """Replaces underscores with spaces and normalizes capitalization (Title Case)."""
     clean = name.replace("_", " ").strip()
+    if clean.lower() == "billet hammersaw":
+        return "Billet HammerSaw"
     return clean.title()
 
 
@@ -142,6 +144,28 @@ ARCHETYPE_TABLES: Dict[str, Dict[str, Any]] = {
             },
         ],
     },
+    "Flank": {
+        "title": "Flank Action Table",
+        "sections": [
+            {
+                "condition": "If opposing robot is not facing toward it:",
+                "rows": [
+                    ("1", "Retreat"),
+                    ("2--3", "Evade"),
+                    ("4--6", "Rush"),
+                ],
+            },
+            {
+                "condition": "Otherwise (opposing robot facing toward it):",
+                "rows": [
+                    ("1", "Retreat"),
+                    ("2--4", "Evade"),
+                    ("5", "Face"),
+                    ("6", "Rush"),
+                ],
+            },
+        ],
+    },
 }
 
 # Fallback bot to archetype mapping matching Action_tables.md
@@ -151,6 +175,8 @@ DEFAULT_BOT_ARCHETYPES: Dict[str, str] = {
     "beater_wide": "Balanced",
     "nightwing_wide": "Balanced",
     "chonk": "Spin Up",
+    "billet_hammersaw": "Flank",
+    "sparrow_crusher": "Flank",
 }
 
 
@@ -173,16 +199,18 @@ def load_bot_archetype_mapping() -> Dict[str, str]:
             if line_s.startswith("|") and not line_s.startswith("|-") and "Bot" not in line_s:
                 parts = [p.strip() for p in line_s.split("|") if p.strip()]
                 if len(parts) >= 2:
-                    bot_key = parts[0].strip().lower()
+                    bot_key = parts[0].strip().lower().replace(" ", "_")
                     archetype_val = parts[1].strip()
                     mapping[bot_key] = archetype_val
+                    mapping[parts[0].strip().lower()] = archetype_val
     return mapping
 
 
 def get_action_table_for_bot(bot_stem: str) -> Dict[str, Any]:
     """Returns the action table definition dictionary for a given bot stem."""
     mapping = load_bot_archetype_mapping()
-    archetype_name = mapping.get(bot_stem.lower(), "Balanced")
+    clean_stem = bot_stem.lower().replace(" ", "_")
+    archetype_name = mapping.get(clean_stem, mapping.get(bot_stem.lower(), "Balanced"))
     # Lookup canonical archetype
     for key, val in ARCHETYPE_TABLES.items():
         if key.lower() == archetype_name.lower():

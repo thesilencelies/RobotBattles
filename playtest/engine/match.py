@@ -380,7 +380,7 @@ def execute_turn(
 
     # 1. Automata Planning
     auto_roll = roll_d6(fixed_automaton_roll)
-    auto_action = get_automaton_action(match.automaton_type, a_bot, auto_roll)
+    auto_action = get_automaton_action(match.automaton_type, a_bot, auto_roll, opponent=p_bot)
     a_choice = compute_automaton_drive(a_bot, p_bot, auto_action)
     match.automaton_roll = auto_roll
     match.automaton_action = auto_action

@@ -49,6 +49,19 @@ ARCHETYPE_TABLES: Dict[str, Dict[str, List[Dict[str, Any]]]] = {
             {"roll_min": 5, "roll_max": 6, "action": "Rush"},
         ],
     },
+    "Flank": {
+        "target_not_facing": [  # Opposing robot is not facing toward it
+            {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
+            {"roll_min": 2, "roll_max": 3, "action": "Evade"},
+            {"roll_min": 4, "roll_max": 6, "action": "Rush"},
+        ],
+        "target_facing": [  # Opposing robot is facing toward it
+            {"roll_min": 1, "roll_max": 1, "action": "Retreat"},
+            {"roll_min": 2, "roll_max": 4, "action": "Evade"},
+            {"roll_min": 5, "roll_max": 5, "action": "Face"},
+            {"roll_min": 6, "roll_max": 6, "action": "Rush"},
+        ],
+    },
 }
 
 # Per automata allocation mapping from Action_tables.md
@@ -58,6 +71,8 @@ AUTOMATA_ARCHETYPES: Dict[str, str] = {
     "beater_wide": "Balanced",
     "nightwing_wide": "Balanced",
     "chonk": "Spin Up",
+    "billet_hammersaw": "Flank",
+    "sparrow_crusher": "Flank",
 }
 
 # Backward compatibility alias
@@ -67,6 +82,8 @@ AUTOMATA_TABLES = {
     "Vyper_Spinner_Uncharged": ARCHETYPE_TABLES["Spin Up"]["uncharged"],
     "Balanced_Full": ARCHETYPE_TABLES["Balanced"]["full_spin"],
     "Balanced_Sub": ARCHETYPE_TABLES["Balanced"]["sub_spin"],
+    "Flank_Facing": ARCHETYPE_TABLES["Flank"]["target_facing"],
+    "Flank_Not_Facing": ARCHETYPE_TABLES["Flank"]["target_not_facing"],
 }
 
 
@@ -82,6 +99,8 @@ def get_automaton_archetype(automaton_name: str) -> str:
         if bot_key in clean:
             return arch
     # Fallback heuristics
+    if "hammersaw" in clean or "billet" in clean or "sparrow" in clean or "crusher" in clean or "flank" in clean:
+        return "Flank"
     if "flipper" in clean or "rush" in clean:
         return "Full Rush"
     if "spinner" in clean or "chonk" in clean:
@@ -89,6 +108,15 @@ def get_automaton_archetype(automaton_name: str) -> str:
     if "beater" in clean or "nightwing" in clean or "balanced" in clean:
         return "Balanced"
     return "Full Rush"
+
+
+def is_robot_facing_target(observer_pose: Pose, target_pose: Pose, threshold_deg: float = 45.0) -> bool:
+    """Returns True if target_pose lies within +/- threshold_deg of observer's heading."""
+    dx = target_pose.x - observer_pose.x
+    dy = target_pose.y - observer_pose.y
+    target_heading = math.degrees(math.atan2(dx, -dy))
+    bearing = abs(normalize_angle_deg(target_heading - observer_pose.theta))
+    return bearing <= threshold_deg
 
 
 def is_automaton_at_full_spin(automaton: RobotState) -> bool:
@@ -119,9 +147,11 @@ def get_automaton_action(
     automaton_name: str,
     automaton: RobotState,
     roll: int,
+    opponent: Optional[RobotState] = None,
 ) -> str:
     """
     Looks up action based on automaton archetype, weapon spin state, and d6 roll.
+    For Flank archetype, evaluates whether the opposing robot is facing toward it (+/- 45 deg).
     Automata consider themselves at full spin unless they have an active weapon
     with spin up that is not at max spin.
     """
@@ -143,6 +173,13 @@ def get_automaton_action(
             ARCHETYPE_TABLES["Balanced"]["full_spin"]
             if at_full
             else ARCHETYPE_TABLES["Balanced"]["sub_spin"]
+        )
+    elif archetype == "Flank":
+        is_facing = is_robot_facing_target(opponent.pose, automaton.pose, 45.0) if opponent is not None else True
+        table = (
+            ARCHETYPE_TABLES["Flank"]["target_facing"]
+            if is_facing
+            else ARCHETYPE_TABLES["Flank"]["target_not_facing"]
         )
     else:
         table = ARCHETYPE_TABLES["Full Rush"]["default"]

@@ -404,7 +404,7 @@ class PlaytestApp {
       seqIndex++;
 
       this.switchTab(item.tab);
-      RobotViewRenderer.renderRobotState(item.container, item.robot, item.isAuto);
+      RobotViewRenderer.renderRobotState(item.container, item.robot, item.isAuto, null, null, this.currentMatch ? this.currentMatch.player_robot : null);
 
       setTimeout(() => {
         RobotViewRenderer.animateDamageTrain(item.container, item.steps, () => {
@@ -485,7 +485,7 @@ class PlaytestApp {
     // Render Views
     this.arenaRenderer.render(m);
     RobotViewRenderer.renderRobotState(this.playerRobotContainer, pBot, false);
-    RobotViewRenderer.renderRobotState(this.automatonRobotContainer, aBot, true, m.automaton_roll, m.automaton_action);
+    RobotViewRenderer.renderRobotState(this.automatonRobotContainer, aBot, true, m.automaton_roll, m.automaton_action, pBot);
     CombatLogRenderer.renderLog(this.logContainer, m.log);
 
     if (m.phase !== "game_over") {

@@ -29,7 +29,7 @@ export class RobotViewRenderer {
   // Cache of zoom/pan state per container (player vs automaton)
   static viewStates = new Map();
 
-  static renderRobotState(container, robot, isAutomaton = false, lastRoll = null, lastAction = null) {
+  static renderRobotState(container, robot, isAutomaton = false, lastRoll = null, lastAction = null, opponentRobot = null) {
     if (!container || !robot) return;
 
     const comps = Object.values(robot.components || {});
@@ -77,7 +77,7 @@ export class RobotViewRenderer {
 
     let actionTableHtml = "";
     if (isAutomaton) {
-      actionTableHtml = this._renderAutomataTable(robot, lastRoll, lastAction);
+      actionTableHtml = this._renderAutomataTable(robot, lastRoll, lastAction, opponentRobot);
     }
 
     const driveStatus = (robot.left_drive_max > 0 || robot.right_drive_max > 0) ? "Operational" : "Disabled";
@@ -905,7 +905,7 @@ export class RobotViewRenderer {
     playStep(0);
   }
 
-  static _renderAutomataTable(robot, lastRoll, lastAction) {
+  static _renderAutomataTable(robot, lastRoll, lastAction, opponentRobot = null) {
     const rawName = (robot.name || "").toLowerCase().replace(/\s+/g, "_");
     const spinCount = Object.values(robot.weapon_spin_counters || {}).reduce((a, b) => a + b, 0);
 
@@ -915,6 +915,8 @@ export class RobotViewRenderer {
       archetype = "Balanced";
     } else if (rawName.includes("spinner") || rawName.includes("chonk")) {
       archetype = "Spin Up";
+    } else if (rawName.includes("hammersaw") || rawName.includes("billet") || rawName.includes("sparrow") || rawName.includes("crusher") || rawName.includes("flank")) {
+      archetype = "Flank";
     } else if (rawName.includes("flipper")) {
       archetype = "Full Rush";
     }
@@ -922,7 +924,34 @@ export class RobotViewRenderer {
     let rows = [];
     let tableNote = "";
 
-    if (archetype === "Spin Up") {
+    if (archetype === "Flank") {
+      let isFacing = true;
+      if (opponentRobot && opponentRobot.pose && robot.pose) {
+        const dx = robot.pose.x - opponentRobot.pose.x;
+        const dy = robot.pose.y - opponentRobot.pose.y;
+        const targetHeading = Math.atan2(dx, -dy) * (180 / Math.PI);
+        let diff = (targetHeading - opponentRobot.pose.theta) % 360;
+        if (diff >= 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        isFacing = Math.abs(diff) <= 45.0;
+      }
+      if (!isFacing) {
+        tableNote = "Flank (Opponent Not Facing: Opening to Rush!)";
+        rows = [
+          { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
+          { roll: "2–3", action: "Evade", desc: "Move forwards perpendicular to opponent" },
+          { roll: "4–6", action: "Rush", desc: "Drive at opponent at full speed" },
+        ];
+      } else {
+        tableNote = "Flank (Opponent Facing: Evasive Maneuver)";
+        rows = [
+          { roll: "1", action: "Retreat", desc: "Face opponent and move back 1 step" },
+          { roll: "2–4", action: "Evade", desc: "Move forwards perpendicular to opponent" },
+          { roll: "5", action: "Face", desc: "Rotate on spot to face opponent" },
+          { roll: "6", action: "Rush", desc: "Drive at opponent at full speed" },
+        ];
+      }
+    } else if (archetype === "Spin Up") {
       if (spinCount >= 2) {
         tableNote = `Spin Up (Charged: Spin counters >= 2, Currently ${spinCount})`;
         rows = [

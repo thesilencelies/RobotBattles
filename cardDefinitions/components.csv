@@ -21,14 +21,14 @@ Banebots Compliant Wheels,1,2,SS,DD,6,3,,,components/wheels_and_drive/banebots-t
 Banebots T81 Heavy Wheels,2,2,SSS,DDD,6,2,invertible,,components/wheels_and_drive/banebots-t81-wheels.jpeg,itgresa.com
 High Grip Tires,2,3,SSS,DDDD,5,1,,,components/wheels_and_drive/turnabot-30mm-high-grip-tires.jpg,itgresa.com
 Aluminum Plate,2,1,,,8,2,,,components/mechanicals_and_armor/viper-horizontal-spinner-armor-panels.jpeg,itgresa.com
-TPU Plate,1,0,,,6,2,,,components/mechanicals_and_armor/repeat-robotics-scalar-tpu-chassis.jpg,itgresa.com
+TPU Plate,1,0,,,5,2,,,components/mechanicals_and_armor/repeat-robotics-scalar-tpu-chassis.jpg,itgresa.com
 Titanium Top Plate,3,3,,,9,2,,overhead attacks hit this component instead unless inverted,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-titanium-lid.jpg,itgresa.com
 UHMW Wraparound Armor,3,2,,,8,2,,attacks that hit this components side hit this instead,components/mechanicals_and_armor/saifu-wraparound-armor.jpg,itgresa.com
 Titanium Wedge,3,5,,,10,2,wedge,,components/mechanicals_and_armor/baby-nautiloid-titanium-wedge.jpeg,itgresa.com
 Steel Wedge,4,3,,,12,3,wedge,,components/mechanicals_and_armor/vertical-spinner-bent-steel-wedge.jpeg,itgresa.com
 AR500 Wedge,5,4,,,16,3,wedge,,components/mechanicals_and_armor/just-cuz-robotics-ssp-kit-ar500-wedge.jpg,itgresa.com
-Forks,1,1,,,6,0,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg,itgresa.com
-Titanium Horns,2,3,,,11,2,forks,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg,itgresa.com
+Forks,2,1,,,6,0,forks,,components/mechanicals_and_armor/black-frost-front-forks.jpeg,itgresa.com
+Titanium Horns,3,3,,,11,2,forks,,components/mechanicals_and_armor/saifu-symmetrical-titanium-horns.jpeg,itgresa.com
 Belt,0,0,XS,XS,5,2,fragile,,components/mechanicals_and_armor/fingertech-s3m-timing-belt.jpg,itgresa.com
 Timing Pulley,1,1,SS,SSS,5,2,fragile,,components/mechanicals_and_armor/fingertech-pulley.jpg,itgresa.com
-Self righting arm,1,2,P,,9,1,Self-right,,,itgresa.com
+Self righting arm,1,2,P,,6,0,Self-right,,,itgresa.com
