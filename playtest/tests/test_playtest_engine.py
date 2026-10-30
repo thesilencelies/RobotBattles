@@ -250,7 +250,12 @@ class TestPlaytestEngine(unittest.TestCase):
             flip_strength=5, pose=Pose(140, 200, 90), components={}, connections={},
             supply_graph={}, reverse_supply={}, left_drive_max=3, right_drive_max=3
         )
-        drive_evade_wall = compute_automaton_drive(automaton_near_left, player, "Evade")
+        player_south = RobotState(
+            id="p", name="Player", chassis_name="", chassis_template="Square",
+            flip_strength=5, pose=Pose(140, 500, 0), components={}, connections={},
+            supply_graph={}, reverse_supply={}
+        )
+        drive_evade_wall = compute_automaton_drive(automaton_near_left, player_south, "Evade")
         self.assertEqual(drive_evade_wall.left, 3)
         self.assertEqual(drive_evade_wall.right, 3)
 
@@ -427,6 +432,8 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.components["wedge_1"] = wedge_comp
 
         auto_weapon = [c for c in a_bot.components.values() if c.card_type == "weapon"][0]
+        auto_weapon.is_wedge = False
+        auto_weapon.keywords = "Trigger;Self-right;Reset"
         a_bot.weapon_spin_counters[auto_weapon.id] = 4
 
         col = CollisionEvent(
@@ -506,6 +513,8 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.is_inverted = True
 
         auto_weapon = [c for c in a_bot.components.values() if c.card_type == "weapon"][0]
+        auto_weapon.is_wedge = False
+        auto_weapon.keywords = "Trigger;Self-right;Reset"
         a_bot.weapon_spin_counters[auto_weapon.id] = 4
 
         col = CollisionEvent(
@@ -528,8 +537,13 @@ class TestPlaytestEngine(unittest.TestCase):
         # Now test invertible wedge:
         wedge_comp.is_invertible = True
         wedge_comp.keywords = "wedge;invertible"
+        wedge_comp.is_destroyed = False
+        wedge_comp.is_damaged = False
+        wedge_comp.current_durability = 11
+        auto_weapon.was_used_this_turn = False
+        a_bot.weapon_spin_counters[auto_weapon.id] = 4
         p_bot.is_inverted = True
-        logs2 = resolve_collision_combat(col, p_bot, a_bot, 1)
+        logs2 = resolve_collision_combat(col, p_bot, a_bot, 2)
         self.assertTrue(any("Wedge was hit" in entry.message for entry in logs2))
         self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs2))
 
@@ -963,7 +977,7 @@ class TestPlaytestEngine(unittest.TestCase):
             logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
             thrown_logs = [l.message for l in logs if "THROWN" in l.message]
             self.assertTrue(any("takes throw damage 5" in msg for msg in thrown_logs))
-            self.assertTrue(any("rolled 2 -> rotated 120° clockwise" in l.message for l in logs))
+            self.assertTrue(any("rolled 2 -> rotated 45°" in l.message for l in logs))
 
         # Case 2: Thrown near wall (target lands <= 20mm from wall) -> takes throw damage equal to full throw strength (5)
         # Position victim close to top wall (y=25) so thrown displacement hits the wall
@@ -971,11 +985,12 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.pose = Pose(x=400.0, y=50.0, theta=0.0)
         col.contact_point = (400.0, 45.0)
         w_comp.is_active = True
+        w_comp.was_used_this_turn = False
         with patch("random.randint", return_value=3): # d6 roll = 3
             logs_wall = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
             wall_logs = [l.message for l in logs_wall if "THROWN into a WALL" in l.message]
             self.assertTrue(any("takes throw damage 5" in msg for msg in wall_logs))
-            self.assertTrue(any("rolled 3 -> rotated 180° clockwise" in l.message for l in logs_wall))
+            self.assertTrue(any("rolled 3 -> rotated -90°" in l.message for l in logs_wall))
 
     def test_active_contact_still_in_contact_proceeds_to_inertial(self):
         from playtest.engine.combat import resolve_collision_combat
@@ -1033,8 +1048,9 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertFalse(any("rotated a random amount" in msg for msg in log_messages))
         self.assertEqual(p_bot.pose.theta, orig_p_theta)
         self.assertEqual(a_bot.pose.theta, orig_a_theta)
-        # 6. Inertial separation occurred
-        self.assertTrue(any("Inertial separation" in msg for msg in log_messages))
+        # 6. Post-collision separation removed: robots do not separate
+        self.assertFalse(any("Inertial separation" in msg for msg in log_messages))
+        self.assertFalse(any("moved back a full unit" in msg for msg in log_messages))
 
     def test_active_contact_thrown_clear_does_not_proceed_to_inertial(self):
         from playtest.engine.combat import resolve_collision_combat
@@ -1082,7 +1098,7 @@ class TestPlaytestEngine(unittest.TestCase):
             self.assertFalse(any("proceeding with inertial contact" in msg for msg in log_messages))
 
     def test_active_contact_still_touching_separates_full_unit(self):
-        """Tests that if robots remain touching after active contact, they separate a full unit."""
+        """Rule: Post-collision 1-unit separation is removed entirely; robots resolve remaining steps and remain in place."""
         from playtest.engine.combat import resolve_collision_combat, check_robots_in_contact
         from playtest.engine.types import CollisionEvent
         csv_text = read_saved_robot("Vyper_Spinner.csv")
@@ -1127,15 +1143,14 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("ACTIVE WEAPON HIT" in msg for msg in log_messages))
         # Proceeded to inertial contact
         self.assertTrue(any("proceeding with inertial contact" in msg for msg in log_messages))
-        # Separated back a full unit
-        self.assertTrue(any("moved back a full unit to separate" in msg for msg in log_messages))
-        # Robots are no longer touching
-        self.assertFalse(check_robots_in_contact(p_bot, a_bot))
-        self.assertAlmostEqual(p_bot.pose.y, 470.0, delta=0.5)
-        self.assertAlmostEqual(a_bot.pose.y, 320.0, delta=0.5)
+        # Post-collision separation removed: robots do not separate a full unit
+        self.assertFalse(any("moved back a full unit to separate" in msg for msg in log_messages))
+        self.assertTrue(check_robots_in_contact(p_bot, a_bot))
+        self.assertEqual(p_bot.pose.y, 420.0)
+        self.assertEqual(a_bot.pose.y, 370.0)
 
     def test_inertial_separation_wall_clamped(self):
-        """Tests that inertial separation respects arena boundary walls ('if possible')."""
+        """Rule: Post-collision separation removed; pushing match does not push back a full unit."""
         from playtest.engine.combat import resolve_collision_combat
         from playtest.engine.types import CollisionEvent
         csv_text = read_saved_robot("Vyper_Spinner.csv")
@@ -1143,7 +1158,7 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot = match.player_robot
         a_bot = match.automaton_robot
 
-        # p_bot is close to left wall: WALL_LEFT is 100, min robot x is 135 (WALL_LEFT + MINIATURE_RADIUS 35)
+        # p_bot and a_bot in contact near wall with no remaining steps/push vector
         p_bot.pose = Pose(x=145.0, y=400.0, theta=0.0)
         a_bot.pose = Pose(x=175.0, y=400.0, theta=180.0)
 
@@ -1162,13 +1177,10 @@ class TestPlaytestEngine(unittest.TestCase):
         )
 
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
-        # Overlap between p_bot (x=145) and a_bot (x=175) is 70 - 30 = 40mm.
-        # Both robots move back a full unit (overlap/2 + DRIVE_UNIT_MM 40mm) = 20 + 40 = 60mm away from contact.
-        # p_bot tries to move left (-x) by 60mm: 145 - 60 = 85, clamped to 135 (left boundary)
-        self.assertEqual(p_bot.pose.x, 135.0)
-        # a_bot moves right (+x) by 60mm: 175 + 60 = 235 (well within bounds)
-        self.assertEqual(a_bot.pose.x, 235.0)
-        self.assertTrue(any("moved back a full unit" in entry.message.lower() for entry in logs))
+        # Separation removed: robots stay at their positions and do not move back a full unit
+        self.assertEqual(p_bot.pose.x, 145.0)
+        self.assertEqual(a_bot.pose.x, 175.0)
+        self.assertFalse(any("moved back a full unit" in entry.message.lower() for entry in logs))
 
     def test_configurable_playcount_in_engine(self):
         """Tests that the simulator playcount (max rounds) can be configured for dev purposes."""
@@ -1326,9 +1338,10 @@ class TestPlaytestEngine(unittest.TestCase):
         a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
 
         w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
-        w_comp.outputs = "5W"
+        w_comp.outputs = "10W"
         w_comp.text = ""
         w_comp.is_active = True
+        w_comp.was_used_this_turn = False
         p_bot.weapon_spin_counters[w_comp.id] = 1
         w_comp.spin_counters = 1
 
@@ -1368,7 +1381,9 @@ class TestPlaytestEngine(unittest.TestCase):
 
         # Reset opponent pose and player weapon spin
         a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+        w_comp.outputs = "5W"
         w_comp.is_active = True
+        w_comp.was_used_this_turn = False
         p_bot.weapon_spin_counters[w_comp.id] = 1
         w_comp.spin_counters = 1
 
@@ -1396,8 +1411,8 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("Wedge was hit —" in m for m in log_msgs2))
         self.assertTrue(any(f"{a_bot.name} is not thrown" in m for m in log_msgs2))
         self.assertFalse(any(f"{a_bot.name} is THROWN" in m for m in log_msgs2))
-        # Player Bot was raised and thrown, so robots are separated
-        self.assertFalse(check_robots_in_contact(p_bot, a_bot))
+        # Post-collision separation removed: robots remain in contact
+        self.assertTrue(check_robots_in_contact(p_bot, a_bot))
 
     def test_weapon_damage_applies_only_to_contacted_component(self):
         """Rule: Weapon strike damage applies to just the one contacted component, while recoil feedback uses the chain."""
@@ -1409,6 +1424,10 @@ class TestPlaytestEngine(unittest.TestCase):
 
         p_bot.pose = Pose(x=400.0, y=410.0, theta=0.0)
         a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+
+        # Wire plate 15 to component 12 to test excess damage does not propagate across connections
+        p_bot.connections["15"] = ["12"]
+        p_bot.connections["12"] = ["15"]
 
         # Target on player: TPU Plate (connected to other components)
         plate_cids = [cid for cid, c in p_bot.components.items() if "plate" in c.name.lower() and len(p_bot.connections.get(cid, [])) > 0]
@@ -1920,11 +1939,12 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_rem_vector=(0.0, 50.0),
             push_vector=(0.0, 20.0),
         )
-        resolve_inert_contact(col, r1, r2, round_num=1)
-        # Both robots move in r1's direction (-Y) by -30.0, then both move back a full unit to separate:
-        # r1: 400 - 30 + 45 = 415; r2: 340 - 30 - 45 = 265
-        self.assertAlmostEqual(r1.pose.y, 415.0, delta=2.0)
-        self.assertAlmostEqual(r2.pose.y, 265.0, delta=2.0)
+        logs = resolve_inert_contact(col, r1, r2, round_num=1)
+        # Both robots move in r1's direction (-Y) by -30.0 (separation removed):
+        # r1: 400 - 30 = 370; r2: 340 - 30 = 310
+        self.assertAlmostEqual(r1.pose.y, 370.0, delta=2.0)
+        self.assertAlmostEqual(r2.pose.y, 310.0, delta=2.0)
+        self.assertFalse(any("Inertial separation" in entry.message for entry in logs))
 
     def test_match_export_log_structure(self):
         """
@@ -2006,7 +2026,7 @@ class TestPlaytestEngine(unittest.TestCase):
         logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
         self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs))
 
-        # Now raised: damage is still 6, but attacks have throw strength reduced by 2 (was 6, now 4)
+        # Rule: Raised does not reduce attack throw strength (still full throw strength 6)
         a_bot.components[target_cid].is_damaged = False
         a_bot.components[target_cid].is_destroyed = False
         a_bot.components[target_cid].current_durability = a_bot.components[target_cid].max_durability
@@ -2017,7 +2037,29 @@ class TestPlaytestEngine(unittest.TestCase):
         wpn.was_used_this_turn = False
         logs_raised = resolve_collision_combat(col, p_bot, a_bot, round_num=2)
         self.assertTrue(any("dealing 6 dmg" in entry.message for entry in logs_raised))
-        self.assertTrue(any("reduced by 2 (was 6, now 4)" in entry.message for entry in logs_raised))
+        self.assertFalse(any("reduced by 2" in entry.message for entry in logs_raised))
+        self.assertTrue(any("Strength 6" in entry.message for entry in logs_raised))
+
+        # Rule: Raised increases throw strength received by +2 (when base throw > 0)
+        p_bot.is_raised = False
+        a_bot.is_raised = True
+        a_bot.components[target_cid].is_damaged = False
+        a_bot.components[target_cid].is_destroyed = False
+        a_bot.components[target_cid].current_durability = a_bot.components[target_cid].max_durability
+        a_bot.components[target_cid].absorption = 0
+        wpn.is_active = True
+        p_bot.weapon_spin_counters[wpn.id] = 3
+        wpn.was_used_this_turn = False
+        logs_recv = resolve_collision_combat(col, p_bot, a_bot, round_num=3)
+        self.assertTrue(any("+2 throw strength after active contact (throw strength is now 8)" in entry.message for entry in logs_recv))
+
+        # Rule: Raised does NOT trigger a throw when base throw strength is 0
+        a_bot.components[target_cid].absorption = 10  # 10 >= 6 attack
+        wpn.is_active = True
+        p_bot.weapon_spin_counters[wpn.id] = 3
+        wpn.was_used_this_turn = False
+        logs_zero = resolve_collision_combat(col, p_bot, a_bot, round_num=4)
+        self.assertFalse(any("is THROWN" in entry.message for entry in logs_zero))
 
     def test_feedback_propagation_rounding_up(self):
         """
@@ -2233,77 +2275,73 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(w_comp.spin_counters, 1)
 
     def test_physical_curve_templates_trajectory(self):
-        """Tests that consolidated physical curve templates generate trajectories matching exact angles."""
+        """Tests that discrete grid movement steps generate 45-degree snapped trajectories."""
         from playtest.engine.match import get_template_metadata
         from playtest.engine.movement import generate_trajectory
 
         start = Pose(x=400.0, y=400.0, theta=0.0)
 
-        # 1. Gentle curve: (3, 2) -> 26.0 deg right
+        # 1. Gentle curve: (3, 2) -> 1 turn (45°) + 2 forwards steps -> 45° right
         meta_gentle = get_template_metadata(3, 2)
         self.assertEqual(meta_gentle["template_id"], "curve_gentle")
-        self.assertEqual(meta_gentle["nominal_rc"], 220.0)
-        self.assertAlmostEqual(meta_gentle["target_angle_deg"], 26.0)
         self.assertFalse(meta_gentle["flipped"])
+        self.assertEqual(meta_gentle["total_steps"], 3)
         traj_g = generate_trajectory(start, MoveChoice(3, 2), num_steps=20)
-        self.assertAlmostEqual(traj_g[-1].theta, 26.0, places=1)
+        self.assertAlmostEqual(traj_g[-1].theta, 45.0, places=1)
         self.assertGreater(traj_g[-1].x, 400.0)  # moved right
         self.assertLess(traj_g[-1].y, 400.0)     # moved forward (decreased y)
 
-        # Flipped gentle curve: (2, 3) -> 26.0 deg left (334 deg)
+        # Flipped gentle curve: (2, 3) -> 1 turn (-45°) + 2 forwards steps -> 315° (-45° left)
         meta_gentle_flip = get_template_metadata(2, 3)
         self.assertTrue(meta_gentle_flip["flipped"])
+        self.assertEqual(meta_gentle_flip["total_steps"], 3)
         traj_gf = generate_trajectory(start, MoveChoice(2, 3), num_steps=20)
-        self.assertAlmostEqual(traj_gf[-1].theta, 334.0, places=1)
+        self.assertAlmostEqual(traj_gf[-1].theta, 315.0, places=1)
         self.assertLess(traj_gf[-1].x, 400.0)    # moved left
 
-        # 2. Medium curve: (2, 1) -> 35.0 deg
+        # 2. Medium curve: (2, 1) -> 1 turn (45°) + 1 forwards step -> 45° right
         meta_med = get_template_metadata(2, 1)
         self.assertEqual(meta_med["template_id"], "curve_medium")
-        self.assertEqual(meta_med["nominal_rc"], 97.5)
-        self.assertAlmostEqual(meta_med["target_angle_deg"], 35.0)
+        self.assertEqual(meta_med["total_steps"], 2)
         traj_m = generate_trajectory(start, MoveChoice(2, 1), num_steps=20)
-        self.assertAlmostEqual(traj_m[-1].theta, 35.0, places=1)
+        self.assertAlmostEqual(traj_m[-1].theta, 45.0, places=1)
 
-        # 3. Sharp curve: (3, 1) -> 70.0 deg, and (5, 1) -> 180.0 deg
+        # 3. Sharp curve: (3, 1) -> turn (45°) + forwards + turn (45°) -> 90° right
         meta_sharp = get_template_metadata(3, 1)
         self.assertEqual(meta_sharp["template_id"], "curve_sharp")
-        self.assertEqual(meta_sharp["nominal_rc"], 55.0)
-        self.assertAlmostEqual(meta_sharp["target_angle_deg"], 70.0)
+        self.assertEqual(meta_sharp["total_steps"], 3)
         traj_s = generate_trajectory(start, MoveChoice(3, 1), num_steps=20)
-        self.assertAlmostEqual(traj_s[-1].theta, 70.0, places=1)
+        self.assertAlmostEqual(traj_s[-1].theta, 90.0, places=1)
 
+        # Sharp curve max: (5, 1) -> 5 steps ending at 180°
         meta_sharp_max = get_template_metadata(5, 1)
-        self.assertAlmostEqual(meta_sharp_max["target_angle_deg"], 180.0)
+        self.assertEqual(meta_sharp_max["total_steps"], 5)
         traj_smax = generate_trajectory(start, MoveChoice(5, 1), num_steps=20)
         self.assertAlmostEqual(traj_smax[-1].theta, 180.0, places=1)
 
     def test_asymmetric_counter_drives_trajectory(self):
-        """Tests Rule 6.1 g: Spin Disc for min(|L|, |R|) then Pivot Fan for remainder."""
+        """Tests discrete grid steps for asymmetric counter drives snapped to 45° increments."""
         from playtest.engine.match import get_template_metadata
         from playtest.engine.movement import generate_trajectory
 
         start = Pose(x=400.0, y=400.0, theta=0.0)
 
-        # Choice (3, -1): k=1 (spin 90°), rem=2 (pivot 90°) -> total rotation 180°
+        # Choice (3, -1): turn (+45°), pivot (+45°), turn (+45°) -> 135° rotation
         meta = get_template_metadata(3, -1)
         self.assertEqual(meta["category"], "asymmetric_counter")
-        self.assertEqual(meta["spin_k"], 1)
-        self.assertEqual(meta["spin_deg"], 90.0)
-        self.assertEqual(meta["pivot_rem"], 2)
-        self.assertEqual(meta["pivot_deg"], 90.0)
         self.assertFalse(meta["flipped"])
+        self.assertEqual(meta["total_steps"], 3)
 
         traj = generate_trajectory(start, MoveChoice(3, -1), num_steps=20)
-        # End theta should be 180 deg
-        self.assertAlmostEqual(traj[-1].theta, 180.0, places=1)
+        self.assertAlmostEqual(traj[-1].theta, 135.0, places=1)
 
-        # Choice (-1, 3): left turn counter-drive -> flipped = True
+        # Choice (-1, 3): left turn counter-drive -> flipped = True, ends at 225° (-135°)
         meta_flip = get_template_metadata(-1, 3)
         self.assertEqual(meta_flip["category"], "asymmetric_counter")
         self.assertTrue(meta_flip["flipped"])
+        self.assertEqual(meta_flip["total_steps"], 3)
         traj_flip = generate_trajectory(start, MoveChoice(-1, 3), num_steps=20)
-        self.assertAlmostEqual(traj_flip[-1].theta, 180.0, places=1)
+        self.assertAlmostEqual(traj_flip[-1].theta, 225.0, places=1)
 
     def test_hazard_wall_knockout_on_throw(self):
         """Rule: A marked hazard wall collision causes immediate knockout."""
@@ -3098,6 +3136,121 @@ class TestPlaytestEngine(unittest.TestCase):
         execute_turn(match_sc, MoveChoice(0, 0), fixed_automaton_roll=1)
         self.assertEqual(match_sc.automaton_action, "Retreat")
         self.assertEqual(match_sc.automaton_roll, 1)
+
+    def test_discrete_grid_movement_step_calculation(self):
+        """Tests the discrete grid movement step algorithm."""
+        from playtest.engine.movement import compute_movement_steps
+
+        # 1. Straight forward: (3, 3) -> 3 forwards steps
+        steps_fwd = compute_movement_steps(3, 3)
+        self.assertEqual(len(steps_fwd), 3)
+        for s in steps_fwd:
+            self.assertEqual(s["type"], "forwards")
+            self.assertEqual(s["direction"], 1)
+
+        # 2. Straight reverse: (-2, -2) -> 2 reverse steps
+        steps_rev = compute_movement_steps(-2, -2)
+        self.assertEqual(len(steps_rev), 2)
+        for s in steps_rev:
+            self.assertEqual(s["type"], "reverse")
+            self.assertEqual(s["direction"], -1)
+
+        # 3. Pivot on spot: (+2, -2) -> 2 pivot steps clockwise (rotation +45°)
+        steps_piv_cw = compute_movement_steps(2, -2)
+        self.assertEqual(len(steps_piv_cw), 2)
+        for s in steps_piv_cw:
+            self.assertEqual(s["type"], "pivot")
+            self.assertEqual(s["rotation_deg"], 45.0)
+
+        # Pivot counter-clockwise: (-2, +2) -> 2 pivot steps CCW (rotation -45°)
+        steps_piv_ccw = compute_movement_steps(-2, 2)
+        self.assertEqual(len(steps_piv_ccw), 2)
+        for s in steps_piv_ccw:
+            self.assertEqual(s["type"], "pivot")
+            self.assertEqual(s["rotation_deg"], -45.0)
+
+        # 4. Turn steps (one value is 0): (2, 0) -> 2 turn steps
+        steps_turn = compute_movement_steps(2, 0)
+        self.assertEqual(len(steps_turn), 2)
+        self.assertEqual(steps_turn[0]["type"], "turn")
+        self.assertEqual(steps_turn[0]["pinned_side"], "right")
+        self.assertEqual(steps_turn[0]["rotation_deg"], 45.0)
+        self.assertEqual(steps_turn[1]["type"], "turn")
+
+        # 5. Curve alternation: (3, 2) -> turn (pinned right), forwards, forwards
+        steps_curve = compute_movement_steps(3, 2)
+        self.assertEqual(len(steps_curve), 3)
+        self.assertEqual(steps_curve[0]["type"], "turn")
+        self.assertEqual(steps_curve[0]["pinned_side"], "right")
+        self.assertEqual(steps_curve[1]["type"], "forwards")
+        self.assertEqual(steps_curve[2]["type"], "forwards")
+
+        # Sharp curve alternation: (3, 1) -> turn, forwards, turn
+        steps_sharp = compute_movement_steps(3, 1)
+        self.assertEqual(len(steps_sharp), 3)
+        self.assertEqual(steps_sharp[0]["type"], "turn")
+        self.assertEqual(steps_sharp[1]["type"], "forwards")
+        self.assertEqual(steps_sharp[2]["type"], "turn")
+
+    def test_discrete_grid_chassis_occupancy_cells(self):
+        """Tests that all robot chassis occupy 4 discrete squares (Square 2x2, Wide 4x1, Triangle T-piece)."""
+        from playtest.engine.field import get_chassis_grid_cells
+        from playtest.engine.types import Pose
+
+        # Square chassis at (400, 400), theta=0: occupies 2x2 = 4 squares
+        sq_cells = get_chassis_grid_cells("Square", Pose(400.0, 400.0, 0.0))
+        self.assertEqual(len(sq_cells), 4)
+
+        # Wide chassis at (400, 400), theta=0: occupies 4x1 = 4 squares
+        wide_cells = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, 0.0))
+        self.assertEqual(len(wide_cells), 4)
+
+        # Triangle chassis at (400, 400), theta=0: occupies T-tetris piece (Option A) = 4 squares
+        tri_cells = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, 0.0))
+        self.assertEqual(len(tri_cells), 4)
+
+    def test_joint_movement_rigid_attachment(self):
+        """Tests that apply_joint_step moves the passive robot rigidly attached to the active robot."""
+        from playtest.engine.movement import apply_joint_step
+        from playtest.engine.types import Pose
+
+        p_active = Pose(x=400.0, y=400.0, theta=0.0)
+        p_passive = Pose(x=400.0, y=360.0, theta=180.0)
+
+        # 1. Forwards step: translates passive bot by the exact same delta
+        step_fwd = {"type": "forwards", "direction": 1}
+        new_act_fwd, new_pas_fwd = apply_joint_step(p_active, p_passive, step_fwd)
+        self.assertAlmostEqual(new_act_fwd.y, 360.0)
+        self.assertAlmostEqual(new_pas_fwd.y, 320.0)
+        self.assertEqual(new_pas_fwd.theta, 180.0)
+
+        # 2. Pivot step: rotates passive bot around active bot's center
+        step_piv = {"type": "pivot", "rotation_deg": 45.0}
+        new_act_piv, new_pas_piv = apply_joint_step(p_active, p_passive, step_piv)
+        self.assertAlmostEqual(new_act_piv.theta, 45.0)
+        # Relative distance between centers is preserved
+        orig_dist = ((p_passive.x - p_active.x)**2 + (p_passive.y - p_active.y)**2)**0.5
+        new_dist = ((new_pas_piv.x - new_act_piv.x)**2 + (new_pas_piv.y - new_act_piv.y)**2)**0.5
+        self.assertAlmostEqual(orig_dist, new_dist)
+        # Passive robot theta also rotates by +45°
+        self.assertAlmostEqual(new_pas_piv.theta, 225.0)
+
+        # 3. Turn step: rotates passive bot around active bot's pinned wheel/edge
+        step_turn = {"type": "turn", "pinned_side": "right", "rotation_deg": 45.0}
+        new_act_turn, new_pas_turn = apply_joint_step(p_active, p_passive, step_turn)
+        self.assertAlmostEqual(new_act_turn.theta, 45.0)
+        self.assertAlmostEqual(new_pas_turn.theta, 225.0)
+
+    def test_throw_rotation_d6_table(self):
+        """Tests that THROW_ROTATION_MAP matches the d6 rotation table in Section 5.3."""
+        from playtest.engine.combat import THROW_ROTATION_MAP
+
+        self.assertEqual(THROW_ROTATION_MAP[1], -45.0)  # 45° ACW
+        self.assertEqual(THROW_ROTATION_MAP[2], 45.0)   # 45° CW
+        self.assertEqual(THROW_ROTATION_MAP[3], -90.0)  # 90° ACW
+        self.assertEqual(THROW_ROTATION_MAP[4], 90.0)   # 90° CW
+        self.assertEqual(THROW_ROTATION_MAP[5], 180.0)  # 180°
+        self.assertEqual(THROW_ROTATION_MAP[6], 0.0)    # No rotation
 
 
 if __name__ == "__main__":

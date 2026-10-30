@@ -34,6 +34,7 @@ from .movement import (
     DRIVE_UNIT_MM,
     MINIATURE_RADIUS,
     WHEELBASE_MM,
+    compute_movement_steps,
     generate_trajectory,
 )
 from .types import (
@@ -61,6 +62,8 @@ def get_template_metadata(left: int, right: int) -> Dict[str, Any]:
     info["wheelbase"] = WHEELBASE_MM
     info["drive_unit"] = DRIVE_UNIT_MM
     info["miniature_radius"] = MINIATURE_RADIUS
+    info["steps"] = compute_movement_steps(left, right)
+    info["total_steps"] = len(info["steps"])
 
     if t_id in CURVE_CONFIGS:
         cfg = CURVE_CONFIGS[t_id]
@@ -410,7 +413,7 @@ def execute_turn(
 
     # 2. Movement Phase
     # Crushing Claw Grab Effect:
-    # Rule: "Following a successful hit with the Crushing Claw, on the next turn the target moves along with this robot during the movement phase as if in inertial contact and as if raised (contributing zero motion)."
+    was_grabbed = (p_bot.grabbed_by == a_bot.id or a_bot.grabbed_by == p_bot.id)
     if p_bot.grabbed_by == a_bot.id:
         p_choice = MoveChoice(0, 0)
         a_traj = generate_trajectory(a_bot.pose, a_choice)
@@ -447,7 +450,7 @@ def execute_turn(
     match.automaton_trajectory = a_traj
 
     # 3. Collision Phase
-    col = detect_collision(p_bot, p_traj, a_bot, a_traj)
+    col = None if was_grabbed else detect_collision(p_bot, p_traj, a_bot, a_traj)
     match.last_collision = col
 
     if col:

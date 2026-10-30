@@ -15,6 +15,7 @@ from .field import (
     WALL_RIGHT,
     WALL_TOP,
     card_to_miniature_offset,
+    get_chassis_grid_cells,
     get_chassis_polygon,
     get_weapon_template_geometry,
     point_in_polygon,
@@ -472,11 +473,11 @@ def detect_collision(
     Detects first collision between composite miniatures, tests active weapon red zones,
     and calculates remaining motion vectors for pushing match.
     """
-    num_steps = min(len(traj1), len(traj2))
+    num_steps = max(len(traj1), len(traj2))
 
     for k in range(1, num_steps):
-        p1 = traj1[k]
-        p2 = traj2[k]
+        p1 = traj1[min(k, len(traj1) - 1)]
+        p2 = traj2[min(k, len(traj2) - 1)]
 
         parts1 = get_robot_miniature_parts(r1, p1.x, p1.y, p1.theta)
         parts2 = get_robot_miniature_parts(r2, p2.x, p2.y, p2.theta)
@@ -493,6 +494,16 @@ def detect_collision(
                     break
             if has_contact:
                 break
+
+        # Check discrete grid cell overlap
+        if not has_contact:
+            cells1 = get_chassis_grid_cells(r1.chassis_template, p1)
+            cells2 = get_chassis_grid_cells(r2.chassis_template, p2)
+            shared_cells = cells1 & cells2
+            if shared_cells:
+                has_contact = True
+                sc = list(shared_cells)[0]
+                contact_pt = ((sc[0] + 0.5) * 40.0, (sc[1] + 0.5) * 40.0)
 
         if has_contact:
             # Check Active weapon contact across ALL active weapons:

@@ -176,6 +176,227 @@ def list_template_options(left_max: int, right_max: int) -> List[Dict[str, Any]]
     return options
 
 
+def compute_movement_steps(left: int, right: int) -> List[Dict[str, Any]]:
+    """
+    Computes discrete movement steps on the 45-degree snapped grid.
+    Rules:
+    - If the absolute value of the remaining drive differs and the previous step was not a turn or one value is 0:
+      Do a turn step. The side with less drive is kept still, and the robot rotates 45 degrees towards that side,
+      keeping that edge where it is. Increment or decrement the side that has more drive towards 0.
+    - Else:
+      - If both have the same sign: take a forwards (or reverse) step.
+        Move the robot one square in the direction it is facing (or opposite if negative).
+        Increment or decrement both drive values towards 0.
+      - If the signs of both are different: do a pivot step.
+        Rotate the robot 45 degrees around its centre, in the direction determined by the signs
+        (positive is forwards, negative is reverse). Increment or decrement both drive values towards 0.
+    """
+    steps: List[Dict[str, Any]] = []
+    rem_l = int(left)
+    rem_r = int(right)
+    prev_was_turn = False
+
+    while rem_l != 0 or rem_r != 0:
+        if abs(rem_l) != abs(rem_r) and (not prev_was_turn or rem_l == 0 or rem_r == 0):
+            prev_was_turn = True
+            if abs(rem_l) > abs(rem_r):
+                pinned = "right"
+                rot_deg = 45.0 if rem_l > 0 else -45.0
+                new_l = rem_l - 1 if rem_l > 0 else rem_l + 1
+                new_r = rem_r
+            else:
+                pinned = "left"
+                rot_deg = -45.0 if rem_r > 0 else 45.0
+                new_r = rem_r - 1 if rem_r > 0 else rem_r + 1
+                new_l = rem_l
+
+            steps.append({
+                "type": "turn",
+                "pinned_side": pinned,
+                "rotation_deg": rot_deg,
+                "left_before": rem_l,
+                "right_before": rem_r,
+                "left_after": new_l,
+                "right_after": new_r,
+            })
+            rem_l, rem_r = new_l, new_r
+        else:
+            prev_was_turn = False
+            if (rem_l > 0 and rem_r > 0) or (rem_l < 0 and rem_r < 0):
+                is_reverse = (rem_l < 0)
+                new_l = rem_l + 1 if is_reverse else rem_l - 1
+                new_r = rem_r + 1 if is_reverse else rem_r - 1
+                steps.append({
+                    "type": "reverse" if is_reverse else "forwards",
+                    "direction": -1 if is_reverse else 1,
+                    "left_before": rem_l,
+                    "right_before": rem_r,
+                    "left_after": new_l,
+                    "right_after": new_r,
+                })
+                rem_l, rem_r = new_l, new_r
+            else:
+                rot_deg = 45.0 if rem_l > 0 else -45.0
+                new_l = rem_l - 1 if rem_l > 0 else rem_l + 1
+                new_r = rem_r + 1 if rem_r < 0 else rem_r - 1
+                steps.append({
+                    "type": "pivot",
+                    "rotation_deg": rot_deg,
+                    "left_before": rem_l,
+                    "right_before": rem_r,
+                    "left_after": new_l,
+                    "right_after": new_r,
+                })
+                rem_l, rem_r = new_l, new_r
+
+    return steps
+
+
+def get_heading_grid_delta(theta_deg: float) -> Tuple[int, int]:
+    """
+    Returns the integer (dx, dy) grid direction for a heading in degrees,
+    snapped to the nearest 45 degree increment.
+    Heading 0 is North (-y), 90 is East (+x), 180 is South (+y), 270 is West (-x).
+    """
+    snapped = int(round((theta_deg % 360.0) / 45.0) * 45) % 360
+    deltas = {
+        0: (0, -1),
+        45: (1, -1),
+        90: (1, 0),
+        135: (1, 1),
+        180: (0, 1),
+        225: (-1, 1),
+        270: (-1, 0),
+        315: (-1, -1),
+    }
+    return deltas.get(snapped, (0, -1))
+
+
+def apply_movement_step(
+    pose: Pose,
+    step: Dict[str, Any],
+    wheelbase: float = WHEELBASE_MM,
+    grid_unit_mm: float = DRIVE_UNIT_MM,
+    clamp_to_walls: bool = True,
+) -> Pose:
+    """
+    Applies a single discrete movement step to a robot Pose.
+    """
+    stype = step["type"]
+    new_pose = pose.clone()
+
+    if stype in ("forwards", "reverse"):
+        dx_g, dy_g = get_heading_grid_delta(new_pose.theta)
+        direction = step.get("direction", 1 if stype == "forwards" else -1)
+        dx_mm = dx_g * direction * grid_unit_mm
+        dy_mm = dy_g * direction * grid_unit_mm
+        new_pose.x += dx_mm
+        new_pose.y += dy_mm
+
+    elif stype == "pivot":
+        rot_deg = step["rotation_deg"]
+        new_pose.theta = (new_pose.theta + rot_deg) % 360.0
+
+    elif stype == "turn":
+        rot_deg = step["rotation_deg"]
+        pinned = step["pinned_side"]
+        rad = math.radians(rot_deg)
+        r_rad = math.radians(new_pose.theta)
+        rx = math.cos(r_rad)
+        ry = math.sin(r_rad)
+        pv_offset = (wheelbase / 2.0) if pinned == "right" else -(wheelbase / 2.0)
+        pv_x = new_pose.x + pv_offset * rx
+        pv_y = new_pose.y + pv_offset * ry
+        v_x = new_pose.x - pv_x
+        v_y = new_pose.y - pv_y
+        cos_r = math.cos(rad)
+        sin_r = math.sin(rad)
+        new_pose.x = pv_x + (v_x * cos_r - v_y * sin_r)
+        new_pose.y = pv_y + (v_x * sin_r + v_y * cos_r)
+        new_pose.theta = (new_pose.theta + rot_deg) % 360.0
+
+    if clamp_to_walls:
+        new_pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_pose.x))
+        new_pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_pose.y))
+
+    return new_pose
+
+
+def apply_joint_step(
+    active_pose: Pose,
+    passive_pose: Pose,
+    step: Dict[str, Any],
+    wheelbase: float = WHEELBASE_MM,
+    grid_unit_mm: float = DRIVE_UNIT_MM,
+    clamp_to_walls: bool = False,
+) -> Tuple[Pose, Pose]:
+    """
+    Executes a movement step on active_pose, moving passive_pose along like it is stuck to it.
+    - Forwards / Reverse: both robots translate by the same grid delta.
+    - Pivot: both robots rotate about active robot's center by rotation_deg.
+    - Turn: both robots rotate about active robot's pinned edge/wheel by rotation_deg.
+    """
+    stype = step["type"]
+    new_active = active_pose.clone()
+    new_passive = passive_pose.clone()
+
+    if stype in ("forwards", "reverse"):
+        dx_g, dy_g = get_heading_grid_delta(active_pose.theta)
+        direction = step.get("direction", 1 if stype == "forwards" else -1)
+        dx_mm = dx_g * direction * grid_unit_mm
+        dy_mm = dy_g * direction * grid_unit_mm
+        new_active.x += dx_mm
+        new_active.y += dy_mm
+        new_passive.x += dx_mm
+        new_passive.y += dy_mm
+
+    elif stype == "pivot":
+        rot_deg = step["rotation_deg"]
+        rad = math.radians(rot_deg)
+        cos_r = math.cos(rad)
+        sin_r = math.sin(rad)
+        new_active.theta = (new_active.theta + rot_deg) % 360.0
+        rel_x = passive_pose.x - active_pose.x
+        rel_y = passive_pose.y - active_pose.y
+        new_passive.x = active_pose.x + (rel_x * cos_r - rel_y * sin_r)
+        new_passive.y = active_pose.y + (rel_x * sin_r + rel_y * cos_r)
+        new_passive.theta = (new_passive.theta + rot_deg) % 360.0
+
+    elif stype == "turn":
+        rot_deg = step["rotation_deg"]
+        pinned_side = step["pinned_side"]
+        rad = math.radians(rot_deg)
+        cos_r = math.cos(rad)
+        sin_r = math.sin(rad)
+
+        r_heading = math.radians(active_pose.theta)
+        rx = math.cos(r_heading)
+        ry = math.sin(r_heading)
+        pivot_offset = (wheelbase / 2.0) if pinned_side == "right" else -(wheelbase / 2.0)
+        pv_x = active_pose.x + pivot_offset * rx
+        pv_y = active_pose.y + pivot_offset * ry
+
+        v_ax = active_pose.x - pv_x
+        v_ay = active_pose.y - pv_y
+        new_active.x = pv_x + (v_ax * cos_r - v_ay * sin_r)
+        new_active.y = pv_y + (v_ax * sin_r + v_ay * cos_r)
+        new_active.theta = (new_active.theta + rot_deg) % 360.0
+
+        v_px = passive_pose.x - pv_x
+        v_py = passive_pose.y - pv_y
+        new_passive.x = pv_x + (v_px * cos_r - v_py * sin_r)
+        new_passive.y = pv_y + (v_px * sin_r + v_py * cos_r)
+        new_passive.theta = (new_passive.theta + rot_deg) % 360.0
+
+    if clamp_to_walls:
+        new_active.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_active.x))
+        new_active.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_active.y))
+        new_passive.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_passive.x))
+        new_passive.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_passive.y))
+
+    return (new_active, new_passive)
+
+
 def generate_trajectory(
     start_pose: Pose,
     choice: MoveChoice,
@@ -184,244 +405,47 @@ def generate_trajectory(
 ) -> List[TrajectoryPoint]:
     """
     Computes a discrete trajectory of TrajectoryPoints from t=0.0 to t=1.0
-    for a chosen (Left, Right) drive pair along the corresponding physical movement template.
-    The robot starts with its front (or rear for reverse) bumper flush at the template baseline
-    and follows the exact template channel to the marked stop line.
+    for a chosen (Left, Right) drive pair along discrete grid steps.
     """
-    l_val = float(choice.left)
-    r_val = float(choice.right)
+    l_val = int(choice.left)
+    r_val = int(choice.right)
 
-    theta_0_rad = start_pose.heading_rad()
-    x_0 = start_pose.x
-    y_0 = start_pose.y
-
-    # Forward vector f (heading 0 is North: dx = 0, dy = -1)
-    f_x = math.sin(theta_0_rad)
-    f_y = -math.cos(theta_0_rad)
-
-    # Right vector r (heading 0 is North: dx = 1, dy = 0)
-    r_x = math.cos(theta_0_rad)
-    r_y = math.sin(theta_0_rad)
-
-    # Map choice directly to physical movement template
-    info = map_permutation_to_template(int(choice.left), int(choice.right))
-    cat = info["category"]
-
-    # Case 1: Stationary (0, 0)
-    if cat == "stop":
-        points = [
-            TrajectoryPoint(x=x_0, y=y_0, theta=start_pose.theta, t=i / float(num_steps))
-            for i in range(num_steps + 1)
+    steps = compute_movement_steps(l_val, r_val)
+    if not steps:
+        count = max(1, num_steps)
+        return [
+            TrajectoryPoint(x=start_pose.x, y=start_pose.y, theta=start_pose.theta, t=i / float(count))
+            for i in range(count + 1)
         ]
+
+    step_poses: List[Pose] = [start_pose.clone()]
+    curr = start_pose.clone()
+    for step in steps:
+        curr = apply_movement_step(curr, step, clamp_to_walls=clamp_to_walls)
+        step_poses.append(curr.clone())
+
+    total_steps = len(steps)
+    if num_steps <= 0 or num_steps == total_steps:
+        points: List[TrajectoryPoint] = []
+        for i, p in enumerate(step_poses):
+            points.append(TrajectoryPoint(x=p.x, y=p.y, theta=p.theta, t=i / float(total_steps)))
         return points
 
-    # Case 2: Straight translation (L == R)
-    if cat == "straight":
-        total_dist = l_val * DRIVE_UNIT_MM
-        points = []
-        for i in range(num_steps + 1):
-            t = i / float(num_steps)
-            dist_t = total_dist * t
-            px = x_0 + dist_t * f_x
-            py = y_0 + dist_t * f_y
-            if clamp_to_walls:
-                px = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, px))
-                py = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, py))
-            points.append(TrajectoryPoint(x=px, y=py, theta=start_pose.theta, t=t))
-        return points
+    # Interpolate for smooth animation if num_steps > total_steps
+    points: List[TrajectoryPoint] = []
+    sub = max(1, num_steps // total_steps)
+    for step_idx in range(total_steps):
+        p_start = step_poses[step_idx]
+        p_end = step_poses[step_idx + 1]
+        for s in range(sub):
+            alpha = s / float(sub)
+            t_val = (step_idx + alpha) / float(total_steps)
+            interp_x = p_start.x + (p_end.x - p_start.x) * alpha
+            interp_y = p_start.y + (p_end.y - p_start.y) * alpha
+            d_th = (p_end.theta - p_start.theta + 180.0) % 360.0 - 180.0
+            interp_th = (p_start.theta + d_th * alpha) % 360.0
+            points.append(TrajectoryPoint(x=interp_x, y=interp_y, theta=interp_th, t=t_val))
 
-    # Case 3: Pure Spin-on-the-spot (L == -R)
-    # Spin Disc template: 90 deg per 1 drive unit (4 units = 360 deg)
-    if cat == "spin":
-        delta_deg = l_val * 90.0  # Positive L spins clockwise
-        points = []
-        for i in range(num_steps + 1):
-            t = i / float(num_steps)
-            curr_theta = (start_pose.theta + t * delta_deg) % 360.0
-            points.append(TrajectoryPoint(x=x_0, y=y_0, theta=curr_theta, t=t))
-        return points
-
-    # Case 4: Pivot on locked wheel (one side is 0)
-    # Pivot Fan template: 45 deg per 1 unit (4 units = 180 deg)
-    if cat == "pivot":
-        points = []
-        pivot_offset = WHEELBASE_MM / 2.0
-
-        if abs(r_val) < 1e-6 and l_val > 0:
-            # Forward pivot around right wheel (turning right / CW)
-            pv_x = x_0 + pivot_offset * r_x
-            pv_y = y_0 + pivot_offset * r_y
-            total_deg = l_val * 45.0
-            for i in range(num_steps + 1):
-                t = i / float(num_steps)
-                phi = math.radians(t * total_deg)
-                px = pv_x - pivot_offset * (math.cos(phi) * r_x - math.sin(phi) * f_x)
-                py = pv_y - pivot_offset * (math.cos(phi) * r_y - math.sin(phi) * f_y)
-                curr_theta = (start_pose.theta + t * total_deg) % 360.0
-                if clamp_to_walls:
-                    px = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, px))
-                    py = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, py))
-                points.append(TrajectoryPoint(x=px, y=py, theta=curr_theta, t=t))
-
-        elif abs(l_val) < 1e-6 and r_val > 0:
-            # Forward pivot around left wheel (turning left / CCW)
-            pv_x = x_0 - pivot_offset * r_x
-            pv_y = y_0 - pivot_offset * r_y
-            total_deg = r_val * 45.0
-            for i in range(num_steps + 1):
-                t = i / float(num_steps)
-                phi = math.radians(t * total_deg)
-                px = pv_x + pivot_offset * (math.cos(phi) * r_x + math.sin(phi) * f_x)
-                py = pv_y + pivot_offset * (math.cos(phi) * r_y + math.sin(phi) * f_y)
-                curr_theta = (start_pose.theta - t * total_deg) % 360.0
-                if clamp_to_walls:
-                    px = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, px))
-                    py = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, py))
-                points.append(TrajectoryPoint(x=px, y=py, theta=curr_theta, t=t))
-
-        elif abs(r_val) < 1e-6 and l_val < 0:
-            # Reverse pivot on right wheel (template at rear)
-            pv_x = x_0 + pivot_offset * r_x
-            pv_y = y_0 + pivot_offset * r_y
-            total_deg = abs(l_val) * 45.0
-            for i in range(num_steps + 1):
-                t = i / float(num_steps)
-                phi = math.radians(t * total_deg)
-                px = pv_x - pivot_offset * (math.cos(phi) * r_x - math.sin(phi) * f_x)
-                py = pv_y - pivot_offset * (math.cos(phi) * r_y - math.sin(phi) * f_y)
-                curr_theta = (start_pose.theta - t * total_deg) % 360.0
-                if clamp_to_walls:
-                    px = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, px))
-                    py = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, py))
-                points.append(TrajectoryPoint(x=px, y=py, theta=curr_theta, t=t))
-
-        elif abs(l_val) < 1e-6 and r_val < 0:
-            # Reverse pivot on left wheel (template at rear)
-            pv_x = x_0 - pivot_offset * r_x
-            pv_y = y_0 - pivot_offset * r_y
-            total_deg = abs(r_val) * 45.0
-            for i in range(num_steps + 1):
-                t = i / float(num_steps)
-                phi = math.radians(t * total_deg)
-                px = pv_x + pivot_offset * (math.cos(phi) * r_x - math.sin(phi) * f_x)
-                py = pv_y + pivot_offset * (math.cos(phi) * r_y - math.sin(phi) * f_y)
-                curr_theta = (start_pose.theta + t * total_deg) % 360.0
-                if clamp_to_walls:
-                    px = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, px))
-                    py = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, py))
-                points.append(TrajectoryPoint(x=px, y=py, theta=curr_theta, t=t))
-
-        return points
-
-    # Case 5: Forward / Reverse Curves using consolidated physical Curve Templates
-    # (curve_gentle, curve_medium, curve_sharp)
-    if cat == "curve_forward":
-        t_id = info["template_id"]
-        c_l = info["canonical_left"]
-        c_r = info["canonical_right"]
-        cfg = CURVE_CONFIGS.get(t_id, CURVE_CONFIGS["curve_medium"])
-        r_c = cfg["nominal_rc"]
-        phi_deg = cfg["pair_angles"].get((c_l, c_r), (c_l - c_r) * 35.0)
-        flipped = info["flipped"]
-        at_rear = info["at_rear"]
-
-        points = []
-        for i in range(num_steps + 1):
-            t = i / float(num_steps)
-            phi = math.radians(t * phi_deg)
-            cos_p = math.cos(phi)
-            sin_p = math.sin(phi)
-
-            if not at_rear:
-                # Forward motion along the curved channel
-                delta_f = r_c * sin_p + MINIATURE_RADIUS * (1.0 - cos_p)
-                delta_r = r_c * (1.0 - cos_p) - MINIATURE_RADIUS * sin_p
-                if flipped:
-                    delta_r = -delta_r
-                    delta_th = -t * phi_deg
-                else:
-                    delta_th = t * phi_deg
-            else:
-                # Reverse motion along the curved channel (template at rear bumper)
-                delta_f = -(r_c * sin_p + MINIATURE_RADIUS * (1.0 - cos_p))
-                delta_r = r_c * (1.0 - cos_p) - MINIATURE_RADIUS * sin_p
-                if flipped:
-                    delta_r = -delta_r
-                    delta_th = t * phi_deg
-                else:
-                    delta_th = -t * phi_deg
-
-            px = x_0 + delta_f * f_x + delta_r * r_x
-            py = y_0 + delta_f * f_y + delta_r * r_y
-            curr_theta = (start_pose.theta + delta_th) % 360.0
-
-            if clamp_to_walls:
-                px = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, px))
-                py = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, py))
-
-            points.append(TrajectoryPoint(x=px, y=py, theta=curr_theta, t=t))
-
-        return points
-
-    # Case 6: Asymmetric Counter-drives (opposite signs with unequal magnitudes)
-    # Rule 6.1 g: Spin on spot using Spin Disc for shared magnitude, then Pivot Fan for remainder.
-    if cat == "asymmetric_counter":
-        c_l = info["canonical_left"]
-        c_r = info["canonical_right"]
-        k = -c_r  # common magnitude for spin disc
-        rem = c_l - k  # remainder magnitude for pivot fan
-
-        # Phase 1 Spin direction & Phase 2 Pivot wheel
-        if choice.left > 0 and choice.right < 0:
-            spin_l, spin_r = k, -k
-            piv_l, piv_r = (rem, 0) if choice.left > abs(choice.right) else (0, -rem)
-        elif choice.left < 0 and choice.right > 0:
-            spin_l, spin_r = -k, k
-            piv_l, piv_r = (0, rem) if choice.right > abs(choice.left) else (-rem, 0)
-        else:
-            spin_l, spin_r = k, -k
-            piv_l, piv_r = (rem, 0)
-
-        n1 = max(1, int(round(num_steps * (k / float(k + rem)))))
-        n2 = max(1, num_steps - n1)
-
-        # Generate Phase 1 (spin on the spot)
-        traj_spin = generate_trajectory(
-            start_pose,
-            MoveChoice(spin_l, spin_r),
-            num_steps=n1,
-            clamp_to_walls=clamp_to_walls,
-        )
-        mid_pose = Pose(x=traj_spin[-1].x, y=traj_spin[-1].y, theta=traj_spin[-1].theta)
-
-        # Generate Phase 2 (pivot from intermediate pose)
-        traj_pivot = generate_trajectory(
-            mid_pose,
-            MoveChoice(piv_l, piv_r),
-            num_steps=n2,
-            clamp_to_walls=clamp_to_walls,
-        )
-
-        combined: List[TrajectoryPoint] = []
-        t_spin_end = k / float(k + rem)
-        for i, pt in enumerate(traj_spin[:-1]):
-            t = (i / float(n1)) * t_spin_end
-            combined.append(TrajectoryPoint(x=pt.x, y=pt.y, theta=pt.theta, t=t))
-
-        for i, pt in enumerate(traj_pivot):
-            t = t_spin_end + (i / float(n2)) * (1.0 - t_spin_end)
-            combined.append(TrajectoryPoint(x=pt.x, y=pt.y, theta=pt.theta, t=t))
-
-        return combined
-
-    # Fallback to straight
-    total_dist = l_val * DRIVE_UNIT_MM
-    return [
-        TrajectoryPoint(
-            x=x_0 + total_dist * (i / float(num_steps)) * f_x,
-            y=y_0 + total_dist * (i / float(num_steps)) * f_y,
-            theta=start_pose.theta,
-            t=i / float(num_steps),
-        )
-        for i in range(num_steps + 1)
-    ]
+    final = step_poses[-1]
+    points.append(TrajectoryPoint(x=final.x, y=final.y, theta=final.theta, t=1.0))
+    return points

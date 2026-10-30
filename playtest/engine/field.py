@@ -35,27 +35,66 @@ MAT_CENTER_Y = 150.0
 MAT_TO_MINI_SCALE = 0.273
 
 # Base Chassis miniature polygons in local coordinates (origin at center, facing North = -Y)
+# Grid squares: Square is 2x2, Wide is 4x1, Triangle is Option A T-piece (3-wide base at rear, 1-square stem in front)
 CHASSIS_MINIATURE_SHAPES: Dict[str, List[Tuple[float, float]]] = {
     "Triangle": [
-        (0.0, -36.0),    # Forward tip apex
-        (35.0, -5.0),    # Right shoulder
-        (35.0, 35.0),    # Right rear
-        (-35.0, 35.0),   # Left rear
-        (-35.0, -5.0),   # Left shoulder
+        (-18.0, -38.0),  # Front left stem tip
+        (18.0, -38.0),   # Front right stem tip
+        (18.0, -2.0),    # Stem right shoulder
+        (58.0, -2.0),    # Base right front
+        (58.0, 38.0),    # Base right rear
+        (-58.0, 38.0),   # Base left rear
+        (-58.0, -2.0),   # Base left front
+        (-18.0, -2.0),   # Stem left shoulder
     ],
     "Square": [
-        (-30.0, -35.0),  # Top left
-        (30.0, -35.0),   # Top right
-        (30.0, 35.0),    # Bottom right
-        (-30.0, 35.0),   # Bottom left
+        (-36.0, -36.0),  # Top left
+        (36.0, -36.0),   # Top right
+        (36.0, 36.0),    # Bottom right
+        (-36.0, 36.0),   # Bottom left
     ],
     "Wide": [
-        (-42.0, -25.0),  # Top left
-        (42.0, -25.0),   # Top right
-        (42.0, 25.0),    # Bottom right
-        (-42.0, 25.0),   # Bottom left
+        (-76.0, -18.0),  # Top left
+        (76.0, -18.0),   # Top right
+        (76.0, 18.0),    # Bottom right
+        (-76.0, 18.0),   # Bottom left
     ],
 }
+
+
+def get_chassis_grid_cells(
+    chassis_template: str,
+    pose: Any,
+    grid_unit: float = 40.0,
+) -> set[Tuple[int, int]]:
+    """
+    Returns the set of integer grid coordinates (gx, gy) occupied by a robot
+    at the given pose.
+    - Square: 2x2 squares
+    - Wide: 4x1 squares
+    - Triangle: Option A T-piece (3-wide base at rear, 1-square stem in front)
+    """
+    tname = (chassis_template or "Square").capitalize()
+    if tname == "Wide":
+        offsets = [(-1.5, 0.0), (-0.5, 0.0), (0.5, 0.0), (1.5, 0.0)]
+    elif tname == "Triangle":
+        offsets = [(-1.0, 0.5), (0.0, 0.5), (1.0, 0.5), (0.0, -0.5)]
+    else:
+        offsets = [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)]
+
+    rad = math.radians(pose.theta)
+    cos_t = math.cos(rad)
+    sin_t = math.sin(rad)
+
+    cells: set[Tuple[int, int]] = set()
+    for lx, ly in offsets:
+        wx = pose.x + (lx * cos_t - ly * sin_t) * grid_unit
+        wy = pose.y + (lx * sin_t + ly * cos_t) * grid_unit
+        gx = int(math.floor(wx / grid_unit))
+        gy = int(math.floor(wy / grid_unit))
+        cells.add((gx, gy))
+
+    return cells
 
 
 def card_to_miniature_offset(card_x: float, card_y: float, card_w: float = 44.0, card_h: float = 64.0) -> Tuple[float, float]:

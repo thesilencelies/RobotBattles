@@ -370,7 +370,7 @@ Each round follows a sequence of 3 steps:
   \textbf{Step} & \textbf{Summary} \\
   \midrule
   \textbf{1. Planning} & Players secretly select drive \inlineIcon{\resourceM} values for each side and choose which components to supply. \\
-  \textbf{2. Movement} & Choices are simultaneously revealed; robots advance along the movement templates. \\
+  \textbf{2. Movement} & Choices are simultaneously revealed; robots advance simultaneously one step at a time across the arena grid. \\
   \textbf{3. Collision} & Collisions and contacts (active weapon hits or inert pushes) are resolved. \\
   \bottomrule
 \end{tabularx}}
@@ -389,187 +389,159 @@ The bigger the difference the more the robot will turn.
 
 \subsection{Movement}
 
-Movement units are found on the straight movement template. Where an effect says a robot moves that amount, move them along that template without changing facing.
+Instead of movement templates, battle maneuvering is resolved on a discrete square grid. Robot facings and turns are strictly snapped to \textbf{45-degree increments} ($0^\circ$, $45^\circ$, $90^\circ$, $135^\circ$, $180^\circ$, $225^\circ$, $270^\circ$, $315^\circ$).
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{images/movement_templates.png}
-    \caption{Movement Templates}
-    \label{fig:movement_templates}
-\end{figure}
+\subsubsection{Chassis Grid Footprints}
+Each robot occupies multiple squares on the grid simultaneously. Each chassis type occupies exactly 4 grid squares:
+\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+  \item \textbf{Square Chassis:} Occupies a \textbf{2$\times$2} square footprint (sized slightly inside the $2\times2$ grid cell boundary).
+  \item \textbf{Wide Chassis:} Occupies a \textbf{4$\times$1} rectangular bar.
+  \item \textbf{Triangle Chassis:} Occupies a \textbf{T-tetris piece} of 4 squares: a 3-square wide base across the rear (housing the drive wheels) with a 1-square central stem extending forward (the front wedge tip; preserving original chassis edge boundaries and weapon mount zones).
+\end{itemize}
 
-Both robots advance along the template corresponding to their chosen drive \inlineIcon{\resourceM} values.
+\subsubsection{Simultaneous Step-by-Step Resolution}
+During the Planning phase, players secretly choose integer drive values ($L$ and $R$) for the left and right sides of their robot up to that side's active drive capacity. Choices are revealed simultaneously.
 
-Movement details:
-\begingroup
-\emergencystretch=1.5em
-\begin{enumerate}[label=\alph*., leftmargin=*, noitemsep, topsep=0.5pt]
-      \item \textbf{Forward Alignment \& Stop Lines:} Front bumper starts flush at black baseline. Align the bumper flush against the target line to achieve the correct position and facing.
-      \item \textbf{Left/Right Symmetry (Flipping):} Templates are printed for right turns (where left is greater than right). If turning left (where right is greater than left), flip the template face-down.
-      \item \textbf{Reverse Maneuvers (Rear Placement):} If both drive values are negative, place the template baseline against the \textbf{back} of the robot; move backward to the target line.
-      \item \textbf{Asymmetric Drive \inlineIcon{\resourceM} with a Negative:} When drive \inlineIcon{\resourceM} choices have opposite signs with unequal magnitudes (for example, \texttt{3/\allowbreak-1} or \texttt{3/\allowbreak-2}), resolve the movement in two steps: first spin on the spot using the Spin Disc for the shared magnitude, then from that new heading use the Pivot Fan for the remainder.
-      \item \textbf{Movements Beyond the Template:} If the chosen drive values exceed the template markings, move to the template end of the closest fitting one, then place another template for the remainder.
-      \item \textbf{Path Overlap \& Collision Check:} Overlapping paths cause collisions at contact.
+Both robots are then moved \textbf{simultaneously one step at a time} until both robots have exhausted all movement steps or they collide (attempt to occupy the same grid space).
+
+\noindent
+At each step, a robot selects its step type according to the following rules:
+\begin{enumerate}[label=\arabic*., leftmargin=*, noitemsep, topsep=2pt]
+  \item \textbf{Turn Step Condition:} If the absolute value of the remaining drive differs ($|L| \neq |R|$) \textbf{and} (the previous step was not a turn \textbf{or} one drive value is 0), take a \textbf{Turn Step}.
+  \item \textbf{Otherwise:}
+  \begin{itemize}[noitemsep, topsep=1pt]
+    \item If both remaining drives have the \textbf{same sign} (both positive or both negative): take a \textbf{Forwards Step}.
+    \item If the signs of both are \textbf{different} (one positive, one negative): take a \textbf{Pivot Step}.
+  \end{itemize}
 \end{enumerate}
-\endgroup
+
+\subsubsection{Step Types \& Mechanics}
+\begin{itemize}[leftmargin=*, topsep=2pt]
+  \item \textbf{Forwards Step:} Move the robot one square in the direction it is facing (orthogonally if facing at a right angle; diagonally if facing at a $45^\circ$ slant).
+  \begin{itemize}[noitemsep, topsep=1pt]
+    \item \textbf{Positive Drive:} Reduce both drive values by 1 towards 0 ($L \leftarrow L - 1$, $R \leftarrow R - 1$).
+    \item \textbf{Negative Drive:} Move one square in reverse, and increase both drive values by 1 towards 0 ($L \leftarrow L + 1$, $R \leftarrow R + 1$).
+  \end{itemize}
+
+  \item \textbf{Turn Step:} Keep the side of the robot with smaller drive magnitude ($|drive|$) stationary, and rotate the robot $45^\circ$ around that end:
+  \begin{itemize}[noitemsep, topsep=1pt]
+    \item \textbf{Clockwise ($45^\circ$):} For positive left ($+L$) or negative right ($-R$).
+    \item \textbf{Anticlockwise ($45^\circ$):} For positive right ($+R$) or negative left ($-L$).
+  \end{itemize}
+  Then increment the side with larger drive magnitude towards 0 (subtract 1 if positive, add 1 if negative).
+
+  \item \textbf{Pivot Step:} Rotate the robot $45^\circ$ about its geometric center:
+  \begin{itemize}[noitemsep, topsep=1pt]
+    \item \textbf{Clockwise ($45^\circ$):} If left drive is positive ($+L$).
+    \item \textbf{Anticlockwise ($45^\circ$):} If right drive is positive ($+R$).
+  \end{itemize}
+  Then increment both sides towards 0 (reduce positive by 1, increase negative by 1).
+\end{itemize}
+
 \clearpage
 
 % ==============================================================================
-% PAGE 6: COMPREHENSIVE MOVEMENT EXAMPLES & REFERENCE GUIDE
+% PAGE 5: GRID MOVEMENT EXAMPLES & DIAGRAMS
 % ==============================================================================
 
-\subsubsection{Movement Examples}
+\subsubsection{Movement Examples \& Step Traces}
 
-%\vspace{0.2em}
-%\noindent\textbf{1. Straight Driving and Reverse Maneuvers (\texttt{3/3} vs \texttt{-2/-2})}
-%\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-%  \item \textbf{(\texttt{3/3}):} Align Straight Template baseline flush against the \textbf{front bumper}. Advance straight forward until the front bumper aligns with the blue \textbf{L3 R3} line. Heading is unchanged.
-%  \item \textbf{(\texttt{-2/-2}):} Negative drive \inlineIcon{\resourceM} moves backward. Align baseline flush against the \textbf{rear bumper} pointing backward. Reverse until the rear bumper aligns with \textbf{L2 R2}. Heading is unchanged.
-%\end{itemize}
+\noindent\textbf{1. Straight Advance (\texttt{3/3}):}\\
+$|3| = |3|$ (same magnitude). Both drives positive $\rightarrow$ 3 consecutive \textbf{Forwards Steps}. Each step advances 1 square forward and reduces both drives by 1 (\texttt{3/3} $\rightarrow$ \texttt{2/2} $\rightarrow$ \texttt{1/1} $\rightarrow$ \texttt{0/0}). Heading is unchanged.
 
-%\vspace{0.2em}
-%\noindent\textbf{2. Curved Arcs and Left/Right Flipping (\texttt{2/1} vs \texttt{1/2})}
-%\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-%  \item \textbf{(\texttt{2/1}):} Place the Medium Curve Template face-up with baseline at the front bumper. Advance along the curve until the front bumper aligns with line \textbf{L2 R1}.
-%  \item \textbf{(\texttt{1/2}):} Turning left. Take the Medium Curve Template and \textbf{flip it face-down}. Advance along the arc to line \textbf{L2 R1}, sweeping counter-clockwise.
-%\end{itemize}
+\vspace{0.3em}
+\noindent\textbf{2. Curved Arc (\texttt{3/1}) --- Natural Step Alternation:}\\
+Curves automatically alternate turning and advancing to trace an arc:
+\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
+  \item \textbf{Step 1 (Turn):} Remaining drives \texttt{3/1} ($|3| \neq |1|$, previous not a turn). Left has more drive; right end stays still. Rotate $45^\circ$ CW around right end. Drive becomes \texttt{2/1}.
+  \item \textbf{Step 2 (Forwards):} Remaining drives \texttt{2/1} ($|2| \neq |1|$, but previous step \textit{was} a turn and neither is 0). Take a \textbf{Forwards Step} 1 square along current diagonal heading. Drives become \texttt{1/0}.
+  \item \textbf{Step 3 (Turn):} Remaining drives \texttt{1/0} (one value is 0). Right end stays still. Rotate $45^\circ$ CW around right end. Drives become \texttt{0/0}. Robot finishes with a $90^\circ$ right turn.
+\end{itemize}
+
+\vspace{0.3em}
+\noindent\textbf{3. In-Place Center Pivot (\texttt{2/-2}):}\\
+$|2| = |-2|$ (equal magnitude, opposite signs) $\rightarrow$ 2 consecutive \textbf{Pivot Steps} around the center. Each step rotates $45^\circ$ CW on the spot and increments drives towards 0 (\texttt{2/-2} $\rightarrow$ \texttt{1/-1} $\rightarrow$ \texttt{0/0}), resulting in an exact $90^\circ$ clockwise rotation on the spot.
+
+\vspace{0.3em}
+\noindent\textbf{4. Locked-Wheel Turn (\texttt{2/0}):}\\
+One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around the stationary right wheel ($45^\circ$ then $45^\circ = 90^\circ$ total CW turn).
 
 \begin{figure}[H]
   \centering
   \adjustbox{max width=\linewidth}{%
   \begin{tikzpicture}[x=1cm, y=1cm]
-    % PANEL 1: Straight (3/3) & Reverse (-2/-2)
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (7.9, 7.2);
-    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 7.0) {1. Straight Driving (3/3) \& Reverse (-2/-2)};
+    % -------------------------------------------------------------
+    % PANEL 1: CHASSIS FOOTPRINTS ON THE GRID
+    % -------------------------------------------------------------
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (7.8, 7.4);
+    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 7.2) {Chassis Grid Footprints (4 Squares Each)};
 
-    % Straight 3/3 (Left)
-    \node[font=\scriptsize\bfseries, text=accentBlue] at (1.8, 5.7) {Straight (3/3) Advance};
-    % Actual Straight Template PNG
-    \node[anchor=south] at (1.8, 1.25) {\includegraphics[width=1.55cm]{images/template_straight.png}};
-    % Ghost Bot A at start (front bumper flush to START line)
-    \node at (1.8, 1.30) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
-    % End Bot A (over template, front bumper flush to L3 R3)
-    \node at (1.8, 3.26) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
-    % Motion vector
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue] (0.4, 1.30) -- (0.4, 3.26) node[midway, left=-1pt, font=\footnotesize\bfseries, text=accentBlue, align=center] {Advance\\3 units};
+    % Grid background for Panel 1 (7 cols x 6 rows)
+    \draw[step=0.9cm, draw=boxBorder!60, line width=0.5pt] (0.5, 0.5) grid (7.3, 6.4);
 
-    % Reverse -2/-2 (Right): Template rotated 180 deg so numbers increase downwards
-    \node[font=\scriptsize\bfseries, text=arenaRed] at (5.9, 5.7) {Reverse (-2/-2) Maneuver};
-    % Straight Template rotated 180 deg, START line placed at rear of start bot
-    \node[anchor=north] at (5.9, 4.92) {\includegraphics[width=1.55cm, angle=180]{images/template_straight.png}};
-    % Ghost Bot B at start (rear bumper flush to START line at top)
-    \node at (5.9, 4.80) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_square_circle.png}};
-    % End Bot B (reversed 2 units down to L2 R2)
-    \node at (5.9, 3.49) [rotate=0] {\includegraphics[width=1.75cm]{images/mini_bot_square_circle.png}};
-    % Motion vector
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (4.4, 4.80) -- (4.4, 3.49) node[midway, left=1pt, font=\footnotesize\bfseries, text=arenaRed, align=center] {Reverse\\2 units};
+    % Square Chassis (2x2)
+    \draw[fill=accentBlue!25, draw=accentBlue, line width=1.5pt, rounded corners=1.5pt] (0.5 + 0.9, 0.5 + 3.6) rectangle ++(1.8, 1.8);
+    \node[font=\footnotesize\bfseries, text=accentBlue] at (2.3, 5.0) {Square};
+    \node[font=\scriptsize\bfseries, text=textDark] at (2.3, 4.5) {2 $\times$ 2};
+    \draw[-{Triangle[width=3mm,length=4mm]}, line width=1.6pt, draw=green!70!black] (2.3, 4.8) -- (2.3, 5.8);
 
-    % PANEL 2: Curved Arcs: Right (2/1) & Left (1/2) Flipped
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0) rectangle (16.2, 7.2);
-    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 7.0) {2. Curved Arcs: Right (2/1) \& Left (1/2) Flipped};
+    % Wide Chassis (4x1)
+    \draw[fill=amberNote!25, draw=amberNote!80!black, line width=1.5pt, rounded corners=1.5pt] (0.5 + 2.7, 0.5 + 4.5) rectangle ++(3.6, 0.9);
+    \node[font=\footnotesize\bfseries, text=amberNote!80!black] at (4.95, 4.95) {Wide (4 $\times$ 1)};
+    \draw[-{Triangle[width=3mm,length=4mm]}, line width=1.6pt, draw=green!70!black] (4.95, 4.7) -- (4.95, 5.8);
 
-    % Right Turn 2/1 (Face-Up)
-    \node[font=\scriptsize\bfseries, text=accentBlue] at (10.2, 5.8) {Curve Right (2/1) Face-Up};
-    % Actual Curve Template PNG
-    \node[anchor=south west] at (8.6, 1.2) {\includegraphics[width=3.6cm]{images/template_curve_ratio_2_1.png}};
-    % Ghost Bot C at START FRONT (front line hard up against START FRONT edge)
-    \node[name=ghostC] at (9.8, 1.53) [rotate=0] {\includegraphics[width=2.5cm]{images/mini_bot_ghost_triangle_line.png}};
-    % End Bot C (front line hard up against line L2 R1, rotated -35 deg CW)
-    \node[name=endC] at (10.0, 2.67) [rotate=-35] {\includegraphics[width=2.5cm]{images/mini_bot_triangle_line.png}};
-    % Curved motion arrow tracking over template path
-    \draw[{Stealth[length=3mm]}-, line width=1.8pt, draw=accentBlue] (ghostC.north) to[bend right=25] (endC.south);
+    % Triangle Chassis (T-Piece: Base 3x1 at rear, Stem 1x1 in front)
+    % Base (3x1) at y=1.4
+    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.5pt] (1.4, 1.4) rectangle (4.1, 2.3);
+    % Stem (1x1) at center front y=2.3
+    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.5pt] (2.3, 2.3) rectangle (3.2, 3.2);
+    \node[font=\footnotesize\bfseries, text=arenaRed] at (2.75, 1.85) {Triangle Base (3 $\times$ 1)};
+    \node[font=\scriptsize\bfseries, text=arenaRed] at (2.75, 2.75) {Wedge};
+    \draw[-{Triangle[width=3mm,length=4mm]}, line width=1.6pt, draw=green!70!black] (2.75, 1.85) -- (2.75, 3.5);
 
-    % Left Turn 1/2 (FLIP FACE-DOWN)
-    \node[font=\scriptsize\bfseries, text=arenaRed] at (14.2, 6.1) {Curve Left (1/2) Flipped};
-    \node[draw=noteBorder, fill=noteBg, font=\tiny\bfseries, rounded corners=2pt, inner sep=1.5pt] at (14.2, 5.55) {FLIP FACE-DOWN (TURNING LEFT)};
-    % Actual Flipped Curve Template PNG
-    \node[anchor=south east] at (15.9, 1.2) {\includegraphics[width=3.6cm]{images/template_curve_ratio_2_1_flipped.png}};
-    % Ghost Bot D at START FRONT (front line hard up against START FRONT edge)
-    \node[name=ghostD] at (14.8, 1.59) [rotate=0] {\includegraphics[width=2.5cm]{images/mini_bot_ghost_square_circle.png}};
-    % End Bot D (front line hard up against line L1 R2, rotated 35 deg CCW)
-    \node[name=endD] at (14.6, 2.52) [rotate=35] {\includegraphics[width=2.5cm]{images/mini_bot_square_circle.png}};
-    % Curved motion arrow tracking over template path
-    \draw[{Stealth[length=3mm]}-, line width=1.8pt, draw=arenaRed] (ghostD.north) to[bend left=25] (endD.south);
+    \node[draw=boxBorder, fill=noteBg, font=\scriptsize, align=left, rounded corners=2pt] at (5.8, 2.0) {
+      \textbf{T-Piece Chassis:}\\
+      $\bullet$ 3-square base at rear\\
+      $\bullet$ 1-square wedge at front\\
+      $\bullet$ Preserves card edges
+    };
+
+    % -------------------------------------------------------------
+    % PANEL 2: THREE STEP MECHANICS ON THE GRID
+    % -------------------------------------------------------------
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.2, 0) rectangle (16.2, 7.4);
+    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (8.35, 7.2) {Step Mechanics: Forwards, Turn, Pivot};
+
+    % Section A: Forwards Step (Orthogonal & Diagonal)
+    \node[font=\scriptsize\bfseries, text=accentBlue, anchor=west] at (8.5, 6.4) {\textbf{A. Forwards Step:} 1 square in facing direction};
+    \draw[step=0.7cm, draw=boxBorder!60, line width=0.4pt] (8.6, 4.4) grid (11.4, 6.1);
+    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.2pt] (9.3, 4.4) rectangle (10.0, 5.1);
+    \draw[-{Stealth[length=2.5mm]}, line width=1.8pt, draw=accentBlue] (9.65, 4.75) -- (9.65, 5.75) node[right=2pt, font=\tiny\bfseries] {Orthogonal};
+
+    \draw[step=0.7cm, draw=boxBorder!60, line width=0.4pt] (12.4, 4.4) grid (15.2, 6.1);
+    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.2pt] (12.4, 4.4) rectangle (13.1, 5.1);
+    \draw[-{Stealth[length=2.5mm]}, line width=1.8pt, draw=accentBlue] (12.75, 4.75) -- (14.15, 6.15) node[right=2pt, font=\tiny\bfseries] {Diagonal ($45^\circ$)};
+
+    % Section B: Turn Step (45 deg around stationary end)
+    \node[font=\scriptsize\bfseries, text=arenaRed, anchor=west] at (8.5, 3.8) {\textbf{B. Turn Step:} Pin stationary side, rotate $45^\circ$ around that end};
+    \draw[step=0.75cm, draw=boxBorder!60, line width=0.4pt] (8.6, 1.8) grid (11.6, 3.5);
+    % Start bot (horizontal 2x1 for simplicity)
+    \draw[fill=gray!25, draw=gray, line width=1pt, dashed] (8.6, 2.55) rectangle (10.1, 3.3);
+    % Pinned end circle
+    \fill[arenaRed] (10.1, 2.55) circle (3pt) node[below=2pt, font=\tiny\bfseries, text=arenaRed] {Pinned End};
+    % Rotated bot 45 deg
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=arenaRed] (8.9, 3.4) arc (135:80:1.3) node[above=1pt, font=\tiny\bfseries, text=arenaRed] {$45^\circ$};
+    \node[font=\tiny, align=left] at (11.0, 2.5) {Slower side pins;\\faster side advances};
+
+    % Section C: Pivot Step (45 deg around center)
+    \node[font=\scriptsize\bfseries, text=amberNote!90!black, anchor=west] at (8.5, 1.3) {\textbf{C. Pivot Step:} Rotate $45^\circ$ about geometric center};
+    \draw[step=0.75cm, draw=boxBorder!60, line width=0.4pt] (12.4, 0.2) grid (15.4, 1.7);
+    \fill[primaryDark] (13.9, 0.95) circle (3pt) node[below=2pt, font=\tiny\bfseries] {Center Pin};
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=amberNote!90!black] (13.2, 1.4) arc (150:30:0.8) node[above=1pt, font=\tiny\bfseries, text=amberNote!90!black] {Pivot $45^\circ$};
   \end{tikzpicture}%
   }
-  \caption{Straight Driving, Reverse Maneuvers, and Curved Arcs with Face-Down Flipping}
-  \label{fig:diagram_movement_straight_curve}
-\end{figure}
-
-%\noindent\textbf{3. Pivot Fan vs. Spin Disc Rotations (\texttt{2/0} vs \texttt{2/-2})}
-%\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-%  \item \textbf{(\texttt{2/0}):} Right wheel is locked. Place Pivot Fan red marker on the \textbf{right wheel}. Robot swings clockwise around that wheel by 90 degrees (two 45-degree steps) to line \textbf{L2 R0}.
-%  \item \textbf{(\texttt{2/-2}):} Tracks counter-rotate equally. Center the Spin Disc under the chassis. Robot rotates 180 degrees clockwise (two 90-degree steps) to line \textbf{L2 R-2} on the spot with zero displacement.
-%\end{itemize}
-
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}[x=1cm, y=1cm]
-    % PANEL 1: Locked-Wheel Pivot Fan (2/0)
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (7.9, 6.6);
-    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 6.4) {3. Pivot Fan: Locked Wheel Turn (2/0)};
-
-    % Fan outline centered on right wheel pin (4.5, 2.5)
-    \draw[fill=boxBg, draw=boxBorder, line width=0.8pt] (4.5, 2.5) -- ++(180:2.6) arc (180:0:2.6) -- cycle;
-    \draw[line width=2.0pt, draw=textDark] (4.5, 2.5) -- ++(180:2.6) node[pos=0.5, below=2pt, font=\scriptsize\bfseries] {START FRONT};
-    % Ray lines for 45 deg, 90 deg, 135 deg, 180 deg
-    \draw[line width=0.9pt, draw=accentBlue] (4.5, 2.5) -- ++(135:2.6) node[pos=0.85, above left=-2pt, font=\footnotesize\bfseries, text=accentBlue] {L1 R0 (45$^\circ$)};
-    \draw[line width=1.3pt, draw=arenaRed] (4.5, 2.5) -- ++(90:2.6) node[pos=0.85, right=2pt, font=\footnotesize\bfseries, text=arenaRed] {L2 R0 (90$^\circ$)};
-    \draw[line width=0.9pt, draw=accentBlue] (4.5, 2.5) -- ++(45:2.6) node[pos=0.85, above right=-2pt, font=\footnotesize\bfseries, text=accentBlue] {L3 R0 (135$^\circ$)};
-    \draw[line width=0.9pt, draw=accentBlue] (4.5, 2.5) -- ++(0:2.6) node[pos=0.6, above=2pt, font=\footnotesize\bfseries, text=accentBlue] {L4 R0 (180$^\circ$)};
-
-    % Ghost Bot A at start (chassis spans baseline, right wheel on pin)
-    \node at (3.2, 2.5) [rotate=0, opacity=0.45] {\includegraphics[width=4.8cm]{images/mini_bot_ghost_wide_line.png}};
-    % End Bot A rotated -90 deg (facing East, right wheel on pin, opacity allows ray lines to show through)
-    \node at (4.5, 3.8) [rotate=-90, opacity=0.65] {\includegraphics[width=4.8cm]{images/mini_bot_wide_line.png}};
-
-    % Locked wheel pin marker (on top of chassis)
-    \fill[arenaRed] (4.5, 2.5) circle (3.5pt);
-    \node[draw=arenaRed, fill=noteBg, font=\scriptsize\bfseries, rounded corners=1.5pt, text=arenaRed] at (4.5, 1.7) {LOCKED WHEEL PIN};
-    \draw[-{Stealth[length=2mm]}, arenaRed, line width=0.8pt] (4.5, 1.95) -- (4.5, 2.35);
-
-    % Pivot rotation arc
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (2.8, 3.2) arc (160:105:1.6);
-    \node[font=\footnotesize\bfseries, text=arenaRed] at (2.2, 4.3) {Pivot 90$^\circ$ CW};
-
-    % PANEL 2: In-Place Spin Disc (2/-2)
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0) rectangle (16.2, 6.6);
-    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 6.4) {Spin Disc: In-Place Center Rotation (2/-2)};
-
-    % Spin disc circle centered at (12.2, 3.1)
-    \draw[fill=boxBg, draw=boxBorder, line width=0.8pt] (12.2, 3.1) circle (1.8cm);
-    \draw[line width=1.6pt, draw=textDark] (12.2, 3.1) -- ++(90:1.8cm) node[above=1pt, font=\footnotesize\bfseries] {START (0$^\circ$)};
-    \draw[line width=0.9pt, draw=accentBlue] (12.2, 3.1) -- ++(0:1.8cm) node[right=2pt, font=\footnotesize\bfseries, text=accentBlue] {L1 R-1 (90$^\circ$)};
-    \draw[line width=1.3pt, draw=arenaRed] (12.2, 3.1) -- ++(-90:1.8cm) node[below=1pt, font=\footnotesize\bfseries, text=arenaRed] {L2 R-2 (180$^\circ$)};
-    \draw[line width=0.9pt, draw=accentBlue] (12.2, 3.1) -- ++(180:1.8cm) node[left=2pt, font=\footnotesize\bfseries, text=accentBlue] {L3 R-3 (270$^\circ$)};
-
-    % 60-degree ticks at edges with numbers 1 to 6 for thrown robot orientation
-    \foreach \d/\ang in {1/30, 2/-30, 3/-90, 4/-150, 5/150, 6/90} {
-      \draw[line width=1.1pt, draw=amberNote] (12.2, 3.1) ++(\ang:1.55cm) -- ++(\ang:0.25cm);
-    }
-    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (30:1.35cm)$) {1};
-    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (-30:1.35cm)$) {2};
-    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (-105:1.40cm)$) {3};
-    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (-150:1.35cm)$) {4};
-    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (150:1.35cm)$) {5};
-    \node[font=\scriptsize\bfseries, text=amberNote] at ($(12.2, 3.1) + (75:1.40cm)$) {6};
-
-    % Ghost Bot B at start (centered on disc)
-    \node at (12.2, 3.1) [rotate=0, opacity=0.4] {\includegraphics[width=4.5cm]{images/mini_bot_ghost_wide_line.png}};
-    % End Bot B rotated 180 deg (facing South, opacity allows markings to show through)
-    \node at (12.2, 3.1) [rotate=180, opacity=0.65] {\includegraphics[width=4.5cm]{images/mini_bot_wide_line.png}};
-
-    % Center chassis pin
-    \fill[primaryDark] (12.2, 3.1) circle (3.5pt);
-    \node[fill=white, draw=primaryDark, font=\scriptsize\bfseries, rounded corners=1.5pt] at (12.2, 2.55) {CENTER PIN};
-
-    % Circular spin arrow (around upper left into lower right)
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=arenaRed] (10.6, 4.4) arc (140:-40:2.0);
-    \node[font=\footnotesize\bfseries, text=arenaRed, align=center] at (14.2, 5.2) {Spin 180$^\circ$ CW\\(On the spot)};
-
-  \end{tikzpicture}
-  \caption{Locked-Wheel Pivot Fan vs. In-Place Spin Disc Rotations}
-  \label{fig:diagram_movement_pivot_spin}
+  \caption{Discrete Grid Chassis Footprints and the Three Movement Step Types}
+  \label{fig:diagram_grid_footprints}
 \end{figure}
 
 
@@ -583,13 +555,11 @@ Movement details:
 
 \subsection{Determining the Contact Point}
 
-If the robots paths intersect then there is a collision at that point. 
-For a collision, place both robots as far along their path as they can go without touching the other's path, then slowly move both forwards until they touch each other. Where the robots touch shows the contact point. Align the contact line from the template with the chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
+During simultaneous step-by-step movement across the arena grid, if two robots attempt to enter or occupy the same grid space, a collision occurs. Both robots halt independent movement at that step. Where the robots touch shows the contact point. Align the contact direction into each robot's chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
 
-If the parts of either robot that is touching is the weapon's active area (the red zone on the template), then the contact is active.
- Otherwise, it is an inert contact.
+If the parts of either robot that is touching is the weapon's active area (the marked strike zone on the chassis), then the contact is an \textbf{Active Contact}. Otherwise, it is an \textbf{Inert Contact}.
 
-The first remaining component on the robot along the line corresponding to the contact point is the component hit. When working out what component is hit, if a template is crossed that weapon is the component hit in that contact.
+The first remaining component on the robot along the line corresponding to the contact point is the component hit. When working out what component is hit, if a weapon's active area is crossed, that weapon is the component hit in that contact.
 
 \begin{figure}[H]
   \centering
@@ -659,87 +629,102 @@ The first remaining component on the robot along the line corresponding to the c
 
 \subsection{Inert Contact (Pushing Match)}
 
-Essentially a pushing match between colliding chassis surfaces:
-\begin{enumerate}
-  \item Move along templates until contact.
-  \item Displace the remainder of robot A's template to the end of robot B's template.
-  \item Move both robots along the straight line from the initial contact point to the end of A's displaced template (a raised robot's motion does not contribute).
-  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the largest drive \inlineIcon{\resourceM} value the other robot chose. If its weapon contacts the wall, it loses all spin counters and takes feedback equal to half the sum of its weapon strength and that throw strength, rounded up.
-  \item If the robots are still touching, both robots are moved back a full unit to separate them.
+Inert contact occurs when non-weapon chassis surfaces make contact (or weapons collide without active strike areas):
+\begin{enumerate}[leftmargin=*, noitemsep, topsep=1pt]
+  \item Both robots halt their simultaneous movement at the step of contact.
+  \item Both robots move together according to the remaining steps of each robot, starting with the player with the largest number of remaining steps left. If players have an equal number of steps remaining, the tie is broken by the youngest player.
+  \item During these remaining steps, the active pushing robot moves both robots together:
+  \begin{itemize}[noitemsep, topsep=1pt]
+    \item \textbf{Forwards Steps:} Both robots move together one square in the direction of the step.
+    \item \textbf{Turn and Pivot Steps:} Both robots rotate together about the center or edge of the rotating robot (the opposing robot moves along with it as if stuck to it).
+    \item \textbf{Raised Robot:} A raised robot's motion does not contribute to pushing.
+  \end{itemize}
+  \item Once the first player has resolved all of their remaining steps, the second player resolves any remaining steps they have left in the same manner, moving both robots together.
+  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the largest drive \inlineIcon{\resourceM} value the other robot chose this round. If its weapon contacts the wall, it loses all spin counters and takes feedback equal to half the sum of its weapon strength and that throw strength, rounded up.
+  \item \textbf{No Separation Required:} Robot separation after collisions is no longer required. The robots remain in their resulting adjacent positions where movement concludes.
 \end{enumerate}
 
 \begin{figure}[H]
   \centering
+  \adjustbox{max width=\linewidth}{%
   \begin{tikzpicture}[x=1cm, y=1cm]
-    % PANEL 1: Step 1 (Contact & Remainder Vectors)
+    % PANEL 1: Step 1 (Collision on Grid)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 4.7) rectangle (7.9, 9.2);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 9.05) {Step 1: Advance to Contact (Non-Weapon Surface)};
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 9.05) {Step 1: Contact on Grid Space};
 
-    % Templates showing remaining motion
-    \node at (2.2, 7.3) [rotate=-25, opacity=0.65] {\includegraphics[width=0.75cm]{images/template_straight.png}};
-    \node at (3.9, 7.2) [rotate=60, opacity=0.65] {\includegraphics[width=0.75cm]{images/template_straight.png}};
+    \draw[step=0.8cm, draw=boxBorder!60, line width=0.4pt] (0.8, 5.0) grid (7.2, 8.6);
+    % Bot A (Square, Blue)
+    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.4pt, rounded corners=1pt] (2.4, 5.8) rectangle (4.0, 7.4);
+    \node[font=\scriptsize\bfseries, text=accentBlue] at (3.2, 6.6) {Bot A};
+    % Bot B (Triangle, Red) meeting at x=4.0
+    \draw[fill=arenaRed!25, draw=arenaRed, line width=1.4pt] (4.0, 5.8) rectangle (5.6, 7.4);
+    \node[font=\scriptsize\bfseries, text=arenaRed] at (4.8, 6.6) {Bot B};
+    % Contact point marker
+    \fill[primaryDark] (4.0, 6.6) circle (3pt);
+    \node[fill=white, draw=boxBorder, font=\tiny\bfseries, rounded corners=1.5pt] at (4.0, 7.8) {Contact};
 
-    % Bot A (Triangle with Line template)
-    \node at (2.8, 6.4) [rotate=-25] {\includegraphics[width=1.65cm]{images/mini_bot_triangle_line.png}};
-    % Bot B (Wide with Line template) in direct contact
-    \node at (3.3, 6.5) [rotate=60] {\includegraphics[width=1.65cm]{images/mini_bot_wide_line.png}};
-    % Contact point at shoulder-to-flank
-    \fill[primaryDark] (2.95, 6.45) circle (2.2pt);
-
-    % Remainder arrows
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=accentBlue, dashed] (2.1, 6.4) -- ++(65:1.5) node[above right=-2pt, font=\scriptsize\bfseries, text=accentBlue] {Remainder A};
-    \draw[-{Stealth[length=3mm]}, line width=1.8pt, draw=amberNote!80!black, dashed] (3.6, 6.5) -- ++(165:1.4) node[above left=-2pt, font=\scriptsize\bfseries, text=amberNote!80!black] {Remainder B};
-
-    % PANEL 2: Step 2 (Displace Remainder Template)
+    % PANEL 2: Step 2 (Joint Forward Push)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 4.7) rectangle (16.2, 9.2);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 9.05) {Step 2: Displace Remainder A to End of B};
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 9.05) {Step 2: Joint Forward Push Along Grid};
 
-    % Contact point
-    \fill[primaryDark, name=contact2] (12.6, 5.6) circle (2.5pt) node[below=2pt, font=\scriptsize\bfseries] {Contact};
-    % Vector B template & arrow from contact
-    \node[name=templateB2, anchor=center] at (12.6,5.6) [rotate=60, opacity=0.6] {\includegraphics[width=0.65cm]{images/template_straight.png}};
-    \draw[-{Stealth[length=3.5mm]}, line width=2pt, draw=amberNote!80!black] (templateB2.center) -- (templateB2.north) node[midway, above left=-1pt, font=\scriptsize\bfseries, text=amberNote!80!black] {Remainder B};
-    % Displaced Template A attached to end of B
-    \node[name=templateA2, anchor=south] at (templateB2.north) [rotate=-35, opacity=0.6] {\includegraphics[width=0.65cm]{images/template_straight.png}};
-    \draw[-{Stealth[length=3.5mm]}, line width=2pt, draw=accentBlue] (templateA2.south) -- (templateA2.north) node[midway, above left=-2pt, font=\scriptsize\bfseries, text=accentBlue] {Displaced Remainder A};
-    % Resultant net vector line
-    \draw[-{Stealth[length=3.5mm]}, line width=2.4pt, draw=arenaRed, dashed] (templateB2.center) -- (templateA2.north) node[pos=0.45, below=1pt, sloped, font=\footnotesize\bfseries, text=arenaRed] {Net Pushing Vector};
+    \draw[step=0.8cm, draw=boxBorder!60, line width=0.4pt] (9.1, 5.0) grid (15.5, 8.6);
+    % Ghost start positions
+    \draw[fill=gray!15, draw=gray!60, line width=0.8pt, dashed] (9.9, 5.8) rectangle (11.5, 7.4);
+    \draw[fill=gray!15, draw=gray!60, line width=0.8pt, dashed] (11.5, 5.8) rectangle (13.1, 7.4);
+    % Advanced bots (+1 square East)
+    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.4pt] (10.7, 5.8) rectangle (12.3, 7.4);
+    \draw[fill=arenaRed!25, draw=arenaRed, line width=1.4pt] (12.3, 5.8) rectangle (13.9, 7.4);
+    \draw[-{Stealth[length=3mm]}, line width=2pt, draw=arenaRed] (10.7, 6.6) -- (13.5, 6.6) node[midway, above=1pt, font=\scriptsize\bfseries, text=arenaRed] {Joint Advance};
 
-    % PANEL 3: Step 3 (Joint Push Along Net Vector)
+    % PANEL 3: Step 3 (Joint Rotation: Opponent Stuck Along for the Turn)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0.0) rectangle (7.9, 4.4);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 4.25) {Step 3: Joint Push Along Net Vector};
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 4.25) {Step 3: Joint Rotation (Turns \& Pivots)};
 
-    % Net line
-    \draw[-{Stealth[length=3.5mm]}, line width=2.4pt, draw=arenaRed] (3.3, 0.5) -- (3.6, 2.0) node[pos=0.25, above=1pt, sloped, font=\footnotesize\bfseries, text=arenaRed] {Pushing Line};
+    \draw[step=0.8cm, draw=boxBorder!60, line width=0.4pt] (0.8, 0.3) grid (7.2, 3.9);
+    \fill[arenaRed] (2.4, 1.9) circle (3pt) node[below=2pt, font=\tiny\bfseries, text=arenaRed] {Pivot Point};
+    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.2pt] (2.4, 1.9) rectangle (4.0, 3.5);
+    \draw[fill=arenaRed!25, draw=arenaRed, line width=1.2pt] (4.0, 1.9) rectangle (5.6, 3.5);
+    \draw[-{Stealth[length=3mm]}, line width=2pt, draw=arenaRed] (4.8, 3.4) arc (60:20:2.0);
+    \node[font=\scriptsize\bfseries, text=arenaRed, align=center] at (5.8, 1.0) {Both rotate together\\around active bot's pivot};
 
-    % Initial contact ghosts
-    \node at (3.2, 0.4) [rotate=-25] {\includegraphics[width=1.4cm]{images/mini_bot_ghost_triangle_line.png}};
-    \node at (4.0, 0.5) [rotate=75] {\includegraphics[width=1.4cm]{images/mini_bot_ghost_wide_line.png}};
-
-    % Pushed final robots
-    \node at (3.0, 2.6) [rotate=-25] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
-    \node at (3.8, 2.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
-
-    % PANEL 4: Step 4 (Wall Impact & 1-Unit Separation)
+    % PANEL 4: Step 4 (Conclude Movement: No Separation)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0.0) rectangle (16.2, 4.4);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 4.25) {Step 4: 1-Unit Separation};
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 4.25) {Step 4: Adjacent End (No Separation)};
 
-    % Separation after collision
-    \draw[{Stealth[length=2.5mm]}-{Stealth[length=2.5mm]}, line width=2pt, draw=accentBlue] (9.8, 2.8) -- (11.0, 2.8) node[midway, below=4pt, font=\scriptsize\bfseries, text=accentBlue] {1 Unit Separation};
-    \node at (9.6, 2.9) [rotate=-25] {\includegraphics[width=1.75cm]{images/mini_bot_triangle_line.png}};
-    \node at (11.4, 2.9) [rotate=75] {\includegraphics[width=1.75cm]{images/mini_bot_wide_line.png}};
-  \end{tikzpicture}
-  \caption{Step-by-Step Resolution of Inert Contact (Pushing Match)}
+    \draw[step=0.8cm, draw=boxBorder!60, line width=0.4pt] (9.1, 0.3) grid (15.5, 3.9);
+    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.4pt] (11.5, 1.1) rectangle (13.1, 2.7);
+    \draw[fill=arenaRed!25, draw=arenaRed, line width=1.4pt] (13.1, 1.1) rectangle (14.7, 2.7);
+    \node[fill=primaryDark, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=2.5pt] at (12.3, 3.4) {Robots remain adjacent};
+    \node[font=\scriptsize, align=center] at (12.3, 0.6) {Separation back 1 unit is \textbf{no longer required}};
+  \end{tikzpicture}%
+  }
+  \caption{Step-by-Step Resolution of Inert Contact and Joint Grid Movement}
   \label{fig:diagram_inert_contact}
 \end{figure}
 
 \subsection{Active Contact (Weapon Hits)}
 
 When weapons collide with an opponent:
-\begin{itemize}
+\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
   \item All weapons involved in the contact are assumed to hit, and they deal weapon damage \inlineIcon{\resourceW} according to their damage level to the single outermost component contacted (damage does not penetrate inwards), unless a weapon has \textbf{Overhead} (which hits a random component along the contact line instead of the outermost and causes no throw) or \textbf{Trigger} (which does not attack if an opposing weapon makes contact).
   \item Then both robots are thrown away from the contact. The base throw strength received is equal to the weapon damage \inlineIcon{\resourceW} minus the absorption of the hit component (minimum 0). Any additions to throw strength are added after that.
-  \item Thrown distance is the roll of a six-sided die or the throw strength, whichever is lower. Thrown robot orientation after active contact is decided by rolling a die and rotating that many 60-degree steps clockwise (using the numbered ticks on the rim of the Spin Disc template).
+  \item Thrown distance is the roll of a six-sided die or the throw strength, whichever is lower (measured in grid squares away from contact).
+  \item \textbf{Random Rotation After a Throw:} Thrown robot orientation is determined by rolling a six-sided die (d6):
+  \begin{center}
+  \small
+  \begin{tabular}{c l}
+    \toprule
+    \textbf{d6 Roll} & \textbf{Orientation Adjustment} \\
+    \midrule
+    \textbf{1} & $45^\circ$ Anticlockwise \\
+    \textbf{2} & $45^\circ$ Clockwise \\
+    \textbf{3} & $90^\circ$ Anticlockwise \\
+    \textbf{4} & $90^\circ$ Clockwise \\
+    \textbf{5} & $180^\circ$ (Reversed) \\
+    \textbf{6} & No Rotation (Facing Unchanged) \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
   \item Weapons receive feedback equal to half the combined attack strength in the contact.
   \item If after active contact the robots are still in contact, proceed with inertial contact.
 \end{itemize}
@@ -751,15 +736,15 @@ Similarly if a weapon contacts multiple components at once, each component is da
 \begin{tabularx}{\textwidth}{l X}
   \textbf{Contact Type} & \textbf{Resolution Mechanism} \\
   \midrule
-  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage \inlineIcon{\resourceW} to outermost component contacted $\rightarrow$ Base throw strength equals weapon damage \inlineIcon{\resourceW} minus absorption of hit component (minimum 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance is the lower of the die roll or the throw strength $\rightarrow$ Thrown robot orientation rotates clockwise by that many 60-degree steps as rolled on the die $\rightarrow$ Throw damage equals throw strength. If robots are still in contact, proceed with inertial contact. \\
+  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage \inlineIcon{\resourceW} to outermost component contacted $\rightarrow$ Base throw strength equals weapon damage \inlineIcon{\resourceW} minus absorption of hit component (minimum 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance in grid squares is lower of die roll or throw strength $\rightarrow$ Thrown robot orientation determined by d6 roll ($45^\circ$/$90^\circ$/$180^\circ$/None) $\rightarrow$ Throw damage equals throw strength. If robots remain in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match $\rightarrow$ Displace remainder of A's template to end of B's $\rightarrow$ Move along straight line from contact to end of displaced template $\rightarrow$ Wall collision causes throw (takes throw damage equal to throw strength) $\rightarrow$ If still touching, move both back a full unit to separate them. \\
+  \textbf{Inert Contact} & Pushing match on grid $\rightarrow$ Move both robots together using remaining steps of each robot, starting with most steps left (tie: youngest player) $\rightarrow$ Pushed into wall causes throw (throw strength = pusher's largest chosen drive) $\rightarrow$ Conclude adjacent (no separation). \\
 \end{tabularx}
 \end{summarybox}
 
 \subsection{The Ground Game}
 
-Wedges and forks can both inflict the raised status on opponents when they hit. A raised robot does not contribute any motion to the pushing in inert contact. It receives an additional throw strength of 2 after any active contact (even if it is the only one whose weapon hit), and the throw strength of its attacks is reduced by 2.
+Wedges and forks can both inflict the raised status on opponents when they hit. A raised robot does not contribute any motion to the pushing in inert contact. When a raised robot receives an active throw, the throw strength is increased by 2. \textbf{Raised just increases throw strength received; it does not trigger a throw where there is not already one} (for example, in inert pushing or when weapon damage does not exceed absorption). The throw strength of a raised robot's own attacks is reduced by 2.
 
 When both robots would be raised in the same contact, randomly choose one by rolling a dice: that one is raised and the other isn't.
 
@@ -773,15 +758,13 @@ When both robots would be raised in the same contact, randomly choose one by rol
 
 \subsection{Throws \& Inversion}
 
-A robot that is thrown is moved a distance equal to the lower of a die roll or the throw strength away from the contact point along the center-to-center line (in the case of contact with a wall it's thrown away from the wall).
-Robot orientation after active contact is decided by rolling a die and rotating that many 60-degree steps clockwise (using the numbered ticks on the rim of the Spin Disc template).
+A robot that is thrown is moved a distance in grid squares equal to the lower of a die roll (d6) or the throw strength away from the contact point along the center-to-center line (in the case of contact with a wall, it is thrown away from the wall).
+Robot orientation after a throw is decided by rolling a d6 on the random rotation table ($45^\circ$, $90^\circ$, $180^\circ$, or no rotation).
 If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted} (lower rolled distances represent high-arching vertical throws rather than horizontal displacement).
 After the throw, the thrown robot takes throw damage at a randomly chosen component equal to the throw strength.
 If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately knocked out}.
 If its weapon hits a wall it takes feedback to the weapon equal to half the sum of its weapon strength \inlineIcon{\resourceW} and the throw strength, rounded up, and then any spin counters it has are removed.
 The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on (try again if it bounces off altogether).
-
-If a thrown robot would end up in contact with another robot, separate them by 1 unit.
 
 \begin{figure}[H]
   \centering
@@ -808,7 +791,7 @@ If a thrown robot would end up in contact with another robot, separate them by 1
     % Thrown Bot B
     \node at (7.2, 4.4) [rotate=50] {\includegraphics[width=1.75cm]{images/mini_bot_ghost_triangle_line.png}};
     \draw[-{Stealth[length=2.5mm]}, line width=1.5pt, draw=accentBlue] (7.9, 3.9) arc (-40:120:0.6);
-    \node[font=\scriptsize\bfseries, text=accentBlue] at (8.3, 4.7) {Die roll in 60-degree steps};
+    \node[font=\scriptsize\bfseries, text=accentBlue] at (8.3, 4.7) {d6 rotation table ($45^\circ$/$90^\circ$/$180^\circ$)};
 
     % PANEL 2: Hazard Wall Elimination
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (10.2, 1.4) rectangle (16.2, 5.8);

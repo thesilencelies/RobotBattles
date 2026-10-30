@@ -22,7 +22,7 @@ The core gameplay is split into two main parts:
 - **Budgets:** Robots must be built within the chosen cost budget (typically \$50) and weight capacity. Players may enter up to two robots (e.g., clusterbots) within the total budget.
 
 ### 2. Robot Battling (Arena & Miniatures)
-- **The Arena:** Matches take place on an arena map featuring starting zones, perimeter walls, and hazard/pit zones (where thrown robots exit the arena).
+- **The Arena:** Matches take place on a grid arena featuring starting zones, perimeter walls, and hazard/pit zones. Maneuvering is resolved simultaneously step-by-step with 45-degree snapped orientations.
 - **Match Length:** Played for 20 rounds or until a robot is knocked out (has no active drive or cannot unflip).
 
 ## Game Formats
