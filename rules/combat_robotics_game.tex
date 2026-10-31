@@ -56,6 +56,9 @@
 \definecolor{amberNote}{HTML}{DD6B20}    % Amber accent
 \definecolor{wallBlack}{HTML}{0F172A}    % Boundary wall black
 
+% Canonical Chassis Template Macros
+\input{chassis_macros.tex}
+
 % Typography & Section formatting
 \setcounter{secnumdepth}{0}
 \titleformat{\section}
@@ -273,8 +276,50 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
   \centering
   \begin{subfigure}[b]{0.48\textwidth}
     \centering
-    \includegraphics[width=\linewidth, height=5.2cm, keepaspectratio]{images/chassis_templates.png}
-    \caption{Chassis Templates}
+    \adjustbox{max width=\linewidth}{%
+    \begin{tikzpicture}[x=1cm, y=1cm]
+      % Background frame
+      \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (7.8, 5.2);
+      \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 5.02) {Chassis Templates (Grid Footprints)};
+
+      % Column Titles
+      \node[font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=primaryDark] at (1.30, 4.30) {Square ($2\times 2$)};
+      \node[font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=primaryDark] at (3.80, 4.30) {Triangle (4 Sq)};
+      \node[font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=primaryDark] at (6.30, 4.30) {Wide ($4\times 1$)};
+
+      % Row 1: Player 1 (Blue)
+      \node[fill=accentBlue, text=white, font=\fontsize{5}{6}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt, rotate=90] at (0.28, 3.10) {Team A};
+
+      % Grids for Row 1 (step 0.45cm)
+      \draw[step=0.45cm, draw=boxBorder!50, line width=0.3pt] (0.40, 2.20) grid (2.20, 4.00);
+      \draw[step=0.45cm, draw=boxBorder!50, line width=0.3pt] (2.45, 2.20) grid (5.15, 4.00);
+      \draw[step=0.45cm, draw=boxBorder!50, line width=0.3pt] (5.40, 2.65) grid (7.20, 3.55);
+
+      % Templates Row 1
+      \chassisSquare[blue]{1.30}{3.10}{0}{0.45}
+      \chassisTriangle[blue]{3.80}{3.10}{0}{0.45}
+      \chassisWide[blue]{6.30}{3.10}{0}{0.45}
+
+      % Row 2: Player 2 (Red)
+      \node[fill=arenaRed, text=white, font=\fontsize{5}{6}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt, rotate=90] at (0.28, 1.25) {Team B};
+
+      % Grids for Row 2 (step 0.45cm)
+      \draw[step=0.45cm, draw=boxBorder!50, line width=0.3pt] (0.40, 0.35) grid (2.20, 2.15);
+      \draw[step=0.45cm, draw=boxBorder!50, line width=0.3pt] (2.45, 0.35) grid (5.15, 2.15);
+      \draw[step=0.45cm, draw=boxBorder!50, line width=0.3pt] (5.40, 0.80) grid (7.20, 1.70);
+
+      % Templates Row 2
+      \chassisSquare[red]{1.30}{1.25}{0}{0.45}
+      \chassisTriangle[red]{3.80}{1.25}{0}{0.45}
+      \chassisWide[red]{6.30}{1.25}{0}{0.45}
+
+      % Sub-captions / footprints notes at bottom
+      \node[font=\fontsize{5}{6}\selectfont, text=textDark] at (1.30, 0.15) {4 Squares};
+      \node[font=\fontsize{5}{6}\selectfont, text=textDark] at (3.80, 0.15) {3+1 T-Shape};
+      \node[font=\fontsize{5}{6}\selectfont, text=textDark] at (6.30, 0.15) {4 Squares};
+    \end{tikzpicture}%
+    }
+    \caption{Chassis Templates (Grid Footprints)}
     \label{fig:chassis_templates}
   \end{subfigure}
   \hfill
@@ -480,43 +525,22 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
     \draw[step=0.85cm, draw=boxBorder!60, line width=0.4pt] (0.5, 0.6) grid (7.3, 6.55);
 
     % Square Chassis (2x2)
-    \draw[fill=accentBlue!25, draw=accentBlue, line width=1.4pt, rounded corners=1.5pt] (1.35, 3.95) rectangle ++(1.7, 1.7);
-    % Left/Right drive wheels
-    \fill[primaryDark] (1.27, 4.15) rectangle ++(0.12, 0.45);
-    \fill[primaryDark] (1.27, 4.95) rectangle ++(0.12, 0.45);
-    \fill[primaryDark] (3.01, 4.15) rectangle ++(0.12, 0.45);
-    \fill[primaryDark] (3.01, 4.95) rectangle ++(0.12, 0.45);
-    % Front active weapon zone
-    \draw[line width=2.4pt, draw=arenaRed] (1.45, 5.65) -- (2.95, 5.65);
-    \fill[primaryDark] (2.20, 4.80) circle (2.2pt);
-    \draw[-{Triangle[width=2.5mm,length=3.5mm]}, line width=1.5pt, draw=green!60!black] (2.20, 4.80) -- (2.20, 5.55);
+    \chassisSquare[blue, weapon=bar]{2.20}{4.80}{0}{0.85}
     \node[fill=white, draw=accentBlue, font=\scriptsize\bfseries, rounded corners=1.5pt, inner sep=2pt] at (2.20, 3.65) {Square (2 $\times$ 2)};
 
     % Wide Chassis (4x1)
-    \draw[fill=amberNote!25, draw=amberNote!80!black, line width=1.4pt, rounded corners=1.5pt] (3.65, 4.80) rectangle ++(3.4, 0.85);
-    % Left/Right drive wheels
-    \fill[primaryDark] (3.57, 4.90) rectangle ++(0.12, 0.65);
-    \fill[primaryDark] (7.01, 4.90) rectangle ++(0.12, 0.65);
-    % Center weapon disc
-    \fill[arenaRed] (5.35, 5.65) circle (3pt);
-    \draw[-{Triangle[width=2.5mm,length=3.5mm]}, line width=1.5pt, draw=green!60!black] (5.35, 4.95) -- (5.35, 5.60);
-    \node[fill=white, draw=amberNote!80!black, font=\scriptsize\bfseries, rounded corners=1.5pt, inner sep=2pt] at (5.35, 4.45) {Wide (4 $\times$ 1)};
+    \chassisWide[red, weapon=disc]{5.35}{5.225}{0}{0.85}
+    \node[fill=white, draw=arenaRed, font=\scriptsize\bfseries, rounded corners=1.5pt, inner sep=2pt] at (5.35, 4.45) {Wide (4 $\times$ 1)};
 
-    % Triangle Chassis (T-Piece: Base 3x1 at rear, Stem 1x1 in front)
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.4pt] (1.35, 1.45) rectangle (3.90, 2.30);
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.4pt] (2.20, 2.30) rectangle (3.05, 3.15);
-    % Rear wheels on outer squares
-    \fill[primaryDark] (1.27, 1.55) rectangle ++(0.12, 0.60);
-    \fill[primaryDark] (3.86, 1.55) rectangle ++(0.12, 0.60);
-    % Front active weapon / wedge tip
-    \draw[line width=2.4pt, draw=arenaRed!80!black] (2.25, 3.15) -- (3.00, 3.15);
-    \draw[-{Triangle[width=2.5mm,length=3.5mm]}, line width=1.5pt, draw=green!60!black] (2.62, 1.85) -- (2.62, 3.05);
-    \node[fill=white, draw=arenaRed, font=\scriptsize\bfseries, rounded corners=1.5pt, inner sep=2pt] at (2.62, 1.05) {Triangle (T-Piece)};
+    % Triangle Chassis (Wedge Outline with Faded T-Tetris Occupancy Behind)
+    \chassisTriangle[red, weapon=bar]{2.625}{2.30}{0}{0.85}
+    \node[fill=white, draw=arenaRed, font=\scriptsize\bfseries, rounded corners=1.5pt, inner sep=2pt] at (2.20, 1.05) {Triangle (4 Sq T-Piece)};
 
     % Summary callout badge
-    \node[draw=boxBorder, fill=noteBg, font=\scriptsize, align=left, rounded corners=2pt, inner sep=4pt] at (5.55, 2.05) {
+    \node[draw=boxBorder, fill=noteBg, font=\scriptsize, align=left, rounded corners=2pt, inner sep=4pt] at (5.80, 2.05) {
       \textbf{Chassis Grid Rules:}\\
       $\bullet$ Exactly 4 squares each\\
+      $\bullet$ Faded area = grid footprint\\
       $\bullet$ Red bar = weapon zone\\
       $\bullet$ Green arrow = facing\\
       $\bullet$ 45-degree angle snap
@@ -532,39 +556,34 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
     \node[font=\scriptsize\bfseries, text=accentBlue, anchor=west] at (8.4, 6.45) {A. Forwards Step (1 Square in Facing Direction)};
     % Orthogonal
     \draw[step=0.55cm, draw=boxBorder!60, line width=0.35pt] (8.5, 4.55) grid (11.8, 6.2);
-    % Ghost start
-    \draw[fill=gray!20, draw=gray!60, line width=0.8pt, dashed, rounded corners=1pt] (8.5+0.55, 4.55) rectangle ++(1.1, 1.1);
-    % Advanced
-    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.2pt, rounded corners=1pt] (8.5+0.55, 4.55+0.55) rectangle ++(1.1, 1.1);
+    \chassisSquare[ghost]{9.60}{5.10}{0}{0.48}
+    \chassisSquare[blue]{9.60}{5.65}{0}{0.48}
     \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] (9.6, 5.1) -- (9.6, 5.95);
     \node[fill=primaryDark, text=white, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (11.1, 5.2) {Orthogonal};
 
     % Diagonal (45 deg)
     \draw[step=0.55cm, draw=boxBorder!60, line width=0.35pt] (12.4, 4.55) grid (15.7, 6.2);
-    % Ghost start
-    \draw[fill=gray!20, draw=gray!60, line width=0.8pt, dashed, rounded corners=1pt] (12.4, 4.55) rectangle ++(1.1, 1.1);
-    % Advanced diagonal
-    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.2pt, rounded corners=1pt] (12.4+0.55, 4.55+0.55) rectangle ++(1.1, 1.1);
+    \chassisSquare[ghost]{13.05}{5.10}{45}{0.48}
+    \chassisSquare[blue]{13.60}{5.65}{45}{0.48}
     \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] (12.95, 5.1) -- (14.05, 6.0);
     \node[fill=primaryDark, text=white, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (14.9, 4.8) {Diagonal ($45^\circ$)};
 
     % ROW 2: ROTATIONS (Turn & Pivot)
     \node[font=\scriptsize\bfseries, text=arenaRed, anchor=west] at (8.4, 4.15) {B. Turn Step (Pin Slower End)};
-    \draw[step=0.55cm, draw=boxBorder!60, line width=0.35pt] (8.5, 2.35) grid (11.8, 3.90);
-    % Ghost start (horizontal 2x1)
-    \draw[fill=gray!20, draw=gray!60, line width=0.8pt, dashed] (8.6, 2.45) rectangle ++(1.1, 0.7);
-    % Pinned right wheel
-    \fill[arenaRed] (9.7, 2.80) circle (2.5pt);
-    % Rotated 45 deg
-    \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=arenaRed] (8.9, 3.30) arc (135:80:0.9);
-    \node[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (10.9, 3.15) {Turn $45^\circ$};
+    \draw[step=0.55cm, draw=boxBorder!60, line width=0.35pt] (8.5, 2.15) grid (11.8, 3.80);
+    \chassisWide[ghost]{9.25}{2.85}{0}{0.48}
+    \fill[arenaRed] (10.10, 2.85) circle (2.5pt);
+    \chassisWide[red]{9.60}{3.25}{45}{0.48}
+    \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=arenaRed] (8.9, 3.05) arc (135:80:0.9);
+    \node[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (10.9, 3.00) {Turn $45^\circ$};
 
     \node[font=\scriptsize\bfseries, text=amberNote!90!black, anchor=west] at (12.3, 4.15) {C. Pivot Step (Center Pin)};
-    \draw[step=0.55cm, draw=boxBorder!60, line width=0.35pt] (12.4, 2.35) grid (15.7, 3.90);
-    \draw[fill=gray!20, draw=gray!60, line width=0.8pt, dashed] (13.1, 2.65) rectangle ++(1.1, 0.9);
-    \fill[primaryDark] (13.65, 3.10) circle (2.5pt);
-    \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=amberNote!90!black] (13.1, 3.40) arc (140:40:0.7);
-    \node[fill=white, draw=amberNote!90!black, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (14.9, 3.15) {Pivot $45^\circ$};
+    \draw[step=0.55cm, draw=boxBorder!60, line width=0.35pt] (12.4, 2.15) grid (15.7, 3.80);
+    \chassisSquare[ghost]{13.65}{2.85}{0}{0.48}
+    \fill[primaryDark] (13.65, 2.85) circle (2.5pt);
+    \chassisSquare[red]{13.65}{2.85}{45}{0.48}
+    \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=amberNote!90!black] (13.1, 3.15) arc (140:40:0.7);
+    \node[fill=white, draw=amberNote!90!black, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (14.9, 3.00) {Pivot $45^\circ$};
 
     % ROW 3: CURVED ARC SEQUENCE (3/1 Trace: Turn -> Forward -> Turn)
     \node[font=\scriptsize\bfseries, text=primaryDark, anchor=west] at (8.4, 1.95) {D. Curved Arc Trace (\texttt{3/1}: Turn $\rightarrow$ Forwards $\rightarrow$ Turn)};
@@ -572,8 +591,7 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
 
     % Step indicators on grid
     % Start: Facing North at x=8.8
-    \draw[fill=accentBlue!25, draw=accentBlue, line width=1pt] (8.6, 0.35) rectangle ++(0.9, 0.9);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] (9.05, 0.55) -- (9.05, 1.10);
+    \chassisSquare[blue]{9.05}{0.95}{0}{0.42}
     \node[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark] at (9.05, 0.15) {Start (\texttt{3/1})};
 
     % Step 1: Turn 45 CW -> heading NE
@@ -581,13 +599,13 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
     \node[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1pt] at (10.0, 1.05) {1. Turn $45^\circ$};
 
     % Step 2: Forwards 1 NE
-    \draw[fill=accentBlue!20, draw=accentBlue, line width=0.8pt, dashed] (10.6, 0.5) rectangle ++(0.9, 0.9);
+    \chassisSquare[ghost]{11.10}{1.05}{45}{0.42}
     \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] (10.8, 0.7) -- (11.3, 1.2);
     \draw[-{Stealth[length=2.0mm]}, line width=1.3pt, draw=accentBlue] (11.7, 0.85) -- (12.5, 0.85);
     \node[fill=accentBlue, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1pt] at (12.1, 1.1) {2. Fwd 1 NE};
 
     % Step 3: Turn 45 CW -> heading East
-    \draw[fill=accentBlue!40, draw=accentBlue, line width=1.2pt] (12.8, 0.4) rectangle ++(0.9, 0.9);
+    \chassisSquare[blue]{13.20}{0.95}{90}{0.42}
     \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] (13.0, 0.85) -- (13.55, 0.85);
     \node[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1pt] at (14.5, 1.1) {3. Turn $45^\circ$};
     \node[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=green!60!black] at (14.5, 0.6) {Finish: $90^\circ$ CW};
@@ -628,21 +646,11 @@ The first remaining component on the robot along the line corresponding to the c
     % Visible Grid (6 cols x 6 rows, step 0.65cm)
     \draw[step=0.65cm, draw=boxBorder!60, line width=0.35pt] (0.5, 6.2) grid (4.7, 10.1);
 
-    % Bot A (Triangle T-piece facing East)
-    % Base (3x1 vertical): x=1.15 to 1.80, y=6.85 to 8.80
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.1pt] (1.15, 6.85) rectangle (1.80, 8.80);
-    % Stem (1x1): x=1.80 to 2.45, y=7.50 to 8.15
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.1pt] (1.80, 7.50) rectangle (2.45, 8.15);
-    % Active weapon bar on East front edge
-    \draw[line width=2.4pt, draw=arenaRed] (2.45, 7.50) -- (2.45, 8.15);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=arenaRed] (1.5, 7.82) -- (2.3, 7.82);
+    % Bot A (Triangle facing East)
+    \chassisTriangle[red, weapon=bar]{1.80}{7.825}{90}{0.65}
 
     % Bot B (Square 2x2 facing West)
-    % Body: x=2.45 to 3.75, y=7.17 to 8.47
-    \draw[fill=accentBlue!25, draw=accentBlue, line width=1.1pt] (2.45, 7.17) rectangle (3.75, 8.47);
-    % Active weapon bar on West front edge
-    \draw[line width=2.4pt, draw=arenaRed] (2.45, 7.50) -- (2.45, 8.15);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] (3.4, 7.82) -- (2.6, 7.82);
+    \chassisSquare[blue, weapon=bar]{3.10}{7.825}{270}{0.65}
 
     % Contact marker
     \fill[arenaRed] (2.45, 7.82) circle (3pt);
@@ -656,17 +664,11 @@ The first remaining component on the robot along the line corresponding to the c
     % Visible Grid
     \draw[step=0.65cm, draw=boxBorder!60, line width=0.35pt] (6.0, 6.2) grid (10.2, 10.1);
 
-    % Bot A (Triangle T-piece facing East)
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.1pt] (6.4, 6.85) rectangle (7.05, 8.80);
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.1pt] (7.05, 7.50) rectangle (7.70, 8.15);
-    \draw[line width=2.4pt, draw=arenaRed] (7.70, 7.50) -- (7.70, 8.15);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=arenaRed] (6.75, 7.82) -- (7.55, 7.82);
+    % Bot A (Triangle facing East)
+    \chassisTriangle[red, weapon=bar]{7.05}{7.825}{90}{0.65}
 
     % Bot B (Square 2x2 facing North)
-    \draw[fill=accentBlue!25, draw=accentBlue, line width=1.1pt] (7.70, 7.17) rectangle (9.00, 8.47);
-    % Active weapon facing North (top edge)
-    \draw[line width=2.4pt, draw=accentBlue] (7.70, 8.47) -- (9.00, 8.47);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] (8.35, 7.5) -- (8.35, 8.3);
+    \chassisSquare[blue, weapon=bar]{8.35}{7.825}{0}{0.65}
 
     % Contact marker at left flank
     \fill[arenaRed] (7.70, 7.82) circle (3pt);
@@ -681,16 +683,13 @@ The first remaining component on the robot along the line corresponding to the c
     \draw[step=0.65cm, draw=boxBorder!60, line width=0.35pt] (11.5, 6.2) grid (15.7, 10.1);
 
     % Bot A (Square 2x2 facing North)
-    \draw[fill=accentBlue!25, draw=accentBlue, line width=1.1pt] (12.0, 7.17) rectangle (13.30, 8.47);
-    \draw[line width=2.4pt, draw=accentBlue] (12.0, 8.47) -- (13.30, 8.47);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] (12.65, 7.5) -- (12.65, 8.3);
+    \chassisSquare[blue]{12.65}{7.825}{0}{0.65}
 
     % Bot B (Wide 4x1 facing North)
-    \draw[fill=amberNote!25, draw=amberNote!80!black, line width=1.1pt] (13.30, 7.17) rectangle (15.25, 7.82);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=amberNote!80!black] (14.27, 7.3) -- (14.27, 8.1);
+    \chassisWide[red]{14.60}{7.825}{0}{0.65}
 
     % Flank contact marker
-    \fill[accentBlue] (13.30, 7.50) circle (3pt);
+    \fill[accentBlue] (13.30, 7.825) circle (3pt);
     \node[fill=white, draw=accentBlue, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (13.30, 8.7) {Inert Touch};
     \node[fill=accentBlue, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=2.5pt] at (13.6, 6.6) {Inert Contact (Push)};
 
@@ -704,7 +703,7 @@ The first remaining component on the robot along the line corresponding to the c
     \draw[step=0.65cm, draw=boxBorder!60, line width=0.35pt] (0.4, 0.4) grid (5.8, 4.6);
 
     % Bot B (Vyper Square 2x2 facing North)
-    \draw[fill=accentBlue!20, draw=accentBlue, line width=1.2pt] (3.0, 1.3) rectangle (4.3, 2.6);
+    \chassisSquare[blue]{3.65}{1.95}{0}{0.65}
     % Quadrants inside Bot B
     \draw[draw=boxBorder!70, dashed, line width=0.5pt] (3.0, 1.95) -- (4.3, 1.95);
     \draw[draw=boxBorder!70, dashed, line width=0.5pt] (3.65, 1.3) -- (3.65, 2.6);
@@ -713,9 +712,8 @@ The first remaining component on the robot along the line corresponding to the c
     \node[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark] at (3.32, 1.62) {Drv L};
     \node[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark] at (3.97, 1.62) {Drv R};
 
-    % Bot A (Triangle T-piece angled at 45 deg, striking Front-L corner)
-    \draw[fill=arenaRed!25, draw=arenaRed, line width=1.1pt, rotate around={-45:(3.0, 2.6)}] (1.7, 2.27) rectangle (2.35, 4.22);
-    \draw[fill=arenaRed!25, draw=arenaRed, line width=1.1pt, rotate around={-45:(3.0, 2.6)}] (2.35, 2.92) rectangle (3.0, 3.57);
+    % Bot A (Triangle angled at 45 deg striking Front-L corner)
+    \chassisTriangle[red, weapon=bar]{2.54}{3.06}{135}{0.65}
 
     % Contact point star & Contact Ray
     \fill[arenaRed] (3.0, 2.6) circle (3pt);
@@ -764,20 +762,17 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
     \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 9.15) {Step 1: Contact Halt on Grid};
 
     \draw[step=0.75cm, draw=boxBorder!60, line width=0.35pt] (0.6, 5.1) grid (7.3, 8.7);
-    % Bot A (Square 2x2, Blue)
-    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.3pt, rounded corners=1pt] (2.1, 5.85) rectangle (3.6, 7.35);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] (2.4, 6.6) -- (3.3, 6.6);
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=accentBlue] at (2.85, 6.1) {Bot A};
+    % Bot A (Square 2x2, Blue facing East)
+    \chassisSquare[blue]{2.85}{6.60}{90}{0.75}
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=accentBlue] at (2.85, 6.0) {Bot A};
 
-    % Bot B (Triangle T-Piece, Red: Stem 1x1 at x=3.6 to 4.35, Base 3x1 at x=4.35 to 5.1)
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.3pt] (3.6, 6.225) rectangle (4.35, 6.975);
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.3pt] (4.35, 5.475) rectangle (5.1, 7.725);
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=arenaRed] (4.8, 6.6) -- (3.9, 6.6);
+    % Bot B (Triangle 4-sq T, Red facing West)
+    \chassisTriangle[red]{4.35}{6.60}{270}{0.75}
     \node[font=\fontsize{6}{7}\selectfont\bfseries, text=arenaRed] at (4.72, 7.4) {Bot B};
 
     % Contact point marker
-    \fill[primaryDark] (3.6, 6.6) circle (2.8pt);
-    \node[fill=primaryDark, text=white, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (3.6, 7.8) {Contact};
+    \fill[primaryDark] (3.60, 6.60) circle (2.8pt);
+    \node[fill=primaryDark, text=white, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (3.60, 7.8) {Contact};
     \node[fill=accentBlue, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt] at (2.85, 5.35) {[1] Halt Simultaneous Steps};
 
     % PANEL 2: Step 2 (Joint Forward Push)
@@ -786,14 +781,12 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
 
     \draw[step=0.75cm, draw=boxBorder!60, line width=0.35pt] (8.9, 5.1) grid (15.6, 8.7);
     % Ghost start positions
-    \draw[fill=gray!15, draw=gray!60, line width=0.8pt, dashed] (9.65, 5.85) rectangle (11.15, 7.35);
-    \draw[fill=gray!15, draw=gray!60, line width=0.8pt, dashed] (11.15, 6.225) rectangle (11.90, 6.975);
-    \draw[fill=gray!15, draw=gray!60, line width=0.8pt, dashed] (11.90, 5.475) rectangle (12.65, 7.725);
+    \chassisSquare[ghost]{10.40}{6.60}{90}{0.75}
+    \chassisTriangle[ghost]{11.90}{6.60}{270}{0.75}
 
     % Advanced bots (+1 square East = +0.75cm)
-    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.3pt] (10.40, 5.85) rectangle (11.90, 7.35);
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.3pt] (11.90, 6.225) rectangle (12.65, 6.975);
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.3pt] (12.65, 5.475) rectangle (13.40, 7.725);
+    \chassisSquare[blue]{11.15}{6.60}{90}{0.75}
+    \chassisTriangle[red]{12.65}{6.60}{270}{0.75}
     \draw[-{Stealth[length=2.5mm]}, line width=1.8pt, draw=arenaRed] (10.40, 6.6) -- (12.9, 6.6);
     \node[fill=arenaRed, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt] at (11.9, 5.35) {[2] Pusher Advances Both 1 Sq};
 
@@ -804,18 +797,16 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
     \draw[step=0.75cm, draw=boxBorder!60, line width=0.35pt] (0.6, 0.3) grid (7.3, 3.9);
 
     % Pivot point on Bot A stationary edge (pinned right corner)
-    \fill[arenaRed] (2.85, 1.35) circle (3pt) node[below=2pt, font=\fontsize{6}{7}\selectfont\bfseries, text=arenaRed] {Pivot Pin};
+    \fill[arenaRed] (2.85, 1.35) circle (3pt) node[above left=1pt, font=\fontsize{6}{7}\selectfont\bfseries, text=arenaRed] {Pivot Pin};
 
-    % Ghost start orientation (0 deg)
-    \draw[fill=gray!15, draw=gray!60, line width=0.7pt, dashed] (1.35, 1.35) rectangle (2.85, 2.85);
-    \draw[fill=gray!15, draw=gray!60, line width=0.7pt, dashed] (2.85, 1.725) rectangle (3.60, 2.475);
-    \draw[fill=gray!15, draw=gray!60, line width=0.7pt, dashed] (3.60, 0.975) rectangle (4.35, 3.225);
+    % Ghost start orientation (0 deg relative to East)
+    \chassisSquare[ghost]{2.10}{2.10}{90}{0.75}
+    \chassisTriangle[ghost]{3.60}{2.10}{270}{0.75}
 
     % Rotated bots 45 deg together around pivot point (2.85, 1.35)
     \begin{scope}[rotate around={-45:(2.85, 1.35)}]
-      \draw[fill=accentBlue!30, draw=accentBlue, line width=1.2pt] (1.35, 1.35) rectangle (2.85, 2.85);
-      \draw[fill=arenaRed!20, draw=arenaRed, line width=1.2pt] (2.85, 1.725) rectangle (3.60, 2.475);
-      \draw[fill=arenaRed!20, draw=arenaRed, line width=1.2pt] (3.60, 0.975) rectangle (4.35, 3.225);
+      \chassisSquare[blue]{2.10}{2.10}{90}{0.75}
+      \chassisTriangle[red]{3.60}{2.10}{270}{0.75}
     \end{scope}
 
     % Curved rotation arrow
@@ -829,9 +820,8 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
 
     \draw[step=0.75cm, draw=boxBorder!60, line width=0.35pt] (8.9, 0.3) grid (15.6, 3.9);
     % Final resting positions adjacent on grid
-    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.3pt] (11.15, 1.35) rectangle (12.65, 2.85);
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.3pt] (12.65, 1.725) rectangle (13.40, 2.475);
-    \draw[fill=arenaRed!20, draw=arenaRed, line width=1.3pt] (13.40, 0.975) rectangle (14.15, 3.225);
+    \chassisSquare[blue]{11.90}{2.10}{90}{0.75}
+    \chassisTriangle[red]{13.40}{2.10}{270}{0.75}
     \node[fill=primaryDark, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=2.5pt] at (12.65, 3.4) {Robots Remain Adjacent};
     \node[fill=accentBlue, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt] at (12.65, 0.6) {[4] Movement Concludes (No Back-Off)};
   \end{tikzpicture}%
@@ -915,16 +905,13 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     % Visible Grid (13 cols x 7 rows, step 0.65cm)
     \draw[step=0.65cm, draw=boxBorder!60, line width=0.35pt] (0.5, 0.4) grid (9.4, 5.2);
 
-    % Bot A (Square 2x2, Blue) at x=1.15 to 2.45, y=2.05 to 3.35
-    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.3pt, rounded corners=1pt] (1.15, 2.05) rectangle (2.45, 3.35);
-    % Front active weapon (red bar on East front edge)
-    \draw[line width=2.8pt, draw=arenaRed] (2.45, 2.05) -- (2.45, 3.35);
-    \fill[primaryDark] (1.80, 2.70) circle (2.2pt) node[below=2pt, font=\fontsize{5.5}{6.5}\selectfont\bfseries] {$C_A$};
+    % Bot A (Square 2x2, Blue facing East with weapon bar)
+    \chassisSquare[blue, weapon=bar]{1.80}{2.70}{90}{0.65}
+    \node[below=2pt, font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=primaryDark] at (1.80, 2.65) {$C_A$};
 
-    % Bot B at impact (Triangle T-piece, ghost outline at x=2.45 to 3.75)
-    \draw[fill=gray!15, draw=gray!60, line width=0.8pt, dashed] (2.45, 2.375) rectangle (3.10, 3.025);
-    \draw[fill=gray!15, draw=gray!60, line width=0.8pt, dashed] (3.10, 1.725) rectangle (3.75, 3.675);
-    \fill[gray!70!black] (3.10, 2.70) circle (2pt) node[below=2pt, font=\fontsize{5.5}{6.5}\selectfont\bfseries] {$C_B$};
+    % Bot B at impact (Triangle 4-sq T, ghost outline facing West)
+    \chassisTriangle[ghost]{3.10}{2.70}{270}{0.65}
+    \node[below=2pt, font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=gray!80!black] at (3.10, 2.65) {$C_B$};
 
     % Contact point marker
     \fill[arenaRed] (2.45, 2.70) circle (3pt);
@@ -939,11 +926,7 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     \node[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=1.5pt] at (4.5, 3.10) {Throw: $d \le \text{Strength}$ Sqs};
 
     % Thrown Bot B at Landing Grid Position (shifted to x=6.35, rotated 45 deg CW via d6 roll)
-    \begin{scope}[rotate around={-45:(6.35, 2.70)}]
-      \draw[fill=arenaRed!25, draw=arenaRed, line width=1.3pt] (5.70, 2.375) rectangle (6.35, 3.025);
-      \draw[fill=arenaRed!25, draw=arenaRed, line width=1.3pt] (6.35, 1.725) rectangle (7.00, 3.675);
-    \end{scope}
-    \fill[arenaRed] (6.35, 2.70) circle (2.2pt);
+    \chassisTriangle[red]{6.35}{2.70}{315}{0.65}
 
     % Rotation indicator badge
     \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=accentBlue] (7.2, 3.4) arc (60:-40:0.7);
@@ -967,14 +950,14 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     \node[fill=primaryDark, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt] at (15.0, 5.0) {Hazard};
 
     % Ghost bot start
-    \draw[fill=gray!15, draw=gray!60, line width=0.8pt, dashed] (11.0, 2.05) rectangle (12.3, 3.35);
+    \chassisSquare[ghost]{11.65}{2.70}{90}{0.65}
 
     % Throw vector into hazard wall
     \draw[-{Stealth[length=2.8mm]}, line width=2.2pt, draw=arenaRed] (12.3, 2.70) -- (13.65, 2.70);
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=arenaRed] at (12.8, 3.0) {Thrown};
+    \node[fill=white, inner sep=1pt, font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=arenaRed] at (12.95, 3.10) {Thrown};
 
     % Bot contacting hazard wall
-    \draw[fill=accentBlue!30, draw=accentBlue, line width=1.3pt] (13.05, 2.05) rectangle (14.35, 3.35);
+    \chassisSquare[blue]{13.70}{2.70}{90}{0.65}
     \fill[arenaRed] (14.35, 2.70) circle (3pt);
 
     % Elimination Badge
@@ -1043,16 +1026,11 @@ to each component that supplies it, shared equally if there are multiple compone
     % Visible Grid (10 cols x 5 rows, step 0.65cm)
     \draw[step=0.65cm, draw=boxBorder!60, line width=0.35pt] (0.5, 0.4) grid (7.0, 3.3);
 
-    % Bot A (Nightwing Wide 4x1 facing North)
-    \draw[fill=accentBlue!25, draw=accentBlue, line width=1.2pt, rounded corners=1pt] (1.3, 0.7) rectangle (3.9, 1.35);
-    % Center weapon disc
-    \fill[arenaRed] (2.6, 1.35) circle (2.2pt);
-    % Fork tines / markings at x=1.95 and x=3.25
-    \draw[line width=2pt, draw=amberNote!90!black] (1.65, 1.35) -- (2.30, 1.35);
-    \draw[line width=2pt, draw=amberNote!90!black] (2.90, 1.35) -- (3.55, 1.35);
+    % Bot A (Wide 4x1 facing North with forks)
+    \chassisWide[blue, weapon=forks]{2.60}{1.025}{0}{0.65}
 
-    % Opponent Bot B (Square 2x2) contacting in line with Fork L
-    \draw[fill=gray!25, draw=gray!70!black, line width=1.2pt] (1.3, 1.35) rectangle (2.6, 2.65);
+    % Opponent Bot B (Square 2x2, Red facing South) contacting in line with Fork L
+    \chassisSquare[red]{1.95}{2.00}{180}{0.65}
     \fill[arenaRed] (1.95, 1.35) circle (2.8pt);
 
     % Dotted line through opponent in line with fork
@@ -1070,24 +1048,21 @@ to each component that supplies it, shared equally if there are multiple compone
     % Visible Grid
     \draw[step=0.65cm, draw=boxBorder!60, line width=0.35pt] (8.8, 0.4) grid (15.3, 3.3);
 
-    % Bot A (Nightwing Wide 4x1 facing North)
-    \draw[fill=accentBlue!25, draw=accentBlue, line width=1.2pt, rounded corners=1pt] (9.2, 0.7) rectangle (11.8, 1.35);
-    \fill[arenaRed] (10.5, 1.35) circle (2.2pt);
-    \draw[line width=2pt, draw=amberNote!90!black] (9.55, 1.35) -- (10.20, 1.35);
-    \draw[line width=2pt, draw=amberNote!90!black] (10.80, 1.35) -- (11.45, 1.35);
+    % Bot A (Wide 4x1 facing North with forks)
+    \chassisWide[blue, weapon=forks]{10.50}{1.025}{0}{0.65}
 
     % Fork lines extending slightly into space (not contacting)
-    \draw[densely dotted, line width=1.3pt, draw=amberNote!90!black] (9.87, 1.35) -- (9.87, 2.0);
-    \draw[densely dotted, line width=1.3pt, draw=amberNote!90!black] (11.12, 1.35) -- (11.12, 2.0);
+    \draw[densely dotted, line width=1.3pt, draw=amberNote!90!black] (9.85, 1.35) -- (9.85, 2.0);
+    \draw[densely dotted, line width=1.3pt, draw=amberNote!90!black] (11.15, 1.35) -- (11.15, 2.0);
 
-    % Opponent Bot B (Square 2x2) contacting from right flank
-    \draw[fill=gray!25, draw=gray!70!black, line width=1.2pt] (11.8, 0.7) rectangle (13.1, 2.0);
-    \fill[primaryDark] (11.8, 1.05) circle (2.8pt);
-    \draw[-{Stealth[length=2.2mm]}, draw=textDark, line width=1.2pt] (13.7, 1.35) -- (13.15, 1.35);
+    % Opponent Bot B (Square 2x2, Red facing West) contacting from right flank
+    \chassisSquare[red]{12.45}{1.35}{270}{0.65}
+    \fill[primaryDark] (11.80, 1.35) circle (2.8pt);
+    \draw[-{Stealth[length=2.2mm]}, draw=textDark, line width=1.2pt] (13.60, 1.35) -- (13.15, 1.35);
 
     % Status Badge
-    \node[fill=gray!80!black, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3.5pt] at (14.2, 2.2) {STATUS: NOT RAISED};
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark, align=center] at (14.2, 1.3) {Flank contact\\outside fork lines};
+    \node[fill=gray!80!black, text=white, font=\footnotesize\bfseries, rounded corners=2pt, inner sep=3.5pt, anchor=west] at (13.55, 2.3) {STATUS: NOT RAISED};
+    \node[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark, align=left, anchor=west] at (13.65, 1.35) {Flank contact\\outside forks};
   \end{tikzpicture}
   \caption{Fork Engagement (Raised Status) and Mechanical Penalties}
   \label{fig:diagram_forks_raised}

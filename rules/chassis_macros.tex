@@ -1,0 +1,204 @@
+% ==============================================================================
+% CHASSIS TEMPLATE MACROS FOR ROBOT BATTLES
+% ==============================================================================
+% Canonical macros ensuring identical chassis outlines, grid occupancy,
+% wheel affectations, facing arrows, and Blue/Red/Ghost color palettes
+% across all figures in the rulebook and print-and-play materials.
+%
+% Compass Heading Convention:
+%   0 deg   = North (+Y)
+%   45 deg  = North-East (CW)
+%   90 deg  = East (+X)
+%   135 deg = South-East (CW)
+%   180 deg = South (-Y)
+%   270 deg / -90 deg = West (-X)
+%
+% Usage:
+%   \chassisSquare[options]{x}{y}{heading_deg}{grid_step}
+%   \chassisTriangle[options]{x}{y}{heading_deg}{grid_step}
+%   \chassisWide[options]{x}{y}{heading_deg}{grid_step}
+%
+% Options:
+%   blue (default) | red | ghost
+%   weapon = none (default) | bar | disc | forks
+%   arrow = true (default) | false
+%   center = true (default) | false
+% ==============================================================================
+
+\def\rbTeamBlue{blue}
+\def\rbTeamRed{red}
+\def\rbTeamGhost{ghost}
+\def\rbWeaponBar{bar}
+\def\rbWeaponDisc{disc}
+\def\rbWeaponForks{forks}
+\def\rbTrue{true}
+
+\pgfkeys{
+  /rbchassis/.is family, /rbchassis,
+  team/.store in = \rbTeam,
+  weapon/.store in = \rbWeapon,
+  arrow/.store in = \rbArrow,
+  center/.store in = \rbCenter,
+  blue/.style = {team = blue},
+  red/.style = {team = red},
+  ghost/.style = {team = ghost},
+}
+
+\newcommand{\rbApplyStyle}{%
+  \ifx\rbTeam\rbTeamGhost
+    \def\rbBodyFill{gray!15}%
+    \def\rbBodyDraw{gray!60}%
+    \def\rbFadedFill{gray!10}%
+    \def\rbFadedDraw{gray!35}%
+    \def\rbWheelFill{gray!45}%
+    \def\rbWheelDraw{gray!65}%
+    \def\rbArrowDraw{gray!60}%
+    \def\rbLineWidth{0.9pt}%
+    \def\rbLineType{dashed}%
+  \else
+    \ifx\rbTeam\rbTeamRed
+      \def\rbBodyFill{arenaRed!20}%
+      \def\rbBodyDraw{arenaRed}%
+      \def\rbFadedFill{arenaRed!15}%
+      \def\rbFadedDraw{arenaRed!50}%
+      \def\rbWheelFill{primaryDark}%
+      \def\rbWheelDraw{primaryDark!80!black}%
+      \def\rbArrowDraw{green!60!black}%
+      \def\rbLineWidth{1.3pt}%
+      \def\rbLineType{solid}%
+    \else
+      \def\rbBodyFill{accentBlue!25}%
+      \def\rbBodyDraw{accentBlue}%
+      \def\rbFadedFill{accentBlue!15}%
+      \def\rbFadedDraw{accentBlue!50}%
+      \def\rbWheelFill{primaryDark}%
+      \def\rbWheelDraw{primaryDark!80!black}%
+      \def\rbArrowDraw{green!60!black}%
+      \def\rbLineWidth{1.3pt}%
+      \def\rbLineType{solid}%
+    \fi
+  \fi
+}
+
+% ------------------------------------------------------------------------------
+% 1. SQUARE CHASSIS (2x2 Occupancy)
+% ------------------------------------------------------------------------------
+\newcommand{\chassisSquare}[5][blue]{%
+  \begingroup
+  \pgfkeys{/rbchassis, team=blue, weapon=none, arrow=true, center=true, #1}%
+  \rbApplyStyle
+  \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
+    % Drive wheels (4 wheels: 2 left, 2 right)
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-0.99, -0.68) rectangle (-0.85, -0.22);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-0.99,  0.22) rectangle (-0.85,  0.68);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 0.85, -0.68) rectangle ( 0.99, -0.22);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 0.85,  0.22) rectangle ( 0.99,  0.68);
+    % Main chassis body (2x2 occupancy, slightly inset)
+    \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, rounded corners=2pt]
+      (-0.92, -0.92) rectangle (0.92, 0.92);
+    % Center pin dot
+    \ifx\rbCenter\rbTrue
+      \fill[primaryDark] (0, 0) circle [radius=0.08];
+    \fi
+    % Weapon overlay
+    \ifx\rbWeapon\rbWeaponBar
+      \draw[line width=2.4pt, draw=arenaRed] (-0.75, 0.92) -- (0.75, 0.92);
+    \fi
+    \ifx\rbWeapon\rbWeaponDisc
+      \fill[arenaRed] (0, 0.92) circle [radius=0.14];
+    \fi
+    % Facing arrow
+    \ifx\rbArrow\rbTrue
+      \draw[-{Triangle[width=2.4mm,length=3.2mm]}, line width=1.4pt, draw=\rbArrowDraw]
+        (0, -0.35) -- (0, 0.65);
+    \fi
+  \end{scope}%
+  \endgroup
+}
+
+% ------------------------------------------------------------------------------
+% 2. WIDE CHASSIS (4x1 Occupancy)
+% ------------------------------------------------------------------------------
+\newcommand{\chassisWide}[5][blue]{%
+  \begingroup
+  \pgfkeys{/rbchassis, team=blue, weapon=none, arrow=true, center=true, #1}%
+  \rbApplyStyle
+  \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
+    % Drive wheels (2 wheels: 1 left end, 1 right end)
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-1.99, -0.30) rectangle (-1.85, 0.30);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 1.85, -0.30) rectangle ( 1.99, 0.30);
+    % Main chassis body (4x1 occupancy, slightly inset)
+    \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, rounded corners=2pt]
+      (-1.92, -0.42) rectangle (1.92, 0.42);
+    % Center pin dot
+    \ifx\rbCenter\rbTrue
+      \fill[primaryDark] (0, 0) circle [radius=0.08];
+    \fi
+    % Weapon overlay
+    \ifx\rbWeapon\rbWeaponDisc
+      \fill[arenaRed] (0, 0.42) circle [radius=0.14];
+    \fi
+    \ifx\rbWeapon\rbWeaponForks
+      \draw[line width=2pt, draw=amberNote!90!black] (-1.35, 0.42) -- (-0.65, 0.42);
+      \draw[line width=2pt, draw=amberNote!90!black] ( 0.65, 0.42) -- ( 1.35, 0.42);
+    \fi
+    \ifx\rbWeapon\rbWeaponBar
+      \draw[line width=2.4pt, draw=arenaRed] (-1.40, 0.42) -- (1.40, 0.42);
+    \fi
+    % Facing arrow
+    \ifx\rbArrow\rbTrue
+      \draw[-{Triangle[width=2.4mm,length=3.2mm]}, line width=1.4pt, draw=\rbArrowDraw]
+        (0, -0.25) -- (0, 0.32);
+    \fi
+  \end{scope}%
+  \endgroup
+}
+
+% ------------------------------------------------------------------------------
+% 3. TRIANGLE CHASSIS (Wedge Outline + Faded T-Tetris Occupancy)
+% ------------------------------------------------------------------------------
+\newcommand{\chassisTriangle}[5][blue]{%
+  \begingroup
+  \pgfkeys{/rbchassis, team=blue, weapon=none, arrow=true, center=true, #1}%
+  \rbApplyStyle
+  \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
+    % FADED T-TETRIS OCCUPANCY (Behind the wedge: 3x1 rear base + 1x1 front stem)
+    \fill[\rbFadedFill] (-1.5, -1.0) rectangle (1.5, 0.0);
+    \fill[\rbFadedFill] (-0.5,  0.0) rectangle (0.5, 1.0);
+    % Subtle boundary & cell dividers
+    \draw[\rbFadedDraw, dashed, line width=0.4pt]
+      (-1.5, -1.0) -- (1.5, -1.0) -- (1.5, 0.0) -- (0.5, 0.0) --
+      (0.5, 1.0) -- (-0.5, 1.0) -- (-0.5, 0.0) -- (-1.5, 0.0) -- cycle;
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] (-0.5, -1.0) -- (-0.5, 0.0);
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] ( 0.5, -1.0) -- ( 0.5, 0.0);
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] (-0.5,  0.0) -- ( 0.5, 0.0);
+
+    % Drive wheels on rear vertical side rails
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-1.47, -0.80) rectangle (-1.33, -0.20);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 1.33, -0.80) rectangle ( 1.47, -0.20);
+
+    % WEDGE OUTLINE (Iconic combat robotics shape: flat rear, side rails, sloping edges to apex)
+    \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, line join=round]
+      (-1.40, -0.92) -- (1.40, -0.92) -- (1.40, -0.10) -- (0.0, 0.95) -- (-1.40, -0.10) -- cycle;
+
+    % Center pin dot (near centroid)
+    \ifx\rbCenter\rbTrue
+      \fill[primaryDark] (0, -0.20) circle [radius=0.08];
+    \fi
+
+    % Weapon overlay
+    \ifx\rbWeapon\rbWeaponBar
+      \draw[line width=2.4pt, draw=arenaRed] (-0.45, 0.58) -- (0.0, 0.95) -- (0.45, 0.58);
+    \fi
+    \ifx\rbWeapon\rbWeaponDisc
+      \fill[arenaRed] (0, 0.95) circle [radius=0.14];
+    \fi
+
+    % Facing arrow
+    \ifx\rbArrow\rbTrue
+      \draw[-{Triangle[width=2.4mm,length=3.2mm]}, line width=1.4pt, draw=\rbArrowDraw]
+        (0, -0.55) -- (0, 0.65);
+    \fi
+  \end{scope}%
+  \endgroup
+}

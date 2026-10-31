@@ -45,6 +45,161 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
 \pagestyle{empty}
 \usetikzlibrary{calc,patterns,arrows.meta}
 
+\definecolor{primaryDark}{HTML}{1A202C}
+\definecolor{accentBlue}{HTML}{2B6CB0}
+\definecolor{arenaRed}{HTML}{C53030}
+\definecolor{amberNote}{HTML}{D69E2E}
+\definecolor{boxBorder}{HTML}{CBD5E0}
+\definecolor{boxBg}{HTML}{F7FAFC}
+\definecolor{textDark}{HTML}{2D3748}
+
+\def\rbTeamBlue{blue}
+\def\rbTeamRed{red}
+\def\rbTeamGhost{ghost}
+\def\rbWeaponBar{bar}
+\def\rbWeaponDisc{disc}
+\def\rbWeaponForks{forks}
+\def\rbTrue{true}
+
+\pgfkeys{
+  /rbchassis/.is family, /rbchassis,
+  team/.store in = \rbTeam,
+  weapon/.store in = \rbWeapon,
+  arrow/.store in = \rbArrow,
+  center/.store in = \rbCenter,
+  blue/.style = {team = blue},
+  red/.style = {team = red},
+  ghost/.style = {team = ghost},
+}
+
+\newcommand{\rbApplyStyle}{%
+  \ifx\rbTeam\rbTeamGhost
+    \def\rbBodyFill{gray!15}%
+    \def\rbBodyDraw{gray!60}%
+    \def\rbFadedFill{gray!10}%
+    \def\rbFadedDraw{gray!35}%
+    \def\rbWheelFill{gray!45}%
+    \def\rbWheelDraw{gray!65}%
+    \def\rbArrowDraw{gray!60}%
+    \def\rbLineWidth{0.9pt}%
+    \def\rbLineType{dashed}%
+  \else
+    \ifx\rbTeam\rbTeamRed
+      \def\rbBodyFill{arenaRed!20}%
+      \def\rbBodyDraw{arenaRed}%
+      \def\rbFadedFill{arenaRed!15}%
+      \def\rbFadedDraw{arenaRed!50}%
+      \def\rbWheelFill{primaryDark}%
+      \def\rbWheelDraw{primaryDark!80!black}%
+      \def\rbArrowDraw{green!60!black}%
+      \def\rbLineWidth{1.3pt}%
+      \def\rbLineType{solid}%
+    \else
+      \def\rbBodyFill{accentBlue!25}%
+      \def\rbBodyDraw{accentBlue}%
+      \def\rbFadedFill{accentBlue!15}%
+      \def\rbFadedDraw{accentBlue!50}%
+      \def\rbWheelFill{primaryDark}%
+      \def\rbWheelDraw{primaryDark!80!black}%
+      \def\rbArrowDraw{green!60!black}%
+      \def\rbLineWidth{1.3pt}%
+      \def\rbLineType{solid}%
+    \fi
+  \fi
+}
+
+\newcommand{\chassisSquare}[5][blue]{%
+  \begingroup
+  \pgfkeys{/rbchassis, team=blue, weapon=none, arrow=true, center=true, #1}%
+  \rbApplyStyle
+  \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-0.99, -0.68) rectangle (-0.85, -0.22);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-0.99,  0.22) rectangle (-0.85,  0.68);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 0.85, -0.68) rectangle ( 0.99, -0.22);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 0.85,  0.22) rectangle ( 0.99,  0.68);
+    \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, rounded corners=2pt]
+      (-0.92, -0.92) rectangle (0.92, 0.92);
+    \ifx\rbCenter\rbTrue
+      \fill[primaryDark] (0, 0) circle [radius=0.08];
+    \fi
+    \ifx\rbWeapon\rbWeaponBar
+      \draw[line width=2.4pt, draw=arenaRed] (-0.75, 0.92) -- (0.75, 0.92);
+    \fi
+    \ifx\rbWeapon\rbWeaponDisc
+      \fill[arenaRed] (0, 0.92) circle [radius=0.14];
+    \fi
+    \ifx\rbArrow\rbTrue
+      \draw[-{Triangle[width=2.4mm,length=3.2mm]}, line width=1.4pt, draw=\rbArrowDraw]
+        (0, -0.35) -- (0, 0.65);
+    \fi
+  \end{scope}%
+  \endgroup
+}
+
+\newcommand{\chassisWide}[5][blue]{%
+  \begingroup
+  \pgfkeys{/rbchassis, team=blue, weapon=none, arrow=true, center=true, #1}%
+  \rbApplyStyle
+  \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-1.99, -0.30) rectangle (-1.85, 0.30);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 1.85, -0.30) rectangle ( 1.99, 0.30);
+    \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, rounded corners=2pt]
+      (-1.92, -0.42) rectangle (1.92, 0.42);
+    \ifx\rbCenter\rbTrue
+      \fill[primaryDark] (0, 0) circle [radius=0.08];
+    \fi
+    \ifx\rbWeapon\rbWeaponDisc
+      \fill[arenaRed] (0, 0.42) circle [radius=0.14];
+    \fi
+    \ifx\rbWeapon\rbWeaponForks
+      \draw[line width=2pt, draw=amberNote!90!black] (-1.35, 0.42) -- (-0.65, 0.42);
+      \draw[line width=2pt, draw=amberNote!90!black] ( 0.65, 0.42) -- ( 1.35, 0.42);
+    \fi
+    \ifx\rbWeapon\rbWeaponBar
+      \draw[line width=2.4pt, draw=arenaRed] (-1.40, 0.42) -- (1.40, 0.42);
+    \fi
+    \ifx\rbArrow\rbTrue
+      \draw[-{Triangle[width=2.4mm,length=3.2mm]}, line width=1.4pt, draw=\rbArrowDraw]
+        (0, -0.25) -- (0, 0.32);
+    \fi
+  \end{scope}%
+  \endgroup
+}
+
+\newcommand{\chassisTriangle}[5][blue]{%
+  \begingroup
+  \pgfkeys{/rbchassis, team=blue, weapon=none, arrow=true, center=true, #1}%
+  \rbApplyStyle
+  \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
+    \fill[\rbFadedFill] (-1.5, -1.0) rectangle (1.5, 0.0);
+    \fill[\rbFadedFill] (-0.5,  0.0) rectangle (0.5, 1.0);
+    \draw[\rbFadedDraw, dashed, line width=0.4pt]
+      (-1.5, -1.0) -- (1.5, -1.0) -- (1.5, 0.0) -- (0.5, 0.0) --
+      (0.5, 1.0) -- (-0.5, 1.0) -- (-0.5, 0.0) -- (-1.5, 0.0) -- cycle;
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] (-0.5, -1.0) -- (-0.5, 0.0);
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] ( 0.5, -1.0) -- ( 0.5, 0.0);
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] (-0.5,  0.0) -- ( 0.5, 0.0);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-1.47, -0.80) rectangle (-1.33, -0.20);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 1.33, -0.80) rectangle ( 1.47, -0.20);
+    \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, line join=round]
+      (-1.40, -0.92) -- (1.40, -0.92) -- (1.40, -0.10) -- (0.0, 0.95) -- (-1.40, -0.10) -- cycle;
+    \ifx\rbCenter\rbTrue
+      \fill[primaryDark] (0, -0.20) circle [radius=0.08];
+    \fi
+    \ifx\rbWeapon\rbWeaponBar
+      \draw[line width=2.4pt, draw=arenaRed] (-0.45, 0.58) -- (0.0, 0.95) -- (0.45, 0.58);
+    \fi
+    \ifx\rbWeapon\rbWeaponDisc
+      \fill[arenaRed] (0, 0.95) circle [radius=0.14];
+    \fi
+    \ifx\rbArrow\rbTrue
+      \draw[-{Triangle[width=2.4mm,length=3.2mm]}, line width=1.4pt, draw=\rbArrowDraw]
+        (0, -0.55) -- (0, 0.65);
+    \fi
+  \end{scope}%
+  \endgroup
+}
+
 \begin{document}
 
 % ==============================================================================
@@ -187,7 +342,7 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
 
   % Header
   \node[anchor=north west] at (15, 203) {\sffamily\bfseries\Large ROBOT BATTLES --- ARENA MINIATURES \& TOKENS};
-  \node[anchor=north west] at (15, 196) {\sffamily\small 100\% True Scale. Cut along dashed boxes. Place on arena mat to execute moves along templates.};
+  \node[anchor=north west] at (15, 196) {\sffamily\small 100\% True Scale. Cut along dashed boxes. Place on arena grid to execute movement.};
 
   % Scale Bar
   \draw[line width=1.5pt] (225, 201) -- (275, 201);
@@ -199,54 +354,48 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
   \node[anchor=north west] at (15, 186) {\sffamily\bfseries\large PLAYER 1 / TEAM A (BLUE)};
 
   % P1 Triangle
-  \begin{scope}[shift={(55, 142)}]
-    \draw[line width=0.5pt, gray!40, dashed] (-38, -38) rectangle (38, 38);
-    \draw[fill=blue!10!black!90, draw=cyan, line width=2.5pt] (0, 36) -- (35, 5) -- (35, -35) -- (-35, -35) -- (-35, 5) -- cycle;
-    \draw[-{Triangle[width=4mm,length=5mm]}, line width=2.0pt, green!80!black] (0, -10) -- (0, 22);
-    \node[anchor=center, white] at (0, -22) {\sffamily\scriptsize\bfseries P1 TRIANGLE};
+  \begin{scope}[shift={(55, 145)}]
+    \draw[line width=0.5pt, gray!40, dashed] (-33, -25) rectangle (33, 25);
+    \chassisTriangle[blue]{0}{0}{0}{20}
+    \node[anchor=center, textDark] at (0, -29) {\sffamily\scriptsize\bfseries P1 TRIANGLE};
   \end{scope}
 
   % P1 Square
-  \begin{scope}[shift={(140, 142)}]
-    \draw[line width=0.5pt, gray!40, dashed] (-33, -38) rectangle (33, 38);
-    \draw[fill=blue!10!black!90, draw=cyan, line width=2.5pt, rounded corners=2mm] (-30, -35) rectangle (30, 35);
-    \draw[-{Triangle[width=4mm,length=5mm]}, line width=2.0pt, green!80!black] (0, -10) -- (0, 22);
-    \node[anchor=center, white] at (0, -22) {\sffamily\scriptsize\bfseries P1 SQUARE};
+  \begin{scope}[shift={(135, 145)}]
+    \draw[line width=0.5pt, gray!40, dashed] (-23, -25) rectangle (23, 25);
+    \chassisSquare[blue]{0}{0}{0}{20}
+    \node[anchor=center, textDark] at (0, -29) {\sffamily\scriptsize\bfseries P1 SQUARE};
   \end{scope}
 
   % P1 Wide
-  \begin{scope}[shift={(235, 150)}]
-    \draw[line width=0.5pt, gray!40, dashed] (-45, -28) rectangle (45, 28);
-    \draw[fill=blue!10!black!90, draw=cyan, line width=2.5pt, rounded corners=2mm] (-42, -25) rectangle (42, 25);
-    \draw[-{Triangle[width=4mm,length=5mm]}, line width=2.0pt, green!80!black] (0, -12) -- (0, 14);
-    \node[anchor=center, white] at (0, -15) {\sffamily\scriptsize\bfseries P1 WIDE};
+  \begin{scope}[shift={(225, 145)}]
+    \draw[line width=0.5pt, gray!40, dashed] (-43, -15) rectangle (43, 15);
+    \chassisWide[blue]{0}{0}{0}{20}
+    \node[anchor=center, textDark] at (0, -19) {\sffamily\scriptsize\bfseries P1 WIDE};
   \end{scope}
 
   % Section: Player 2 / Automaton (Red)
   \node[anchor=north west] at (15, 96) {\sffamily\bfseries\large PLAYER 2 / AUTOMATON (RED)};
 
   % P2 Triangle
-  \begin{scope}[shift={(55, 52)}]
-    \draw[line width=0.5pt, gray!40, dashed] (-38, -38) rectangle (38, 38);
-    \draw[fill=red!15!black!90, draw=red!80!white, line width=2.5pt] (0, 36) -- (35, 5) -- (35, -35) -- (-35, -35) -- (-35, 5) -- cycle;
-    \draw[-{Triangle[width=4mm,length=5mm]}, line width=2.0pt, green!80!black] (0, -10) -- (0, 22);
-    \node[anchor=center, white] at (0, -22) {\sffamily\scriptsize\bfseries P2 TRIANGLE};
+  \begin{scope}[shift={(55, 55)}]
+    \draw[line width=0.5pt, gray!40, dashed] (-33, -25) rectangle (33, 25);
+    \chassisTriangle[red]{0}{0}{0}{20}
+    \node[anchor=center, textDark] at (0, -29) {\sffamily\scriptsize\bfseries P2 TRIANGLE};
   \end{scope}
 
   % P2 Square
-  \begin{scope}[shift={(140, 52)}]
-    \draw[line width=0.5pt, gray!40, dashed] (-33, -38) rectangle (33, 38);
-    \draw[fill=red!15!black!90, draw=red!80!white, line width=2.5pt, rounded corners=2mm] (-30, -35) rectangle (30, 35);
-    \draw[-{Triangle[width=4mm,length=5mm]}, line width=2.0pt, green!80!black] (0, -10) -- (0, 22);
-    \node[anchor=center, white] at (0, -22) {\sffamily\scriptsize\bfseries P2 SQUARE};
+  \begin{scope}[shift={(135, 55)}]
+    \draw[line width=0.5pt, gray!40, dashed] (-23, -25) rectangle (23, 25);
+    \chassisSquare[red]{0}{0}{0}{20}
+    \node[anchor=center, textDark] at (0, -29) {\sffamily\scriptsize\bfseries P2 SQUARE};
   \end{scope}
 
   % P2 Wide
-  \begin{scope}[shift={(235, 82)}]
-    \draw[line width=0.5pt, gray!40, dashed] (-45, -28) rectangle (45, 28);
-    \draw[fill=red!15!black!90, draw=red!80!white, line width=2.5pt, rounded corners=2mm] (-42, -25) rectangle (42, 25);
-    \draw[-{Triangle[width=4mm,length=5mm]}, line width=2.0pt, green!80!black] (0, -12) -- (0, 14);
-    \node[anchor=center, white] at (0, -15) {\sffamily\scriptsize\bfseries P2 WIDE};
+  \begin{scope}[shift={(225, 78)}]
+    \draw[line width=0.5pt, gray!40, dashed] (-43, -15) rectangle (43, 15);
+    \chassisWide[red]{0}{0}{0}{20}
+    \node[anchor=center, textDark] at (0, -19) {\sffamily\scriptsize\bfseries P2 WIDE};
   \end{scope}
 
   % Tokens Section (Bottom Right)
