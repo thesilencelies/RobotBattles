@@ -202,3 +202,63 @@
   \end{scope}%
   \endgroup
 }
+
+% ==============================================================================
+% 4. GRID MANAGEMENT & SNAP PLACEMENT MACROS
+% ==============================================================================
+% Enables defining arena grids with an origin (X0, Y0) and cell step size.
+% All robot placement, contact dots, and grid vectors snap to integer/half-integer
+% coordinates on the active grid.
+%
+% Usage:
+%   \setGrid{x0}{y0}{step}
+%   \gridPt{gx}{gy} -> TikZ coordinate ({x0 + gx*step}, {y0 + gy*step})
+%   \gridDraw[style]{gx_min}{gy_min}{gx_max}{gy_max}
+%   \gridSquare[options]{gx}{gy}{heading}
+%   \gridTriangle[options]{gx}{gy}{heading}
+%   \gridWide[options]{gx}{gy}{heading}
+%   \gridDot[fill options]{gx}{gy}
+%   \gridNode[options]{gx}{gy}{content}
+% ==============================================================================
+
+\def\rbGridXzero{0}
+\def\rbGridYzero{0}
+\def\rbGridStep{1}
+
+\newcommand{\setGrid}[3]{%
+  \def\rbGridXzero{#1}%
+  \def\rbGridYzero{#2}%
+  \def\rbGridStep{#3}%
+}
+
+\newcommand{\gridPt}[2]{({\rbGridXzero + (#1)*\rbGridStep}, {\rbGridYzero + (#2)*\rbGridStep})}
+
+\newcommand{\gridDraw}[5][draw=boxBorder!60, line width=0.35pt]{%
+  \draw[step=\rbGridStep, #1] \gridPt{#2}{#3} grid \gridPt{#4}{#5};%
+}
+
+\newcommand{\gridSquare}[4][blue]{%
+  \pgfmathsetmacro{\rbCalcX}{\rbGridXzero + (#2)*\rbGridStep}%
+  \pgfmathsetmacro{\rbCalcY}{\rbGridYzero + (#3)*\rbGridStep}%
+  \chassisSquare[#1]{\rbCalcX}{\rbCalcY}{#4}{\rbGridStep}%
+}
+
+\newcommand{\gridWide}[4][blue]{%
+  \pgfmathsetmacro{\rbCalcX}{\rbGridXzero + (#2)*\rbGridStep}%
+  \pgfmathsetmacro{\rbCalcY}{\rbGridYzero + (#3)*\rbGridStep}%
+  \chassisWide[#1]{\rbCalcX}{\rbCalcY}{#4}{\rbGridStep}%
+}
+
+\newcommand{\gridTriangle}[4][blue]{%
+  \pgfmathsetmacro{\rbCalcX}{\rbGridXzero + (#2)*\rbGridStep}%
+  \pgfmathsetmacro{\rbCalcY}{\rbGridYzero + (#3)*\rbGridStep}%
+  \chassisTriangle[#1]{\rbCalcX}{\rbCalcY}{#4}{\rbGridStep}%
+}
+
+\newcommand{\gridDot}[3][arenaRed]{%
+  \fill[#1] \gridPt{#2}{#3} circle (2.8pt);%
+}
+
+\newcommand{\gridNode}[4][]{%
+  \node[#1] at \gridPt{#2}{#3} {#4};%
+}
