@@ -16,3 +16,6 @@ to the card designs outside of explicit instruction to do so.
 
 # Repo
 This is a single developer repo, so unless otherwise requested to, commit and push to main
+
+## Publishing & Upload Scripts
+Whenever the rules PDF is updated or recompiled (`rules/combat_robotics_game.tex`), run the upload script (`python3 upload_rules.py`) to publish the updated PDF to Google Drive.
