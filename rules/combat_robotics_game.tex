@@ -4,6 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[sfdefault]{roboto}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage[top=2.0cm, bottom=2.5cm, left=2.0cm, right=2.0cm, headheight=14pt, footskip=1.2cm]{geometry}
 \usepackage{graphicx}
 \usepackage{subcaption}
@@ -443,12 +444,147 @@ The bigger the difference the more the robot will turn.
 Instead of movement templates, battle maneuvering is resolved on a discrete square grid. Robot facings and turns are strictly snapped to \textbf{45-degree increments} ($0^\circ$, $45^\circ$, $90^\circ$, $135^\circ$, $180^\circ$, $225^\circ$, $270^\circ$, $315^\circ$).
 
 \subsubsection{Chassis Grid Footprints}
-Each robot occupies multiple squares on the grid simultaneously. Each chassis type occupies exactly 4 grid squares:
+Each robot occupies multiple squares on the grid simultaneously. When aligned orthogonally ($0^\circ$, $90^\circ$, $180^\circ$, $270^\circ$), each chassis occupies exactly 4 grid squares:
 \begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
   \item \textbf{Square Chassis:} Occupies a \textbf{2$\times$2} square footprint (sized slightly inside the $2\times2$ grid cell boundary).
   \item \textbf{Wide Chassis:} Occupies a \textbf{4$\times$1} rectangular bar.
   \item \textbf{Triangle Chassis:} Occupies a \textbf{T-tetris piece} of 4 squares: a 3-square wide base across the rear (housing the drive wheels) with a 1-square central stem extending forward (the front wedge tip; preserving original chassis edge boundaries and weapon mount zones).
 \end{itemize}
+
+\subsubsection{45-Degree Rotated Chassis Occupancy \& Grid Snapping}
+When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throws), their orientation aligns diagonally with the arena grid. To guarantee discrete collision detection and unambiguous tile occupancy, robot boundaries snap strictly to discrete grid envelopes as illustrated in Figure~\ref{fig:diagram_chassis_45_occupancy}:
+\begin{itemize}[leftmargin=*, noitemsep, topsep=2pt]
+  \item \textbf{Square Chassis (Always 4 Squares):} A Square chassis rotated $45^\circ$ forms a diamond centered within the \textbf{exact same 2$\times$2 grid block} (4 squares). In a \textbf{Pivot Step}, it rotates on the spot inside this $2\times2$ footprint. In a \textbf{Turn Step}, pivoting around its outer wheel swings the robot into the adjacent column or row, occupying a \textbf{2$\times$2 square block shifted by 1 grid cell}.
+  \item \textbf{Wide Chassis (4 Squares Base $\rightarrow$ 6 Squares at 45$^\circ$):} When aligned diagonally, a Wide chassis occupies \textbf{6 grid squares} arranged as a diagonal staircase of three overlapping $2\times1$ dominoes (2 squares per row and column; outer tip corners are excluded). In a \textbf{Pivot Step}, the 6-square staircase centers on the robot's midpoint. In a \textbf{Turn Step}, the robot pivots around its stationary outer wheel, shifting the 6-square staircase 1 grid square forward along the turn arc.
+  \item \textbf{Triangle Chassis (4 Squares Base $\rightarrow$ 6 Squares at 45$^\circ$):} When aligned diagonally, a Triangle chassis occupies \textbf{6 grid squares} arranged in a stepped $3-2-1$ staircase (3 squares in the leading row, 2 squares in the middle row, and 1 square in the trailing corner). In a \textbf{Pivot Step}, this footprint centers on the robot's centroid. In a \textbf{Turn Step}, the robot pivots around its stationary rear wheel/corner, shifting the $3-2-1$ footprint 1 grid square forward along the turn arc.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \adjustbox{max width=\linewidth}{%
+  \begin{tikzpicture}[x=1cm, y=1cm]
+    % Outer Frame (16.2cm wide x 11.2cm high)
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (16.2, 11.2);
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 11.05) {Chassis Grid Occupancy: Orthogonal vs $45^\circ$ Rotations (Pivot \& Turn)};
+
+    % Key / Legend
+    \node[draw=boxBorder, fill=noteBg, font=\scriptsize, align=left, rounded corners=2pt, inner sep=2.5pt, anchor=north east] at (16.05, 11.05) {%
+      \textbf{Key:}\quad
+      {\color{primaryDark}\textbf{---}} Initial Shape \quad
+      {\color{arenaRed!80}\textbf{[ ]}} Snapped Footprint \quad
+      {\color{accentBlue}\textbf{---}} Final Robot \quad
+      \raisebox{-0.5pt}{\tikz{\draw[-{Triangle[width=1.6mm,length=2.0mm]}, line width=1.0pt, draw=green!60!black] (0,0) -- (0,0.24);}}~Heading
+    };
+
+    % Column Headers
+    \node[font=\footnotesize\bfseries, text=primaryDark] at (2.75, 10.15) {1. Orthogonal Base ($0^\circ$)};
+    \node[font=\footnotesize\bfseries, text=primaryDark] at (8.10, 10.15) {2. $45^\circ$ Center Pivot};
+    \node[font=\footnotesize\bfseries, text=primaryDark] at (13.45, 10.15) {3. $45^\circ$ Wheel/Edge Turn};
+
+    % -------------------------------------------------------------
+    % ROW 1: SQUARE CHASSIS
+    % -------------------------------------------------------------
+    \node[font=\footnotesize\bfseries, text=accentBlue, anchor=west] at (0.3, 9.75) {A. Square Chassis (4 Squares)};
+
+    % Col 1: Sq 0 deg
+    \setGrid{1.30}{7.05}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \gridSquareFootprint{2}{2}
+    \gridSquare[blue]{2}{2}{0}
+
+    % Col 2: Sq 45 deg Pivot
+    \setGrid{6.65}{7.05}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \draw[primaryDark, line width=0.8pt] \gridPt{1}{1} rectangle \gridPt{3}{3};
+    \gridSquareFootprint{2}{2}
+    \gridSquare[blue]{2}{2}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=amberNote!90!black] \gridPt{1.4}{2.5} arc (140:40:0.7);
+
+    % Col 3: Sq 45 deg Turn
+    \setGrid{12.00}{7.05}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \draw[primaryDark, line width=0.8pt] \gridPt{1}{1} rectangle \gridPt{3}{3};
+    \gridSquareFootprint{3}{2}
+    \gridDot[arenaRed]{3}{2}
+    \gridSquare[blue]{3}{2}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=arenaRed] \gridPt{1.4}{2.6} arc (120:60:1.3);
+
+    % Row 1 Sublabels
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (2.75, 6.75) {4 Squares ($2\times2$)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (8.10, 6.75) {Same 4 Squares ($2\times2$)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (13.45, 6.75) {Shifted 1 Col ($2\times2$)};
+
+    % -------------------------------------------------------------
+    % ROW 2: TRIANGLE CHASSIS
+    % -------------------------------------------------------------
+    \node[font=\footnotesize\bfseries, text=accentBlue, anchor=west] at (0.3, 6.35) {B. Triangle Chassis (4 Squares Base $\rightarrow$ 6 Squares at $45^\circ$)};
+
+    % Col 1: Tri 0 deg
+    \setGrid{1.30}{3.65}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \gridTriangleFootprint{2.5}{2.0}{0}
+    \gridTriangle[blue, faded=false]{2.5}{2.0}{0}
+
+    % Col 2: Tri 45 deg Pivot
+    \setGrid{6.65}{3.65}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \draw[primaryDark, line width=0.8pt] \gridPt{1}{1} -- \gridPt{4}{1} -- \gridPt{4}{2} -- \gridPt{3}{2} -- \gridPt{3}{3} -- \gridPt{2}{3} -- \gridPt{2}{2} -- \gridPt{1}{2} -- cycle;
+    \gridTriangleFootprint{2.5}{2.0}{45}
+    \gridTriangle[blue, faded=false]{2.5}{2.0}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=amberNote!90!black] \gridPt{1.5}{2.7} arc (135:55:0.9);
+
+    % Col 3: Tri 45 deg Turn
+    \setGrid{12.00}{3.65}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \draw[primaryDark, line width=0.8pt] \gridPt{1}{1} -- \gridPt{4}{1} -- \gridPt{4}{2} -- \gridPt{3}{2} -- \gridPt{3}{3} -- \gridPt{2}{3} -- \gridPt{2}{2} -- \gridPt{1}{2} -- cycle;
+    \gridTriangleFootprint{2.5}{3.0}{45}
+    \gridDot[arenaRed]{3.5}{1.5}
+    \gridTriangle[blue, faded=false]{2.5}{3.0}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=arenaRed] \gridPt{1.4}{2.8} arc (130:70:1.6);
+
+    % Row 2 Sublabels
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (2.75, 3.35) {4 Squares (T-Tetris)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (8.10, 3.35) {6 Squares ($3-2-1$ Stepped)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (13.45, 3.35) {Shifted 1 Row Up ($3-2-1$)};
+
+    % -------------------------------------------------------------
+    % ROW 3: WIDE CHASSIS
+    % -------------------------------------------------------------
+    \node[font=\footnotesize\bfseries, text=accentBlue, anchor=west] at (0.3, 2.95) {C. Wide Chassis (4 Squares Base $\rightarrow$ 6 Squares at $45^\circ$)};
+
+    % Col 1: Wide 0 deg
+    \setGrid{1.30}{0.25}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \gridWideFootprint{2.5}{2.0}{0}
+    \gridWide[blue]{2.5}{2.0}{0}
+
+    % Col 2: Wide 45 deg Pivot
+    \setGrid{6.65}{0.25}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \draw[primaryDark, line width=0.8pt] \gridPt{0.5}{1.5} rectangle \gridPt{4.5}{2.5};
+    \gridWideFootprint{2.5}{2.0}{45}
+    \gridWide[blue]{2.5}{2.0}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=amberNote!90!black] \gridPt{1.2}{2.4} arc (140:60:1.0);
+
+    % Col 3: Wide 45 deg Turn
+    \setGrid{12.00}{0.25}{0.58}
+    \gridDraw{0}{0}{5}{4}
+    \draw[primaryDark, line width=0.8pt] \gridPt{0.5}{1.5} rectangle \gridPt{4.5}{2.5};
+    \gridWideFootprint{2.5}{2.5}{45}
+    \gridDot[arenaRed]{4.5}{2.0}
+    \gridWide[blue]{2.5}{2.5}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=arenaRed] \gridPt{1.2}{2.6} arc (130:75:1.7);
+
+    % Row 3 Sublabels
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (2.75, 0.08) {4 Squares ($4\times1$)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (8.10, 0.08) {6 Squares ($2-2-2$ Staircase)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (13.45, 0.08) {Shifted 1 Row Up ($2-2-2$)};
+
+  \end{tikzpicture}%
+  }
+  \caption{Chassis Grid Occupancy: Snapped Footprints for $0^\circ$ and $45^\circ$ Rotations (Pivot \& Turn)}
+  \label{fig:diagram_chassis_45_occupancy}
+\end{figure}
 
 \subsubsection{Simultaneous Step-by-Step Resolution}
 During the Planning phase, players secretly choose integer drive values ($L$ and $R$) for the left and right sides of their robot up to that side's active drive capacity. Choices are revealed simultaneously.
@@ -489,12 +625,6 @@ At each step, a robot selects its step type according to the following rules:
   Then increment both sides towards 0 (reduce positive by 1, increase negative by 1).
 \end{itemize}
 
-\clearpage
-
-% ==============================================================================
-% PAGE 5: GRID MOVEMENT EXAMPLES & DIAGRAMS
-% ==============================================================================
-
 \subsubsection{Movement Examples \& Step Traces}
 
 \noindent\textbf{1. Straight Advance (\texttt{3/3}):}\\
@@ -521,112 +651,96 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
   \centering
   \adjustbox{max width=\linewidth}{%
   \begin{tikzpicture}[x=1cm, y=1cm]
-    % -------------------------------------------------------------
-    % PANEL 1: CHASSIS FOOTPRINTS ON THE GRID
-    % -------------------------------------------------------------
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (7.8, 7.4);
-    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 7.2) {Chassis Grid Footprints (4 Squares Each)};
-
-    % Grid background for Panel 1 (8 cols x 7 rows, step 0.85cm)
-    \setGrid{0.5}{0.6}{0.85}
-    \gridDraw[draw=boxBorder!60, line width=0.4pt]{0}{0}{8}{7}
-
-    % Square Chassis (2x2)
-    \gridSquare[blue, weapon=bar]{2}{5}{0}
-    \gridNode[fill=white, draw=accentBlue, font=\scriptsize\bfseries, rounded corners=1.5pt, inner sep=2pt]{2}{3.65}{Square (2 $\times$ 2)}
-
-    % Wide Chassis (4x1)
-    \gridWide[red, weapon=disc]{5.0}{5.5}{0}
-    \gridNode[fill=white, draw=arenaRed, font=\scriptsize\bfseries, rounded corners=1.5pt, inner sep=2pt]{5.0}{4.5}{Wide (4 $\times$ 1)}
-
-    % Triangle Chassis (Wedge Outline with Faded T-Tetris Occupancy Behind)
-    \gridTriangle[red, weapon=bar]{2.5}{2.0}{0}
-    \gridNode[fill=white, draw=arenaRed, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=1.5pt]{2.0}{0.5}{Triangle (4 Sq T-Piece)}
-
-    % Summary callout badge
-    \gridNode[draw=boxBorder, fill=noteBg, font=\scriptsize, align=left, rounded corners=2pt, inner sep=4pt]{6.1}{1.9}{%
-      \textbf{Chassis Grid Rules:}\\
-      $\bullet$ Exactly 4 squares each\\
-      $\bullet$ Faded area = grid footprint\\
-      $\bullet$ Red bar = weapon zone\\
-      $\bullet$ Green arrow = facing\\
-      $\bullet$ 45-degree angle snap
-    }
-
-    % -------------------------------------------------------------
-    % PANEL 2: DISCRETE GRID MOVEMENT STEPS & ARC TRACE
-    % -------------------------------------------------------------
-    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.2, 0) rectangle (16.2, 7.4);
-    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (8.35, 7.2) {Discrete Grid Movement Steps};
+    \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (16.2, 7.4);
+    \node[fill=primaryDark, text=white, font=\small\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 7.2) {Discrete Grid Movement Steps Across Arena Grid};
 
     % ROW 1: FORWARDS STEPS (Orthogonal & Diagonal)
-    \node[font=\scriptsize\bfseries, text=accentBlue, anchor=west] at (8.4, 6.45) {A. Forwards Step (1 Square in Facing Direction)};
+    \node[font=\scriptsize\bfseries, text=accentBlue, anchor=west] at (0.4, 6.25) {A. Forwards Step (1 Square in Facing Direction)};
     % Orthogonal
-    \setGrid{8.5}{4.55}{0.55}
+    \setGrid{0.5}{3.95}{0.55}
     \gridDraw{0}{0}{6}{3}
+    \gridSquareFootprint{2}{1}
     \gridSquare[ghost]{2}{1}{0}
+    \gridSquareFootprint{2}{2}
     \gridSquare[blue]{2}{2}{0}
     \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] \gridPt{2}{1} -- \gridPt{2}{2.6};
     \gridNode[fill=primaryDark, text=white, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.7}{1.2}{Orthogonal}
 
     % Diagonal (45 deg)
-    \setGrid{12.4}{4.55}{0.55}
+    \setGrid{4.4}{3.95}{0.55}
     \gridDraw{0}{0}{6}{3}
-    \gridSquare[ghost]{1.5}{1.0}{45}
-    \gridSquare[blue]{2.5}{2.0}{45}
-    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] \gridPt{1.5}{1.0} -- \gridPt{3.2}{2.7};
+    \gridSquareFootprint{2}{1}
+    \gridSquare[ghost]{2}{1}{45}
+    \gridSquareFootprint{3}{2}
+    \gridSquare[blue]{3}{2}{45}
+    \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=accentBlue] \gridPt{2}{1} -- \gridPt{3.5}{2.5};
     \gridNode[fill=primaryDark, text=white, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.6}{0.5}{Diagonal ($45^\circ$)}
 
-    % ROW 2: ROTATIONS (Turn & Pivot)
-    \node[font=\scriptsize\bfseries, text=arenaRed, anchor=west] at (8.4, 4.15) {B. Turn Step (Pin Slower End)};
-    \setGrid{8.5}{2.15}{0.55}
+    % ROW 1 (Right): Turn & Pivot
+    \node[font=\scriptsize\bfseries, text=arenaRed, anchor=west] at (8.3, 6.25) {B. Turn Step (Pin Slower End)};
+    \setGrid{8.4}{3.95}{0.55}
     \gridDraw{0}{0}{6}{3}
-    \gridWide[ghost]{2.5}{0.7}{0}
-    \gridDot[arenaRed]{4.0}{0.7}
-    \begin{scope}[rotate around={-45:\gridPt{4.0}{0.7}}]
-      \gridWide[red]{2.5}{0.7}{0}
-    \end{scope}
-    \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=arenaRed] \gridPt{1.8}{1.1} arc (135:80:1.1);
-    \gridNode[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.5}{1.8}{Turn $45^\circ$}
+    \gridWideFootprint{2.5}{1.0}{0}
+    \gridWide[ghost]{2.5}{1.0}{0}
+    \gridWideFootprint{2.5}{2.0}{45}
+    \gridDot[arenaRed]{4.5}{1.0}
+    \gridWide[red]{2.5}{2.0}{45}
+    \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=arenaRed] \gridPt{1.5}{1.5} arc (135:80:1.3);
+    \gridNode[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.5}{2.5}{Turn $45^\circ$}
 
-    \node[font=\scriptsize\bfseries, text=amberNote!90!black, anchor=west] at (12.3, 4.15) {C. Pivot Step (Center Pin)};
-    \setGrid{12.4}{2.15}{0.55}
+    \node[font=\scriptsize\bfseries, text=amberNote!90!black, anchor=west] at (12.3, 6.25) {C. Pivot Step (Center Pin)};
+    \setGrid{12.4}{3.95}{0.55}
     \gridDraw{0}{0}{6}{3}
+    \gridSquareFootprint{2.0}{1.5}
     \gridSquare[ghost]{2.0}{1.5}{0}
     \gridDot[primaryDark]{2.0}{1.5}
     \gridSquare[red]{2.0}{1.5}{45}
     \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=amberNote!90!black] \gridPt{1.2}{2.0} arc (140:40:0.8);
-    \gridNode[fill=white, draw=amberNote!90!black, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.5}{1.5}{Pivot $45^\circ$}
+    \gridNode[fill=white, draw=amberNote!90!black, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.5}{2.2}{Pivot $45^\circ$}
 
-    % ROW 3: CURVED ARC SEQUENCE (3/1 Trace: Turn -> Forward -> Turn)
-    \node[font=\scriptsize\bfseries, text=primaryDark, anchor=west] at (8.4, 2.05) {D. Curved Arc Trace (\texttt{3/1}: Turn $\rightarrow$ Forwards $\rightarrow$ Turn)};
-    \setGrid{8.5}{0.40}{0.48}
-    \gridDraw{0}{0}{14}{3}
+    % ROW 2: CURVED ARC SEQUENCE (3/1 Trace: Turn -> Forward -> Turn)
+    \node[font=\scriptsize\bfseries, text=primaryDark, anchor=west] at (0.4, 3.60) {D. Curved Arc Sequence (\texttt{3/1}: Turn $45^\circ$ $\rightarrow$ Forwards 1 NE $\rightarrow$ Turn $45^\circ$)};
+    \setGrid{0.5}{0.40}{0.52}
+    \gridDraw{0}{0}{28}{5}
 
-    % Step indicators on grid
-    % Start: Facing North at gx=1.5
-    \gridSquare[blue]{1.5}{1.5}{0}
-    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{1.5}{0.2}{Start (\texttt{3/1})}
+    % Step indicators on grid across the 28-cell width
+    % Start: Facing North at gx=3, gy=2
+    \gridSquareFootprint{3}{2}
+    \gridSquare[blue]{3}{2}{0}
+    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{3}{0.5}{Start (\texttt{3/1})}
 
-    % Step 1: Turn 45 CW -> heading NE
-    \draw[-{Stealth[length=2.0mm]}, line width=1.3pt, draw=arenaRed] \gridPt{2.8}{1.5} -- \gridPt{4.4}{1.5};
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1pt]{3.6}{2.0}{1. Turn $45^\circ$}
+    % Arrow 1
+    \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=arenaRed] \gridPt{5.2}{2.5} -- \gridPt{8.0}{2.5};
+    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{6.6}{3.3}{1. Turn $45^\circ$ CW}
 
-    % Step 2: Forwards 1 NE
-    \gridSquare[ghost]{5.8}{1.5}{45}
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] \gridPt{5.3}{0.8} -- \gridPt{6.2}{1.8};
-    \draw[-{Stealth[length=2.0mm]}, line width=1.3pt, draw=accentBlue] \gridPt{7.2}{1.5} -- \gridPt{8.8}{1.5};
-    \gridNode[fill=accentBlue, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1pt]{8.0}{2.0}{2. Fwd 1 NE}
+    % Step 1: Turn 45 CW -> heading NE at gx=10, gy=2
+    \gridSquareFootprint{10}{2}
+    \gridSquare[ghost]{10}{2}{0}
+    \gridSquare[blue]{10}{2}{45}
+    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{10}{0.5}{Heading NE}
 
-    % Step 3: Turn 45 CW -> heading East
-    \gridSquare[blue]{10.2}{1.5}{90}
-    \draw[-{Stealth[length=1.8mm]}, line width=1.2pt, draw=accentBlue] \gridPt{11.6}{1.5} -- \gridPt{12.4}{1.5};
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1pt]{12.7}{2.0}{3. Turn $45^\circ$}
-    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=green!60!black]{12.7}{0.9}{Finish: $90^\circ$ CW}
+    % Arrow 2
+    \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=accentBlue] \gridPt{12.2}{2.5} -- \gridPt{15.0}{2.5};
+    \gridNode[fill=accentBlue, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{13.6}{3.3}{2. Fwd 1 NE}
+
+    % Step 2: Fwd 1 NE -> at gx=17, gy=3 heading NE
+    \gridSquareFootprint{17}{3}
+    \gridSquare[blue]{17}{3}{45}
+    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{17}{0.5}{Adv. 1 Diagonal}
+
+    % Arrow 3
+    \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=arenaRed] \gridPt{19.2}{2.5} -- \gridPt{22.0}{2.5};
+    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{20.6}{3.3}{3. Turn $45^\circ$ CW}
+
+    % Step 3: Turn 45 CW -> heading East at gx=24, gy=3
+    \gridSquareFootprint{24}{3}
+    \gridSquare[blue]{24}{3}{90}
+    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=green!60!black]{24}{0.5}{Finish: $90^\circ$ East}
+
   \end{tikzpicture}%
   }
-  \caption{Discrete Grid Chassis Footprints and Movement Steps Across Arena Grid}
-  \label{fig:diagram_grid_footprints}
+  \caption{Discrete Grid Movement Steps and Arc Traces Across Arena Grid}
+  \label{fig:diagram_grid_movement}
 \end{figure}
 
 
@@ -721,22 +835,24 @@ The first remaining component on the robot along the line corresponding to the c
     \gridDraw{0}{0}{8}{6}
 
     % Bot B (Vyper Square 2x2 facing North)
-    \gridSquare[blue]{5.0}{2.5}{0}
+    \gridSquareFootprint{5.0}{2.0}
+    \gridSquare[blue]{5.0}{2.0}{0}
     % Quadrants inside Bot B
-    \draw[draw=boxBorder!70, dashed, line width=0.5pt] \gridPt{4.0}{2.5} -- \gridPt{6.0}{2.5};
-    \draw[draw=boxBorder!70, dashed, line width=0.5pt] \gridPt{5.0}{1.5} -- \gridPt{5.0}{3.5};
-    \gridNode[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark]{4.5}{3.0}{Plate}
-    \gridNode[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark]{5.5}{3.0}{Wpn}
-    \gridNode[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark]{4.5}{2.0}{Drv L}
-    \gridNode[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark]{5.5}{2.0}{Drv R}
+    \draw[draw=boxBorder!70, dashed, line width=0.5pt] \gridPt{4.0}{2.0} -- \gridPt{6.0}{2.0};
+    \draw[draw=boxBorder!70, dashed, line width=0.5pt] \gridPt{5.0}{1.0} -- \gridPt{5.0}{3.0};
+    \gridNode[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark]{4.5}{2.5}{Plate}
+    \gridNode[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark]{5.5}{2.5}{Wpn}
+    \gridNode[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark]{4.5}{1.5}{Drv L}
+    \gridNode[font=\fontsize{5}{6}\selectfont\bfseries, text=textDark]{5.5}{1.5}{Drv R}
 
-    % Bot A (Triangle angled at 45 deg striking Front-L corner)
-    \gridTriangle[red, weapon=bar]{3.3}{4.2}{135}
+    % Bot A (Triangle angled at 135 deg striking Front-L corner at (4.0, 3.0))
+    \gridTriangleFootprint{3.0}{4.0}{135}
+    \gridTriangle[red, weapon=bar, faded=false]{3.0}{4.0}{135}
 
-    % Contact point star & Contact Ray
-    \gridDot[arenaRed]{4.0}{3.5}
-    \draw[line width=1.8pt, draw=arenaRed, dashed, -{Stealth[length=2.5mm]}] \gridPt{2.6}{4.9} -- \gridPt{4.0}{3.5} -- \gridPt{5.0}{2.5};
-    \gridNode[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{2.5}{5.2}{Contact Ray}
+    % Contact point marker & Contact Ray
+    \gridDot[arenaRed]{4.0}{3.0}
+    \draw[line width=1.8pt, draw=arenaRed, dashed, -{Stealth[length=2.5mm]}] \gridPt{2.0}{5.0} -- \gridPt{4.0}{3.0} -- \gridPt{5.0}{2.0};
+    \gridNode[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{2.5}{4.8}{Contact Ray}
 
     % Right Subpanel: Automata Card Sheet Layout
     \node[anchor=west] at (7.0, 2.6) {\includegraphics[height=4.6cm]{images/automata_vyper_layout.png}};
@@ -953,7 +1069,8 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=1.5pt]{6.5}{4.1}{Throw: $d \le \text{Strength}$ Sqs}
 
     % Thrown Bot B at Landing Grid Position (shifted to gx=9.0, rotated 45 deg CW via d6 roll)
-    \gridTriangle[red]{9.0}{3.5}{315}
+    \gridTriangleFootprint{9.0}{3.5}{315}
+    \gridTriangle[red, faded=false]{9.0}{3.5}{315}
 
     % Rotation indicator badge
     \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=accentBlue] \gridPt{10.2}{4.4} arc (60:-40:0.7);
