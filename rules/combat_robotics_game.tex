@@ -298,7 +298,7 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
 
       \setGrid{2.55}{2.20}{0.45}
       \gridDraw[draw=boxBorder!50, line width=0.3pt]{0}{0}{5}{4}
-      \gridTriangle[blue]{2.5}{2}{0}
+      \gridTriangle[blue]{2.5}{1.5}{0}
 
       \setGrid{5.40}{2.65}{0.45}
       \gridDraw[draw=boxBorder!50, line width=0.3pt]{0}{0}{4}{2}
@@ -314,7 +314,7 @@ Each robot is built onto a chassis. A chassis is a large mat that shows the robo
 
       \setGrid{2.55}{0.35}{0.45}
       \gridDraw[draw=boxBorder!50, line width=0.3pt]{0}{0}{5}{4}
-      \gridTriangle[red]{2.5}{2}{0}
+      \gridTriangle[red]{2.5}{1.5}{0}
 
       \setGrid{5.40}{0.80}{0.45}
       \gridDraw[draw=boxBorder!50, line width=0.3pt]{0}{0}{4}{2}
@@ -522,25 +522,25 @@ When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throw
     % Col 1: Tri 0 deg
     \setGrid{1.30}{3.65}{0.58}
     \gridDraw{0}{0}{5}{4}
-    \gridTriangleFootprint{2.5}{2.0}{0}
-    \gridTriangle[blue, faded=false]{2.5}{2.0}{0}
+    \gridTriangleFootprint{2.5}{1.5}{0}
+    \gridTriangle[blue, faded=false]{2.5}{1.5}{0}
 
     % Col 2: Tri 45 deg Pivot
     \setGrid{6.65}{3.65}{0.58}
     \gridDraw{0}{0}{5}{4}
     \draw[primaryDark, line width=0.8pt] \gridPt{1}{1} -- \gridPt{4}{1} -- \gridPt{4}{2} -- \gridPt{3}{2} -- \gridPt{3}{3} -- \gridPt{2}{3} -- \gridPt{2}{2} -- \gridPt{1}{2} -- cycle;
-    \gridTriangleFootprint{2.5}{2.0}{45}
-    \gridTriangle[blue, faded=false]{2.5}{2.0}{45}
-    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=amberNote!90!black] \gridPt{1.5}{2.7} arc (135:55:0.9);
+    \gridTriangleFootprint{2.5}{1.5}{45}
+    \gridTriangle[blue, faded=false]{2.5}{1.5}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=amberNote!90!black] \gridPt{1.5}{2.2} arc (135:55:0.9);
 
     % Col 3: Tri 45 deg Turn
     \setGrid{12.00}{3.65}{0.58}
     \gridDraw{0}{0}{5}{4}
     \draw[primaryDark, line width=0.8pt] \gridPt{1}{1} -- \gridPt{4}{1} -- \gridPt{4}{2} -- \gridPt{3}{2} -- \gridPt{3}{3} -- \gridPt{2}{3} -- \gridPt{2}{2} -- \gridPt{1}{2} -- cycle;
-    \gridTriangleFootprint{2.5}{3.0}{45}
+    \gridTriangleFootprint{2.5}{2.5}{45}
     \gridDot[arenaRed]{3.5}{1.5}
-    \gridTriangle[blue, faded=false]{2.5}{3.0}{45}
-    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=arenaRed] \gridPt{1.4}{2.8} arc (130:70:1.6);
+    \gridTriangle[blue, faded=false]{2.5}{2.5}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=arenaRed] \gridPt{1.4}{2.0} arc (130:70:1.6);
 
     % Row 2 Sublabels
     \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (2.75, 3.35) {4 Squares (T-Tetris)};
@@ -553,32 +553,32 @@ When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throw
     \node[font=\footnotesize\bfseries, text=accentBlue, anchor=west] at (0.3, 2.95) {C. Wide Chassis (4 Squares Base $\rightarrow$ 6 Squares at $45^\circ$)};
 
     % Col 1: Wide 0 deg
-    \setGrid{1.30}{0.25}{0.58}
-    \gridDraw{0}{0}{5}{4}
-    \gridWideFootprint{2.5}{2.0}{0}
-    \gridWide[blue]{2.5}{2.0}{0}
+    \setGrid{1.30}{0.25}{0.50}
+    \gridDraw{0}{0}{6}{4}
+    \gridWideFootprint{3.0}{1.5}{0}
+    \gridWide[blue]{3.0}{1.5}{0}
 
     % Col 2: Wide 45 deg Pivot
-    \setGrid{6.65}{0.25}{0.58}
-    \gridDraw{0}{0}{5}{4}
-    \draw[primaryDark, line width=0.8pt] \gridPt{0.5}{1.5} rectangle \gridPt{4.5}{2.5};
-    \gridWideFootprint{2.5}{2.0}{45}
-    \gridWide[blue]{2.5}{2.0}{45}
-    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=amberNote!90!black] \gridPt{1.2}{2.4} arc (140:60:1.0);
+    \setGrid{6.65}{0.25}{0.50}
+    \gridDraw{0}{0}{6}{4}
+    \draw[primaryDark, line width=0.8pt] \gridPt{1}{1} rectangle \gridPt{5}{2};
+    \gridWideFootprint{3.0}{1.5}{45}
+    \gridWide[blue]{3.0}{1.5}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=amberNote!90!black] \gridPt{1.5}{2.0} arc (140:60:1.2);
 
     % Col 3: Wide 45 deg Turn
-    \setGrid{12.00}{0.25}{0.58}
-    \gridDraw{0}{0}{5}{4}
-    \draw[primaryDark, line width=0.8pt] \gridPt{0.5}{1.5} rectangle \gridPt{4.5}{2.5};
-    \gridWideFootprint{2.5}{2.5}{45}
-    \gridDot[arenaRed]{4.5}{2.0}
-    \gridWide[blue]{2.5}{2.5}{45}
-    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=arenaRed] \gridPt{1.2}{2.6} arc (130:75:1.7);
+    \setGrid{12.00}{0.25}{0.50}
+    \gridDraw{0}{0}{6}{4}
+    \draw[primaryDark, line width=0.8pt] \gridPt{1}{1} rectangle \gridPt{5}{2};
+    \gridWideFootprint{3.0}{2.5}{45}
+    \gridDot[arenaRed]{5.0}{1.5}
+    \gridWide[blue]{3.0}{2.5}{45}
+    \draw[-{Stealth[length=1.6mm]}, line width=1.1pt, draw=arenaRed] \gridPt{1.5}{2.0} arc (130:75:1.8);
 
     % Row 3 Sublabels
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (2.75, 0.08) {4 Squares ($4\times1$)};
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (8.10, 0.08) {6 Squares ($2-2-2$ Staircase)};
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (13.45, 0.08) {Shifted 1 Row Up ($2-2-2$)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (2.80, 0.08) {4 Squares ($4\times1$)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (8.15, 0.08) {6 Squares ($2-2-2$ Staircase)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (13.50, 0.08) {Shifted 1 Row Up ($2-2-2$)};
 
   \end{tikzpicture}%
   }
@@ -678,15 +678,15 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
 
     % ROW 1 (Right): Turn & Pivot
     \node[font=\scriptsize\bfseries, text=arenaRed, anchor=west] at (8.3, 6.25) {B. Turn Step (Pin Slower End)};
-    \setGrid{8.4}{3.95}{0.55}
-    \gridDraw{0}{0}{6}{3}
-    \gridWideFootprint{2.5}{1.0}{0}
-    \gridWide[ghost]{2.5}{1.0}{0}
-    \gridWideFootprint{2.5}{2.0}{45}
-    \gridDot[arenaRed]{4.5}{1.0}
-    \gridWide[red]{2.5}{2.0}{45}
-    \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=arenaRed] \gridPt{1.5}{1.5} arc (135:80:1.3);
-    \gridNode[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.5}{2.5}{Turn $45^\circ$}
+    \setGrid{8.4}{3.80}{0.50}
+    \gridDraw{0}{0}{6}{4}
+    \draw[primaryDark, line width=0.6pt] \gridPt{1}{1} rectangle \gridPt{5}{2};
+    \gridWide[ghost]{3.0}{1.5}{0}
+    \gridWideFootprint{3.0}{2.5}{45}
+    \gridDot[arenaRed]{5.0}{1.5}
+    \gridWide[red]{3.0}{2.5}{45}
+    \draw[-{Stealth[length=2.0mm]}, line width=1.2pt, draw=arenaRed] \gridPt{1.5}{2.0} arc (130:75:1.6);
+    \gridNode[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.8}{3.3}{Turn $45^\circ$}
 
     \node[font=\scriptsize\bfseries, text=amberNote!90!black, anchor=west] at (12.3, 6.25) {C. Pivot Step (Center Pin)};
     \setGrid{12.4}{3.95}{0.55}
@@ -776,7 +776,7 @@ The first remaining component on the robot along the line corresponding to the c
     \gridDraw{0}{0}{6}{6}
 
     % Bot A (Triangle facing East)
-    \gridTriangle[red, weapon=bar]{1.0}{2.5}{90}
+    \gridTriangle[red, weapon=bar]{0.5}{2.5}{90}
 
     % Bot B (Square 2x2 facing West)
     \gridSquare[blue, weapon=bar]{3.0}{2.5}{270}
@@ -795,7 +795,7 @@ The first remaining component on the robot along the line corresponding to the c
     \gridDraw{0}{0}{6}{6}
 
     % Bot A (Triangle facing East)
-    \gridTriangle[red, weapon=bar]{1.0}{2.5}{90}
+    \gridTriangle[red, weapon=bar]{0.5}{2.5}{90}
 
     % Bot B (Square 2x2 facing North)
     \gridSquare[blue, weapon=bar]{3.0}{2.5}{0}
@@ -903,8 +903,8 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
     \gridNode[font=\fontsize{6}{7}\selectfont\bfseries, text=accentBlue]{2.0}{1.7}{Bot A}
 
     % Bot B (Triangle 4-sq T, Red facing West)
-    \gridTriangle[red]{4.0}{2.5}{270}
-    \gridNode[font=\fontsize{6}{7}\selectfont\bfseries, text=arenaRed]{4.0}{3.3}{Bot B}
+    \gridTriangle[red]{4.5}{2.5}{270}
+    \gridNode[font=\fontsize{6}{7}\selectfont\bfseries, text=arenaRed]{4.5}{3.3}{Bot B}
 
     % Contact point marker
     \gridDot[primaryDark]{3.0}{2.5}
@@ -920,13 +920,13 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
 
     % Ghost start positions
     \gridSquare[ghost]{2.0}{2.5}{90}
-    \gridTriangle[ghost]{4.0}{2.5}{270}
+    \gridTriangle[ghost]{4.5}{2.5}{270}
 
     % Advanced bots (+1 square East)
     \gridSquare[blue]{3.0}{2.5}{90}
-    \gridTriangle[red]{5.0}{2.5}{270}
-    \draw[-{Stealth[length=2.5mm]}, line width=1.8pt, draw=arenaRed] \gridPt{2.0}{2.5} -- \gridPt{5.3}{2.5};
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{4.0}{0.5}{[2] Pusher Advances Both 1 Sq}
+    \gridTriangle[red]{5.5}{2.5}{270}
+    \draw[-{Stealth[length=2.5mm]}, line width=1.8pt, draw=arenaRed] \gridPt{2.0}{2.5} -- \gridPt{5.8}{2.5};
+    \gridNode[fill=arenaRed, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{4.2}{0.5}{[2] Pusher Advances Both 1 Sq}
 
     % PANEL 3: Step 3 (Joint Rotation: Opponent Stuck Along for the Turn)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0.0) rectangle (7.9, 4.5);
@@ -941,12 +941,12 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
 
     % Ghost start orientation (0 deg relative to East)
     \gridSquare[ghost]{2.0}{2.5}{90}
-    \gridTriangle[ghost]{4.0}{2.5}{270}
+    \gridTriangle[ghost]{4.5}{2.5}{270}
 
     % Rotated bots 45 deg together around pivot point (2.0, 1.5)
     \begin{scope}[rotate around={-45:\gridPt{2.0}{1.5}}]
       \gridSquare[blue]{2.0}{2.5}{90}
-      \gridTriangle[red]{4.0}{2.5}{270}
+      \gridTriangle[red]{4.5}{2.5}{270}
     \end{scope}
 
     % Curved rotation arrow
@@ -963,9 +963,9 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
 
     % Final resting positions adjacent on grid
     \gridSquare[blue]{3.0}{2.5}{90}
-    \gridTriangle[red]{5.0}{2.5}{270}
-    \gridNode[fill=primaryDark, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=2.5pt]{4.0}{4.2}{Robots Remain Adjacent}
-    \gridNode[fill=accentBlue, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{4.0}{0.5}{[4] Movement Concludes (No Back-Off)}
+    \gridTriangle[red]{5.5}{2.5}{270}
+    \gridNode[fill=primaryDark, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=2.5pt]{4.2}{4.2}{Robots Remain Adjacent}
+    \gridNode[fill=accentBlue, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{4.2}{0.5}{[4] Movement Concludes (No Back-Off)}
   \end{tikzpicture}%
   }
   \caption{Step-by-Step Resolution of Inert Contact and Joint Grid Movement}
@@ -1053,8 +1053,8 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     \gridNode[below=2pt, font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=primaryDark]{2.0}{3.5}{$C_A$}
 
     % Bot B at impact (Triangle 4-sq T, ghost outline facing West)
-    \gridTriangle[ghost]{4.0}{3.5}{270}
-    \gridNode[below=2pt, font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=gray!80!black]{4.0}{3.5}{$C_B$}
+    \gridTriangle[ghost]{4.5}{3.5}{270}
+    \gridNode[below=2pt, font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=gray!80!black]{4.5}{3.5}{$C_B$}
 
     % Contact point marker
     \gridDot[arenaRed]{3.0}{3.5}
@@ -1064,9 +1064,9 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
     \draw[dashed, line width=1.2pt, draw=textDark] \gridPt{0.5}{3.5} -- \gridPt{13.5}{3.5};
     \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{5.0}{3.0}{Center Line}
 
-    % Throw vector along center line (5 squares away to gx=9.0)
-    \draw[-{Stealth[length=3.0mm]}, line width=2.2pt, draw=arenaRed] \gridPt{4.0}{3.5} -- \gridPt{9.0}{3.5};
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=1.5pt]{6.5}{4.1}{Throw: $d \le \text{Strength}$ Sqs}
+    % Throw vector along center line (away to gx=9.0)
+    \draw[-{Stealth[length=3.0mm]}, line width=2.2pt, draw=arenaRed] \gridPt{4.5}{3.5} -- \gridPt{9.0}{3.5};
+    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=1.5pt]{6.75}{4.1}{Throw: $d \le \text{Strength}$ Sqs}
 
     % Thrown Bot B at Landing Grid Position (shifted to gx=9.0, rotated 45 deg CW via d6 roll)
     \gridTriangleFootprint{9.0}{3.5}{315}

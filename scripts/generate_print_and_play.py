@@ -171,30 +171,30 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
   \pgfkeys{/rbchassis, team=blue, weapon=none, arrow=true, center=true, #1}%
   \rbApplyStyle
   \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
-    \fill[\rbFadedFill] (-1.5, -1.0) rectangle (1.5, 0.0);
-    \fill[\rbFadedFill] (-0.5,  0.0) rectangle (0.5, 1.0);
+    \fill[\rbFadedFill] (-1.5, -0.5) rectangle (1.5, 0.5);
+    \fill[\rbFadedFill] (-0.5,  0.5) rectangle (0.5, 1.5);
     \draw[\rbFadedDraw, dashed, line width=0.4pt]
-      (-1.5, -1.0) -- (1.5, -1.0) -- (1.5, 0.0) -- (0.5, 0.0) --
-      (0.5, 1.0) -- (-0.5, 1.0) -- (-0.5, 0.0) -- (-1.5, 0.0) -- cycle;
-    \draw[\rbFadedDraw, dashed, line width=0.3pt] (-0.5, -1.0) -- (-0.5, 0.0);
-    \draw[\rbFadedDraw, dashed, line width=0.3pt] ( 0.5, -1.0) -- ( 0.5, 0.0);
-    \draw[\rbFadedDraw, dashed, line width=0.3pt] (-0.5,  0.0) -- ( 0.5, 0.0);
-    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-1.47, -0.80) rectangle (-1.33, -0.20);
-    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 1.33, -0.80) rectangle ( 1.47, -0.20);
+      (-1.5, -0.5) -- (1.5, -0.5) -- (1.5, 0.5) -- (0.5, 0.5) --
+      (0.5, 1.5) -- (-0.5, 1.5) -- (-0.5, 0.5) -- (-1.5, 0.5) -- cycle;
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] (-0.5, -0.5) -- (-0.5, 0.5);
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] ( 0.5, -0.5) -- ( 0.5, 0.5);
+    \draw[\rbFadedDraw, dashed, line width=0.3pt] (-0.5,  0.5) -- ( 0.5, 0.5);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-1.47, -0.30) rectangle (-1.33, 0.30);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 1.33, -0.30) rectangle ( 1.47, 0.30);
     \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, line join=round]
-      (-1.40, -0.92) -- (1.40, -0.92) -- (1.40, -0.10) -- (0.0, 0.95) -- (-1.40, -0.10) -- cycle;
+      (-1.40, -0.42) -- (1.40, -0.42) -- (1.40, 0.40) -- (0.0, 1.45) -- (-1.40, 0.40) -- cycle;
     \ifx\rbCenter\rbTrue
-      \fill[primaryDark] (0, -0.20) circle [radius=0.08];
+      \fill[primaryDark] (0, 0) circle [radius=0.08];
     \fi
     \ifx\rbWeapon\rbWeaponBar
-      \draw[line width=2.4pt, draw=arenaRed] (-0.45, 0.58) -- (0.0, 0.95) -- (0.45, 0.58);
+      \draw[line width=2.4pt, draw=arenaRed] (-0.45, 1.08) -- (0.0, 1.45) -- (0.45, 1.08);
     \fi
     \ifx\rbWeapon\rbWeaponDisc
-      \fill[arenaRed] (0, 0.95) circle [radius=0.14];
+      \fill[arenaRed] (0, 1.45) circle [radius=0.14];
     \fi
     \ifx\rbArrow\rbTrue
       \draw[-{Triangle[width=2.4mm,length=3.2mm]}, line width=1.4pt, draw=\rbArrowDraw]
-        (0, -0.55) -- (0, 0.65);
+        (0, -0.05) -- (0, 1.15);
     \fi
   \end{scope}%
   \endgroup
@@ -356,7 +356,7 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
   % P1 Triangle
   \begin{scope}[shift={(55, 145)}]
     \draw[line width=0.5pt, gray!40, dashed] (-33, -25) rectangle (33, 25);
-    \chassisTriangle[blue]{0}{0}{0}{20}
+    \chassisTriangle[blue]{0}{-10}{0}{20}
     \node[anchor=center, textDark] at (0, -29) {\sffamily\scriptsize\bfseries P1 TRIANGLE};
   \end{scope}
 
@@ -380,7 +380,7 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
   % P2 Triangle
   \begin{scope}[shift={(55, 55)}]
     \draw[line width=0.5pt, gray!40, dashed] (-33, -25) rectangle (33, 25);
-    \chassisTriangle[red]{0}{0}{0}{20}
+    \chassisTriangle[red]{0}{-10}{0}{20}
     \node[anchor=center, textDark] at (0, -29) {\sffamily\scriptsize\bfseries P2 TRIANGLE};
   \end{scope}
 
