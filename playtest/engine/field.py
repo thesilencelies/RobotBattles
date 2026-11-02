@@ -72,9 +72,8 @@ def get_chassis_grid_cells(
       Orthogonally: a straight 5-cell line centered at (cx, cy).
       Diagonally: a straight 5-cell diagonal line passing through (cx, cy).
     - Triangle (T-piece): Anchored at the center of the middle back tile.
-      Always occupies 4 squares across all 8 headings.
-      Orthogonally: 4 squares (3 rear base tiles + 1 front stem tile).
-      Diagonally: 4 squares (central square (cx, cy) + 3 of 4 diagonal corners around it).
+      Occupies 4 squares orthogonally (3 rear base tiles + 1 front stem tile),
+      and 6 squares diagonally arranged as a stepped 3-2-1 staircase.
     """
     tname = (chassis_template or "Square").capitalize()
     gx = pose.x / grid_unit
@@ -116,13 +115,29 @@ def get_chassis_grid_cells(
         elif heading == 270:
             return {(cx, cy - 1), (cx, cy), (cx, cy + 1), (cx - 1, cy)}
         elif heading == 45:
-            return {(cx, cy), (cx - 1, cy - 1), (cx + 1, cy - 1), (cx + 1, cy + 1)}
+            return {
+                (cx - 1, cy - 1), (cx, cy - 1), (cx + 1, cy - 1),
+                (cx, cy), (cx + 1, cy),
+                (cx + 1, cy + 1),
+            }
         elif heading == 315:
-            return {(cx, cy), (cx - 1, cy - 1), (cx + 1, cy - 1), (cx - 1, cy + 1)}
+            return {
+                (cx - 1, cy - 1), (cx, cy - 1), (cx + 1, cy - 1),
+                (cx - 1, cy), (cx, cy),
+                (cx - 1, cy + 1),
+            }
         elif heading == 135:
-            return {(cx, cy), (cx + 1, cy - 1), (cx + 1, cy + 1), (cx - 1, cy + 1)}
+            return {
+                (cx + 1, cy - 1),
+                (cx, cy), (cx + 1, cy),
+                (cx - 1, cy + 1), (cx, cy + 1), (cx + 1, cy + 1),
+            }
         elif heading == 225:
-            return {(cx, cy), (cx - 1, cy - 1), (cx - 1, cy + 1), (cx + 1, cy + 1)}
+            return {
+                (cx - 1, cy - 1),
+                (cx - 1, cy), (cx, cy),
+                (cx - 1, cy + 1), (cx, cy + 1), (cx + 1, cy + 1),
+            }
 
     # Fallback to Square
     vx = int(round(gx))

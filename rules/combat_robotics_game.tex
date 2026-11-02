@@ -456,7 +456,7 @@ When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throw
 \begin{itemize}[leftmargin=*, noitemsep, topsep=2pt]
   \item \textbf{Square Chassis (Always 4 Squares):} A Square chassis rotated $45^\circ$ forms a diamond centered within the \textbf{exact same 2$\times$2 grid block} (4 squares). In a \textbf{Pivot Step}, it rotates on the spot inside this $2\times2$ footprint. In a \textbf{Turn Step}, pivoting around its outer wheel swings the robot into the adjacent column or row, occupying a \textbf{2$\times$2 square block shifted by 1 grid cell}.
   \item \textbf{Wide Chassis (Always 5 Squares):} When aligned diagonally, a Wide chassis occupies \textbf{5 grid squares} arranged as a single diagonal line passing through its center square, keeping motion intuitive. In a \textbf{Pivot Step}, it rotates around its central square into this 5-square diagonal. In a \textbf{Turn Step}, the robot pivots around its outer wheel, shifting 1 grid square forward along the turn arc.
-  \item \textbf{Triangle Chassis (Always 4 Squares):} A Triangle chassis rotates around the center of its middle back square. When rotated $45^\circ$, it occupies \textbf{4 grid squares}: the central square plus 3 of the 4 diagonal corners around it (leaving empty the corner opposite its heading). In a \textbf{Pivot Step}, it rotates in place. In a \textbf{Turn Step}, it pivots around its stationary rear wheel/corner, shifting 1 grid square forward along the turn arc.
+  \item \textbf{Triangle Chassis (4 Squares Base $\rightarrow$ 6 Squares at 45$^\circ$):} When aligned diagonally, a Triangle chassis occupies \textbf{6 grid squares} arranged in a stepped $3-2-1$ staircase (3 squares in the leading row, 2 squares in the middle row, and 1 square in the trailing corner). In a \textbf{Pivot Step}, this footprint centers on the robot's centroid. In a \textbf{Turn Step}, the robot pivots around its stationary rear wheel/corner, shifting the $3-2-1$ footprint 1 grid square forward along the turn arc.
 \end{itemize}
 
 \begin{figure}[H]
@@ -517,7 +517,7 @@ When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throw
     % -------------------------------------------------------------
     % ROW 2: TRIANGLE CHASSIS
     % -------------------------------------------------------------
-    \node[font=\footnotesize\bfseries, text=accentBlue, anchor=west] at (0.3, 6.35) {B. Triangle Chassis (Always 4 Squares Across All Headings)};
+    \node[font=\footnotesize\bfseries, text=accentBlue, anchor=west] at (0.3, 6.35) {B. Triangle Chassis (4 Squares Base $\rightarrow$ 6 Squares at $45^\circ$)};
 
     % Col 1: Tri 0 deg
     \setGrid{1.30}{3.65}{0.58}
@@ -544,8 +544,8 @@ When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throw
 
     % Row 2 Sublabels
     \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (2.75, 3.35) {4 Squares (T-Tetris)};
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (8.10, 3.35) {4 Squares (3 Corners + Center)};
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (13.45, 3.35) {Shifted 1 Row Up (4 Squares)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (8.10, 3.35) {6 Squares ($3-2-1$ Stepped)};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (13.45, 3.35) {Shifted 1 Row Up ($3-2-1$)};
 
     % -------------------------------------------------------------
     % ROW 3: WIDE CHASSIS
