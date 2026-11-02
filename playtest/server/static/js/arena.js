@@ -1,6 +1,8 @@
 /**
- * Arena SVG/Canvas Renderer & Miniature Visualizer
+ * Arena SVG/Canvas Renderer & Discrete Grid Visualizer
  */
+
+import { PlaytestApi } from "./api.js";
 
 const CHASSIS_MINIATURE_SHAPES = {
   Triangle: [
@@ -24,10 +26,63 @@ const CHASSIS_MINIATURE_SHAPES = {
   ],
 };
 
+/**
+ * Returns integer grid cell coordinates [gx, gy] occupied by the robot.
+ * Aligns strictly with field.py get_chassis_grid_cells.
+ */
+export function getChassisGridCells(chassisTemplate, pose, gridUnit = 40.0) {
+  const tname = (chassisTemplate || "Square").toLowerCase();
+  const gx = pose.x / gridUnit;
+  const gy = pose.y / gridUnit;
+  const heading = ((Math.round((pose.theta % 360) / 45) * 45) % 360 + 360) % 360;
+
+  if (tname.includes("square")) {
+    const vx = Math.round(gx);
+    const vy = Math.round(gy);
+    return [
+      [vx - 1, vy - 1], [vx, vy - 1],
+      [vx - 1, vy], [vx, vy]
+    ];
+  } else if (tname.includes("wide")) {
+    const cx = Math.floor(gx);
+    const cy = Math.floor(gy);
+    if (heading === 0 || heading === 180) {
+      return [[cx - 2, cy], [cx - 1, cy], [cx, cy], [cx + 1, cy], [cx + 2, cy]];
+    } else if (heading === 90 || heading === 270) {
+      return [[cx, cy - 2], [cx, cy - 1], [cx, cy], [cx, cy + 1], [cx, cy + 2]];
+    } else if (heading === 45 || heading === 225) {
+      return [[cx - 2, cy - 2], [cx - 1, cy - 1], [cx, cy], [cx + 1, cy + 1], [cx + 2, cy + 2]];
+    } else {
+      return [[cx - 2, cy + 2], [cx - 1, cy + 1], [cx, cy], [cx + 1, cy - 1], [cx + 2, cy - 2]];
+    }
+  } else { // Triangle
+    const cx = Math.floor(gx);
+    const cy = Math.floor(gy);
+    if (heading === 0) {
+      return [[cx - 1, cy], [cx, cy], [cx + 1, cy], [cx, cy - 1]];
+    } else if (heading === 180) {
+      return [[cx - 1, cy], [cx, cy], [cx + 1, cy], [cx, cy + 1]];
+    } else if (heading === 90) {
+      return [[cx, cy - 1], [cx, cy], [cx, cy + 1], [cx + 1, cy]];
+    } else if (heading === 270) {
+      return [[cx, cy - 1], [cx, cy], [cx, cy + 1], [cx - 1, cy]];
+    } else if (heading === 45) {
+      return [[cx - 1, cy - 1], [cx, cy - 1], [cx + 1, cy - 1], [cx, cy], [cx + 1, cy], [cx + 1, cy + 1]];
+    } else if (heading === 315) {
+      return [[cx - 1, cy - 1], [cx, cy - 1], [cx + 1, cy - 1], [cx - 1, cy], [cx, cy], [cx - 1, cy + 1]];
+    } else if (heading === 135) {
+      return [[cx + 1, cy - 1], [cx, cy], [cx + 1, cy], [cx - 1, cy + 1], [cx, cy + 1], [cx + 1, cy + 1]];
+    } else { // 225
+      return [[cx - 1, cy - 1], [cx - 1, cy], [cx, cy], [cx - 1, cy + 1], [cx, cy + 1], [cx + 1, cy + 1]];
+    }
+  }
+}
+
 export class ArenaRenderer {
   constructor(svgElement) {
     this.svg = svgElement;
-    this.layerArena = this.svg.querySelector("#layer-arena");
+    this.layerGrid = this.svg.querySelector("#layer-grid");
+    this.layerFootprints = this.svg.querySelector("#layer-footprints");
     this.layerTemplates = this.svg.querySelector("#layer-templates");
     this.layerGhosts = this.svg.querySelector("#layer-ghosts");
     this.layerRobots = this.svg.querySelector("#layer-robots");
@@ -35,6 +90,7 @@ export class ArenaRenderer {
 
     this.animating = false;
     this.animFrame = null;
+    this._previewSeq = 0;
 
     // Arena Zoom & Pan state
     this.zoom = 1.0;
@@ -45,6 +101,7 @@ export class ArenaRenderer {
     this.maxZoom = 4.0;
 
     this._initZoomControls();
+    this._renderGrid();
   }
 
   _initZoomControls() {
@@ -168,6 +225,117 @@ export class ArenaRenderer {
     this.svg.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
   }
 
+  _renderGrid() {
+    if (!this.layerGrid) return;
+    this.layerGrid.innerHTML = "";
+
+    const gridOriginX = 100;
+    const gridOriginY = 100;
+    const unit = 40;
+    const cols = 15;
+    const rows = 15;
+
+    // Draw Column numbers: 1 to 15
+    for (let c = 0; c < cols; c++) {
+      const colNum = c + 1;
+      const x = gridOriginX + (c + 0.5) * unit;
+
+      // Top label
+      const tTop = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tTop.setAttribute("x", x);
+      tTop.setAttribute("y", 91);
+      tTop.setAttribute("class", "arena-grid-label");
+      tTop.setAttribute("text-anchor", "middle");
+      tTop.textContent = String(colNum);
+      this.layerGrid.appendChild(tTop);
+
+      // Bottom label
+      const tBot = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tBot.setAttribute("x", x);
+      tBot.setAttribute("y", 717);
+      tBot.setAttribute("class", "arena-grid-label");
+      tBot.setAttribute("text-anchor", "middle");
+      tBot.textContent = String(colNum);
+      this.layerGrid.appendChild(tBot);
+    }
+
+    // Draw Row letters: A to O
+    for (let r = 0; r < rows; r++) {
+      const rowLetter = String.fromCharCode(65 + r); // 65 = 'A'
+      const y = gridOriginY + (r + 0.5) * unit + 3.5;
+
+      // Left label
+      const tLeft = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tLeft.setAttribute("x", 89);
+      tLeft.setAttribute("y", y);
+      tLeft.setAttribute("class", "arena-grid-label");
+      tLeft.setAttribute("text-anchor", "middle");
+      tLeft.textContent = rowLetter;
+      this.layerGrid.appendChild(tLeft);
+
+      // Right label
+      const tRight = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tRight.setAttribute("x", 715);
+      tRight.setAttribute("y", y);
+      tRight.setAttribute("class", "arena-grid-label");
+      tRight.setAttribute("text-anchor", "middle");
+      tRight.textContent = rowLetter;
+      this.layerGrid.appendChild(tRight);
+    }
+
+    // Subtle intersection dots inside arena play area
+    const dotsG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    dotsG.setAttribute("class", "arena-grid-dots");
+    for (let i = 1; i < cols; i++) {
+      for (let j = 1; j < rows; j++) {
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("cx", gridOriginX + i * unit);
+        dot.setAttribute("cy", gridOriginY + j * unit);
+        dot.setAttribute("r", "1.2");
+        dot.setAttribute("fill", "rgba(148, 163, 184, 0.35)");
+        dotsG.appendChild(dot);
+      }
+    }
+    this.layerGrid.appendChild(dotsG);
+  }
+
+  _renderFootprints(pBot, aBot) {
+    if (!this.layerFootprints) return;
+    this.layerFootprints.innerHTML = "";
+
+    if (pBot && pBot.pose) {
+      this._renderSingleBotFootprint(pBot, "player");
+    }
+    if (aBot && aBot.pose) {
+      this._renderSingleBotFootprint(aBot, "automaton");
+    }
+  }
+
+  _renderSingleBotFootprint(bot, role) {
+    const cells = getChassisGridCells(bot.chassis_template, bot.pose);
+    const isPlayer = role === "player";
+    const primaryColor = isPlayer ? "#00e5ff" : "#f43f5e";
+    const fillColor = isPlayer ? "rgba(0, 229, 255, 0.22)" : "rgba(244, 63, 94, 0.22)";
+
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", `bot-footprint footprint-${role}`);
+
+    for (const [gx, gy] of cells) {
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", `${gx * 40.0 + 1.5}`);
+      rect.setAttribute("y", `${gy * 40.0 + 1.5}`);
+      rect.setAttribute("width", "37");
+      rect.setAttribute("height", "37");
+      rect.setAttribute("rx", "4");
+      rect.setAttribute("fill", fillColor);
+      rect.setAttribute("stroke", bot.is_inverted ? "#f59e0b" : primaryColor);
+      rect.setAttribute("stroke-width", "1.8");
+      g.appendChild(rect);
+    }
+
+    this.layerFootprints.appendChild(g);
+  }
+
   render(matchState) {
     if (!matchState) return;
 
@@ -176,15 +344,23 @@ export class ArenaRenderer {
 
     if (this.layerTemplates) this.layerTemplates.innerHTML = "";
 
-    // 1. Render Trajectories (Ghosts)
+    // 0. Ensure Grid coordinates are rendered
+    if (this.layerGrid && this.layerGrid.children.length === 0) {
+      this._renderGrid();
+    }
+
+    // 1. Render Snapped Footprints under robots
+    this._renderFootprints(pBot, aBot);
+
+    // 2. Render Trajectories (Ghosts)
     this._renderTrajectories(matchState.player_trajectory, matchState.automaton_trajectory);
 
-    // 2. Render Miniatures at current poses
+    // 3. Render Miniatures at current poses
     this.layerRobots.innerHTML = "";
     this._renderMiniature(pBot, "player");
     this._renderMiniature(aBot, "automaton");
 
-    // 3. Render Collision Effect if applicable
+    // 4. Render Collision Effect if applicable
     this.layerEffects.innerHTML = "";
     if (matchState.last_collision) {
       this._renderCollisionEffect(matchState.last_collision);
@@ -211,17 +387,7 @@ export class ArenaRenderer {
     const pBot = JSON.parse(JSON.stringify(matchState.player_robot));
     const aBot = JSON.parse(JSON.stringify(matchState.automaton_robot));
 
-    // Render physical movement templates docked at start poses
-    if (this.layerTemplates) {
-      this.layerTemplates.innerHTML = "";
-      this.layerTemplates.style.opacity = "1";
-      if (matchState.player_template && matchState.player_template.category !== "stop" && pTraj.length > 0) {
-        this._renderMovementTemplate(pTraj[0], matchState.player_choice, matchState.player_template, "player");
-      }
-      if (matchState.automaton_template && matchState.automaton_template.category !== "stop" && aTraj.length > 0) {
-        this._renderMovementTemplate(aTraj[0], matchState.automaton_choice, matchState.automaton_template, "automaton");
-      }
-    }
+    if (this.layerTemplates) this.layerTemplates.innerHTML = "";
 
     // Draw full trajectory ghost lines
     this._renderTrajectories(pTraj, aTraj);
@@ -232,6 +398,9 @@ export class ArenaRenderer {
         pBot.pose = pTraj[frameIdx];
         aBot.pose = aTraj[frameIdx];
 
+        // Dynamically update discrete footprints as robots move across grid
+        this._renderFootprints(pBot, aBot);
+
         this.layerRobots.innerHTML = "";
         this._renderMiniature(pBot, "player");
         this._renderMiniature(aBot, "automaton");
@@ -240,19 +409,6 @@ export class ArenaRenderer {
         this.animFrame = requestAnimationFrame(step);
       } else {
         this.animating = false;
-
-        // Smoothly fade out physical movement templates
-        if (this.layerTemplates) {
-          const tLayer = this.layerTemplates;
-          tLayer.style.transition = "opacity 0.4s ease";
-          tLayer.style.opacity = "0";
-          setTimeout(() => {
-            tLayer.innerHTML = "";
-            tLayer.style.opacity = "1";
-            tLayer.style.transition = "";
-          }, 400);
-        }
-
         this.render(matchState);
         if (onComplete) onComplete();
       }
@@ -261,7 +417,110 @@ export class ArenaRenderer {
     this.animFrame = requestAnimationFrame(step);
   }
 
+  async renderActionPlanPreview(playerPose, cards, chassisTemplate) {
+    if (!playerPose || !cards) return;
+    const seq = ++this._previewSeq;
+
+    const allWait = cards.every(c => !c || c === "Wait" || c === "Stop");
+    if (allWait) {
+      if (this.layerTemplates) this.layerTemplates.innerHTML = "";
+      if (this.layerGhosts) this.layerGhosts.innerHTML = "";
+      return;
+    }
+
+    try {
+      const data = await PlaytestApi.getActionPlanPreview(cards, playerPose, chassisTemplate);
+      if (seq !== this._previewSeq || this.animating) return;
+
+      const traj = data.trajectory || [];
+      const actions = data.actions || [];
+
+      // 1. Draw Ghost Trajectory Path
+      if (this.layerGhosts && traj.length > 1) {
+        this.layerGhosts.innerHTML = "";
+        const pD = traj.map((pt, i) => `${i === 0 ? "M" : "L"} ${pt.x} ${pt.y}`).join(" ");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", pD);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#00e5ff");
+        path.setAttribute("stroke-width", "2.2");
+        path.setAttribute("stroke-dasharray", "4,3");
+        path.setAttribute("opacity", "0.65");
+        this.layerGhosts.appendChild(path);
+      }
+
+      // 2. Draw Intermediate and Destination Footprints
+      if (this.layerTemplates) {
+        this.layerTemplates.innerHTML = "";
+        actions.forEach((act, idx) => {
+          if (!act.end_pose) return;
+          const isFinal = idx === actions.length - 1;
+          const fakeBot = {
+            pose: act.end_pose,
+            chassis_template: chassisTemplate,
+            is_inverted: false,
+          };
+          const stepLabel = `${idx + 1}: ${act.card_code}`;
+          this._renderGhostFootprint(fakeBot, "player", isFinal, stepLabel);
+        });
+      }
+    } catch (err) {
+      console.warn("Could not render action plan preview:", err);
+    }
+  }
+
+  _renderGhostFootprint(bot, role, isFinal, label) {
+    const cells = getChassisGridCells(bot.chassis_template, bot.pose);
+    const color = role === "player" ? "#00e5ff" : "#f43f5e";
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "action-preview-footprint");
+
+    for (const [gx, gy] of cells) {
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", `${gx * 40.0 + 2}`);
+      rect.setAttribute("y", `${gy * 40.0 + 2}`);
+      rect.setAttribute("width", "36");
+      rect.setAttribute("height", "36");
+      rect.setAttribute("rx", "4");
+      rect.setAttribute("fill", isFinal ? "rgba(0, 229, 255, 0.18)" : "rgba(0, 229, 255, 0.08)");
+      rect.setAttribute("stroke", color);
+      rect.setAttribute("stroke-width", isFinal ? "2" : "1.2");
+      rect.setAttribute("stroke-dasharray", isFinal ? "none" : "3,2");
+      g.appendChild(rect);
+    }
+
+    if (label) {
+      const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      const textW = label.length * 6 + 12;
+      bg.setAttribute("x", `${bot.pose.x - textW / 2}`);
+      bg.setAttribute("y", `${bot.pose.y - 8}`);
+      bg.setAttribute("width", `${textW}`);
+      bg.setAttribute("height", "16");
+      bg.setAttribute("rx", "3");
+      bg.setAttribute("fill", "rgba(10, 14, 23, 0.85)");
+      bg.setAttribute("stroke", color);
+      bg.setAttribute("stroke-width", "1");
+      g.appendChild(bg);
+
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", `${bot.pose.x}`);
+      text.setAttribute("y", `${bot.pose.y + 3.5}`);
+      text.setAttribute("fill", "#ffffff");
+      text.setAttribute("font-size", "7.5");
+      text.setAttribute("font-weight", "bold");
+      text.setAttribute("text-anchor", "middle");
+      text.textContent = label;
+      g.appendChild(text);
+    }
+
+    this.layerTemplates.appendChild(g);
+  }
+
   renderPlanningPreview(playerPose, choice, templateInfo) {
+    if (choice && choice.cards) {
+      this.renderActionPlanPreview(playerPose, choice.cards, choice.chassis_template || "Square");
+      return;
+    }
     if (!this.layerTemplates) return;
     this.layerTemplates.innerHTML = "";
     this.layerTemplates.style.opacity = "1";
@@ -272,8 +531,12 @@ export class ArenaRenderer {
   }
 
   clearPlanningPreview() {
+    this._previewSeq++;
     if (this.layerTemplates && !this.animating) {
       this.layerTemplates.innerHTML = "";
+    }
+    if (this.layerGhosts && !this.animating) {
+      this.layerGhosts.innerHTML = "";
     }
   }
 

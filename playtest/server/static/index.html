@@ -122,9 +122,10 @@
           </div>
           <svg id="arena-svg" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
             <defs>
-              <!-- Floor Grid Pattern -->
-              <pattern id="arena-grid-10" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+              <!-- Floor 40mm Discrete Grid Pattern -->
+              <pattern id="arena-grid-40" x="100" y="100" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(148, 163, 184, 0.28)" stroke-width="1.2"/>
+                <circle cx="0" cy="0" r="1.5" fill="rgba(148, 163, 184, 0.45)"/>
               </pattern>
               <!-- Hazard Yellow Hatch Pattern -->
               <pattern id="hazard-hatch" width="16" height="16" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
@@ -141,38 +142,46 @@
             </defs>
 
             <!-- 1. Background Arena Floor -->
-            <rect x="0" y="0" width="800" height="800" fill="#0a0f18" />
-            <rect x="0" y="0" width="800" height="800" fill="url(#arena-grid-10)" />
+            <rect x="0" y="0" width="800" height="800" fill="#070b12" />
 
-            <!-- 2. Hazard Pit Zones (4 Yellow Hatched Corners) -->
-            <rect x="0" y="0" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.6"/>
-            <rect x="650" y="0" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.6"/>
-            <rect x="0" y="650" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.6"/>
-            <rect x="650" y="650" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.6"/>
+            <!-- 2. Discrete 40mm Combat Robotics Grid (15x15 squares = 600mm x 600mm) -->
+            <rect x="100" y="100" width="600" height="600" fill="#0d1424" stroke="#334155" stroke-width="2" />
+            <rect x="100" y="100" width="600" height="600" fill="url(#arena-grid-40)" />
+
+            <!-- Dynamic Grid & Ruler Layer (coordinate numbers 1-15 & A-O) -->
+            <g id="layer-grid"></g>
+
+            <!-- 3. Hazard Pit Zones (4 Yellow Hatched Corners) -->
+            <rect x="0" y="0" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.65"/>
+            <rect x="650" y="0" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.65"/>
+            <rect x="0" y="650" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.65"/>
+            <rect x="650" y="650" width="150" height="150" fill="url(#hazard-hatch)" opacity="0.65"/>
 
             <!-- Pit Outlines -->
-            <rect x="0" y="0" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2"/>
-            <rect x="650" y="0" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2"/>
-            <rect x="0" y="650" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2"/>
-            <rect x="650" y="650" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2"/>
+            <rect x="0" y="0" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2.5"/>
+            <rect x="650" y="0" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2.5"/>
+            <rect x="0" y="650" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2.5"/>
+            <rect x="650" y="650" width="150" height="150" fill="none" stroke="#eab308" stroke-width="2.5"/>
 
-            <!-- 3. Red Starting Deployment Zones -->
-            <rect x="300" y="120" width="200" height="100" fill="rgba(239, 68, 68, 0.08)" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="6,4" rx="4"/>
-            <text x="400" y="175" fill="rgba(239, 68, 68, 0.4)" font-size="12" font-family="sans-serif" font-weight="bold" text-anchor="middle">AUTOMATON START</text>
+            <!-- 4. Deployment Start Zones -->
+            <rect x="300" y="120" width="200" height="80" fill="rgba(239, 68, 68, 0.12)" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="6,4" rx="4"/>
+            <text x="400" y="165" fill="rgba(239, 68, 68, 0.6)" font-size="11" font-family="sans-serif" font-weight="bold" text-anchor="middle">AUTOMATON START</text>
 
-            <rect x="300" y="580" width="200" height="100" fill="rgba(0, 229, 255, 0.08)" stroke="#00e5ff" stroke-width="1.8" stroke-dasharray="6,4" rx="4"/>
-            <text x="400" y="635" fill="rgba(0, 229, 255, 0.4)" font-size="12" font-family="sans-serif" font-weight="bold" text-anchor="middle">PLAYER START</text>
+            <rect x="300" y="600" width="200" height="80" fill="rgba(0, 229, 255, 0.12)" stroke="#00e5ff" stroke-width="1.8" stroke-dasharray="6,4" rx="4"/>
+            <text x="400" y="645" fill="rgba(0, 229, 255, 0.6)" font-size="11" font-family="sans-serif" font-weight="bold" text-anchor="middle">PLAYER START</text>
 
-            <!-- 4. Arena Perimeter Walls (Solid Black Lines with Corner Openings) -->
-            <line x1="150" y1="100" x2="650" y2="100" stroke="#475569" stroke-width="4.5" />
-            <line x1="150" y1="700" x2="650" y2="700" stroke="#475569" stroke-width="4.5" />
-            <line x1="100" y1="150" x2="100" y2="650" stroke="#475569" stroke-width="4.5" />
-            <line x1="700" y1="150" x2="700" y2="650" stroke="#475569" stroke-width="4.5" />
+            <!-- 5. Arena Perimeter Walls (Solid Slate Lines with Corner Openings) -->
+            <line x1="150" y1="100" x2="650" y2="100" stroke="#64748b" stroke-width="5" stroke-linecap="round" />
+            <line x1="150" y1="700" x2="650" y2="700" stroke="#64748b" stroke-width="5" stroke-linecap="round" />
+            <line x1="100" y1="150" x2="100" y2="650" stroke="#64748b" stroke-width="5" stroke-linecap="round" />
+            <line x1="700" y1="150" x2="700" y2="650" stroke="#64748b" stroke-width="5" stroke-linecap="round" />
 
-            <line x1="400" y1="100" x2="400" y2="700" stroke="#334155" stroke-width="0.8" stroke-dasharray="4,4" opacity="0.4"/>
-            <line x1="100" y1="400" x2="700" y2="400" stroke="#334155" stroke-width="0.8" stroke-dasharray="4,4" opacity="0.4"/>
+            <!-- Arena Centerlines -->
+            <line x1="400" y1="100" x2="400" y2="700" stroke="#475569" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
+            <line x1="100" y1="400" x2="700" y2="400" stroke="#475569" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
 
             <!-- Dynamic SVG Layers -->
+            <g id="layer-footprints"></g>
             <g id="layer-templates"></g>
             <g id="layer-ghosts"></g>
             <g id="layer-robots"></g>
@@ -181,60 +190,111 @@
           </svg>
         </div>
 
-        <!-- Turn Planning Dock -->
+        <!-- Turn Planning Dock: 3 Action Cards Interface -->
         <div class="turn-planning-dock">
+          <!-- Dock Header with Drive Budget Meters -->
           <div class="planning-header">
             <div class="planning-title-col">
-              <h3>🧭 Planning Phase: Movement Template Selection</h3>
-              <span class="planning-hint">Choose your drive values bounded by your robot's active drive count.</span>
+              <h3>🧭 Planning Phase: 3 Action Cards</h3>
+              <span class="planning-hint">Select 3 Action Cards for this round. Guaranteed base drive of 1 each side even if damaged.</span>
             </div>
-            <div id="planning-template-badge" class="planning-template-badge">📐 Straight (0, 0)</div>
-          </div>
-
-          <div class="drive-inputs-grid">
-            <!-- Left Drive Control -->
-            <div class="drive-control-box">
-              <div class="drive-box-head">
-                <span class="drive-side-label">LEFT DRIVE</span>
-                <span class="drive-number-badge" id="left-drive-val">0</span>
+            <div class="drive-budget-container">
+              <div class="budget-meter-pill" id="budget-pill-left">
+                <span class="meter-label">LEFT DRIVE</span>
+                <span class="meter-val" id="budget-left-spent">0</span>
+                <span class="meter-sep">/</span>
+                <span class="meter-max" id="budget-left-max">1</span>
+                <div class="budget-bar-track">
+                  <div class="budget-bar-fill" id="budget-bar-left" style="width: 0%"></div>
+                </div>
               </div>
-              <div class="stepper-row">
-                <button class="btn-stepper" id="btn-left-minus">－</button>
-                <input type="range" id="left-drive-slider" class="drive-slider" min="-3" max="3" value="0" step="1">
-                <button class="btn-stepper" id="btn-left-plus">＋</button>
-              </div>
-            </div>
-
-            <!-- Right Drive Control -->
-            <div class="drive-control-box">
-              <div class="drive-box-head">
-                <span class="drive-side-label">RIGHT DRIVE</span>
-                <span class="drive-number-badge" id="right-drive-val">0</span>
-              </div>
-              <div class="stepper-row">
-                <button class="btn-stepper" id="btn-right-minus">－</button>
-                <input type="range" id="right-drive-slider" class="drive-slider" min="-3" max="3" value="0" step="1">
-                <button class="btn-stepper" id="btn-right-plus">＋</button>
+              <div class="budget-meter-pill" id="budget-pill-right">
+                <span class="meter-label">RIGHT DRIVE</span>
+                <span class="meter-val" id="budget-right-spent">0</span>
+                <span class="meter-sep">/</span>
+                <span class="meter-max" id="budget-right-max">1</span>
+                <div class="budget-bar-track">
+                  <div class="budget-bar-fill" id="budget-bar-right" style="width: 0%"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Quick Template Preset Tracks -->
+          <!-- 3 Selected Action Card Slots -->
+          <div class="action-card-slots-row" id="action-card-slots">
+            <div class="action-slot-card active" data-slot="0">
+              <div class="slot-badge">ACTION 1</div>
+              <div class="slot-card-preview">
+                <img class="slot-card-img" src="/CardImages/Action_Wait.png" alt="Wait" onerror="this.style.display='none'">
+                <div class="slot-card-code">Wait</div>
+              </div>
+              <div class="slot-card-info">
+                <div class="slot-card-name">Wait / Stationary</div>
+                <div class="slot-card-cost">L: 0 • R: 0</div>
+              </div>
+              <button class="btn-clear-slot" title="Clear slot (Set to Wait)">×</button>
+            </div>
+
+            <div class="action-slot-card" data-slot="1">
+              <div class="slot-badge">ACTION 2</div>
+              <div class="slot-card-preview">
+                <img class="slot-card-img" src="/CardImages/Action_Wait.png" alt="Wait" onerror="this.style.display='none'">
+                <div class="slot-card-code">Wait</div>
+              </div>
+              <div class="slot-card-info">
+                <div class="slot-card-name">Wait / Stationary</div>
+                <div class="slot-card-cost">L: 0 • R: 0</div>
+              </div>
+              <button class="btn-clear-slot" title="Clear slot (Set to Wait)">×</button>
+            </div>
+
+            <div class="action-slot-card" data-slot="2">
+              <div class="slot-badge">ACTION 3</div>
+              <div class="slot-card-preview">
+                <img class="slot-card-img" src="/CardImages/Action_Wait.png" alt="Wait" onerror="this.style.display='none'">
+                <div class="slot-card-code">Wait</div>
+              </div>
+              <div class="slot-card-info">
+                <div class="slot-card-name">Wait / Stationary</div>
+                <div class="slot-card-cost">L: 0 • R: 0</div>
+              </div>
+              <button class="btn-clear-slot" title="Clear slot (Set to Wait)">×</button>
+            </div>
+          </div>
+
+          <!-- Tactical Presets -->
           <div class="presets-row">
-            <span class="preset-label">Templates:</span>
-            <button class="btn-preset" data-preset="forward">⬆️ Straight Max</button>
-            <button class="btn-preset" data-preset="curve-left">↖️ Curve Left</button>
-            <button class="btn-preset" data-preset="curve-right">↗️ Curve Right</button>
-            <button class="btn-preset" data-preset="pivot-left">🔄 Pivot Left</button>
-            <button class="btn-preset" data-preset="pivot-right">🔃 Pivot Right</button>
-            <button class="btn-preset" data-preset="reverse">⬇️ Reverse</button>
-            <button class="btn-preset" data-preset="stop">⏹️ Stop</button>
+            <span class="preset-label">Tactics:</span>
+            <button class="btn-preset" data-preset="rush">⬆️ Full Rush (3 F)</button>
+            <button class="btn-preset" data-preset="advance-pivot">🛡️ Advance & Pivot</button>
+            <button class="btn-preset" data-preset="turn-right">↪️ Turn Right (90 R)</button>
+            <button class="btn-preset" data-preset="turn-left">↩️ Turn Left (90 L)</button>
+            <button class="btn-preset" data-preset="spin-180">🔃 180° Spin Around</button>
+            <button class="btn-preset" data-preset="wait">⏳ Wait & Spin Up</button>
+            <button class="btn-preset" data-preset="clear">🗑️ Clear All</button>
+          </div>
+
+          <!-- Action Card Drawer / Picker -->
+          <div class="action-card-drawer-section">
+            <div class="drawer-header">
+              <span class="drawer-title">🃏 18-Card Action Pool (Select card to fill active slot):</span>
+              <div class="drawer-filters">
+                <button class="btn-filter-cat active" data-cat="all">All (18)</button>
+                <button class="btn-filter-cat" data-cat="linear">Linear</button>
+                <button class="btn-filter-cat" data-cat="turn">Forward Turn</button>
+                <button class="btn-filter-cat" data-cat="reverse_turn">Reversing Turn</button>
+                <button class="btn-filter-cat" data-cat="pivot">Center Pivot</button>
+              </div>
+            </div>
+            <div class="action-cards-grid" id="action-cards-grid">
+              <!-- Dynamically populated from /api/action_cards -->
+            </div>
           </div>
 
           <!-- Execute Button -->
           <div class="execute-row">
             <button id="btn-execute-turn" class="btn btn-big btn-primary">
-              🚀 Lock in Drive & Execute Turn
+              🚀 Lock in 3 Cards & Execute Turn
             </button>
           </div>
         </div>

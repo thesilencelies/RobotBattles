@@ -291,23 +291,35 @@ class TestBrowserUI(unittest.TestCase):
         arena_overflow_y = self.js_eval("window.getComputedStyle(document.getElementById('view-arena')).overflowY")
         self.assertEqual(arena_overflow_y, "auto")
 
-        # 3. Test Drive Presets
-        self.js_eval("document.querySelector(\".btn-preset[data-preset='forward']\").click()")
-        left_val = self.js_eval("document.getElementById('left-drive-val').textContent")
-        right_val = self.js_eval("document.getElementById('right-drive-val').textContent")
-        self.assertNotEqual(left_val, "0")
-        self.assertEqual(left_val, right_val)
+        # 3. Test Action Cards Planning Dock and Presets
+        self.js_eval("document.querySelector(\".btn-preset[data-preset='rush']\").click()")
+        slot0_code = self.js_eval("document.querySelector(\".action-slot-card[data-slot='0'] .slot-card-code\").textContent")
+        self.assertIn("F", slot0_code)
 
-        # 4. Test Stepper Plus/Minus
-        old_left = int(self.js_eval("document.getElementById('left-drive-slider').value"))
-        self.js_eval("document.getElementById('btn-left-minus').click()")
-        new_left = int(self.js_eval("document.getElementById('left-drive-slider').value"))
-        self.assertEqual(new_left, old_left - 1)
+        # Verify Drive Budget meters
+        left_spent = int(self.js_eval("document.getElementById('budget-left-spent').textContent"))
+        right_spent = int(self.js_eval("document.getElementById('budget-right-spent').textContent"))
+        self.assertGreater(left_spent, 0)
+        self.assertEqual(left_spent, right_spent)
 
-        # 5. Execute Turn
+        # 4. Test 18-Card Action Drawer and Card Selection
+        drawer_cards_count = self.js_eval("document.querySelectorAll('#action-cards-grid .action-card-item').length")
+        self.assertEqual(drawer_cards_count, 18)
+
+        # Select slot 1 and assign a Wait card
+        self.js_eval("document.querySelector(\".action-slot-card[data-slot='1']\").click()")
+        self.js_eval("document.querySelector(\"#action-cards-grid .action-card-item[data-code='Wait']\").click()")
+        slot1_code = self.js_eval("document.querySelector(\".action-slot-card[data-slot='1'] .slot-card-code\").textContent")
+        self.assertEqual(slot1_code, "Wait")
+
+        # 5. Execute Turn with 3 Action Cards
         self.js_eval("document.getElementById('btn-execute-turn').click()")
-        time.sleep(1.0)
-        round_after = self.js_eval("document.getElementById('hud-round').textContent")
+        round_after = ""
+        for _ in range(50):
+            time.sleep(0.1)
+            round_after = self.js_eval("document.getElementById('hud-round').textContent")
+            if "Round 2" in round_after:
+                break
         self.assertIn("Round 2", round_after)
 
         # 6. Check Combat Log updated
@@ -482,43 +494,33 @@ class TestBrowserUI(unittest.TestCase):
 
     def test_07_interactive_planning_template_and_preview(self):
         self.js_eval("window.app.switchTab('arena')")
-        # 1. Test slider change to Gentle Curve (3, 2)
-        res = self.js_eval("""
-        (async () => {
-          window.app.turnLeft = 3;
-          window.app.turnRight = 2;
-          await window.app._updatePlanningPreview();
-          const badgeText = document.getElementById("planning-template-badge").textContent;
-          const overlay = window.app.arenaRenderer.layerTemplates.querySelector(".movement-template-overlay.planning-preview");
-          return {
-            badgeText,
-            hasOverlay: Boolean(overlay),
-            isGentle: badgeText.includes("Gentle Curve")
-          };
-        })()
-        """)
-        self.assertTrue(res["hasOverlay"], "Planning preview template overlay should be rendered on the arena")
-        self.assertTrue(res["isGentle"], f"Badge text should reflect Gentle Curve: {res['badgeText']}")
+        # 1. Test Grid labels and Footprints rendered on Arena
+        grid_labels_count = self.js_eval("document.querySelectorAll('#layer-grid .arena-grid-label').length")
+        self.assertGreaterEqual(grid_labels_count, 30, "Grid ruler labels 1-15 and A-O should be rendered")
 
-        # 2. Test asymmetric counter-drive (3, -1) -> Spin Disc + Pivot Fan
-        asym_res = self.js_eval("""
-        (async () => {
-          window.app.turnLeft = 3;
-          window.app.turnRight = -1;
-          await window.app._updatePlanningPreview();
-          const badgeText = document.getElementById("planning-template-badge").textContent;
-          const spinPhase = window.app.arenaRenderer.layerTemplates.querySelector(".template-phase-spin");
-          const pivotPhase = window.app.arenaRenderer.layerTemplates.querySelector(".template-phase-pivot");
-          return {
-            badgeText,
-            hasSpin: Boolean(spinPhase),
-            hasPivot: Boolean(pivotPhase)
-          };
-        })()
-        """)
-        self.assertTrue(asym_res["hasSpin"], "Asymmetric counter should render Phase 1: Spin Disc")
-        self.assertTrue(asym_res["hasPivot"], "Asymmetric counter should render Phase 2: Pivot Fan")
-        self.assertIn("Spin Disc + Pivot Fan", asym_res["badgeText"])
+        footprints_count = self.js_eval("document.querySelectorAll('#layer-footprints .bot-footprint').length")
+        self.assertEqual(footprints_count, 2, "Both robots should have discrete snapped footprints")
+
+        # 2. Test 3-card Action Plan Preview (e.g. 1F, 90 R, Wait)
+        preview_res = {}
+        for _ in range(30):
+            preview_res = self.js_eval("""
+            (async () => {
+              window.app.selectedCards = ["1F", "90 R", "Wait"];
+              await window.app._updatePlanningPreview();
+              const ghostFootprints = document.querySelectorAll("#layer-templates .action-preview-footprint");
+              const ghostPath = document.querySelector("#layer-ghosts path");
+              return {
+                ghostCount: ghostFootprints.length,
+                hasPath: Boolean(ghostPath)
+              };
+            })()
+            """)
+            if preview_res.get("ghostCount", 0) >= 1:
+                break
+            time.sleep(0.1)
+        self.assertGreaterEqual(preview_res.get("ghostCount", 0), 1, "Action plan preview should render ghost footprints for movement steps")
+        self.assertTrue(preview_res.get("hasPath"), "Action plan preview should render connecting trajectory path")
 
     def test_08_multi_weapon_rendering_on_chassis(self):
         self.js_eval("window.app.switchTab('arena')")
@@ -547,8 +549,8 @@ class TestBrowserUI(unittest.TestCase):
         })()
         """)
         self.assertGreaterEqual(res["count"], 2, "Robot with multiple weapons must render all weapons on the chassis")
-        self.assertIn("7", res["cids"], "NightWing AR500 Disc should be rendered")
-        self.assertIn("8", res["cids"], "Single Tooth Disc should be rendered")
+        self.assertIn("5", res["cids"], "NightWing AR500 Disc should be rendered")
+        self.assertIn("6", res["cids"], "Single Tooth Disc should be rendered")
 
 
 if __name__ == "__main__":

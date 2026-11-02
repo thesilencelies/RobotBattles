@@ -358,7 +358,12 @@ def resolve_weapon_wall_contact(
             w_comp = robot.components[cid]
             spin = robot.weapon_spin_counters.get(cid, 0)
             w_atk = get_weapon_attack_strength(w_comp, spin)
-            feedback = (w_atk + throw_strength + 1) // 2
+            if throw_strength > 0:
+                feedback = (w_atk + throw_strength + 1) // 2
+                formula_desc = f"((weapon strength {w_atk} + throw strength {throw_strength}) / 2, rounded up)"
+            else:
+                feedback = w_atk // 2
+                formula_desc = f"(half weapon strength {w_atk}, rounded down)"
 
             # Reset spin counters
             robot.weapon_spin_counters[cid] = 0
@@ -369,7 +374,7 @@ def resolve_weapon_wall_contact(
                 message=(
                     f"💥 {robot.name}'s weapon {w_comp.name} contacted the wall! "
                     f"Lost all spin counters (was {spin}) and suffered {feedback} feedback "
-                    f"((weapon strength {w_atk} + throw strength {throw_strength}) / 2, rounded up)."
+                    f"{formula_desc}."
                 ),
             ))
             if feedback > 0:
@@ -1020,21 +1025,13 @@ def resolve_inert_contact(
                     message=f"☠️ {wall_bot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
                 ))
 
-            w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=throw_str, round_num=round_num, phase="collision", steps=steps)
+            w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
             logs.extend(w_logs)
 
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"💥 {wall_bot.name} was pushed into the wall by {pushing_bot.name}! THROWN perpendicular to wall with throw strength {throw_str}! (Takes throw damage {throw_str})",
+                message=f"🧱 {wall_bot.name} was pushed into the wall by {pushing_bot.name} and stopped at the wall (no throw).",
             ))
-            if throw_str > 0:
-                eff_flip = wall_bot.flip_strength
-                if throw_str > eff_flip:
-                    wall_bot.is_inverted = not wall_bot.is_inverted
-                    logs.append(CombatLogEntry(
-                        round=round_num, phase="collision",
-                        message=f"🔄 FLIP! (Throw {throw_str} > Flip value {eff_flip}) -> {wall_bot.name} is now {'INVERTED' if wall_bot.is_inverted else 'UPRIGHT'}!",
-                    ))
 
     # Determine execution order: most steps remaining goes first (tie: player 1 / youngest player)
     elif len(r1_rem_steps) >= len(r2_rem_steps):
@@ -1088,45 +1085,13 @@ def resolve_inert_contact(
                             message=f"☠️ {wall_bot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
                         ))
 
-                    w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=throw_str, round_num=round_num, phase="collision", steps=steps)
+                    w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
                     logs.extend(w_logs)
 
                     logs.append(CombatLogEntry(
                         round=round_num, phase="collision",
-                        message=f"💥 {wall_bot.name} was pushed into the wall by {pushing_bot.name}! THROWN perpendicular to wall with throw strength {throw_str}! (Takes throw damage {throw_str})",
+                        message=f"🧱 {wall_bot.name} was pushed into the wall by {pushing_bot.name} and stopped at the wall (no throw).",
                     ))
-
-                    if throw_str > 0:
-                        shock_cid = simulate_dropping_card(wall_bot)
-                        if shock_cid:
-                            resolve_feedback_propagation(wall_bot, shock_cid, throw_str, phase="wall_feedback", steps=steps)
-
-                        roll_d6 = random.randint(1, 6)
-                        thrown_units = min(throw_str, roll_d6)
-                        displacement_mm = thrown_units * DRIVE_UNIT_MM
-
-                        wall_bot.pose.x += normal[0] * displacement_mm
-                        wall_bot.pose.y += normal[1] * displacement_mm
-                        wall_bot.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, wall_bot.pose.x))
-                        wall_bot.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, wall_bot.pose.y))
-
-                        orientation_roll = random.randint(1, 6)
-                        spin_rot = THROW_ROTATION_MAP[orientation_roll]
-                        wall_bot.pose.theta = (wall_bot.pose.theta + spin_rot) % 360.0
-                        logs.append(CombatLogEntry(
-                            round=round_num, phase="collision",
-                            message=f"🧭 Thrown orientation: {wall_bot.name} rolled {orientation_roll} -> rotated {int(spin_rot)}° (now {wall_bot.pose.theta:.0f}°).",
-                        ))
-
-                        eff_flip = wall_bot.flip_strength
-                        excess_throw = throw_str - thrown_units
-                        if excess_throw > eff_flip:
-                            wall_bot.is_inverted = not wall_bot.is_inverted
-                            logs.append(CombatLogEntry(
-                                round=round_num, phase="collision",
-                                message=f"🔄 FLIP! (Remaining throw {excess_throw} > Flip value {eff_flip}) -> {wall_bot.name} is now {'INVERTED' if wall_bot.is_inverted else 'UPRIGHT'}!",
-                            ))
-
                     break
                 else:
                     pushing_bot.pose = cand_pushing

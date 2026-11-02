@@ -72,10 +72,26 @@ export class PlaytestApi {
     return this.startNewBattle(optsOrCsv, automatonName, playerName, maxRounds);
   }
 
-  static async executeTurn(left, right, fixedRoll = null) {
-    const payload = { left: Number(left), right: Number(right) };
-    if (fixedRoll !== null) {
+  static async getActionCards() {
+    const res = await fetch("/api/action_cards");
+    if (!res.ok) throw new Error("Failed to load action cards");
+    return res.json();
+  }
+
+  static async executeTurn(optsOrLeft, right = 0, fixedRoll = null, chosenComponents = null) {
+    let payload = {};
+    if (optsOrLeft && typeof optsOrLeft === "object" && !Array.isArray(optsOrLeft)) {
+      payload = { ...optsOrLeft };
+    } else if (Array.isArray(optsOrLeft)) {
+      payload = { cards: optsOrLeft, left: Number(right) || 0, right: 0 };
+    } else {
+      payload = { left: Number(optsOrLeft), right: Number(right) };
+    }
+    if (fixedRoll !== null && payload.fixed_roll === undefined) {
       payload.fixed_roll = Number(fixedRoll);
+    }
+    if (chosenComponents && payload.chosen_components === undefined) {
+      payload.chosen_components = chosenComponents;
     }
     const res = await fetch("/api/battle/turn", {
       method: "POST",
@@ -89,8 +105,8 @@ export class PlaytestApi {
     return res.json();
   }
 
-  static async submitTurn(left, right, fixedRoll = null) {
-    return this.executeTurn(left, right, fixedRoll);
+  static async submitTurn(optsOrLeft, right = 0, fixedRoll = null, chosenComponents = null) {
+    return this.executeTurn(optsOrLeft, right, fixedRoll, chosenComponents);
   }
 
   static async resetBattle() {
@@ -117,6 +133,20 @@ export class PlaytestApi {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || "Failed to fetch movement template");
+    }
+    return res.json();
+  }
+
+  static async getActionPlanPreview(cards, pose = null, chassis = "Square") {
+    const cardStr = Array.isArray(cards) ? cards.join(",") : String(cards);
+    let url = `/api/action_plan_preview?cards=${encodeURIComponent(cardStr)}&chassis=${encodeURIComponent(chassis)}`;
+    if (pose) {
+      url += `&x=${encodeURIComponent(pose.x)}&y=${encodeURIComponent(pose.y)}&theta=${encodeURIComponent(pose.theta)}`;
+    }
+    const res = await fetch(url);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to fetch action plan preview");
     }
     return res.json();
   }

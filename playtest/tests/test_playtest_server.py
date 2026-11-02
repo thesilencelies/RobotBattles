@@ -153,6 +153,41 @@ class TestPlaytestServer(unittest.TestCase):
         self.assertEqual(tmpl_asym["spin_k"], 1)
         self.assertEqual(tmpl_asym["pivot_rem"], 2)
 
+    def test_api_action_cards(self):
+        res = self.router.dispatch("GET", "/api/action_cards", {}, b"")
+        self.assertEqual(res.status, 200)
+        data = json.loads(res.body.decode("utf-8"))
+        self.assertIn("cards", data)
+        self.assertEqual(len(data["cards"]), 18)
+        codes = [c["code"] for c in data["cards"]]
+        self.assertIn("Wait", codes)
+        self.assertIn("1F", codes)
+        self.assertIn("90 R", codes)
+        self.assertIn("-45 L", codes)
+
+    def test_api_battle_turn_with_cards(self):
+        # Start new match
+        new_payload = json.dumps({
+            "player_csv": read_saved_robot("Vyper_flipper.csv"),
+            "automaton": "Vyper_Spinner",
+        }).encode("utf-8")
+        self.router.dispatch("POST", "/api/battle/new", {}, new_payload)
+
+        # Submit turn with 3 action cards
+        turn_payload = json.dumps({
+            "cards": ["1F", "45 R", "Wait"],
+            "left": 2,
+            "right": 1,
+        }).encode("utf-8")
+        res = self.router.dispatch("POST", "/api/battle/turn", {}, turn_payload)
+        self.assertEqual(res.status, 200)
+        match_data = json.loads(res.body.decode("utf-8"))["match"]
+        self.assertEqual(match_data["player_action_cards"], ["1F", "45 R", "Wait"])
+        self.assertIn("automaton_action_cards", match_data)
+        self.assertEqual(len(match_data["automaton_action_cards"]), 3)
+        self.assertIn("action_step_results", match_data)
+
 
 if __name__ == "__main__":
     unittest.main()
+

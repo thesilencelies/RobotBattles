@@ -15,15 +15,20 @@ class PlaytestApp {
     this.builderController = null;
     this.activeTab = "arena";
 
-    // Turn selection state (2 numbers: left, right)
-    this.turnLeft = 0;
-    this.turnRight = 0;
+    // 3 Action Cards planning state
+    this.selectedCards = ["Wait", "Wait", "Wait"];
+    this.activeSlotIndex = 0;
+    this.actionCardsList = [];
+    this.actionCardsMap = new Map();
+    this.activeFilter = "all";
   }
 
   async init() {
     this._cacheElements();
     this._bindTabs();
-    this._bindBattleControls();
+    await this._loadActionCards();
+    this._renderActionCardsDrawer();
+    this._bindActionPlanningControls();
 
     // 1. Initialize Arena Renderer
     this.arenaRenderer = new ArenaRenderer(this.arenaSvg);
@@ -71,19 +76,18 @@ class PlaytestApp {
     this.hudAspecs = document.getElementById("hud-aspecs");
     this.hudAinverted = document.getElementById("hud-ainverted");
 
-    // Turn Planning Controls
-    this.leftDriveVal = document.getElementById("left-drive-val");
-    this.rightDriveVal = document.getElementById("right-drive-val");
-    this.leftSlider = document.getElementById("left-drive-slider");
-    this.rightSlider = document.getElementById("right-drive-slider");
-    this.btnLeftMinus = document.getElementById("btn-left-minus");
-    this.btnLeftPlus = document.getElementById("btn-left-plus");
-    this.btnRightMinus = document.getElementById("btn-right-minus");
-    this.btnRightPlus = document.getElementById("btn-right-plus");
-    this.btnExecuteTurn = document.getElementById("btn-execute-turn");
+    // Turn Planning: 3 Action Cards Dock Elements
+    this.budgetLeftSpent = document.getElementById("budget-left-spent");
+    this.budgetLeftMax = document.getElementById("budget-left-max");
+    this.budgetRightSpent = document.getElementById("budget-right-spent");
+    this.budgetRightMax = document.getElementById("budget-right-max");
+    this.budgetBarLeft = document.getElementById("budget-bar-left");
+    this.budgetBarRight = document.getElementById("budget-bar-right");
+    this.slotCards = document.querySelectorAll(".action-slot-card");
+    this.actionCardsGrid = document.getElementById("action-cards-grid");
+    this.categoryFilterButtons = document.querySelectorAll(".btn-filter-cat");
     this.presetButtons = document.querySelectorAll(".btn-preset");
-    this.planningTemplateBadge = document.getElementById("planning-template-badge");
-    this._templateCache = new Map();
+    this.btnExecuteTurn = document.getElementById("btn-execute-turn");
 
     // Views
     this.playerRobotContainer = document.getElementById("player-robot-container");
@@ -117,101 +121,140 @@ class PlaytestApp {
     }
   }
 
-  _bindBattleControls() {
-    const updateSliders = () => {
-      this.leftDriveVal.textContent = this.turnLeft > 0 ? `+${this.turnLeft}` : this.turnLeft;
-      this.rightDriveVal.textContent = this.turnRight > 0 ? `+${this.turnRight}` : this.turnRight;
-      this.leftSlider.value = this.turnLeft;
-      this.rightSlider.value = this.turnRight;
-      this._updatePlanningPreview();
-    };
-
-    this.leftSlider.addEventListener("input", (e) => {
-      this.turnLeft = parseInt(e.target.value, 10);
-      updateSliders();
-    });
-
-    this.rightSlider.addEventListener("input", (e) => {
-      this.turnRight = parseInt(e.target.value, 10);
-      updateSliders();
-    });
-
-    this.btnLeftMinus.addEventListener("click", () => {
-      const min = parseInt(this.leftSlider.min, 10);
-      if (this.turnLeft > min) {
-        this.turnLeft--;
-        updateSliders();
+  async _loadActionCards() {
+    try {
+      const data = await PlaytestApi.getActionCards();
+      this.actionCardsList = data.cards || [];
+      this.actionCardsMap = new Map();
+      for (const card of this.actionCardsList) {
+        this.actionCardsMap.set(card.code, card);
       }
+    } catch (err) {
+      console.error("Could not load action cards:", err);
+    }
+  }
+
+  _renderActionCardsDrawer() {
+    if (!this.actionCardsGrid) return;
+    this.actionCardsGrid.innerHTML = "";
+
+    const filteredCards = this.actionCardsList.filter(card => {
+      if (this.activeFilter === "all") return true;
+      return card.category === this.activeFilter;
     });
 
-    this.btnLeftPlus.addEventListener("click", () => {
-      const max = parseInt(this.leftSlider.max, 10);
-      if (this.turnLeft < max) {
-        this.turnLeft++;
-        updateSliders();
-      }
-    });
+    for (const card of filteredCards) {
+      const item = document.createElement("div");
+      item.className = "action-card-item";
+      item.dataset.code = card.code;
+      item.title = `${card.name}: ${card.motion} (L: ${card.left}, R: ${card.right})`;
 
-    this.btnRightMinus.addEventListener("click", () => {
-      const min = parseInt(this.rightSlider.min, 10);
-      if (this.turnRight > min) {
-        this.turnRight--;
-        updateSliders();
-      }
-    });
+      const thumb = document.createElement("img");
+      thumb.className = "action-card-thumb";
+      thumb.src = `/CardImages/${card.image}`;
+      thumb.alt = card.code;
+      thumb.onerror = () => { thumb.style.display = "none"; };
+      item.appendChild(thumb);
 
-    this.btnRightPlus.addEventListener("click", () => {
-      const max = parseInt(this.rightSlider.max, 10);
-      if (this.turnRight < max) {
-        this.turnRight++;
-        updateSliders();
-      }
-    });
+      const title = document.createElement("div");
+      title.className = "action-card-title";
+      title.textContent = card.code;
+      item.appendChild(title);
 
-    // Preset Buttons
-    this.presetButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const preset = btn.dataset.preset;
-        const maxL = this.currentMatch ? this.currentMatch.player_robot.left_drive_max : 3;
-        const maxR = this.currentMatch ? this.currentMatch.player_robot.right_drive_max : 3;
+      const cost = document.createElement("div");
+      cost.className = "action-card-cost-tag";
+      cost.textContent = `L:${card.left} R:${card.right}`;
+      item.appendChild(cost);
 
-        switch (preset) {
-          case "forward":
-            const straight = Math.min(maxL, maxR);
-            this.turnLeft = straight;
-            this.turnRight = straight;
-            break;
-          case "curve-left":
-            this.turnLeft = Math.min(maxL, 1);
-            this.turnRight = Math.min(maxR, 3);
-            break;
-          case "curve-right":
-            this.turnLeft = Math.min(maxL, 3);
-            this.turnRight = Math.min(maxR, 1);
-            break;
-          case "pivot-left":
-            this.turnLeft = 0;
-            this.turnRight = Math.min(maxR, 2);
-            break;
-          case "pivot-right":
-            this.turnLeft = Math.min(maxL, 2);
-            this.turnRight = 0;
-            break;
-          case "reverse":
-            this.turnLeft = maxL > 0 ? -1 : 0;
-            this.turnRight = maxR > 0 ? -1 : 0;
-            break;
-          case "stop":
-            this.turnLeft = 0;
-            this.turnRight = 0;
-            break;
+      item.addEventListener("click", () => {
+        if (item.classList.contains("disabled")) return;
+        this._selectDrawerCard(card.code);
+      });
+
+      this.actionCardsGrid.appendChild(item);
+    }
+  }
+
+  _selectDrawerCard(cardCode) {
+    this.selectedCards[this.activeSlotIndex] = cardCode;
+    // Advance to next slot in sequence
+    this.activeSlotIndex = (this.activeSlotIndex + 1) % 3;
+    this._updateTurnPlanningControls();
+  }
+
+  _bindActionPlanningControls() {
+    // 3 Slot card selections & clear buttons
+    this.slotCards.forEach((slotEl) => {
+      const slotIdx = parseInt(slotEl.dataset.slot, 10);
+      slotEl.addEventListener("click", (e) => {
+        if (e.target.closest(".btn-clear-slot")) {
+          e.stopPropagation();
+          this.selectedCards[slotIdx] = "Wait";
+          this._updateTurnPlanningControls();
+          return;
         }
-        updateSliders();
+        this.activeSlotIndex = slotIdx;
+        this._updateTurnPlanningControls();
       });
     });
 
-    // Execute Turn
-    this.btnExecuteTurn.addEventListener("click", () => this._onExecuteTurn());
+    // Category filter buttons
+    this.categoryFilterButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        this.activeFilter = btn.dataset.cat || "all";
+        this.categoryFilterButtons.forEach(b => b.classList.toggle("active", b === btn));
+        this._renderActionCardsDrawer();
+        this._updateTurnPlanningControls();
+      });
+    });
+
+    // Tactical Preset buttons
+    this.presetButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const preset = btn.dataset.preset;
+        const pBot = this.currentMatch?.player_robot;
+        const maxL = pBot?.left_drive_max ?? 3;
+        const maxR = pBot?.right_drive_max ?? 3;
+        const maxFwd = Math.min(3, Math.min(maxL, maxR));
+
+        switch (preset) {
+          case "rush":
+            if (maxFwd >= 3) {
+              this.selectedCards = ["3 F", "Wait", "Wait"];
+            } else if (maxFwd >= 2) {
+              this.selectedCards = ["2 F", "Wait", "Wait"];
+            } else if (maxFwd >= 1) {
+              this.selectedCards = ["1F", "Wait", "Wait"];
+            } else {
+              this.selectedCards = ["Wait", "Wait", "Wait"];
+            }
+            break;
+          case "advance-pivot":
+            this.selectedCards = ["1F", "90 PR", "Wait"];
+            break;
+          case "turn-right":
+            this.selectedCards = ["90 R", "Wait", "Wait"];
+            break;
+          case "turn-left":
+            this.selectedCards = ["90 L", "Wait", "Wait"];
+            break;
+          case "spin-180":
+            this.selectedCards = ["180 P", "Wait", "Wait"];
+            break;
+          case "wait":
+          case "clear":
+            this.selectedCards = ["Wait", "Wait", "Wait"];
+            break;
+        }
+        this.activeSlotIndex = 0;
+        this._updateTurnPlanningControls();
+      });
+    });
+
+    // Execute Turn button
+    if (this.btnExecuteTurn) {
+      this.btnExecuteTurn.addEventListener("click", () => this._onExecuteTurn());
+    }
 
     // Playcount (Max Rounds) Select Change
     if (this.playcountSelect) {
@@ -344,11 +387,23 @@ class PlaytestApp {
     }
 
     this.btnExecuteTurn.disabled = true;
-    this.btnExecuteTurn.textContent = "⚙️ Executing...";
+    this.btnExecuteTurn.textContent = "⚙️ Executing 3 Action Cards...";
     this.arenaRenderer.clearPlanningPreview();
 
+    let totalL = 0;
+    let totalR = 0;
+    for (const code of this.selectedCards) {
+      const c = this.actionCardsMap.get(code) || { left: 0, right: 0 };
+      totalL += (c.left || 0);
+      totalR += (c.right || 0);
+    }
+
     try {
-      const data = await PlaytestApi.submitTurn(this.turnLeft, this.turnRight);
+      const data = await PlaytestApi.submitTurn({
+        cards: this.selectedCards,
+        left: totalL,
+        right: totalR,
+      });
       this.currentMatch = data.match;
 
       const allDamageSteps = this.currentMatch.damage_steps || [];
@@ -370,7 +425,7 @@ class PlaytestApp {
     } catch (err) {
       alert("Turn failed: " + err.message);
       this.btnExecuteTurn.disabled = false;
-      this.btnExecuteTurn.textContent = "🚀 Lock in Drive & Execute Turn";
+      this.btnExecuteTurn.textContent = "🚀 Lock in 3 Cards & Execute Turn";
     }
   }
 
@@ -467,72 +522,122 @@ class PlaytestApp {
     // Opponent header banner (rolling is executed after player choices and kept strictly to the combat log)
     this.hudAutoBanner.innerHTML = `<span>Opponent: <strong>${aBot.name}</strong>${aSpinBadge}</span>`;
 
-    // Drive Sliders Bounds
-    const maxL = pBot.left_drive_max;
-    const maxR = pBot.right_drive_max;
-    this.leftSlider.min = -maxL;
-    this.leftSlider.max = maxL;
-    this.rightSlider.min = -maxR;
-    this.rightSlider.max = maxR;
-
-    this.turnLeft = Math.max(-maxL, Math.min(maxL, this.turnLeft));
-    this.turnRight = Math.max(-maxR, Math.min(maxR, this.turnRight));
-    this.leftSlider.value = this.turnLeft;
-    this.rightSlider.value = this.turnRight;
-    this.leftDriveVal.textContent = this.turnLeft > 0 ? `+${this.turnLeft}` : this.turnLeft;
-    this.rightDriveVal.textContent = this.turnRight > 0 ? `+${this.turnRight}` : this.turnRight;
-
     // Render Views
     this.arenaRenderer.render(m);
     RobotViewRenderer.renderRobotState(this.playerRobotContainer, pBot, false);
     RobotViewRenderer.renderRobotState(this.automatonRobotContainer, aBot, true, m.automaton_roll, m.automaton_action, pBot);
     CombatLogRenderer.renderLog(this.logContainer, m.log);
 
-    if (m.phase !== "game_over") {
-      this._updatePlanningPreview();
-    } else {
-      this.arenaRenderer.clearPlanningPreview();
-      if (this.planningTemplateBadge) {
-        this.planningTemplateBadge.textContent = "🏁 Match Concluded";
+    // Update Turn Planning Dock (drive meters, slots, card drawer, preview)
+    this._updateTurnPlanningControls();
+  }
+
+  _updateTurnPlanningControls() {
+    const pBot = this.currentMatch?.player_robot;
+    const maxL = Math.max(1, pBot?.left_drive_max ?? 1);
+    const maxR = Math.max(1, pBot?.right_drive_max ?? 1);
+
+    // Calculate spent drive budget
+    let totalL = 0;
+    let totalR = 0;
+    for (const code of this.selectedCards) {
+      const c = this.actionCardsMap.get(code) || { left: 0, right: 0 };
+      totalL += (c.left || 0);
+      totalR += (c.right || 0);
+    }
+
+    if (this.budgetLeftSpent) this.budgetLeftSpent.textContent = String(totalL);
+    if (this.budgetLeftMax) this.budgetLeftMax.textContent = String(maxL);
+    if (this.budgetRightSpent) this.budgetRightSpent.textContent = String(totalR);
+    if (this.budgetRightMax) this.budgetRightMax.textContent = String(maxR);
+
+    const pctL = Math.min(100, Math.round((totalL / maxL) * 100));
+    const pctR = Math.min(100, Math.round((totalR / maxR) * 100));
+
+    if (this.budgetBarLeft) {
+      this.budgetBarLeft.style.width = `${pctL}%`;
+      this.budgetBarLeft.classList.toggle("budget-over", totalL > maxL);
+    }
+    if (this.budgetBarRight) {
+      this.budgetBarRight.style.width = `${pctR}%`;
+      this.budgetBarRight.classList.toggle("budget-over", totalR > maxR);
+    }
+
+    // Update 3 Slot Displays
+    this.slotCards.forEach((slotEl, idx) => {
+      const code = this.selectedCards[idx] || "Wait";
+      const card = this.actionCardsMap.get(code) || {
+        code, name: code, left: 0, right: 0, image: "Action_Wait.png"
+      };
+
+      slotEl.classList.toggle("active", idx === this.activeSlotIndex);
+
+      const img = slotEl.querySelector(".slot-card-img");
+      if (img) {
+        img.src = `/CardImages/${card.image}`;
+        img.style.display = "block";
+        img.onerror = () => { img.style.display = "none"; };
+      }
+
+      const codeEl = slotEl.querySelector(".slot-card-code");
+      if (codeEl) codeEl.textContent = card.code;
+
+      const nameEl = slotEl.querySelector(".slot-card-name");
+      if (nameEl) nameEl.textContent = card.name;
+
+      const costEl = slotEl.querySelector(".slot-card-cost");
+      if (costEl) costEl.textContent = `L: ${card.left} • R: ${card.right}`;
+    });
+
+    // Update disabled state for cards in drawer
+    const currentSlotCode = this.selectedCards[this.activeSlotIndex] || "Wait";
+    const currentCard = this.actionCardsMap.get(currentSlotCode) || { left: 0, right: 0 };
+    const baseL = totalL - (currentCard.left || 0);
+    const baseR = totalR - (currentCard.right || 0);
+
+    if (this.actionCardsGrid) {
+      const items = this.actionCardsGrid.querySelectorAll(".action-card-item");
+      items.forEach(item => {
+        const cCode = item.dataset.code;
+        const cData = this.actionCardsMap.get(cCode);
+        if (cData) {
+          const canAfford = (baseL + cData.left <= maxL) && (baseR + cData.right <= maxR);
+          item.classList.toggle("disabled", !canAfford);
+        }
+      });
+    }
+
+    // Update Execute Button
+    if (this.btnExecuteTurn) {
+      const isOverBudget = totalL > maxL || totalR > maxR;
+      if (this.currentMatch && this.currentMatch.phase === "game_over") {
+        this.btnExecuteTurn.disabled = false;
+        this.btnExecuteTurn.textContent = "🔄 Match Complete — Tap for New Match";
+      } else {
+        this.btnExecuteTurn.disabled = isOverBudget;
+        if (isOverBudget) {
+          this.btnExecuteTurn.textContent = `⚠️ Over Drive Budget (L: ${totalL}/${maxL}, R: ${totalR}/${maxR})`;
+        } else {
+          this.btnExecuteTurn.textContent = "🚀 Lock in 3 Cards & Execute Turn";
+        }
       }
     }
+
+    // Update Planning Preview on Arena
+    this._updatePlanningPreview();
   }
 
   async _updatePlanningPreview() {
-    const left = this.turnLeft;
-    const right = this.turnRight;
-    const key = `${left},${right}`;
-    let templateInfo = this._templateCache.get(key);
-    if (!templateInfo) {
-      try {
-        const data = await PlaytestApi.getMovementTemplate(left, right);
-        templateInfo = data.template || data;
-        this._templateCache.set(key, templateInfo);
-      } catch (err) {
-        console.warn("Could not fetch template preview:", err);
-        return;
-      }
-    }
-
-    if (this.turnLeft !== left || this.turnRight !== right) {
-      return;
-    }
-
-    if (this.planningTemplateBadge) {
-      const flipTag = templateInfo.flipped ? " [FLIP]" : "";
-      const rearTag = templateInfo.at_rear ? " [REAR]" : "";
-      const lineLbl = templateInfo.target_line_label ? ` • ${templateInfo.target_line_label}` : "";
-      this.planningTemplateBadge.textContent = `📐 ${templateInfo.name}${flipTag}${rearTag}${lineLbl}`;
-    }
-
     if (this.currentMatch && this.currentMatch.player_robot && this.currentMatch.player_robot.pose) {
       if (this.currentMatch.phase !== "game_over" && !this.arenaRenderer.animating) {
-        this.arenaRenderer.renderPlanningPreview(
+        await this.arenaRenderer.renderActionPlanPreview(
           this.currentMatch.player_robot.pose,
-          { left, right },
-          templateInfo
+          this.selectedCards,
+          this.currentMatch.player_robot.chassis_template || "Square"
         );
       }
+    } else {
+      this.arenaRenderer.clearPlanningPreview();
     }
   }
 }

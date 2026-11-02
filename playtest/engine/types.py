@@ -38,6 +38,9 @@ class TrajectoryPoint:
     theta: float
     t: float  # 0.0 to 1.0
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {"x": self.x, "y": self.y, "theta": self.theta, "t": self.t}
+
 
 @dataclass
 class ComponentHealth:
@@ -106,11 +109,12 @@ class ComponentHealth:
 
 @dataclass
 class MoveChoice:
-    left: int
-    right: int
+    left: int = 0
+    right: int = 0
+    cards: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"left": self.left, "right": self.right}
+        return {"left": self.left, "right": self.right, "cards": list(self.cards)}
 
 
 @dataclass
@@ -277,6 +281,9 @@ class MatchState:
     log: List[CombatLogEntry] = field(default_factory=list)
     winner: Optional[str] = None  # "player", "automaton", "draw", None
     win_reason: Optional[str] = None
+    player_action_cards: List[str] = field(default_factory=list)
+    automaton_action_cards: List[str] = field(default_factory=list)
+    action_step_results: List[Dict[str, Any]] = field(default_factory=list)
     round_history: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -307,6 +314,9 @@ class MatchState:
             "log": [entry.to_dict() for entry in self.log],
             "winner": self.winner,
             "win_reason": self.win_reason,
+            "player_action_cards": list(self.player_action_cards),
+            "automaton_action_cards": list(self.automaton_action_cards),
+            "action_step_results": self.action_step_results,
             "round_history": self.round_history,
         }
 

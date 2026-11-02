@@ -19,7 +19,12 @@ from builder.server.data import (
 
 from generate_movement_templates import build_all_movement_templates, map_permutation_to_template
 
-from .automata import compute_automaton_drive, get_automaton_action, roll_d6
+from .automata import (
+    compute_automaton_action_plan,
+    compute_automaton_drive,
+    get_automaton_action,
+    roll_d6,
+)
 from .collision import detect_collision
 from .combat import (
     parse_weapon_spin_and_damage,
@@ -35,7 +40,12 @@ from .movement import (
     MINIATURE_RADIUS,
     WHEELBASE_MM,
     compute_movement_steps,
+    generate_action_plan_trajectory,
     generate_trajectory,
+    get_action_card,
+    normalize_action_code,
+    synthesize_cards_from_drive,
+    validate_action_plan,
 )
 from .types import (
     CollisionEvent,
@@ -46,6 +56,7 @@ from .types import (
     MoveChoice,
     Pose,
     RobotState,
+    TrajectoryPoint,
 )
 
 _CANONICAL_TEMPLATE_PAIRS = {t.template_id: t.pairs for t in build_all_movement_templates()}
@@ -375,19 +386,51 @@ def execute_turn(
     p_start = Pose(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta)
     a_start = Pose(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta)
 
-    # Clamp player choice to active drive capability
-    clamped_l = max(-p_bot.left_drive_max, min(p_bot.left_drive_max, player_choice.left))
-    clamped_r = max(-p_bot.right_drive_max, min(p_bot.right_drive_max, player_choice.right))
-    p_choice = MoveChoice(left=clamped_l, right=clamped_r)
-    match.player_choice = p_choice
+    # 1. Action Cards selection & planning
+    # Determine Player's 3 Action Cards
+    if player_choice.cards and len(player_choice.cards) > 0:
+        raw_cards = [normalize_action_code(c) for c in player_choice.cards]
+        while len(raw_cards) < 3:
+            raw_cards.append("Wait")
+        raw_cards = raw_cards[:3]
+
+        eff_l = max(1, p_bot.left_drive_max)
+        eff_r = max(1, p_bot.right_drive_max)
+        is_valid, _, _, _ = validate_action_plan(raw_cards, eff_l, eff_r)
+        if is_valid:
+            p_cards = raw_cards
+        else:
+            cur_l, cur_r = 0, 0
+            p_cards = []
+            for c in raw_cards:
+                meta = get_action_card(c) or {"left": 0, "right": 0}
+                if cur_l + meta.get("left", 0) <= eff_l and cur_r + meta.get("right", 0) <= eff_r:
+                    p_cards.append(c)
+                    cur_l += meta.get("left", 0)
+                    cur_r += meta.get("right", 0)
+                else:
+                    p_cards.append("Wait")
+    else:
+        # Backward compatibility: synthesize from left, right drive values
+        p_cards = synthesize_cards_from_drive(player_choice.left, player_choice.right)
 
     # 1. Automata Planning
     auto_roll = roll_d6(fixed_automaton_roll)
     auto_action = get_automaton_action(match.automaton_type, a_bot, auto_roll, opponent=p_bot)
-    a_choice = compute_automaton_drive(a_bot, p_bot, auto_action)
+    a_choice = compute_automaton_action_plan(a_bot, p_bot, auto_action)
+    a_cards = a_choice.cards
+
+    # Build normalized MoveChoice objects
+    p_left = sum((get_action_card(c) or {}).get("left", 0) for c in p_cards)
+    p_right = sum((get_action_card(c) or {}).get("right", 0) for c in p_cards)
+    p_choice = MoveChoice(left=p_left, right=p_right, cards=p_cards)
+
+    match.player_choice = p_choice
+    match.player_action_cards = p_cards
     match.automaton_roll = auto_roll
     match.automaton_action = auto_action
     match.automaton_choice = a_choice
+    match.automaton_action_cards = a_cards
 
     # Refresh active components taking into account movement and power choices
     p_bot.current_choice = p_choice
@@ -399,8 +442,8 @@ def execute_turn(
         round=r_num,
         phase="planning",
         message=(
-            f"Planning: {p_bot.name} chooses ({p_choice.left}, {p_choice.right}). "
-            f"{a_bot.name} rolls {auto_roll} ({auto_action}) -> chooses ({a_choice.left}, {a_choice.right})."
+            f"Planning: {p_bot.name} chooses [{', '.join(p_cards)}] (Drive L:{p_choice.left}, R:{p_choice.right}). "
+            f"{a_bot.name} rolls {auto_roll} ({auto_action}) -> chooses [{', '.join(a_cards)}] (Drive L:{a_choice.left}, R:{a_choice.right})."
         ),
     ))
 
@@ -415,7 +458,7 @@ def execute_turn(
     # Crushing Claw Grab Effect:
     was_grabbed = (p_bot.grabbed_by == a_bot.id or a_bot.grabbed_by == p_bot.id)
     if p_bot.grabbed_by == a_bot.id:
-        p_choice = MoveChoice(0, 0)
+        p_choice = MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"])
         a_traj = generate_trajectory(a_bot.pose, a_choice)
         dx = p_bot.pose.x - a_start.x
         dy = p_bot.pose.y - a_start.y
@@ -428,8 +471,14 @@ def execute_turn(
             round=r_num, phase="movement",
             message=f"🗜️ {p_bot.name} is grabbed by {a_bot.name}'s Crushing Claw: moves with {a_bot.name} and contributes 0 motion!",
         ))
+        p_bot.pose = Pose(p_traj[-1].x, p_traj[-1].y, p_traj[-1].theta)
+        a_bot.pose = Pose(a_traj[-1].x, a_traj[-1].y, a_traj[-1].theta)
+        match.player_trajectory = p_traj
+        match.automaton_trajectory = a_traj
+        match.last_collision = None
+        match.action_step_results = []
     elif a_bot.grabbed_by == p_bot.id:
-        a_choice = MoveChoice(0, 0)
+        a_choice = MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"])
         p_traj = generate_trajectory(p_bot.pose, p_choice)
         dx = a_bot.pose.x - p_start.x
         dy = a_bot.pose.y - p_start.y
@@ -442,59 +491,124 @@ def execute_turn(
             round=r_num, phase="movement",
             message=f"🗜️ {a_bot.name} is grabbed by {p_bot.name}'s Crushing Claw: moves with {p_bot.name} and contributes 0 motion!",
         ))
+        p_bot.pose = Pose(p_traj[-1].x, p_traj[-1].y, p_traj[-1].theta)
+        a_bot.pose = Pose(a_traj[-1].x, a_traj[-1].y, a_traj[-1].theta)
+        match.player_trajectory = p_traj
+        match.automaton_trajectory = a_traj
+        match.last_collision = None
+        match.action_step_results = []
     else:
-        p_traj = generate_trajectory(p_bot.pose, p_choice)
-        a_traj = generate_trajectory(a_bot.pose, a_choice)
+        # Step-by-step simultaneous card resolution (Action 1 -> Action 2 -> Action 3)
+        action_step_results: List[Dict[str, Any]] = []
+        full_p_traj: List[TrajectoryPoint] = [TrajectoryPoint(p_start.x, p_start.y, p_start.theta, t=0.0)]
+        full_a_traj: List[TrajectoryPoint] = [TrajectoryPoint(a_start.x, a_start.y, a_start.theta, t=0.0)]
+        collision_halted = False
+        collision_event: Optional[CollisionEvent] = None
 
-    match.player_trajectory = p_traj
-    match.automaton_trajectory = a_traj
+        for act_idx in range(3):
+            p_card = p_cards[act_idx]
+            a_card = a_cards[act_idx]
 
-    # 3. Collision Phase
-    col = None if was_grabbed else detect_collision(p_bot, p_traj, a_bot, a_traj)
-    match.last_collision = col
+            if collision_halted:
+                action_step_results.append({
+                    "action_index": act_idx,
+                    "player_card": p_card,
+                    "automaton_card": a_card,
+                    "cancelled": True,
+                    "reason": "Halted due to previous collision",
+                })
+                continue
 
-    if col:
-        # Move both to contact point
-        col_idx = col.step_index if col.step_index > 0 else max(1, int(col.time_t * len(p_traj)))
-        if col_idx < len(p_traj):
-            p_bot.pose = Pose(p_traj[col_idx].x, p_traj[col_idx].y, p_traj[col_idx].theta)
-        if col_idx < len(a_traj):
-            a_bot.pose = Pose(a_traj[col_idx].x, a_traj[col_idx].y, a_traj[col_idx].theta)
+            # Generate trajectory slice for this action card
+            p_sub_traj, _ = generate_action_plan_trajectory(
+                p_bot.pose, [p_card], num_substeps=10, clamp_to_walls=True, chassis_template=p_bot.chassis_template
+            )
+            a_sub_traj, _ = generate_action_plan_trajectory(
+                a_bot.pose, [a_card], num_substeps=10, clamp_to_walls=True, chassis_template=a_bot.chassis_template
+            )
 
-        # Resolve combat and record structured damage steps
-        c_logs = resolve_collision_combat(col, p_bot, a_bot, r_num, steps=match.damage_steps, r1_choice=p_choice, r2_choice=a_choice)
-        match.log.extend(c_logs)
+            # Check collision between the two sub-trajectories
+            col = detect_collision(p_bot, p_sub_traj, a_bot, a_sub_traj)
 
+            t_start = act_idx / 3.0
+            t_span = 1.0 / 3.0
 
-    else:
-        match.log.append(CombatLogEntry(
-            round=r_num, phase="movement", message="Both robots advanced along their template tracks without contact."
-        ))
+            if col:
+                collision_halted = True
+                collision_event = col
+                col_idx = col.step_index if col.step_index > 0 else max(1, int(col.time_t * len(p_sub_traj)))
+                p_col_idx = min(col_idx, len(p_sub_traj) - 1)
+                a_col_idx = min(col_idx, len(a_sub_traj) - 1)
 
-        for bot, choice, traj in [
-            (p_bot, p_choice, p_traj),
-            (a_bot, a_choice, a_traj),
-        ]:
-            # Calculate excess displacement beyond arena walls
-            unclamped = generate_trajectory(bot.pose, choice, clamp_to_walls=False)
-            raw_end = unclamped[-1]
-            clamped_end = traj[-1]
-            excess_dist = math.hypot(raw_end.x - clamped_end.x, raw_end.y - clamped_end.y)
-            drive_throw_str = int(round(excess_dist / DRIVE_UNIT_MM)) if excess_dist > 2.0 else 0
+                for k in range(1, p_col_idx + 1):
+                    pt = p_sub_traj[k]
+                    full_p_traj.append(TrajectoryPoint(pt.x, pt.y, pt.theta, t=t_start + pt.t * t_span))
+                for k in range(1, a_col_idx + 1):
+                    pt = a_sub_traj[k]
+                    full_a_traj.append(TrajectoryPoint(pt.x, pt.y, pt.theta, t=t_start + pt.t * t_span))
 
-            bot.pose = Pose(clamped_end.x, clamped_end.y, clamped_end.theta)
+                p_bot.pose = Pose(p_sub_traj[p_col_idx].x, p_sub_traj[p_col_idx].y, p_sub_traj[p_col_idx].theta)
+                a_bot.pose = Pose(a_sub_traj[a_col_idx].x, a_sub_traj[a_col_idx].y, a_sub_traj[a_col_idx].theta)
 
-            if excess_dist > 2.0:
                 match.log.append(CombatLogEntry(
-                    round=r_num, phase="movement",
-                    message=f"🧱 {bot.name} drove into the arena wall and stopped at the wall.",
+                    round=r_num,
+                    phase="collision",
+                    message=f"💥 COLLISION during Action {act_idx + 1} ({p_card} vs {a_card})! Movement halts at point of contact.",
                 ))
 
-            # Weapon wall contact check: loses all spin counters and takes feedback (weapon_strength // 2, without throw)
-            w_logs = resolve_weapon_wall_contact(
-                bot, throw_strength=0, round_num=r_num, phase="movement", steps=match.damage_steps
-            )
-            match.log.extend(w_logs)
+                # Resolve combat
+                c_logs = resolve_collision_combat(col, p_bot, a_bot, r_num, steps=match.damage_steps, r1_choice=p_choice, r2_choice=a_choice)
+                match.log.extend(c_logs)
+
+                action_step_results.append({
+                    "action_index": act_idx,
+                    "player_card": p_card,
+                    "automaton_card": a_card,
+                    "collision": True,
+                    "halted": True,
+                })
+            else:
+                for k in range(1, len(p_sub_traj)):
+                    pt = p_sub_traj[k]
+                    full_p_traj.append(TrajectoryPoint(pt.x, pt.y, pt.theta, t=t_start + pt.t * t_span))
+                for k in range(1, len(a_sub_traj)):
+                    pt = a_sub_traj[k]
+                    full_a_traj.append(TrajectoryPoint(pt.x, pt.y, pt.theta, t=t_start + pt.t * t_span))
+
+                p_bot.pose = Pose(p_sub_traj[-1].x, p_sub_traj[-1].y, p_sub_traj[-1].theta)
+                a_bot.pose = Pose(a_sub_traj[-1].x, a_sub_traj[-1].y, a_sub_traj[-1].theta)
+
+                # Check arena wall contact for active weapons during this step
+                w_logs_p = resolve_weapon_wall_contact(p_bot, throw_strength=0, round_num=r_num, phase="movement", steps=match.damage_steps)
+                w_logs_a = resolve_weapon_wall_contact(a_bot, throw_strength=0, round_num=r_num, phase="movement", steps=match.damage_steps)
+                match.log.extend(w_logs_p)
+                match.log.extend(w_logs_a)
+
+                action_step_results.append({
+                    "action_index": act_idx,
+                    "player_card": p_card,
+                    "automaton_card": a_card,
+                    "collision": False,
+                    "halted": False,
+                })
+
+        # Pad trajectories to t=1.0 if ended early
+        if full_p_traj[-1].t < 1.0:
+            full_p_traj.append(TrajectoryPoint(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta, t=1.0))
+        if full_a_traj[-1].t < 1.0:
+            full_a_traj.append(TrajectoryPoint(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta, t=1.0))
+
+        match.player_trajectory = full_p_traj
+        match.automaton_trajectory = full_a_traj
+        match.last_collision = collision_event
+        match.action_step_results = action_step_results
+
+        if not collision_event:
+            match.log.append(CombatLogEntry(
+                round=r_num, phase="movement", message="Both robots completed all 3 Action Cards without contact."
+            ))
+
+    col = match.last_collision
 
     # 4. Cleanup Phase
     # Self-right check: if round ended without contact and robot is inverted, invert it
@@ -632,9 +746,12 @@ def execute_turn(
         "player_start_pose": {"x": p_start.x, "y": p_start.y, "theta": p_start.theta},
         "automaton_start_pose": {"x": a_start.x, "y": a_start.y, "theta": a_start.theta},
         "player_choice": p_choice.to_dict(),
+        "player_action_cards": list(match.player_action_cards),
         "automaton_roll": auto_roll,
         "automaton_action": auto_action,
         "automaton_choice": a_choice.to_dict(),
+        "automaton_action_cards": list(match.automaton_action_cards),
+        "action_step_results": list(match.action_step_results),
         "player_template": match.player_template,
         "automaton_template": match.automaton_template,
         "collision": col.to_dict() if col else None,

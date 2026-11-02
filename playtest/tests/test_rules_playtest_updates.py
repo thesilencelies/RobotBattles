@@ -246,7 +246,7 @@ def test_rule2_weapon_attack_intercepted_by_uhmw():
 
 
 # =========================================================================
-# Rule 3: Wall push throw perpendicular to wall with pusher drive strength
+# Rule 3: Wall push halts at wall without throw
 # =========================================================================
 
 def test_rule3_largest_absolute_drive_strength():
@@ -267,12 +267,12 @@ def test_rule3_largest_absolute_drive_strength():
 
 
 @pytest.mark.parametrize("wall,def_pos,expected_normal", [
-    ("left", (120.0, 400.0), (1.0, 0.0)),     # Left wall at x=100 -> thrown +x (East)
-    ("right", (680.0, 400.0), (-1.0, 0.0)),   # Right wall at x=700 -> thrown -x (West)
-    ("top", (400.0, 120.0), (0.0, 1.0)),      # Top wall at y=100 -> thrown +y (South)
-    ("bottom", (400.0, 680.0), (0.0, -1.0)),  # Bottom wall at y=700 -> thrown -y (North)
+    ("left", (120.0, 400.0), (1.0, 0.0)),     # Left wall at x=100
+    ("right", (680.0, 400.0), (-1.0, 0.0)),   # Right wall at x=700
+    ("top", (400.0, 120.0), (0.0, 1.0)),      # Top wall at y=100
+    ("bottom", (400.0, 680.0), (0.0, -1.0)),  # Bottom wall at y=700
 ])
-def test_rule3_wall_push_and_perpendicular_throw(wall, def_pos, expected_normal):
+def test_rule3_wall_push_halts_at_wall_without_throw(wall, def_pos, expected_normal):
     pusher_choice = MoveChoice(left=3, right=-5)  # largest abs strength = 5
     pushed_choice = MoveChoice(left=1, right=1)   # defender drive = 1
 
@@ -295,26 +295,17 @@ def test_rule3_wall_push_and_perpendicular_throw(wall, def_pos, expected_normal)
         contact_type="INERT",
         description="Pushed into wall",
         push_vector=(expected_normal[0] * -10.0, expected_normal[1] * -10.0),
-        r1_remaining_dist=50.0,
+        step_index=5,
+        r1_remaining_dist=0.0,
         r2_remaining_dist=0.0
     )
 
-    init_x, init_y = defender.pose.x, defender.pose.y
     logs = resolve_inert_contact(col, pusher, defender, round_num=1, r1_choice=pusher_choice, r2_choice=pushed_choice)
 
-    # 1. Throw displacement along normal vector
-    dx = defender.pose.x - init_x
-    dy = defender.pose.y - init_y
+    # 1. Wall collision halts at perimeter (no throw displacement away from wall)
+    wall_logs = [l for l in logs if "wall" in l.message.lower()]
+    assert len(wall_logs) > 0
+    assert any("stopped at the wall (no throw)" in l.message.lower() for l in wall_logs)
 
-    if expected_normal[0] != 0:
-        assert math.copysign(1.0, dx) == expected_normal[0]
-        assert abs(dx) > 0.0
-    if expected_normal[1] != 0:
-        assert math.copysign(1.0, dy) == expected_normal[1]
-        assert abs(dy) > 0.0
-
-    # 2. Throw damage equals pusher's drive strength (5)
-    wall_throw_logs = [l for l in logs if "thrown" in l.message.lower() or "wall" in l.message.lower()]
-    assert len(wall_throw_logs) > 0
-    assert any("throw damage 5" in l.message.lower() or "strength 5" in l.message.lower() for l in wall_throw_logs)
-    assert defender.components["body"].current_durability <= 6 - 5
+    # 2. No throw damage dealt from wall contact
+    assert defender.components["body"].current_durability == 6

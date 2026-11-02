@@ -22,7 +22,8 @@ from builder.server.data import (
     write_saved_robot,
 )
 from playtest.engine.match import create_match, execute_turn, get_template_metadata
-from playtest.engine.types import MatchState, MoveChoice
+from playtest.engine.movement import generate_action_plan_trajectory, list_all_action_cards
+from playtest.engine.types import MatchState, MoveChoice, Pose
 
 PLAYTEST_DIR = Path(__file__).resolve().parent.parent
 PLAYTEST_STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -101,6 +102,8 @@ class Router:
         self.routes_post["/api/battle/turn"] = self._api_battle_turn
         self.routes_post["/api/battle/reset"] = self._api_battle_reset
         self.routes_get["/api/battle/export"] = self._api_battle_export
+        self.routes_get["/api/action_cards"] = self._api_action_cards
+        self.routes_get["/api/action_plan_preview"] = self._api_action_plan_preview
         self.routes_get["/api/movement/template"] = self._api_movement_template
 
     def _api_cards(self, query: Mapping[str, str]) -> Response:
@@ -185,7 +188,10 @@ class Router:
             raise HttpError(400, "No active match. Start a new match first.")
 
         try:
-            data = json.loads(body.decode("utf-8"))
+            data = json.loads(body.decode("utf-8")) if body else {}
+            cards = data.get("cards")
+            if cards is not None and not isinstance(cards, list):
+                cards = None
             left = int(data.get("left", 0))
             right = int(data.get("right", 0))
             fixed_roll = int(data["fixed_roll"]) if "fixed_roll" in data else None
@@ -193,15 +199,19 @@ class Router:
             if chosen_components is not None and not isinstance(chosen_components, list):
                 chosen_components = None
         except Exception:
-            raise HttpError(400, "Invalid turn parameters (left, right required as integers)")
+            raise HttpError(400, "Invalid turn parameters (left, right, cards)")
 
         execute_turn(
             self.current_match,
-            MoveChoice(left=left, right=right),
+            MoveChoice(left=left, right=right, cards=cards or []),
             fixed_automaton_roll=fixed_roll,
             player_supplied_components=chosen_components,
         )
         return Response.json({"match": self.current_match.to_dict()})
+
+    def _api_action_cards(self, query: Mapping[str, str]) -> Response:
+        cards = list_all_action_cards()
+        return Response.json({"cards": cards})
 
     def _api_battle_reset(self, query: Mapping[str, str], body: bytes) -> Response:
         self.current_match = None
@@ -235,6 +245,30 @@ class Router:
             raise HttpError(400, "Query params 'left' and 'right' must be integers")
         meta = get_template_metadata(left, right)
         return Response.json({"template": meta, **meta})
+
+    def _api_action_plan_preview(self, query: Mapping[str, str]) -> Response:
+        try:
+            cards_raw = query.get("cards", "")
+            if cards_raw.startswith("["):
+                cards = json.loads(cards_raw)
+            else:
+                cards = [c.strip() for c in cards_raw.split(",") if c.strip()]
+            x = float(query.get("x", 400.0))
+            y = float(query.get("y", 630.0))
+            theta = float(query.get("theta", 0.0))
+            chassis = query.get("chassis", "Square")
+        except Exception as exc:
+            raise HttpError(400, f"Invalid query params: {exc}")
+
+        points, details = generate_action_plan_trajectory(
+            Pose(x, y, theta),
+            cards,
+            chassis_template=chassis,
+        )
+        return Response.json({
+            "trajectory": [p.to_dict() for p in points],
+            "actions": details,
+        })
 
     def dispatch(
         self, method: str, path: str, query: Mapping[str, str], body: bytes
