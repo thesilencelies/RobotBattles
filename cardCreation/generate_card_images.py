@@ -137,6 +137,10 @@ def main():
         "--density", type=int, default=300,
         help="Render DPI for ImageMagick convert (default: 300)"
     )
+    parser.add_argument(
+        "--sheet-name", type=str, default="single_cards_sheet",
+        help="Base name for temporary single card sheet TeX/PDF"
+    )
     args = parser.parse_args()
 
     csv_path = args.csv
@@ -148,7 +152,7 @@ def main():
         print(f"{csv_path} not found. Running generateCards.py...")
         run([sys.executable, str(SCRIPT_DIR / "generateCards.py")], cwd=SCRIPT_DIR)
 
-    generate_card_images(csv_path, args.output_dir, args.density)
+    generate_card_images(csv_path, args.output_dir, args.density, sheet_name=args.sheet_name)
 
 
 if __name__ == "__main__":

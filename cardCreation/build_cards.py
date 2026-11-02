@@ -103,12 +103,20 @@ def main():
             cards_cmd.append("--resource-math")
 
         run(cards_cmd, cwd=SCRIPT_DIR, label="Step 2: Generating card TikZ .tex files")
+        run([sys.executable, str(SCRIPT_DIR / "generate_action_cards.py")],
+            cwd=SCRIPT_DIR, label="Step 2b: Generating action card TikZ .tex files")
 
     # Step 3: Card Images
     if run_all or args.images:
         run([sys.executable, str(SCRIPT_DIR / "generate_card_images.py"),
              "--all", f"--density={args.density}"],
             cwd=SCRIPT_DIR, label="Step 3: Rendering individual card PNG images")
+        action_csv = BUILD_DIR / "action_cards.csv"
+        if action_csv.is_file():
+            run([sys.executable, str(SCRIPT_DIR / "generate_card_images.py"),
+                 f"--csv={action_csv}", f"--density={args.density}",
+                 "--sheet-name=action_cards_images_sheet"],
+                cwd=SCRIPT_DIR, label="Step 3b: Rendering action card PNG images")
 
     # Step 4: Printable A4 Sheet
     if run_all or args.print:

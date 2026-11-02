@@ -1,0 +1,19 @@
+Code,Motion,LeftCost,RightCost,Type
+Wait,stay still,0,0,wait
+1F,move forwards 1,1,1,forward_1
+2 F,move forwards 2,2,2,forward_2
+3 F,move forward 3,3,3,forward_3
+1 B,move backwards 1,1,1,backward_1
+2 B,move backwards 2,2,2,backward_2
+3 B,move backwards 3,3,3,backward_3
+45 R,right turn 45,1,0,turn_r_45
+90 R,right turn 90,2,0,turn_r_90
+-45 L,reversing left turn 45,1,0,rev_turn_l_45
+-90 L,reversing left turn 90,2,0,rev_turn_l_90
+45 L,left turn 45,0,1,turn_l_45
+90 L,left turn 90,0,2,turn_l_90
+-45 R,reversing right turn 45,0,1,rev_turn_r_45
+-90 R,reversing right turn 90,0,2,rev_turn_r_90
+90 PR,pivot 90 right,1,1,pivot_r_90
+90 PL,pivot 90 left,1,1,pivot_l_90
+180 P,180 pivot,2,2,pivot_180

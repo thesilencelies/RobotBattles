@@ -4,12 +4,13 @@ generate_print_and_play.py
 
 Master Print and Play (PnP) generator for Robot Battles.
 Produces two publication-ready PDF documents:
-1. build/robot_battles_pnp_a4.pdf (10 pages A4 Landscape, 1:1 True Scale):
-   - Pages 1-6: All 44 Component and Weapon Cards (56x87mm US card size + 2.5mm bleed, 4x2 grid).
-   - Page 7: Core Movement Templates (Straight, Spin Disc, Pivot Fan, 50mm scale bar).
-   - Page 8: Forward Curves 1 (Medium Curve, Sharp Curve, 50mm scale bar).
-   - Page 9: Forward Curves 2 & Weapons (Gentle Curve, Circle, Large Circle, Line, Bar, Prongs, 50mm scale bar).
-   - Page 10: Arena Miniatures & Tokens (P1 & P2 Triangle, Square, Wide robots; Spin & Damage tokens, 50mm scale bar).
+1. build/robot_battles_pnp_a4.pdf (15 pages A4 Landscape, 1:1 True Scale):
+   - Pages 1-6: All Component and Weapon Cards (56x87mm US card size + 2.5mm bleed, 4x2 grid).
+   - Pages 7-11: Movement Action Cards (36 cards: 2 full player decks of 18 cards, 4x2 grid).
+   - Page 12: Core Movement Templates (Straight, Spin Disc, Pivot Fan, 50mm scale bar).
+   - Page 13: Forward Curves 1 (Medium Curve, Sharp Curve, 50mm scale bar).
+   - Page 14: Forward Curves 2 & Weapons (Gentle Curve, Circle, Large Circle, Line, Bar, Prongs, 50mm scale bar).
+   - Page 15: Arena Miniatures & Tokens (P1 & P2 Triangle, Square, Wide robots; Spin & Damage tokens, 50mm scale bar).
 
 2. build/robot_battles_pnp_a3.pdf (8 pages A3 Landscape):
    - Pages 1-3: Robot Chassis Mats (Square/Nautiloid, Triangle/Viper, Wide/SSP 2.0).
@@ -484,13 +485,62 @@ def build_movement_templates_if_missing() -> None:
             sys.exit("Error generating movement templates.")
 
 
+def build_action_cards_sheet(force: bool = False) -> Path:
+    """Builds cardCreation/build/action_cards_pnp_a4.pdf (2 full sets of 18 action cards = 36 cards)."""
+    output_pdf = CARD_BUILD_DIR / "action_cards_pnp_a4.pdf"
+    if output_pdf.is_file() and not force:
+        return output_pdf
+
+    print("Building Action Cards A4 sheets (2 decks: 36 cards total)...")
+    cmd = [
+        sys.executable,
+        str(REPO_ROOT / "cardCreation" / "generate_action_cards.py"),
+    ]
+    res = subprocess.run(cmd, cwd=REPO_ROOT / "cardCreation")
+    if res.returncode != 0:
+        sys.exit(f"Error running generate_action_cards.py (exit code {res.returncode})")
+
+    # Read base action cards list and duplicate for Player 1 & Player 2 (36 cards total)
+    base_csv = CARD_BUILD_DIR / "action_cards.csv"
+    with open(base_csv, "r", encoding="utf-8") as f:
+        cards = [line.strip() for line in f if line.strip()]
+
+    pnp_cards = cards * 2  # 2 full decks
+    pnp_csv = CARD_BUILD_DIR / "action_cards_pnp_list.csv"
+    with open(pnp_csv, "w", encoding="utf-8") as f:
+        for c in pnp_cards:
+            f.write(f"{c}\n")
+
+    tex_file = CARD_BUILD_DIR / "action_cards_pnp_a4.tex"
+    cmd = [
+        sys.executable,
+        str(REPO_ROOT / "cardCreation" / "generate_card_sheet.py"),
+        "--csv", str(pnp_csv),
+        "--output", str(tex_file),
+        "--cols", "4",
+        "--rows", "2",
+        "--a4",
+    ]
+    res = subprocess.run(cmd, cwd=REPO_ROOT / "cardCreation")
+    if res.returncode != 0:
+        sys.exit("Error generating action_cards_pnp_a4.tex")
+
+    cmd = ["pdflatex", "-interaction=nonstopmode", tex_file.name]
+    res = subprocess.run(cmd, cwd=CARD_BUILD_DIR, stdout=subprocess.DEVNULL)
+    if res.returncode != 0 or not output_pdf.is_file():
+        sys.exit("Error compiling action_cards_pnp_a4.tex to PDF")
+
+    return output_pdf
+
+
 def build_a4_pnp_pdf(output_path: Path, force_cards: bool = False) -> Path:
     """Compiles and merges all cards and templates into A4 PnP PDF."""
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     cards_pdf = build_cards_sheet(force=force_cards)
+    action_cards_pdf = build_action_cards_sheet(force=force_cards)
     build_movement_templates_if_missing()
 
-    # Write and compile template pages (Pages 7-10)
+    # Write and compile template pages (Pages 12-15)
     tpl_tex = BUILD_DIR / "pnp_templates_a4.tex"
     with open(tpl_tex, "w", encoding="utf-8") as fh:
         fh.write(TEMPLATES_LATEX_SOURCE)
@@ -507,12 +557,13 @@ def build_a4_pnp_pdf(output_path: Path, force_cards: bool = False) -> Path:
     if res.returncode != 0 or not tpl_pdf.is_file():
         sys.exit("Error compiling pnp_templates_a4.tex to PDF")
 
-    print(f"Merging cards ({cards_pdf.name}) and templates ({tpl_pdf.name}) into {output_path.name}...")
+    print(f"Merging components ({cards_pdf.name}), action cards ({action_cards_pdf.name}), and templates ({tpl_pdf.name}) into {output_path.name}...")
     cmd = [
         "qpdf",
         "--empty",
         "--pages",
         str(cards_pdf),
+        str(action_cards_pdf),
         str(tpl_pdf),
         "--",
         str(output_path),

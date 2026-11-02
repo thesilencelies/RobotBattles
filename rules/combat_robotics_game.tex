@@ -421,20 +421,29 @@ Each round follows a sequence of 3 steps:
   \toprule
   \textbf{Step} & \textbf{Summary} \\
   \midrule
-  \textbf{1. Planning} & Players secretly select drive \inlineIcon{\resourceM} values for each side and choose which components to supply. \\
-  \textbf{2. Movement} & Choices are simultaneously revealed; robots advance simultaneously one step at a time across the arena grid. \\
-  \textbf{3. Collision} & Collisions and contacts (active weapon hits or inert pushes) are resolved. \\
+  \textbf{1. Planning} & Players secretly choose 3 movement Action Cards in an order of their choice and allocate power to components. \\
+  \textbf{2. Movement} & Choices are simultaneously revealed; robots simultaneously resolve their 1st, then 2nd, then 3rd action card across the arena grid. \\
+  \textbf{3. Collision} & Collisions (entering the same square or passing through an ended square) are resolved immediately. \\
   \bottomrule
 \end{tabularx}}
 
 
 \subsection{Planning}
-In the planning step the player chooses how their robot is going to move this round.
-They each secretly choose a number for the left and right side of their robot: the drive \inlineIcon{\resourceM} values.
-These numbers can be any whole number between plus/minus the sum of all active drive \inlineIcon{\resourceM} on that side. (that is, drive \inlineIcon{\resourceM} output by active components on that side of the robot)
+In the planning step, each player chooses how their robot is going to move this round using \textbf{Action Cards}.
 
-The bigger the number the more forwards that side of the robot goes. 
-The bigger the difference the more the robot will turn.
+Each player secretly selects \textbf{3 action cards} from their action card pool and places them facedown in an order of their choosing (Card~1, Card~2, and Card~3).
+
+Each action card displays a movement diagram in the center, a descriptor in the top-left, its \textbf{left drive cost} in the bottom-left, and its \textbf{right drive cost} in the bottom-right.
+The sum drive cost across the 3 selected action cards must be less than or equal to the robot's remaining active drive \inlineIcon{\resourceM} on each respective side:
+\begin{align*}
+  \sum \text{Left Drive Costs of 3 Cards} &\le \text{Active Left Drive } \inlineIcon{\resourceM} \\
+  \sum \text{Right Drive Costs of 3 Cards} &\le \text{Active Right Drive } \inlineIcon{\resourceM}
+\end{align*}
+(Active drive \inlineIcon{\resourceM} is the sum output by supplied, undamaged drive components on that side of the robot.)
+
+\vspace{0.3em}
+\noindent\textbf{Guaranteed Base Drive:}\\
+Robots are always considered to have at least \textbf{1 drive on each side}, regardless of component damage or power failure. Even if all drive motors on a side are damaged or unpowered, a robot retains a base drive of 1 on each side. This ensures that even heavily damaged robots can always attempt basic tactical moves or choose to \texttt{Wait}.
 
 
 \clearpage
@@ -586,66 +595,75 @@ When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throw
   \label{fig:diagram_chassis_45_occupancy}
 \end{figure}
 
-\subsubsection{Simultaneous Step-by-Step Resolution}
-During the Planning phase, players secretly choose integer drive values ($L$ and $R$) for the left and right sides of their robot up to that side's active drive capacity. Choices are revealed simultaneously.
+\subsubsection{Simultaneous Action Card Resolution}
+During the Planning phase, both players secretly choose 3 Action Cards and arrange them facedown in their chosen execution order: Card~1, Card~2, and Card~3. Choices are revealed simultaneously.
 
-Both robots are then moved \textbf{simultaneously one step at a time} until both robots have exhausted all movement steps or they collide (attempt to occupy the same grid space).
-
-\noindent
-At each step, a robot selects its step type according to the following rules:
+Both robots then resolve their action cards \textbf{simultaneously step-by-step}:
 \begin{enumerate}[label=\arabic*., leftmargin=*, noitemsep, topsep=2pt]
-  \item \textbf{Turn Step Condition:} If the absolute value of the remaining drive differs ($|L| \neq |R|$) \textbf{and} (the previous step was not a turn \textbf{or} one drive value is 0), take a \textbf{Turn Step}.
-  \item \textbf{Otherwise:}
-  \begin{itemize}[noitemsep, topsep=1pt]
-    \item If both remaining drives have the \textbf{same sign} (both positive or both negative): take a \textbf{Forwards Step}.
-    \item If the signs of both are \textbf{different} (one positive, one negative): take a \textbf{Pivot Step}.
-  \end{itemize}
+  \item \textbf{Action 1:} Both robots simultaneously resolve their first action card.
+  \item \textbf{Action 2:} Both robots simultaneously resolve their second action card.
+  \item \textbf{Action 3:} Both robots simultaneously resolve their third action card.
 \end{enumerate}
 
-\subsubsection{Step Types \& Mechanics}
-\begin{itemize}[leftmargin=*, topsep=2pt]
-  \item \textbf{Forwards Step:} Move the robot one square in the direction it is facing (orthogonally if facing at a right angle; diagonally if facing at a $45^\circ$ slant).
-  \begin{itemize}[noitemsep, topsep=1pt]
-    \item \textbf{Positive Drive:} Reduce both drive values by 1 towards 0 ($L \leftarrow L - 1$, $R \leftarrow R - 1$).
-    \item \textbf{Negative Drive:} Move one square in reverse, and increase both drive values by 1 towards 0 ($L \leftarrow L + 1$, $R \leftarrow R + 1$).
-  \end{itemize}
-
-  \item \textbf{Turn Step:} Keep the side of the robot with smaller drive magnitude ($|drive|$) stationary, and rotate the robot $45^\circ$ around that end:
-  \begin{itemize}[noitemsep, topsep=1pt]
-    \item \textbf{Clockwise ($45^\circ$):} For positive left ($+L$) or negative right ($-R$).
-    \item \textbf{Anticlockwise ($45^\circ$):} For positive right ($+R$) or negative left ($-L$).
-  \end{itemize}
-  Then increment the side with larger drive magnitude towards 0 (subtract 1 if positive, add 1 if negative).
-
-  \item \textbf{Pivot Step:} Rotate the robot $45^\circ$ about its geometric center:
-  \begin{itemize}[noitemsep, topsep=1pt]
-    \item \textbf{Clockwise ($45^\circ$):} If left drive is positive ($+L$).
-    \item \textbf{Anticlockwise ($45^\circ$):} If right drive is positive ($+R$).
-  \end{itemize}
-  Then increment both sides towards 0 (reduce positive by 1, increase negative by 1).
-\end{itemize}
-
-\subsubsection{Movement Examples \& Step Traces}
-
-\noindent\textbf{1. Straight Advance (\texttt{3/3}):}\\
-$|3| = |3|$ (same magnitude). Both drives positive $\rightarrow$ 3 consecutive \textbf{Forwards Steps}. Each step advances 1 square forward and reduces both drives by 1 (\texttt{3/3} $\rightarrow$ \texttt{2/2} $\rightarrow$ \texttt{1/1} $\rightarrow$ \texttt{0/0}). Heading is unchanged.
+\noindent
+\textbf{Collisions During Resolution:}\\
+Robots collide if they would both move into the same grid square, or if either robot passes through a square that the other robot ends in during that action card. When a collision occurs, movement halts at that card and contact resolution occurs immediately.
 
 \vspace{0.3em}
-\noindent\textbf{2. Curved Arc (\texttt{3/1}) --- Natural Step Alternation:}\\
-Curves automatically alternate turning and advancing to trace an arc:
-\begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-  \item \textbf{Step 1 (Turn):} Remaining drives \texttt{3/1} ($|3| \neq |1|$, previous not a turn). Left has more drive; right end stays still. Rotate $45^\circ$ CW around right end. Drive becomes \texttt{2/1}.
-  \item \textbf{Step 2 (Forwards):} Remaining drives \texttt{2/1} ($|2| \neq |1|$, but previous step \textit{was} a turn and neither is 0). Take a \textbf{Forwards Step} 1 square along current diagonal heading. Drives become \texttt{1/0}.
-  \item \textbf{Step 3 (Turn):} Remaining drives \texttt{1/0} (one value is 0). Right end stays still. Rotate $45^\circ$ CW around right end. Drives become \texttt{0/0}. Robot finishes with a $90^\circ$ right turn.
-\end{itemize}
+\noindent
+\textbf{Thrown Robots:}\\
+If a collision results in a robot being thrown, the thrown robot is displaced away from the contact point as per the throw rules, and \textbf{its remaining action cards for the round do not happen}.
+
+\subsubsection{The Action Cards}
+Each Action Card represents a discrete maneuver on the arena grid without requiring negative arithmetic:
+
+\noindent
+\begin{center}
+{\small
+\begin{tabularx}{\textwidth}{l X c c}
+  \toprule
+  \textbf{Card Code} & \textbf{Motion Description} & \textbf{Left Drive Cost} & \textbf{Right Drive Cost} \\
+  \midrule
+  \texttt{Wait} & Stay still (remain stationary in current square and heading) & 0 & 0 \\
+  \midrule
+  \texttt{1F} & Move forwards 1 square along current facing & 1 & 1 \\
+  \texttt{2 F} & Move forwards 2 squares along current facing & 2 & 2 \\
+  \texttt{3 F} & Move forward 3 squares along current facing & 3 & 3 \\
+  \midrule
+  \texttt{1 B} & Move backwards 1 square in reverse (facing unchanged) & 1 & 1 \\
+  \texttt{2 B} & Move backwards 2 squares in reverse (facing unchanged) & 2 & 2 \\
+  \texttt{3 B} & Move backwards 3 squares in reverse (facing unchanged) & 3 & 3 \\
+  \midrule
+  \texttt{45 R} & Right turn $45^\circ$ forward around pinned right side & 1 & 0 \\
+  \texttt{90 R} & Right turn $90^\circ$ forward around pinned right side & 2 & 0 \\
+  \texttt{45 L} & Left turn $45^\circ$ forward around pinned left side & 0 & 1 \\
+  \texttt{90 L} & Left turn $90^\circ$ forward around pinned left side & 0 & 2 \\
+  \midrule
+  \texttt{-45 L} & Reversing left turn $45^\circ$ around pinned right side & 1 & 0 \\
+  \texttt{-90 L} & Reversing left turn $90^\circ$ around pinned right side & 2 & 0 \\
+  \texttt{-45 R} & Reversing right turn $45^\circ$ around pinned left side & 0 & 1 \\
+  \texttt{-90 R} & Reversing right turn $90^\circ$ around pinned left side & 0 & 2 \\
+  \midrule
+  \texttt{90 PR} & Pivot $90^\circ$ clockwise about robot center & 1 & 1 \\
+  \texttt{90 PL} & Pivot $90^\circ$ counter-clockwise about robot center & 1 & 1 \\
+  \texttt{180 P} & Pivot $180^\circ$ about robot center (face directly opposite) & 2 & 2 \\
+  \bottomrule
+\end{tabularx}
+}
+\end{center}
+
+\subsubsection{Action Sequence Examples}
+
+\noindent\textbf{1. Straight Dash (\texttt{1F} $\rightarrow$ \texttt{2 F} $\rightarrow$ \texttt{Wait}):}\\
+Card 1 advances 1 square, Card 2 advances 2 squares, Card 3 remains still. Total forward distance: 3 squares. Drive costs: Left $1+2+0 = 3$, Right $1+2+0 = 3$.
 
 \vspace{0.3em}
-\noindent\textbf{3. In-Place Center Pivot (\texttt{2/-2}):}\\
-$|2| = |-2|$ (equal magnitude, opposite signs) $\rightarrow$ 2 consecutive \textbf{Pivot Steps} around the center. Each step rotates $45^\circ$ CW on the spot and increments drives towards 0 (\texttt{2/-2} $\rightarrow$ \texttt{1/-1} $\rightarrow$ \texttt{0/0}), resulting in an exact $90^\circ$ clockwise rotation on the spot.
+\noindent\textbf{2. Curved Flank (\texttt{45 R} $\rightarrow$ \texttt{1F} $\rightarrow$ \texttt{45 R}):}\\
+Card 1 turns $45^\circ$ CW around the pinned right wheel. Card 2 advances 1 square along the new diagonal heading. Card 3 turns another $45^\circ$ CW around the right wheel. The robot completes a smooth $90^\circ$ right arc. Drive costs: Left $1+1+1 = 3$, Right $0+1+0 = 1$.
 
 \vspace{0.3em}
-\noindent\textbf{4. Locked-Wheel Turn (\texttt{2/0}):}\\
-One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around the stationary right wheel ($45^\circ$ then $45^\circ = 90^\circ$ total CW turn).
+\noindent\textbf{3. Tactical Reposition (\texttt{90 PR} $\rightarrow$ \texttt{1F} $\rightarrow$ \texttt{Wait}):}\\
+Card 1 pivots $90^\circ$ CW on the spot. Card 2 drives forward 1 square into the flank. Card 3 holds position. Drive costs: Left $1+1+0 = 2$, Right $1+1+0 = 2$.
 
 \begin{figure}[H]
   \centering
@@ -698,8 +716,8 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
     \draw[-{Stealth[length=2.2mm]}, line width=1.4pt, draw=amberNote!90!black] \gridPt{1.2}{2.0} arc (140:40:0.8);
     \gridNode[fill=white, draw=amberNote!90!black, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.5}{2.2}{Pivot $45^\circ$}
 
-    % ROW 2: CURVED ARC SEQUENCE (3/1 Trace: Turn -> Forward -> Turn)
-    \node[font=\scriptsize\bfseries, text=primaryDark, anchor=west] at (0.4, 3.60) {D. Curved Arc Sequence (\texttt{3/1}: Turn $45^\circ$ $\rightarrow$ Forwards 1 NE $\rightarrow$ Turn $45^\circ$)};
+    % ROW 2: ACTION CARD SEQUENCE
+    \node[font=\scriptsize\bfseries, text=primaryDark, anchor=west] at (0.4, 3.60) {D. Action Card Sequence Example (\texttt{45 R} $\rightarrow$ \texttt{1F} $\rightarrow$ \texttt{45 R}: Costs L:3, R:1)};
     \setGrid{0.5}{0.40}{0.52}
     \gridDraw{0}{0}{28}{5}
 
@@ -707,11 +725,11 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
     % Start: Facing North at gx=3, gy=2
     \gridSquareFootprint{3}{2}
     \gridSquare[blue]{3}{2}{0}
-    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{3}{0.5}{Start (\texttt{3/1})}
+    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{3}{0.5}{Start}
 
     % Arrow 1
     \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=arenaRed] \gridPt{5.2}{2.5} -- \gridPt{8.0}{2.5};
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{6.6}{3.3}{1. Turn $45^\circ$ CW}
+    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{6.6}{3.3}{1. Card 1: \texttt{45 R}}
 
     % Step 1: Turn 45 CW -> heading NE at gx=10, gy=2
     \gridSquareFootprint{10}{2}
@@ -721,7 +739,7 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
 
     % Arrow 2
     \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=accentBlue] \gridPt{12.2}{2.5} -- \gridPt{15.0}{2.5};
-    \gridNode[fill=accentBlue, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{13.6}{3.3}{2. Fwd 1 NE}
+    \gridNode[fill=accentBlue, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{13.6}{3.3}{2. Card 2: \texttt{1F}}
 
     % Step 2: Fwd 1 NE -> at gx=17, gy=3 heading NE
     \gridSquareFootprint{17}{3}
@@ -730,7 +748,7 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
 
     % Arrow 3
     \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=arenaRed] \gridPt{19.2}{2.5} -- \gridPt{22.0}{2.5};
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{20.6}{3.3}{3. Turn $45^\circ$ CW}
+    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{20.6}{3.3}{3. Card 3: \texttt{45 R}}
 
     % Step 3: Turn 45 CW -> heading East at gx=24, gy=3
     \gridSquareFootprint{24}{3}
@@ -739,7 +757,7 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
 
   \end{tikzpicture}%
   }
-  \caption{Discrete Grid Movement Steps and Arc Traces Across Arena Grid}
+  \caption{Discrete Grid Movement Steps and Action Card Sequences Across Arena Grid}
   \label{fig:diagram_grid_movement}
 \end{figure}
 
@@ -754,7 +772,9 @@ One value is 0 $\rightarrow$ 2 consecutive \textbf{Turn Steps} pivoting around t
 
 \subsection{Determining the Contact Point}
 
-During simultaneous step-by-step movement across the arena grid, if two robots attempt to enter or occupy the same grid space, a collision occurs. Both robots halt independent movement at that step. Where the robots touch shows the contact point. Align the contact direction into each robot's chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
+During simultaneous action card resolution across the arena grid, a collision occurs if both robots move into the same square or pass through a square the other ends in. Both robots halt independent movement at that action card. Where the robots touch shows the contact point. Align the contact direction into each robot's chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
+
+If a collision results in a robot being thrown, the thrown robot's remaining action cards for the round do not happen.
 
 If the parts of either robot that is touching is the weapon's active area (the marked strike zone on the chassis), then the contact is an \textbf{Active Contact}. Otherwise, it is an \textbf{Inert Contact}.
 
@@ -874,16 +894,16 @@ The first remaining component on the robot along the line corresponding to the c
 
 Inert contact occurs when non-weapon chassis surfaces make contact (or weapons collide without active strike areas):
 \begin{enumerate}[leftmargin=*, noitemsep, topsep=1pt]
-  \item Both robots halt their simultaneous movement at the step of contact.
-  \item Both robots move together according to the remaining steps of each robot, starting with the player with the largest number of remaining steps left. If players have an equal number of steps remaining, the tie is broken by the youngest player.
-  \item During these remaining steps, the active pushing robot moves both robots together:
+  \item Both robots halt their simultaneous movement at the action card of contact.
+  \item Both robots move together according to the remaining action cards of each robot, starting with the player with the largest number of remaining action cards left. If players have an equal number of action cards remaining, the tie is broken by the youngest player.
+  \item During these remaining cards, the active pushing robot moves both robots together:
   \begin{itemize}[noitemsep, topsep=1pt]
     \item \textbf{Forwards Steps:} Both robots move together one square in the direction of the step.
     \item \textbf{Turn and Pivot Steps:} Both robots rotate together about the center or edge of the rotating robot (the opposing robot moves along with it as if stuck to it).
     \item \textbf{Raised Robot:} A raised robot's motion does not contribute to pushing.
   \end{itemize}
-  \item Once the first player has resolved all of their remaining steps, the second player resolves any remaining steps they have left in the same manner, moving both robots together.
-  \item If a robot is pushed into a wall, it is thrown with throw strength equal to the largest drive \inlineIcon{\resourceM} value the other robot chose this round. If its weapon contacts the wall, it loses all spin counters and takes feedback equal to half the sum of its weapon strength and that throw strength, rounded up.
+  \item Once the first player has resolved all of their remaining action cards, the second player resolves any remaining action cards they have left in the same manner, moving both robots together.
+  \item If a robot is pushed into a wall, movement halts against the wall; no throw occurs (throws due to being pushed into a wall are completely removed). If its active weapon contacts the wall, it loses all spin counters and takes feedback equal to half its weapon strength, rounded down.
   \item \textbf{No Separation Required:} Robot separation after collisions is no longer required. The robots remain in their resulting adjacent positions where movement concludes.
 \end{enumerate}
 
@@ -1008,7 +1028,7 @@ Similarly if a weapon contacts multiple components at once, each component is da
   \midrule
   \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage \inlineIcon{\resourceW} to outermost component contacted $\rightarrow$ Base throw strength equals weapon damage \inlineIcon{\resourceW} minus absorption of hit component (minimum 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance in grid squares is lower of die roll or throw strength $\rightarrow$ Thrown robot orientation determined by d6 roll ($45^\circ$/$90^\circ$/$180^\circ$/None) $\rightarrow$ Throw damage equals throw strength. If robots remain in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match on grid $\rightarrow$ Move both robots together using remaining steps of each robot, starting with most steps left (tie: youngest player) $\rightarrow$ Pushed into wall causes throw (throw strength = pusher's largest chosen drive) $\rightarrow$ Conclude adjacent (no separation). \\
+  \textbf{Inert Contact} & Pushing match on grid $\rightarrow$ Move both robots together using remaining action cards of each robot, starting with most action cards left (tie: youngest player) $\rightarrow$ Pushed into wall halts at perimeter (no throw) $\rightarrow$ Conclude adjacent (no separation). \\
 \end{tabularx}
 \end{summarybox}
 
@@ -1028,12 +1048,12 @@ When both robots would be raised in the same contact, randomly choose one by rol
 
 \subsection{Throws \& Inversion}
 
-A robot that is thrown is moved a distance in grid squares equal to the lower of a die roll (d6) or the throw strength away from the contact point along the center-to-center line (in the case of contact with a wall, it is thrown away from the wall).
+A robot that is thrown is moved a distance in grid squares equal to the lower of a die roll (d6) or the throw strength away from the contact point along the center-to-center line. \textbf{If a robot is thrown, its remaining action cards for the round do not happen.} Throws due to being pushed into a wall are completely removed.
 Robot orientation after a throw is decided by rolling a d6 on the random rotation table ($45^\circ$, $90^\circ$, $180^\circ$, or no rotation).
 If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted} (lower rolled distances represent high-arching vertical throws rather than horizontal displacement).
 After the throw, the thrown robot takes throw damage at a randomly chosen component equal to the throw strength.
 If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately knocked out}.
-If its weapon hits a wall it takes feedback to the weapon equal to half the sum of its weapon strength \inlineIcon{\resourceW} and the throw strength, rounded up, and then any spin counters it has are removed.
+If its weapon hits a wall it takes feedback to the weapon equal to half its weapon strength \inlineIcon{\resourceW}, rounded down, and then any spin counters it has are removed.
 The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on (try again if it bounces off altogether).
 
 \begin{figure}[H]
@@ -1222,7 +1242,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Damage Conditions:} A component is \textbf{Destroyed} if it takes damage equal to or greater than its durability, and \textbf{Damaged} if it takes damage equal to or greater than half its durability. Absorption reduces base throw strength received during attacks.
   \item \textbf{Throw Distance \& Damage:} Thrown distance in grid squares is the lower of a die roll (d6) or the throw strength. Thrown robot orientation is determined by the d6 random rotation table ($45^\circ$, $90^\circ$, $180^\circ$, or none). Throw damage is always equal to the throw strength.
   \item \textbf{No Separation:} Separation back 1 unit is no longer required; robots conclude in their adjacent positions where movement ends.
-  \item \textbf{Wall Collisions:} Driving into a wall stops the robot without a throw, but any contacting weapon takes feedback equal to half its weapon strength, rounded down. Robots pushed into walls are thrown with throw strength equal to the largest drive \inlineIcon{\resourceM} value the other robot chose, take weapon feedback if a weapon hits the wall, and take throw damage equal to throw strength.
+  \item \textbf{Wall Collisions:} Driving or being pushed into a wall stops the robot without a throw. Throws due to being pushed into a wall are completely removed. Any contacting active weapon takes feedback equal to half its weapon strength, rounded down, and loses all spin counters.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounding up).
 \end{itemize}
 \end{summarybox}
@@ -1324,8 +1344,8 @@ The possible actions are as follows:
   \item \textbf{Retreat:} They face towards their opponent and move backwards 1 step.
   \item \textbf{Evade:} Move forwards and perpendicular to the line between the robots. If both directions are clear, choose at random.
 \end{itemize}
-From this you can calculate the drive \inlineIcon{\resourceM} values that they will choose (for each they consider the current position of their opponent). 
-Roll this after deciding your own drive \inlineIcon{\resourceM} values.
+From this you can determine the 3 action cards that they will choose (for each they consider the current position of their opponent within their available drive capacity). 
+Roll this after deciding your own 3 action cards.
 
 \vspace{0.3em}
 \noindent\textbf{Automaton Power Allocation:}\\
