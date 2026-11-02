@@ -3198,8 +3198,8 @@ class TestPlaytestEngine(unittest.TestCase):
         """
         Tests snapped chassis footprints across all 8 headings (0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°):
         - Square: always 4 squares (2x2) regardless of heading.
-        - Wide: 4 squares orthogonally (4x1), 6 squares diagonally (2-2-2 staircase).
-        - Triangle: 4 squares orthogonally (T-piece), 6 squares diagonally (3-2-1 staircase).
+        - Wide: always 5 squares (5x1 orthogonal, 5-square diagonal line at 45°).
+        - Triangle: always 4 squares (4 squares orthogonal T-piece, 4 squares at 45°: center + 3 corners).
         """
         from playtest.engine.field import get_chassis_grid_cells
         from playtest.engine.types import Pose
@@ -3212,22 +3212,22 @@ class TestPlaytestEngine(unittest.TestCase):
             self.assertEqual(len(sq_cells), 4, f"Square at {h}° must have 4 cells, got {len(sq_cells)}")
             self.assertEqual(sq_cells, {(9, 9), (10, 9), (9, 10), (10, 10)})
 
-        # 2. Wide Chassis: 4 squares orthogonal, 6 squares diagonal (2-2-2 domino staircase)
-        for h in [0.0, 90.0, 180.0, 270.0]:
-            w_ortho = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, h))
-            self.assertEqual(len(w_ortho), 4, f"Wide at orthogonal {h}° must have 4 cells, got {len(w_ortho)}")
-        for h in [45.0, 135.0, 225.0, 315.0]:
-            w_diag = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, h))
-            self.assertEqual(len(w_diag), 6, f"Wide at diagonal {h}° must have 6 cells, got {len(w_diag)}")
+        # 2. Wide Chassis: ALWAYS 5 squares across all 8 headings
+        for h in all_headings:
+            w_cells = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, h))
+            self.assertEqual(len(w_cells), 5, f"Wide at {h}° must have 5 cells, got {len(w_cells)}")
+
+        # Verify Wide orthogonal line and diagonal line
+        w_north = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, 0.0))
+        self.assertEqual(w_north, {(8, 10), (9, 10), (10, 10), (11, 10), (12, 10)})
+        w_ne = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, 45.0))
+        self.assertEqual(w_ne, {(8, 8), (9, 9), (10, 10), (11, 11), (12, 12)})
 
         # 3. Triangle Chassis (anchored at center of middle back tile):
-        # 4 squares orthogonal, 6 squares diagonal (3-2-1 staircase)
-        for h in [0.0, 90.0, 180.0, 270.0]:
-            tri_ortho = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, h))
-            self.assertEqual(len(tri_ortho), 4, f"Triangle at orthogonal {h}° must have 4 cells, got {len(tri_ortho)}")
-        for h in [45.0, 135.0, 225.0, 315.0]:
-            tri_diag = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, h))
-            self.assertEqual(len(tri_diag), 6, f"Triangle at diagonal {h}° must have 6 cells, got {len(tri_diag)}")
+        # ALWAYS 4 squares across all 8 headings
+        for h in all_headings:
+            tri_cells = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, h))
+            self.assertEqual(len(tri_cells), 4, f"Triangle at {h}° must have 4 cells, got {len(tri_cells)}")
 
         # Verify Triangle anchor alignment at 0° (North):
         # Anchor at (400, 400) -> middle back tile is (10, 10)
@@ -3236,9 +3236,9 @@ class TestPlaytestEngine(unittest.TestCase):
         tri_north = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, 0.0))
         self.assertEqual(tri_north, {(9, 10), (10, 10), (11, 10), (10, 9)})
 
-        # Verify Triangle at 45°: 3 leading, 2 middle, 1 trailing
+        # Verify Triangle at 45°: center + 3 diagonal corners
         tri_ne = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, 45.0))
-        self.assertEqual(tri_ne, {(9, 9), (10, 9), (11, 9), (10, 10), (11, 10), (11, 11)})
+        self.assertEqual(tri_ne, {(10, 10), (9, 9), (11, 9), (11, 11)})
 
     def test_discrete_turn_and_pivot_grid_snapping(self):
         """Tests that Turn and Pivot movement steps snap cleanly to grid units without floating-point drift."""

@@ -51,10 +51,10 @@ CHASSIS_MINIATURE_SHAPES: Dict[str, List[Tuple[float, float]]] = {
         (-36.0, 36.0),   # Bottom left
     ],
     "Wide": [
-        (-76.0, -18.0),  # Top left
-        (76.0, -18.0),   # Top right
-        (76.0, 18.0),    # Bottom right
-        (-76.0, 18.0),   # Bottom left
+        (-96.0, -18.0),  # Top left
+        (96.0, -18.0),   # Top right
+        (96.0, 18.0),    # Bottom right
+        (-96.0, 18.0),   # Bottom left
     ],
 }
 
@@ -68,11 +68,13 @@ def get_chassis_grid_cells(
     Returns the set of integer grid coordinates (gx, gy) occupied by a robot
     at the given pose according to the official snapped footprint rules:
     - Square (2x2): Always occupies a 2x2 block (4 squares) across all 8 headings.
-    - Wide (4x1): Occupies 4 squares orthogonally, and 6 squares diagonally
-      arranged as a 2-2-2 overlapping domino staircase.
+    - Wide (5x1): Always occupies 5 squares across all 8 headings.
+      Orthogonally: a straight 5-cell line centered at (cx, cy).
+      Diagonally: a straight 5-cell diagonal line passing through (cx, cy).
     - Triangle (T-piece): Anchored at the center of the middle back tile.
-      Occupies 4 squares orthogonally (3-square base + 1-square stem), and 6 squares
-      diagonally arranged as a stepped 3-2-1 staircase.
+      Always occupies 4 squares across all 8 headings.
+      Orthogonally: 4 squares (3 rear base tiles + 1 front stem tile).
+      Diagonally: 4 squares (central square (cx, cy) + 3 of 4 diagonal corners around it).
     """
     tname = (chassis_template or "Square").capitalize()
     gx = pose.x / grid_unit
@@ -85,48 +87,22 @@ def get_chassis_grid_cells(
         return {(vx - 1, vy - 1), (vx, vy - 1), (vx - 1, vy), (vx, vy)}
 
     elif tname == "Wide":
+        cx = int(math.floor(gx))
+        cy = int(math.floor(gy))
         if heading in (0, 180):
-            vx = int(round(gx))
-            cy = int(math.floor(gy))
-            return {(vx - 2, cy), (vx - 1, cy), (vx, cy), (vx + 1, cy)}
+            return {(cx - 2, cy), (cx - 1, cy), (cx, cy), (cx + 1, cy), (cx + 2, cy)}
         elif heading in (90, 270):
-            cx = int(math.floor(gx))
-            vy = int(round(gy))
-            return {(cx, vy - 2), (cx, vy - 1), (cx, vy), (cx, vy + 1)}
-        else:
-            # Diagonal 45, 135, 225, 315 -> 6 squares
-            dist_to_int_x = abs(gx - round(gx))
-            dist_to_int_y = abs(gy - round(gy))
-            if dist_to_int_x <= dist_to_int_y:
-                vx = int(round(gx))
-                cy = int(math.floor(gy))
-                if heading in (45, 225):
-                    return {
-                        (vx - 2, cy - 1), (vx - 1, cy - 1),
-                        (vx - 1, cy), (vx, cy),
-                        (vx, cy + 1), (vx + 1, cy + 1),
-                    }
-                else:  # 135, 315
-                    return {
-                        (vx, cy - 1), (vx + 1, cy - 1),
-                        (vx - 1, cy), (vx, cy),
-                        (vx - 2, cy + 1), (vx - 1, cy + 1),
-                    }
-            else:
-                cx = int(math.floor(gx))
-                vy = int(round(gy))
-                if heading in (45, 225):
-                    return {
-                        (cx - 1, vy - 2), (cx - 1, vy - 1),
-                        (cx, vy - 1), (cx, vy),
-                        (cx + 1, vy), (cx + 1, vy + 1),
-                    }
-                else:  # 135, 315
-                    return {
-                        (cx + 1, vy - 2), (cx + 1, vy - 1),
-                        (cx, vy - 1), (cx, vy),
-                        (cx - 1, vy), (cx - 1, vy + 1),
-                    }
+            return {(cx, cy - 2), (cx, cy - 1), (cx, cy), (cx, cy + 1), (cx, cy + 2)}
+        elif heading in (45, 225):
+            return {
+                (cx - 2, cy - 2), (cx - 1, cy - 1), (cx, cy),
+                (cx + 1, cy + 1), (cx + 2, cy + 2),
+            }
+        else:  # 135, 315
+            return {
+                (cx - 2, cy + 2), (cx - 1, cy + 1), (cx, cy),
+                (cx + 1, cy - 1), (cx + 2, cy - 2),
+            }
 
     elif tname == "Triangle":
         cx = int(math.floor(gx))
@@ -140,29 +116,13 @@ def get_chassis_grid_cells(
         elif heading == 270:
             return {(cx, cy - 1), (cx, cy), (cx, cy + 1), (cx - 1, cy)}
         elif heading == 45:
-            return {
-                (cx - 1, cy - 1), (cx, cy - 1), (cx + 1, cy - 1),
-                (cx, cy), (cx + 1, cy),
-                (cx + 1, cy + 1),
-            }
+            return {(cx, cy), (cx - 1, cy - 1), (cx + 1, cy - 1), (cx + 1, cy + 1)}
         elif heading == 315:
-            return {
-                (cx - 1, cy - 1), (cx, cy - 1), (cx + 1, cy - 1),
-                (cx - 1, cy), (cx, cy),
-                (cx - 1, cy + 1),
-            }
+            return {(cx, cy), (cx - 1, cy - 1), (cx + 1, cy - 1), (cx - 1, cy + 1)}
         elif heading == 135:
-            return {
-                (cx + 1, cy - 1),
-                (cx, cy), (cx + 1, cy),
-                (cx - 1, cy + 1), (cx, cy + 1), (cx + 1, cy + 1),
-            }
+            return {(cx, cy), (cx + 1, cy - 1), (cx + 1, cy + 1), (cx - 1, cy + 1)}
         elif heading == 225:
-            return {
-                (cx - 1, cy - 1),
-                (cx - 1, cy), (cx, cy),
-                (cx - 1, cy + 1), (cx, cy + 1), (cx + 1, cy + 1),
-            }
+            return {(cx, cy), (cx - 1, cy - 1), (cx - 1, cy + 1), (cx + 1, cy + 1)}
 
     # Fallback to Square
     vx = int(round(gx))

@@ -141,10 +141,10 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
   \pgfkeys{/rbchassis, team=blue, weapon=none, arrow=true, center=true, #1}%
   \rbApplyStyle
   \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
-    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-1.99, -0.30) rectangle (-1.85, 0.30);
-    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 1.85, -0.30) rectangle ( 1.99, 0.30);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-2.49, -0.30) rectangle (-2.35, 0.30);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 2.35, -0.30) rectangle ( 2.49, 0.30);
     \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, rounded corners=2pt]
-      (-1.92, -0.42) rectangle (1.92, 0.42);
+      (-2.42, -0.42) rectangle (2.42, 0.42);
     \ifx\rbCenter\rbTrue
       \fill[primaryDark] (0, 0) circle [radius=0.08];
     \fi
@@ -152,11 +152,11 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
       \fill[arenaRed] (0, 0.42) circle [radius=0.14];
     \fi
     \ifx\rbWeapon\rbWeaponForks
-      \draw[line width=2pt, draw=amberNote!90!black] (-1.35, 0.42) -- (-0.65, 0.42);
-      \draw[line width=2pt, draw=amberNote!90!black] ( 0.65, 0.42) -- ( 1.35, 0.42);
+      \draw[line width=2pt, draw=amberNote!90!black] (-1.85, 0.42) -- (-1.15, 0.42);
+      \draw[line width=2pt, draw=amberNote!90!black] ( 1.15, 0.42) -- ( 1.85, 0.42);
     \fi
     \ifx\rbWeapon\rbWeaponBar
-      \draw[line width=2.4pt, draw=arenaRed] (-1.40, 0.42) -- (1.40, 0.42);
+      \draw[line width=2.4pt, draw=arenaRed] (-1.90, 0.42) -- (1.90, 0.42);
     \fi
     \ifx\rbArrow\rbTrue
       \draw[-{Triangle[width=2.4mm,length=3.2mm]}, line width=1.4pt, draw=\rbArrowDraw]
@@ -369,7 +369,7 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
 
   % P1 Wide
   \begin{scope}[shift={(225, 145)}]
-    \draw[line width=0.5pt, gray!40, dashed] (-43, -15) rectangle (43, 15);
+    \draw[line width=0.5pt, gray!40, dashed] (-53, -15) rectangle (53, 15);
     \chassisWide[blue]{0}{0}{0}{20}
     \node[anchor=center, textDark] at (0, -19) {\sffamily\scriptsize\bfseries P1 WIDE};
   \end{scope}
@@ -393,7 +393,7 @@ TEMPLATES_LATEX_SOURCE = r"""\documentclass{article}
 
   % P2 Wide
   \begin{scope}[shift={(225, 78)}]
-    \draw[line width=0.5pt, gray!40, dashed] (-43, -15) rectangle (43, 15);
+    \draw[line width=0.5pt, gray!40, dashed] (-53, -15) rectangle (53, 15);
     \chassisWide[red]{0}{0}{0}{20}
     \node[anchor=center, textDark] at (0, -19) {\sffamily\scriptsize\bfseries P2 WIDE};
   \end{scope}

@@ -119,7 +119,7 @@
 }
 
 % ------------------------------------------------------------------------------
-% 2. WIDE CHASSIS (4x1 Occupancy)
+% 2. WIDE CHASSIS (5x1 Occupancy)
 % ------------------------------------------------------------------------------
 \newcommand{\chassisWide}[5][blue]{%
   \begingroup
@@ -127,12 +127,12 @@
   \rbApplyStyle
   \begin{scope}[shift={(#2,#3)}, rotate={-(#4)}, scale={(#5)}]
     % Drive wheels (2 wheels: 1 left end, 1 right end)
-    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-1.99, -0.30) rectangle (-1.85, 0.30);
-    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 1.85, -0.30) rectangle ( 1.99, 0.30);
-    % Main chassis body (4x1 occupancy, slightly inset)
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] (-2.49, -0.30) rectangle (-2.35, 0.30);
+    \fill[\rbWheelFill, draw=\rbWheelDraw, line width=0.4pt] ( 2.35, -0.30) rectangle ( 2.49, 0.30);
+    % Main chassis body (5x1 occupancy, slightly inset)
     \draw[fill=\rbBodyFill, draw=\rbBodyDraw, line width=\rbLineWidth, \rbLineType, rounded corners=2pt]
-      (-1.92, -0.42) rectangle (1.92, 0.42);
-    % Center pin dot
+      (-2.42, -0.42) rectangle (2.42, 0.42);
+    % Center pin dot (at center of middle tile)
     \ifx\rbCenter\rbTrue
       \fill[primaryDark] (0, 0) circle [radius=0.08];
     \fi
@@ -141,11 +141,11 @@
       \fill[arenaRed] (0, 0.42) circle [radius=0.14];
     \fi
     \ifx\rbWeapon\rbWeaponForks
-      \draw[line width=2pt, draw=amberNote!90!black] (-1.35, 0.42) -- (-0.65, 0.42);
-      \draw[line width=2pt, draw=amberNote!90!black] ( 0.65, 0.42) -- ( 1.35, 0.42);
+      \draw[line width=2pt, draw=amberNote!90!black] (-1.85, 0.42) -- (-1.15, 0.42);
+      \draw[line width=2pt, draw=amberNote!90!black] ( 1.15, 0.42) -- ( 1.85, 0.42);
     \fi
     \ifx\rbWeapon\rbWeaponBar
-      \draw[line width=2.4pt, draw=arenaRed] (-1.40, 0.42) -- (1.40, 0.42);
+      \draw[line width=2.4pt, draw=arenaRed] (-1.90, 0.42) -- (1.90, 0.42);
     \fi
     % Facing arrow
     \ifx\rbArrow\rbTrue
@@ -283,74 +283,98 @@
 
 \newcommand{\gridWideFootprint}[4][fill=arenaRed!25, draw=arenaRed!80, dashed, line width=0.5pt]{%
   \ifnum#4=45
-    \fill[#1] \gridPt{(#2)-2}{(#3)+0.5} rectangle \gridPt{(#2)}{(#3)+1.5};
-    \fill[#1] \gridPt{(#2)-1}{(#3)-0.5} rectangle \gridPt{(#2)+1}{(#3)+0.5};
-    \fill[#1] \gridPt{(#2)}{(#3)-1.5} rectangle \gridPt{(#2)+2}{(#3)-0.5};
-    \draw[#1] \gridPt{(#2)-2}{(#3)+0.5} rectangle \gridPt{(#2)}{(#3)+1.5};
-    \draw[#1] \gridPt{(#2)-1}{(#3)-0.5} rectangle \gridPt{(#2)+1}{(#3)+0.5};
-    \draw[#1] \gridPt{(#2)}{(#3)-1.5} rectangle \gridPt{(#2)+2}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)-2.5}{(#3)+1.5} rectangle \gridPt{(#2)-1.5}{(#3)+2.5};
+    \fill[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)+1.5}{(#3)-2.5} rectangle \gridPt{(#2)+2.5}{(#3)-1.5};
+    \draw[#1] \gridPt{(#2)-2.5}{(#3)+1.5} rectangle \gridPt{(#2)-1.5}{(#3)+2.5};
+    \draw[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \draw[#1] \gridPt{(#2)+1.5}{(#3)-2.5} rectangle \gridPt{(#2)+2.5}{(#3)-1.5};
   \else\ifnum#4=225
-    \fill[#1] \gridPt{(#2)-2}{(#3)+0.5} rectangle \gridPt{(#2)}{(#3)+1.5};
-    \fill[#1] \gridPt{(#2)-1}{(#3)-0.5} rectangle \gridPt{(#2)+1}{(#3)+0.5};
-    \fill[#1] \gridPt{(#2)}{(#3)-1.5} rectangle \gridPt{(#2)+2}{(#3)-0.5};
-    \draw[#1] \gridPt{(#2)-2}{(#3)+0.5} rectangle \gridPt{(#2)}{(#3)+1.5};
-    \draw[#1] \gridPt{(#2)-1}{(#3)-0.5} rectangle \gridPt{(#2)+1}{(#3)+0.5};
-    \draw[#1] \gridPt{(#2)}{(#3)-1.5} rectangle \gridPt{(#2)+2}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)-2.5}{(#3)+1.5} rectangle \gridPt{(#2)-1.5}{(#3)+2.5};
+    \fill[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)+1.5}{(#3)-2.5} rectangle \gridPt{(#2)+2.5}{(#3)-1.5};
+    \draw[#1] \gridPt{(#2)-2.5}{(#3)+1.5} rectangle \gridPt{(#2)-1.5}{(#3)+2.5};
+    \draw[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \draw[#1] \gridPt{(#2)+1.5}{(#3)-2.5} rectangle \gridPt{(#2)+2.5}{(#3)-1.5};
   \else\ifnum#4=135
-    \fill[#1] \gridPt{(#2)}{(#3)+0.5} rectangle \gridPt{(#2)+2}{(#3)+1.5};
-    \fill[#1] \gridPt{(#2)-1}{(#3)-0.5} rectangle \gridPt{(#2)+1}{(#3)+0.5};
-    \fill[#1] \gridPt{(#2)-2}{(#3)-1.5} rectangle \gridPt{(#2)}{(#3)-0.5};
-    \draw[#1] \gridPt{(#2)}{(#3)+0.5} rectangle \gridPt{(#2)+2}{(#3)+1.5};
-    \draw[#1] \gridPt{(#2)-1}{(#3)-0.5} rectangle \gridPt{(#2)+1}{(#3)+0.5};
-    \draw[#1] \gridPt{(#2)-2}{(#3)-1.5} rectangle \gridPt{(#2)}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)-2.5}{(#3)-2.5} rectangle \gridPt{(#2)-1.5}{(#3)-1.5};
+    \fill[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
+    \fill[#1] \gridPt{(#2)+1.5}{(#3)+1.5} rectangle \gridPt{(#2)+2.5}{(#3)+2.5};
+    \draw[#1] \gridPt{(#2)-2.5}{(#3)-2.5} rectangle \gridPt{(#2)-1.5}{(#3)-1.5};
+    \draw[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
+    \draw[#1] \gridPt{(#2)+1.5}{(#3)+1.5} rectangle \gridPt{(#2)+2.5}{(#3)+2.5};
   \else\ifnum#4=315
-    \fill[#1] \gridPt{(#2)}{(#3)+0.5} rectangle \gridPt{(#2)+2}{(#3)+1.5};
-    \fill[#1] \gridPt{(#2)-1}{(#3)-0.5} rectangle \gridPt{(#2)+1}{(#3)+0.5};
-    \fill[#1] \gridPt{(#2)-2}{(#3)-1.5} rectangle \gridPt{(#2)}{(#3)-0.5};
-    \draw[#1] \gridPt{(#2)}{(#3)+0.5} rectangle \gridPt{(#2)+2}{(#3)+1.5};
-    \draw[#1] \gridPt{(#2)-1}{(#3)-0.5} rectangle \gridPt{(#2)+1}{(#3)+0.5};
-    \draw[#1] \gridPt{(#2)-2}{(#3)-1.5} rectangle \gridPt{(#2)}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)-2.5}{(#3)-2.5} rectangle \gridPt{(#2)-1.5}{(#3)-1.5};
+    \fill[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
+    \fill[#1] \gridPt{(#2)+1.5}{(#3)+1.5} rectangle \gridPt{(#2)+2.5}{(#3)+2.5};
+    \draw[#1] \gridPt{(#2)-2.5}{(#3)-2.5} rectangle \gridPt{(#2)-1.5}{(#3)-1.5};
+    \draw[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
+    \draw[#1] \gridPt{(#2)+1.5}{(#3)+1.5} rectangle \gridPt{(#2)+2.5}{(#3)+2.5};
   \else\ifnum#4=90
-    \fill[#1] \gridPt{(#2)-0.5}{(#3)-2} rectangle \gridPt{(#2)+0.5}{(#3)+2};
-    \draw[#1] \gridPt{(#2)-0.5}{(#3)-2} rectangle \gridPt{(#2)+0.5}{(#3)+2};
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-2.5} rectangle \gridPt{(#2)+0.5}{(#3)+2.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-2.5} rectangle \gridPt{(#2)+0.5}{(#3)+2.5};
   \else\ifnum#4=270
-    \fill[#1] \gridPt{(#2)-0.5}{(#3)-2} rectangle \gridPt{(#2)+0.5}{(#3)+2};
-    \draw[#1] \gridPt{(#2)-0.5}{(#3)-2} rectangle \gridPt{(#2)+0.5}{(#3)+2};
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-2.5} rectangle \gridPt{(#2)+0.5}{(#3)+2.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-2.5} rectangle \gridPt{(#2)+0.5}{(#3)+2.5};
   \else
-    \fill[#1] \gridPt{(#2)-2}{(#3)-0.5} rectangle \gridPt{(#2)+2}{(#3)+0.5};
-    \draw[#1] \gridPt{(#2)-2}{(#3)-0.5} rectangle \gridPt{(#2)+2}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)-2.5}{(#3)-0.5} rectangle \gridPt{(#2)+2.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)-2.5}{(#3)-0.5} rectangle \gridPt{(#2)+2.5}{(#3)+0.5};
   \fi\fi\fi\fi\fi\fi
 }
 
 \newcommand{\gridTriangleFootprint}[4][fill=arenaRed!25, draw=arenaRed!80, dashed, line width=0.5pt]{%
   \ifnum#4=45
-    \fill[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
-    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+1.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
+    \fill[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
     \fill[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
-    \draw[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
-    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+1.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
+    \draw[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
     \draw[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
   \else\ifnum#4=315
-    \fill[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
-    \fill[#1] \gridPt{(#2)-1.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
+    \fill[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
     \fill[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
-    \draw[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
-    \draw[#1] \gridPt{(#2)-1.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
+    \draw[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
     \draw[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
   \else\ifnum#4=135
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
     \fill[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
-    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+1.5}{(#3)+0.5};
-    \fill[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
     \draw[#1] \gridPt{(#2)+0.5}{(#3)+0.5} rectangle \gridPt{(#2)+1.5}{(#3)+1.5};
-    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+1.5}{(#3)+0.5};
-    \draw[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \draw[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
   \else\ifnum#4=225
+    \fill[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \fill[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
     \fill[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
-    \fill[#1] \gridPt{(#2)-1.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
-    \fill[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \fill[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \draw[#1] \gridPt{(#2)-0.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
+    \draw[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)-0.5}{(#3)-0.5};
     \draw[#1] \gridPt{(#2)-1.5}{(#3)+0.5} rectangle \gridPt{(#2)-0.5}{(#3)+1.5};
-    \draw[#1] \gridPt{(#2)-1.5}{(#3)-0.5} rectangle \gridPt{(#2)+0.5}{(#3)+0.5};
-    \draw[#1] \gridPt{(#2)-1.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
+    \draw[#1] \gridPt{(#2)+0.5}{(#3)-1.5} rectangle \gridPt{(#2)+1.5}{(#3)-0.5};
   \else\ifnum#4=90
     \fill[#1] \gridPt{(#2)-0.5}{(#3)-1.5} rectangle \gridPt{(#2)+0.5}{(#3)+1.5};
     \fill[#1] \gridPt{(#2)+0.5}{(#3)-0.5} rectangle \gridPt{(#2)+1.5}{(#3)+0.5};
