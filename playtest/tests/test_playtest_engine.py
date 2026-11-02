@@ -1663,6 +1663,7 @@ class TestPlaytestEngine(unittest.TestCase):
 
         csv_text = read_saved_robot("Vyper_flipper.csv")
         match = create_match(csv_text, "Vyper_Spinner", "Player Flipper")
+        match.automaton_robot.pose = Pose(x=100.0, y=100.0, theta=180.0)
         p_bot = match.player_robot
 
         lifter = next(c for c in p_bot.components.values() if "four-bar lifter" in c.name.lower())
@@ -2824,7 +2825,8 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_weapon_targets={},
         )
 
-        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        with patch("playtest.engine.combat.simulate_dropping_card", return_value=None):
+            logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
 
         # Both components take damage 6
         # t1: 6 dmg - 1 abs = 5 net dmg -> 10 - 5 = 5 dur
@@ -3193,21 +3195,112 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(steps_sharp[2]["type"], "turn")
 
     def test_discrete_grid_chassis_occupancy_cells(self):
-        """Tests that all robot chassis occupy 4 discrete squares (Square 2x2, Wide 4x1, Triangle T-piece)."""
+        """
+        Tests snapped chassis footprints across all 8 headings (0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°):
+        - Square: always 4 squares (2x2) regardless of heading.
+        - Wide: 4 squares orthogonally (4x1), 6 squares diagonally (2-2-2 staircase).
+        - Triangle: 4 squares orthogonally (T-piece), 6 squares diagonally (3-2-1 staircase).
+        """
         from playtest.engine.field import get_chassis_grid_cells
         from playtest.engine.types import Pose
 
-        # Square chassis at (400, 400), theta=0: occupies 2x2 = 4 squares
-        sq_cells = get_chassis_grid_cells("Square", Pose(400.0, 400.0, 0.0))
-        self.assertEqual(len(sq_cells), 4)
+        all_headings = [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]
 
-        # Wide chassis at (400, 400), theta=0: occupies 4x1 = 4 squares
-        wide_cells = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, 0.0))
-        self.assertEqual(len(wide_cells), 4)
+        # 1. Square Chassis: ALWAYS 4 squares across all 8 headings
+        for h in all_headings:
+            sq_cells = get_chassis_grid_cells("Square", Pose(400.0, 400.0, h))
+            self.assertEqual(len(sq_cells), 4, f"Square at {h}° must have 4 cells, got {len(sq_cells)}")
+            self.assertEqual(sq_cells, {(9, 9), (10, 9), (9, 10), (10, 10)})
 
-        # Triangle chassis at (400, 400), theta=0: occupies T-tetris piece (Option A) = 4 squares
-        tri_cells = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, 0.0))
-        self.assertEqual(len(tri_cells), 4)
+        # 2. Wide Chassis: 4 squares orthogonal, 6 squares diagonal (2-2-2 domino staircase)
+        for h in [0.0, 90.0, 180.0, 270.0]:
+            w_ortho = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, h))
+            self.assertEqual(len(w_ortho), 4, f"Wide at orthogonal {h}° must have 4 cells, got {len(w_ortho)}")
+        for h in [45.0, 135.0, 225.0, 315.0]:
+            w_diag = get_chassis_grid_cells("Wide", Pose(400.0, 400.0, h))
+            self.assertEqual(len(w_diag), 6, f"Wide at diagonal {h}° must have 6 cells, got {len(w_diag)}")
+
+        # 3. Triangle Chassis (anchored at center of middle back tile):
+        # 4 squares orthogonal, 6 squares diagonal (3-2-1 staircase)
+        for h in [0.0, 90.0, 180.0, 270.0]:
+            tri_ortho = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, h))
+            self.assertEqual(len(tri_ortho), 4, f"Triangle at orthogonal {h}° must have 4 cells, got {len(tri_ortho)}")
+        for h in [45.0, 135.0, 225.0, 315.0]:
+            tri_diag = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, h))
+            self.assertEqual(len(tri_diag), 6, f"Triangle at diagonal {h}° must have 6 cells, got {len(tri_diag)}")
+
+        # Verify Triangle anchor alignment at 0° (North):
+        # Anchor at (400, 400) -> middle back tile is (10, 10)
+        # Rear base is at row 10: (9, 10), (10, 10), (11, 10)
+        # Front stem is at row 9: (10, 9)
+        tri_north = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, 0.0))
+        self.assertEqual(tri_north, {(9, 10), (10, 10), (11, 10), (10, 9)})
+
+        # Verify Triangle at 45°: 3 leading, 2 middle, 1 trailing
+        tri_ne = get_chassis_grid_cells("Triangle", Pose(400.0, 400.0, 45.0))
+        self.assertEqual(tri_ne, {(9, 9), (10, 9), (11, 9), (10, 10), (11, 10), (11, 11)})
+
+    def test_discrete_turn_and_pivot_grid_snapping(self):
+        """Tests that Turn and Pivot movement steps snap cleanly to grid units without floating-point drift."""
+        from playtest.engine.movement import apply_movement_step
+        from playtest.engine.types import Pose
+
+        p_start = Pose(400.0, 400.0, 0.0)
+
+        # 1. Pivot step: 45° rotation in place (x, y do not change)
+        step_piv = {"type": "pivot", "rotation_deg": 45.0}
+        p_piv = apply_movement_step(p_start, step_piv, chassis_template="Square")
+        self.assertEqual(p_piv.x, 400.0)
+        self.assertEqual(p_piv.y, 400.0)
+        self.assertEqual(p_piv.theta, 45.0)
+
+        # 2. Square Turn step: swings right around outer pinned wheel
+        step_turn_cw = {"type": "turn", "rotation_deg": 45.0, "pinned_side": "right"}
+        p_sq_turn = apply_movement_step(p_start, step_turn_cw, chassis_template="Square")
+        self.assertEqual(p_sq_turn.x, 440.0)  # shifted +1 grid unit East
+        self.assertEqual(p_sq_turn.y, 400.0)
+        self.assertEqual(p_sq_turn.theta, 45.0)
+
+        # Second turn step completes 90° turn: shifts North
+        p_sq_turn2 = apply_movement_step(p_sq_turn, step_turn_cw, chassis_template="Square")
+        self.assertEqual(p_sq_turn2.x, 440.0)
+        self.assertEqual(p_sq_turn2.y, 360.0)  # shifted -1 grid unit North
+        self.assertEqual(p_sq_turn2.theta, 90.0)
+
+        # 3. Triangle Turn step: shifts 1 grid unit forward along turn arc
+        p_tri_turn = apply_movement_step(p_start, step_turn_cw, chassis_template="Triangle")
+        self.assertEqual(p_tri_turn.x, 400.0)
+        self.assertEqual(p_tri_turn.y, 360.0)  # shifted -1 grid unit North
+        self.assertEqual(p_tri_turn.theta, 45.0)
+
+        # 4. Wide Turn step: shifts 1 grid unit forward along turn arc
+        p_wide_turn = apply_movement_step(p_start, step_turn_cw, chassis_template="Wide")
+        self.assertEqual(p_wide_turn.x, 400.0)
+        self.assertEqual(p_wide_turn.y, 360.0)
+        self.assertEqual(p_wide_turn.theta, 45.0)
+
+    def test_chassis_diagonal_collision_detection(self):
+        """Tests that 45° diagonal robot footprints trigger grid collision when overlapping."""
+        from playtest.engine.collision import detect_collision
+        from playtest.engine.types import ComponentHealth, Pose, RobotState, TrajectoryPoint
+
+        bot1 = RobotState(
+            id="bot1", name="Bot 1", chassis_name="Triangle Chassis", chassis_template="Triangle",
+            flip_strength=2, pose=Pose(400.0, 400.0, 45.0), components={},
+            connections={}, supply_graph={}, reverse_supply={},
+        )
+        bot2 = RobotState(
+            id="bot2", name="Bot 2", chassis_name="Wide Chassis", chassis_template="Wide",
+            flip_strength=2, pose=Pose(440.0, 400.0, 45.0), components={},
+            connections={}, supply_graph={}, reverse_supply={},
+        )
+
+        traj1 = [TrajectoryPoint(x=bot1.pose.x, y=bot1.pose.y, theta=bot1.pose.theta, t=0.0)]
+        traj2 = [TrajectoryPoint(x=bot2.pose.x, y=bot2.pose.y, theta=bot2.pose.theta, t=0.0)]
+
+        col = detect_collision(bot1, traj1, bot2, traj2)
+        self.assertIsNotNone(col, "Robots with overlapping diagonal footprints must detect collision")
+        self.assertIn(col.contact_type, ("INERT", "BODY", "ACTIVE"))
 
     def test_joint_movement_rigid_attachment(self):
         """Tests that apply_joint_step moves the passive robot rigidly attached to the active robot."""

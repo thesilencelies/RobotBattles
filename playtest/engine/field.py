@@ -34,18 +34,15 @@ MAT_CENTER_X = 210.0
 MAT_CENTER_Y = 150.0
 MAT_TO_MINI_SCALE = 0.273
 
-# Base Chassis miniature polygons in local coordinates (origin at center, facing North = -Y)
-# Grid squares: Square is 2x2, Wide is 4x1, Triangle is Option A T-piece (3-wide base at rear, 1-square stem in front)
+# Base Chassis miniature polygons in local coordinates (facing North = -Y)
+# Square is 2x2, Wide is 4x1, Triangle is wedge outline anchored at center of middle back tile
 CHASSIS_MINIATURE_SHAPES: Dict[str, List[Tuple[float, float]]] = {
     "Triangle": [
-        (-18.0, -38.0),  # Front left stem tip
-        (18.0, -38.0),   # Front right stem tip
-        (18.0, -2.0),    # Stem right shoulder
-        (58.0, -2.0),    # Base right front
-        (58.0, 38.0),    # Base right rear
-        (-58.0, 38.0),   # Base left rear
-        (-58.0, -2.0),   # Base left front
-        (-18.0, -2.0),   # Stem left shoulder
+        (0.0, -58.0),   # Apex front
+        (56.0, -16.0),  # Right shoulder
+        (56.0, 16.8),   # Right rear corner
+        (-56.0, 16.8),  # Left rear corner
+        (-56.0, -16.0), # Left shoulder
     ],
     "Square": [
         (-36.0, -36.0),  # Top left
@@ -69,32 +66,108 @@ def get_chassis_grid_cells(
 ) -> set[Tuple[int, int]]:
     """
     Returns the set of integer grid coordinates (gx, gy) occupied by a robot
-    at the given pose.
-    - Square: 2x2 squares
-    - Wide: 4x1 squares
-    - Triangle: Option A T-piece (3-wide base at rear, 1-square stem in front)
+    at the given pose according to the official snapped footprint rules:
+    - Square (2x2): Always occupies a 2x2 block (4 squares) across all 8 headings.
+    - Wide (4x1): Occupies 4 squares orthogonally, and 6 squares diagonally
+      arranged as a 2-2-2 overlapping domino staircase.
+    - Triangle (T-piece): Anchored at the center of the middle back tile.
+      Occupies 4 squares orthogonally (3-square base + 1-square stem), and 6 squares
+      diagonally arranged as a stepped 3-2-1 staircase.
     """
     tname = (chassis_template or "Square").capitalize()
-    if tname == "Wide":
-        offsets = [(-1.5, 0.0), (-0.5, 0.0), (0.5, 0.0), (1.5, 0.0)]
+    gx = pose.x / grid_unit
+    gy = pose.y / grid_unit
+    heading = int(round((pose.theta % 360.0) / 45.0) * 45) % 360
+
+    if tname == "Square":
+        vx = int(round(gx))
+        vy = int(round(gy))
+        return {(vx - 1, vy - 1), (vx, vy - 1), (vx - 1, vy), (vx, vy)}
+
+    elif tname == "Wide":
+        if heading in (0, 180):
+            vx = int(round(gx))
+            cy = int(math.floor(gy))
+            return {(vx - 2, cy), (vx - 1, cy), (vx, cy), (vx + 1, cy)}
+        elif heading in (90, 270):
+            cx = int(math.floor(gx))
+            vy = int(round(gy))
+            return {(cx, vy - 2), (cx, vy - 1), (cx, vy), (cx, vy + 1)}
+        else:
+            # Diagonal 45, 135, 225, 315 -> 6 squares
+            dist_to_int_x = abs(gx - round(gx))
+            dist_to_int_y = abs(gy - round(gy))
+            if dist_to_int_x <= dist_to_int_y:
+                vx = int(round(gx))
+                cy = int(math.floor(gy))
+                if heading in (45, 225):
+                    return {
+                        (vx - 2, cy - 1), (vx - 1, cy - 1),
+                        (vx - 1, cy), (vx, cy),
+                        (vx, cy + 1), (vx + 1, cy + 1),
+                    }
+                else:  # 135, 315
+                    return {
+                        (vx, cy - 1), (vx + 1, cy - 1),
+                        (vx - 1, cy), (vx, cy),
+                        (vx - 2, cy + 1), (vx - 1, cy + 1),
+                    }
+            else:
+                cx = int(math.floor(gx))
+                vy = int(round(gy))
+                if heading in (45, 225):
+                    return {
+                        (cx - 1, vy - 2), (cx - 1, vy - 1),
+                        (cx, vy - 1), (cx, vy),
+                        (cx + 1, vy), (cx + 1, vy + 1),
+                    }
+                else:  # 135, 315
+                    return {
+                        (cx + 1, vy - 2), (cx + 1, vy - 1),
+                        (cx, vy - 1), (cx, vy),
+                        (cx - 1, vy), (cx - 1, vy + 1),
+                    }
+
     elif tname == "Triangle":
-        offsets = [(-1.0, 0.5), (0.0, 0.5), (1.0, 0.5), (0.0, -0.5)]
-    else:
-        offsets = [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)]
+        cx = int(math.floor(gx))
+        cy = int(math.floor(gy))
+        if heading == 0:
+            return {(cx - 1, cy), (cx, cy), (cx + 1, cy), (cx, cy - 1)}
+        elif heading == 180:
+            return {(cx - 1, cy), (cx, cy), (cx + 1, cy), (cx, cy + 1)}
+        elif heading == 90:
+            return {(cx, cy - 1), (cx, cy), (cx, cy + 1), (cx + 1, cy)}
+        elif heading == 270:
+            return {(cx, cy - 1), (cx, cy), (cx, cy + 1), (cx - 1, cy)}
+        elif heading == 45:
+            return {
+                (cx - 1, cy - 1), (cx, cy - 1), (cx + 1, cy - 1),
+                (cx, cy), (cx + 1, cy),
+                (cx + 1, cy + 1),
+            }
+        elif heading == 315:
+            return {
+                (cx - 1, cy - 1), (cx, cy - 1), (cx + 1, cy - 1),
+                (cx - 1, cy), (cx, cy),
+                (cx - 1, cy + 1),
+            }
+        elif heading == 135:
+            return {
+                (cx + 1, cy - 1),
+                (cx, cy), (cx + 1, cy),
+                (cx - 1, cy + 1), (cx, cy + 1), (cx + 1, cy + 1),
+            }
+        elif heading == 225:
+            return {
+                (cx - 1, cy - 1),
+                (cx - 1, cy), (cx, cy),
+                (cx - 1, cy + 1), (cx, cy + 1), (cx + 1, cy + 1),
+            }
 
-    rad = math.radians(pose.theta)
-    cos_t = math.cos(rad)
-    sin_t = math.sin(rad)
-
-    cells: set[Tuple[int, int]] = set()
-    for lx, ly in offsets:
-        wx = pose.x + (lx * cos_t - ly * sin_t) * grid_unit
-        wy = pose.y + (lx * sin_t + ly * cos_t) * grid_unit
-        gx = int(math.floor(wx / grid_unit))
-        gy = int(math.floor(wy / grid_unit))
-        cells.add((gx, gy))
-
-    return cells
+    # Fallback to Square
+    vx = int(round(gx))
+    vy = int(round(gy))
+    return {(vx - 1, vy - 1), (vx, vy - 1), (vx - 1, vy), (vx, vy)}
 
 
 def card_to_miniature_offset(card_x: float, card_y: float, card_w: float = 44.0, card_h: float = 64.0) -> Tuple[float, float]:

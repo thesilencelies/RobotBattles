@@ -272,15 +272,90 @@ def get_heading_grid_delta(theta_deg: float) -> Tuple[int, int]:
     return deltas.get(snapped, (0, -1))
 
 
+def get_turn_grid_delta(
+    heading_deg: float,
+    rot_deg: float,
+    pinned_side: str = "right",
+    chassis_template: str = "Square",
+) -> Tuple[int, int]:
+    """
+    Returns the integer (dx, dy) grid direction for a 45-degree Turn step,
+    where heading 0 is North (-y), 90 is East (+x), 180 is South (+y), 270 is West (-x).
+
+    - Square chassis swings around its outer pinned wheel/edge into the adjacent cell.
+    - Wide and Triangle chassis shift 1 grid cell forward along the turn arc.
+    """
+    snapped = int(round((heading_deg % 360.0) / 45.0) * 45) % 360
+    is_cw = (rot_deg > 0)
+    tname = (chassis_template or "Square").capitalize()
+
+    if tname in ("Wide", "Triangle"):
+        # Shifts 1 grid square forward along the turn arc
+        if is_cw:
+            deltas_cw = {
+                0: (0, -1),    # 0 -> 45: North
+                45: (1, 0),    # 45 -> 90: East
+                90: (1, 0),    # 90 -> 135: East
+                135: (0, 1),   # 135 -> 180: South
+                180: (0, 1),   # 180 -> 225: South
+                225: (-1, 0),  # 225 -> 270: West
+                270: (-1, 0),  # 270 -> 315: West
+                315: (0, -1),  # 315 -> 0: North
+            }
+            return deltas_cw.get(snapped, (0, -1))
+        else:
+            deltas_ccw = {
+                0: (0, -1),    # 0 -> 315: North
+                315: (-1, 0),  # 315 -> 270: West
+                270: (-1, 0),  # 270 -> 225: West
+                225: (0, 1),   # 225 -> 180: South
+                180: (0, 1),   # 180 -> 135: South
+                135: (1, 0),   # 135 -> 90: East
+                90: (1, 0),    # 90 -> 45: East
+                45: (0, -1),   # 45 -> 0: North
+            }
+            return deltas_ccw.get(snapped, (0, -1))
+    else:
+        # Square: swings around outer pinned edge into adjacent cell
+        if is_cw:
+            deltas_cw = {
+                0: (1, 0),     # 0 -> 45: East
+                45: (0, -1),   # 45 -> 90: North
+                90: (0, 1),    # 90 -> 135: South
+                135: (1, 0),   # 135 -> 180: East
+                180: (-1, 0),  # 180 -> 225: West
+                225: (0, 1),   # 225 -> 270: South
+                270: (0, -1),  # 270 -> 315: North
+                315: (-1, 0),  # 315 -> 0: West
+            }
+            return deltas_cw.get(snapped, (1, 0))
+        else:
+            deltas_ccw = {
+                0: (-1, 0),    # 0 -> 315: West
+                315: (0, -1),  # 315 -> 270: North
+                270: (0, 1),   # 270 -> 225: South
+                225: (-1, 0),  # 225 -> 180: West
+                180: (1, 0),   # 180 -> 135: East
+                135: (0, 1),   # 135 -> 90: South
+                90: (0, -1),   # 90 -> 45: North
+                45: (1, 0),    # 45 -> 0: East
+            }
+            return deltas_ccw.get(snapped, (-1, 0))
+
+
 def apply_movement_step(
     pose: Pose,
     step: Dict[str, Any],
     wheelbase: float = WHEELBASE_MM,
     grid_unit_mm: float = DRIVE_UNIT_MM,
     clamp_to_walls: bool = True,
+    chassis_template: str = "Square",
 ) -> Pose:
     """
     Applies a single discrete movement step to a robot Pose.
+    - forwards / reverse: translates 1 grid cell along heading delta.
+    - pivot: rotates 45 degrees in place around geometric center.
+    - turn: pivots 45 degrees around outer wheel/edge, snapping to discrete grid.
     """
     stype = step["type"]
     new_pose = pose.clone()
@@ -299,20 +374,10 @@ def apply_movement_step(
 
     elif stype == "turn":
         rot_deg = step["rotation_deg"]
-        pinned = step["pinned_side"]
-        rad = math.radians(rot_deg)
-        r_rad = math.radians(new_pose.theta)
-        rx = math.cos(r_rad)
-        ry = math.sin(r_rad)
-        pv_offset = (wheelbase / 2.0) if pinned == "right" else -(wheelbase / 2.0)
-        pv_x = new_pose.x + pv_offset * rx
-        pv_y = new_pose.y + pv_offset * ry
-        v_x = new_pose.x - pv_x
-        v_y = new_pose.y - pv_y
-        cos_r = math.cos(rad)
-        sin_r = math.sin(rad)
-        new_pose.x = pv_x + (v_x * cos_r - v_y * sin_r)
-        new_pose.y = pv_y + (v_x * sin_r + v_y * cos_r)
+        pinned = step.get("pinned_side", "right")
+        dx_g, dy_g = get_turn_grid_delta(new_pose.theta, rot_deg, pinned, chassis_template)
+        new_pose.x += dx_g * grid_unit_mm
+        new_pose.y += dy_g * grid_unit_mm
         new_pose.theta = (new_pose.theta + rot_deg) % 360.0
 
     if clamp_to_walls:
@@ -329,6 +394,7 @@ def apply_joint_step(
     wheelbase: float = WHEELBASE_MM,
     grid_unit_mm: float = DRIVE_UNIT_MM,
     clamp_to_walls: bool = False,
+    active_chassis: str = "Square",
 ) -> Tuple[Pose, Pose]:
     """
     Executes a movement step on active_pose, moving passive_pose along like it is stuck to it.
@@ -364,29 +430,22 @@ def apply_joint_step(
 
     elif stype == "turn":
         rot_deg = step["rotation_deg"]
-        pinned_side = step["pinned_side"]
+        pinned_side = step.get("pinned_side", "right")
+        dx_g, dy_g = get_turn_grid_delta(active_pose.theta, rot_deg, pinned_side, active_chassis)
+        dx_mm = dx_g * grid_unit_mm
+        dy_mm = dy_g * grid_unit_mm
+        new_active.x += dx_mm
+        new_active.y += dy_mm
+        new_active.theta = (active_pose.theta + rot_deg) % 360.0
+
         rad = math.radians(rot_deg)
         cos_r = math.cos(rad)
         sin_r = math.sin(rad)
-
-        r_heading = math.radians(active_pose.theta)
-        rx = math.cos(r_heading)
-        ry = math.sin(r_heading)
-        pivot_offset = (wheelbase / 2.0) if pinned_side == "right" else -(wheelbase / 2.0)
-        pv_x = active_pose.x + pivot_offset * rx
-        pv_y = active_pose.y + pivot_offset * ry
-
-        v_ax = active_pose.x - pv_x
-        v_ay = active_pose.y - pv_y
-        new_active.x = pv_x + (v_ax * cos_r - v_ay * sin_r)
-        new_active.y = pv_y + (v_ax * sin_r + v_ay * cos_r)
-        new_active.theta = (new_active.theta + rot_deg) % 360.0
-
-        v_px = passive_pose.x - pv_x
-        v_py = passive_pose.y - pv_y
-        new_passive.x = pv_x + (v_px * cos_r - v_py * sin_r)
-        new_passive.y = pv_y + (v_px * sin_r + v_py * cos_r)
-        new_passive.theta = (new_passive.theta + rot_deg) % 360.0
+        rel_x = passive_pose.x - active_pose.x
+        rel_y = passive_pose.y - active_pose.y
+        new_passive.x = new_active.x + (rel_x * cos_r - rel_y * sin_r)
+        new_passive.y = new_active.y + (rel_x * sin_r + rel_y * cos_r)
+        new_passive.theta = (passive_pose.theta + rot_deg) % 360.0
 
     if clamp_to_walls:
         new_active.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_active.x))
@@ -402,6 +461,7 @@ def generate_trajectory(
     choice: MoveChoice,
     num_steps: int = 30,
     clamp_to_walls: bool = True,
+    chassis_template: str = "Square",
 ) -> List[TrajectoryPoint]:
     """
     Computes a discrete trajectory of TrajectoryPoints from t=0.0 to t=1.0
@@ -421,7 +481,7 @@ def generate_trajectory(
     step_poses: List[Pose] = [start_pose.clone()]
     curr = start_pose.clone()
     for step in steps:
-        curr = apply_movement_step(curr, step, clamp_to_walls=clamp_to_walls)
+        curr = apply_movement_step(curr, step, clamp_to_walls=clamp_to_walls, chassis_template=chassis_template)
         step_poses.append(curr.clone())
 
     total_steps = len(steps)

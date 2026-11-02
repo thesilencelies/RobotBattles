@@ -474,8 +474,10 @@ def detect_collision(
     and calculates remaining motion vectors for pushing match.
     """
     num_steps = max(len(traj1), len(traj2))
+    start_k = 0 if num_steps <= 1 else 1
+    end_k = 1 if num_steps <= 1 else num_steps
 
-    for k in range(1, num_steps):
+    for k in range(start_k, end_k):
         p1 = traj1[min(k, len(traj1) - 1)]
         p2 = traj2[min(k, len(traj2) - 1)]
 
