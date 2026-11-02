@@ -107,7 +107,7 @@ def generate_card_images(csv_path: Path, output_dir: Path, density: int, sheet_n
 
     run(
         [sys.executable, str(SCRIPT_DIR / "generate_card_sheet.py"),
-         f"--csv={csv_path}", f"--output={BUILD_DIR / sheet_tex}",
+         f"--csv={csv_path.resolve()}", f"--output={BUILD_DIR / sheet_tex}",
          "--cols=1", "--rows=1"],
         cwd=SCRIPT_DIR,
         label=f"generate_card_sheet {csv_path.name} -> {sheet_tex} (1 card per page)",
