@@ -33,6 +33,8 @@ from .movement import (
     WHEELBASE_MM,
     apply_joint_step,
     compute_movement_steps,
+    generate_push_trajectory,
+    snap_pose_to_grid,
 )
 from .types import (
     CollisionEvent,
@@ -42,6 +44,7 @@ from .types import (
     MoveChoice,
     Pose,
     RobotState,
+    TrajectoryPoint,
 )
 
 THROW_ROTATION_MAP: Dict[int, float] = {
@@ -924,18 +927,17 @@ def resolve_inert_contact(
     r2_choice: Optional[MoveChoice] = None,
     r1_rem_steps: Optional[List[Dict[str, Any]]] = None,
     r2_rem_steps: Optional[List[Dict[str, Any]]] = None,
+    moving_robot_id: Optional[str] = None,
+    moving_rem_steps: Optional[List[Dict[str, Any]]] = None,
+    push_trajectories: Optional[Dict[str, List[TrajectoryPoint]]] = None,
 ) -> List[CombatLogEntry]:
     """
-    Executes inert contact (pushing match) resolution adhering to the discrete grid rules:
-    - Both robots stop at the collision step.
-    - If a robot is raised, its motion does not contribute to inertial pushing (remaining steps = 0).
-    - Take the remaining steps of both robots and move both robots according to these remaining steps,
-      starting with the robot with the most steps remaining (if tied, younger player / player 1 goes first).
-    - Pivots and turns move both robots about the center/edge of the rotating robot (the other one moves
-      along rigidly as if stuck to it).
-    - If a robot hits a perimeter wall during the push, it stops at the wall and is thrown away from the wall
-      perpendicular to the wall with throw strength equal to the largest absolute drive strength of the pushing robot.
-    - Post-collision 1-unit separation is removed.
+    Executes inert contact (pushing) resolution adhering to discrete grid rules:
+    - Alternating movement: The moving robot pushes the non-moving robot in the direction
+      the moving robot is moving until the moving robot finishes that action card.
+    - If a robot ends up raised in a collision, it loses all remaining actions and stays raised
+      until the end of the turn. It still pushes the other robot for the collision that caused it to become raised.
+    - If a robot is pushed into a wall, it stops at the wall without throw.
     """
     logs: List[CombatLogEntry] = []
     logs.append(CombatLogEntry(
@@ -944,110 +946,148 @@ def resolve_inert_contact(
         message=f"🛡️ PUSHING MATCH (Inert Contact): {col.description}",
     ))
 
-    # Calculate remaining steps
-    if r1_rem_steps is None:
-        if hasattr(col, "r1_remaining_steps") and col.r1_remaining_steps:
-            r1_rem_steps = list(col.r1_remaining_steps)
-        elif r1_choice is not None:
-            all_r1 = compute_movement_steps(r1_choice.left, r1_choice.right)
-            k = col.step_index
-            r1_rem_steps = all_r1[k:] if k < len(all_r1) else []
-        elif col.r1_remaining_dist > 0:
-            n_steps = max(1, int(round(col.r1_remaining_dist / DRIVE_UNIT_MM)))
-            r1_rem_steps = [{"type": "forwards", "direction": 1} for _ in range(n_steps)]
-        else:
-            r1_rem_steps = []
-
-    if r2_rem_steps is None:
-        if hasattr(col, "r2_remaining_steps") and col.r2_remaining_steps:
-            r2_rem_steps = list(col.r2_remaining_steps)
-        elif r2_choice is not None:
-            all_r2 = compute_movement_steps(r2_choice.left, r2_choice.right)
-            k = col.step_index
-            r2_rem_steps = all_r2[k:] if k < len(all_r2) else []
-        elif col.r2_remaining_dist > 0:
-            n_steps = max(1, int(round(col.r2_remaining_dist / DRIVE_UNIT_MM)))
-            r2_rem_steps = [{"type": "forwards", "direction": 1} for _ in range(n_steps)]
-        else:
-            r2_rem_steps = []
-
-    # Rule: "a raised robot's motion does not contribute in inertial contact"
-    if r1.is_raised:
-        r1_rem_steps = []
-        logs.append(CombatLogEntry(
-            round=round_num, phase="collision",
-            message=f"⬆️ {r1.name} is RAISED — motion does not contribute to inertial pushing!",
-        ))
-    if r2.is_raised:
-        r2_rem_steps = []
-        logs.append(CombatLogEntry(
-            round=round_num, phase="collision",
-            message=f"⬆️ {r2.name} is RAISED — motion does not contribute to inertial pushing!",
-        ))
-
-    # Fallback for manual push_vector if neither robot has discrete steps
-    if not r1_rem_steps and not r2_rem_steps and (col.push_vector != (0.0, 0.0) or col.r1_rem_vector != (0.0, 0.0) or col.r2_rem_vector != (0.0, 0.0)) and not (r1.is_raised and r2.is_raised):
-        if r2.is_raised and col.r1_rem_vector != (0.0, 0.0):
-            p_dx, p_dy = col.r1_rem_vector
-        elif r1.is_raised and col.r2_rem_vector != (0.0, 0.0):
-            p_dx, p_dy = col.r2_rem_vector
-        else:
-            p_dx, p_dy = col.push_vector
-
-        cand1 = Pose(r1.pose.x + p_dx, r1.pose.y + p_dy, r1.pose.theta)
-        cand2 = Pose(r2.pose.x + p_dx, r2.pose.y + p_dy, r2.pose.theta)
-        hit1, n1, _ = check_wall_penetration(cand1)
-        hit2, n2, _ = check_wall_penetration(cand2)
-
-        r1.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, cand1.x))
-        r1.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, cand1.y))
-        r2.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, cand2.x))
-        r2.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, cand2.y))
+    # Alternating movement pushing:
+    if moving_robot_id:
+        moving_bot = r1 if r1.id == moving_robot_id else r2
+        stationary_bot = r2 if r1.id == moving_robot_id else r1
+        moving_rem = moving_rem_steps
+        if moving_rem is None:
+            moving_rem = r1_rem_steps if r1.id == moving_robot_id else r2_rem_steps
+        if moving_rem is None:
+            moving_rem = []
 
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"Robots push together along displaced vector: ({p_dx:.1f}, {p_dy:.1f}).",
+            message=f"🔄 Inertial Push: {moving_bot.name} pushes {stationary_bot.name} along remaining {len(moving_rem)} steps of current action card.",
         ))
 
-        if hit1 or hit2:
-            wall_bot = r1 if hit1 else r2
-            pushing_bot = r2 if hit1 else r1
-            throw_str = get_largest_absolute_drive_strength(pushing_bot, r2_choice if hit1 else r1_choice)
-            if throw_str <= 0:
-                disp = math.hypot(p_dx, p_dy)
-                throw_str = max(1, int(round(disp / DRIVE_UNIT_MM)))
+        for step in moving_rem:
+            prev_m = moving_bot.pose.clone()
+            prev_s = stationary_bot.pose.clone()
 
-            if is_hazard_wall_contact(wall_bot.pose.x, wall_bot.pose.y):
-                wall_bot.is_knocked_out = True
-                wall_bot.is_eliminated = True
+            cand_m, cand_s = apply_joint_step(
+                moving_bot.pose, stationary_bot.pose, step, clamp_to_walls=True,
+                active_chassis=moving_bot.chassis_template,
+                passive_chassis=stationary_bot.chassis_template,
+            )
+            cand_m = snap_pose_to_grid(cand_m, moving_bot.chassis_template)
+            cand_s = snap_pose_to_grid(cand_s, stationary_bot.chassis_template)
+
+            hit_m, _, _ = check_wall_penetration(cand_m)
+            hit_s, _, _ = check_wall_penetration(cand_s)
+
+            if hit_m or hit_s:
+                wall_bot = stationary_bot if hit_s else moving_bot
+                if is_hazard_wall_contact(wall_bot.pose.x, wall_bot.pose.y):
+                    wall_bot.is_knocked_out = True
+                    wall_bot.is_eliminated = True
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"☠️ {wall_bot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
+                    ))
+                w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
+                logs.extend(w_logs)
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"☠️ {wall_bot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
+                    message=f"🧱 {wall_bot.name} was pushed into the wall by {moving_bot.name} and stopped at the wall (no throw).",
                 ))
+                break
+            else:
+                if push_trajectories is not None:
+                    sub = 4
+                    for s in range(1, sub + 1):
+                        alpha = s / float(sub)
+                        ix_m = prev_m.x + (cand_m.x - prev_m.x) * alpha
+                        iy_m = prev_m.y + (cand_m.y - prev_m.y) * alpha
+                        d_th_m = (cand_m.theta - prev_m.theta + 180.0) % 360.0 - 180.0
+                        ith_m = (prev_m.theta + d_th_m * alpha) % 360.0
+                        if moving_bot.id in push_trajectories:
+                            push_trajectories[moving_bot.id].append(TrajectoryPoint(ix_m, iy_m, ith_m, 0.0))
 
-            w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
-            logs.extend(w_logs)
+                        ix_s = prev_s.x + (cand_s.x - prev_s.x) * alpha
+                        iy_s = prev_s.y + (cand_s.y - prev_s.y) * alpha
+                        d_th_s = (cand_s.theta - prev_s.theta + 180.0) % 360.0 - 180.0
+                        ith_s = (prev_s.theta + d_th_s * alpha) % 360.0
+                        if stationary_bot.id in push_trajectories:
+                            push_trajectories[stationary_bot.id].append(TrajectoryPoint(ix_s, iy_s, ith_s, 0.0))
+
+                moving_bot.pose = cand_m
+                stationary_bot.pose = cand_s
+
+    else:
+        # Legacy fallback when moving_robot_id is not specified
+        if r1_rem_steps is None:
+            if hasattr(col, "r1_remaining_steps") and col.r1_remaining_steps:
+                r1_rem_steps = list(col.r1_remaining_steps)
+            elif r1_choice is not None:
+                all_r1 = compute_movement_steps(r1_choice.left, r1_choice.right)
+                k = col.step_index
+                r1_rem_steps = all_r1[k:] if k < len(all_r1) else []
+            elif col.r1_remaining_dist > 0:
+                n_steps = max(1, int(round(col.r1_remaining_dist / DRIVE_UNIT_MM)))
+                r1_rem_steps = [{"type": "forwards", "direction": 1} for _ in range(n_steps)]
+            else:
+                r1_rem_steps = []
+
+        if r2_rem_steps is None:
+            if hasattr(col, "r2_remaining_steps") and col.r2_remaining_steps:
+                r2_rem_steps = list(col.r2_remaining_steps)
+            elif r2_choice is not None:
+                all_r2 = compute_movement_steps(r2_choice.left, r2_choice.right)
+                k = col.step_index
+                r2_rem_steps = all_r2[k:] if k < len(all_r2) else []
+            elif col.r2_remaining_dist > 0:
+                n_steps = max(1, int(round(col.r2_remaining_dist / DRIVE_UNIT_MM)))
+                r2_rem_steps = [{"type": "forwards", "direction": 1} for _ in range(n_steps)]
+            else:
+                r2_rem_steps = []
+
+        if not r1_rem_steps and not r2_rem_steps and (col.push_vector != (0.0, 0.0) or col.r1_rem_vector != (0.0, 0.0) or col.r2_rem_vector != (0.0, 0.0)):
+            if col.r1_rem_vector != (0.0, 0.0):
+                p_dx, p_dy = col.r1_rem_vector
+            elif col.r2_rem_vector != (0.0, 0.0):
+                p_dx, p_dy = col.r2_rem_vector
+            else:
+                p_dx, p_dy = col.push_vector
+
+            cand1 = Pose(r1.pose.x + p_dx, r1.pose.y + p_dy, r1.pose.theta)
+            cand2 = Pose(r2.pose.x + p_dx, r2.pose.y + p_dy, r2.pose.theta)
+            hit1, _, _ = check_wall_penetration(cand1)
+            hit2, _, _ = check_wall_penetration(cand2)
+
+            r1.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, cand1.x))
+            r1.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, cand1.y))
+            r2.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, cand2.x))
+            r2.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, cand2.y))
 
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🧱 {wall_bot.name} was pushed into the wall by {pushing_bot.name} and stopped at the wall (no throw).",
+                message=f"Robots push together along displaced vector: ({p_dx:.1f}, {p_dy:.1f}).",
             ))
 
-    # Determine execution order: most steps remaining goes first (tie: player 1 / youngest player)
-    elif len(r1_rem_steps) >= len(r2_rem_steps):
-        push_phases = [
-            (r1, r2, r1_rem_steps, r1_choice),
-            (r2, r1, r2_rem_steps, r2_choice),
-        ]
-    else:
-        push_phases = [
-            (r2, r1, r2_rem_steps, r2_choice),
-            (r1, r2, r1_rem_steps, r1_choice),
-        ]
+            if hit1 or hit2:
+                wall_bot = r1 if hit1 else r2
+                pushing_bot = r2 if hit1 else r1
+                if is_hazard_wall_contact(wall_bot.pose.x, wall_bot.pose.y):
+                    wall_bot.is_knocked_out = True
+                    wall_bot.is_eliminated = True
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"☠️ {wall_bot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
+                    ))
+                w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
+                logs.extend(w_logs)
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message=f"🧱 {wall_bot.name} was pushed into the wall by {pushing_bot.name} and stopped at the wall (no throw).",
+                ))
 
-    wall_throw_occurred = False
+        if len(r1_rem_steps) >= len(r2_rem_steps):
+            push_phases = [(r1, r2, r1_rem_steps, r1_choice), (r2, r1, r2_rem_steps, r2_choice)]
+        else:
+            push_phases = [(r2, r1, r2_rem_steps, r2_choice), (r1, r2, r1_rem_steps, r1_choice)]
 
-    if r1_rem_steps or r2_rem_steps:
+        wall_throw_occurred = False
         for pushing_bot, pushed_bot, bot_steps, bot_choice in push_phases:
             if wall_throw_occurred:
                 break
@@ -1060,23 +1100,19 @@ def resolve_inert_contact(
             ))
 
             for step in bot_steps:
-                cand_pushing, cand_pushed = apply_joint_step(pushing_bot.pose, pushed_bot.pose, step)
+                cand_pushing, cand_pushed = apply_joint_step(
+                    pushing_bot.pose, pushed_bot.pose, step, clamp_to_walls=True,
+                    active_chassis=pushing_bot.chassis_template, passive_chassis=pushed_bot.chassis_template,
+                )
+                cand_pushing = snap_pose_to_grid(cand_pushing, pushing_bot.chassis_template)
+                cand_pushed = snap_pose_to_grid(cand_pushed, pushed_bot.chassis_template)
 
-                # Check if either robot is pushed into a wall
-                hit_pushing, n_pushing, _ = check_wall_penetration(cand_pushing)
-                hit_pushed, n_pushed, _ = check_wall_penetration(cand_pushed)
+                hit_pushing, _, _ = check_wall_penetration(cand_pushing)
+                hit_pushed, _, _ = check_wall_penetration(cand_pushed)
 
                 if hit_pushing or hit_pushed:
                     wall_throw_occurred = True
                     wall_bot = pushed_bot if hit_pushed else pushing_bot
-                    normal = n_pushed if hit_pushed else n_pushing
-                    throw_str = get_largest_absolute_drive_strength(pushing_bot, bot_choice)
-
-                    pushing_bot.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, cand_pushing.x))
-                    pushing_bot.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, cand_pushing.y))
-                    pushed_bot.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, cand_pushed.x))
-                    pushed_bot.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, cand_pushed.y))
-
                     if is_hazard_wall_contact(wall_bot.pose.x, wall_bot.pose.y):
                         wall_bot.is_knocked_out = True
                         wall_bot.is_eliminated = True
@@ -1084,10 +1120,8 @@ def resolve_inert_contact(
                             round=round_num, phase="collision",
                             message=f"☠️ {wall_bot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
                         ))
-
                     w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
                     logs.extend(w_logs)
-
                     logs.append(CombatLogEntry(
                         round=round_num, phase="collision",
                         message=f"🧱 {wall_bot.name} was pushed into the wall by {pushing_bot.name} and stopped at the wall (no throw).",
@@ -1357,6 +1391,7 @@ def _execute_throw(
     orientation_roll = random.randint(1, 6)
     spin_rot = THROW_ROTATION_MAP[orientation_roll]
     robot.pose.theta = (robot.pose.theta + spin_rot) % 360.0
+    robot.pose = snap_pose_to_grid(robot.pose, robot.chassis_template)
 
     # Throw damage rule: always equal to throw strength
     throw_dmg = throw_str
@@ -1428,6 +1463,9 @@ def resolve_collision_combat(
     steps: Optional[List[DamageTrainStep]] = None,
     r1_choice: Optional[MoveChoice] = None,
     r2_choice: Optional[MoveChoice] = None,
+    moving_robot_id: Optional[str] = None,
+    moving_rem_steps: Optional[List[Dict[str, Any]]] = None,
+    push_trajectories: Optional[Dict[str, List[TrajectoryPoint]]] = None,
 ) -> List[CombatLogEntry]:
     """
     Executes combat resolution adhering strictly to combat_robotics_game.tex.
@@ -1511,28 +1549,28 @@ def resolve_collision_combat(
             r2.is_raised = False
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🎲 Ground Game Clash: Both robots contested ground game! Dice roll ({die_roll}) selects {r1.name} to be RAISED ({r2.name} stays grounded).",
+                message=f"🎲 Ground Game Clash: Both robots contested ground game! Dice roll ({die_roll}) selects {r1.name} to be RAISED ({r2.name} stays grounded). ({r1.name} loses all remaining actions, stays raised until end of turn)",
             ))
         else:
             r2.is_raised = True
             r1.is_raised = False
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🎲 Ground Game Clash: Both robots contested ground game! Dice roll ({die_roll}) selects {r2.name} to be RAISED ({r1.name} stays grounded).",
+                message=f"🎲 Ground Game Clash: Both robots contested ground game! Dice roll ({die_roll}) selects {r2.name} to be RAISED ({r1.name} stays grounded). ({r2.name} loses all remaining actions, stays raised until end of turn)",
             ))
     elif r1_would_raise_r2:
         r2.is_raised = True
         cause = "Forks lift" if r1_forks_lift else "Wedge lifts"
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r1.name}'s {cause} {r2.name}! ({r2.name} is RAISED: no inert push, +2 throw str received)",
+            message=f"🔱 {r1.name}'s {cause} {r2.name}! ({r2.name} is RAISED: loses all remaining actions for the round, stays raised until end of turn)",
         ))
     elif r2_would_raise_r1:
         r1.is_raised = True
         cause = "Forks lift" if r2_forks_lift else "Wedge lifts"
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r2.name}'s {cause} {r1.name}! ({r1.name} is RAISED: no inert push, +2 throw str received)",
+            message=f"🔱 {r2.name}'s {cause} {r1.name}! ({r1.name} is RAISED: loses all remaining actions for the round, stays raised until end of turn)",
         ))
 
     if col.contact_type == "ACTIVE":
@@ -1564,7 +1602,10 @@ def resolve_collision_combat(
 
         if not w1_cand_ids and not w2_cand_ids:
             # Neither robot can actively attack (e.g. weapons are inactive due to reset) -> proceed with inertial contact
-            return resolve_inert_contact(col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice)
+            return resolve_inert_contact(
+                col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice,
+                moving_robot_id=moving_robot_id, moving_rem_steps=moving_rem_steps, push_trajectories=push_trajectories,
+            )
 
         # Trigger keyword handling:
         # Rule: "Trigger does not attack if the opposing robot's active weapon hits anywhere unless it is still in contact after that contact resolves. If they both have Trigger, they both will attack. Trigger weapons don't get feedback if they don't attack."
@@ -1747,18 +1788,22 @@ def resolve_collision_combat(
                     round=round_num, phase="collision",
                     message="⚡ Robots are still in contact after active clash — proceeding with inertial contact!",
                 ))
-                inert_logs = resolve_inert_contact(col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice)
+                inert_logs = resolve_inert_contact(
+                    col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice,
+                    moving_robot_id=moving_robot_id, moving_rem_steps=moving_rem_steps, push_trajectories=push_trajectories,
+                )
                 logs.extend(inert_logs)
 
     else:
         # Standard inert pushing contact
-        inert_logs = resolve_inert_contact(col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice)
+        inert_logs = resolve_inert_contact(
+            col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice,
+            moving_robot_id=moving_robot_id, moving_rem_steps=moving_rem_steps, push_trajectories=push_trajectories,
+        )
         logs.extend(inert_logs)
 
-
-    # After contact, robots are pushed or thrown apart -> clear raised status
-    r1.is_raised = False
-    r2.is_raised = False
+    # Note: raised status persists until the end of the turn (cleared during round cleanup)
+    # per rule: "If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn."
 
     # Refresh drive capabilities and power
     refresh_robot_drive_and_power(r1)

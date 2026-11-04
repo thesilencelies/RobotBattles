@@ -422,8 +422,8 @@ Each round follows a sequence of 3 steps:
   \textbf{Step} & \textbf{Summary} \\
   \midrule
   \textbf{1. Planning} & Players secretly choose 3 movement Action Cards in an order of their choice and allocate power to components. \\
-  \textbf{2. Movement} & Choices are simultaneously revealed; robots simultaneously resolve their 1st, then 2nd, then 3rd action card across the arena grid. \\
-  \textbf{3. Collision} & Collisions (entering the same square or passing through an ended square) are resolved immediately. \\
+  \textbf{2. Movement} & Choices are revealed; robots resolve their chosen Action Cards alternating between robots, starting with the robot with higher total active drive (tie-break: youngest player). \\
+  \textbf{3. Collision} & A collision happens when a moving robot attempts to move through a tile occupied by the other robot. Resolved immediately in the overlapping state. \\
   \bottomrule
 \end{tabularx}}
 
@@ -649,19 +649,29 @@ When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throw
   \label{fig:diagram_chassis_45_occupancy}
 \end{figure}
 
-\subsubsection{Simultaneous Action Card Resolution}
-During the Planning phase, both players secretly choose 3 Action Cards and arrange them facedown in their chosen execution order: Card~1, Card~2, and Card~3. Choices are revealed simultaneously.
+\subsubsection{Alternating Action Card Resolution}
+During the Planning phase, both players secretly choose 3 Action Cards and arrange them facedown in their chosen execution order: Card~1, Card~2, and Card~3. Choices are revealed.
 
-Both robots then resolve their action cards \textbf{simultaneously step-by-step}:
+To eliminate movement ambiguity, the chosen Action Cards are resolved \textbf{alternating between the robots}, starting with the robot with the higher total active drive (ties broken by the youngest player):
 \begin{enumerate}[label=\arabic*., leftmargin=*, noitemsep, topsep=2pt]
-  \item \textbf{Action 1:} Both robots simultaneously resolve their first action card.
-  \item \textbf{Action 2:} Both robots simultaneously resolve their second action card.
-  \item \textbf{Action 3:} Both robots simultaneously resolve their third action card.
+  \item \textbf{First Robot Card 1:} The robot with higher active drive executes its first Action Card.
+  \item \textbf{Second Robot Card 1:} The second robot executes its first Action Card.
+  \item \textbf{First Robot Card 2:} The first robot executes its second Action Card.
+  \item \textbf{Second Robot Card 2:} The second robot executes its second Action Card.
+  \item \textbf{First Robot Card 3:} The first robot executes its third Action Card.
+  \item \textbf{Second Robot Card 3:} The second robot executes its third Action Card.
 \end{enumerate}
 
 \noindent
 \textbf{Collisions During Resolution:}\\
-Robots collide if they would both move into the same grid square, or if either robot passes through a square that the other robot ends in during that action card. When a collision occurs, movement halts at that card and contact resolution occurs immediately.
+A collision happens when a robot tries to move through a tile the other robot is in. They are placed in the overlapping state to work out what is involved in the collision.
+If it is an \textbf{Active Collision}, weapon damage, feedback, and throws are resolved from there.
+If it is an \textbf{Inert Collision}, the robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that motion.
+
+\vspace{0.3em}
+\noindent
+\textbf{Raised Robots:}\\
+If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn. It still pushes the other robot for the collision that caused it to become raised.
 
 \vspace{0.3em}
 \noindent
@@ -914,9 +924,9 @@ Card 1 pivots $90^\circ$ CW on the spot. Card 2 drives forward 1 square into the
 
 \subsection{Determining the Contact Point}
 
-During simultaneous action card resolution across the arena grid, a collision occurs if both robots move into the same square or pass through a square the other ends in. Both robots halt independent movement at that action card. Where the robots touch shows the contact point. Align the contact direction into each robot's chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
+During alternating action card resolution across the arena grid, a collision happens when a moving robot tries to move through a tile the other robot is in. The robots are placed in the overlapping state to work out what is involved in the collision. Where the robots touch shows the contact point. Align the contact direction into each robot's chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
 
-If a collision results in a robot being thrown, the thrown robot's remaining action cards for the round do not happen.
+If a collision results in a robot being thrown, the thrown robot's remaining action cards for the round do not happen. If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn (it still pushes the other robot for the collision that caused it to become raised).
 
 If the parts of either robot that is touching is the weapon's active area (the marked strike zone on the chassis), then the contact is an \textbf{Active Contact}. Otherwise, it is an \textbf{Inert Contact}.
 
@@ -1036,15 +1046,13 @@ The first remaining component on the robot along the line corresponding to the c
 
 Inert contact occurs when non-weapon chassis surfaces make contact (or weapons collide without active strike areas):
 \begin{enumerate}[leftmargin=*, noitemsep, topsep=1pt]
-  \item Both robots halt their simultaneous movement at the action card of contact.
-  \item Both robots move together according to the remaining action cards of each robot, starting with the player with the largest number of remaining action cards left. If players have an equal number of action cards remaining, the tie is broken by the youngest player.
-  \item During these remaining cards, the active pushing robot moves both robots together:
+  \item A collision happens when the moving robot tries to move through a tile the stationary robot is in.
+  \item The robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that action card:
   \begin{itemize}[noitemsep, topsep=1pt]
-    \item \textbf{Forwards Steps:} Both robots move together one square in the direction of the step.
-    \item \textbf{Turn and Pivot Steps:} Both robots rotate together about the center or edge of the rotating robot (the opposing robot moves along with it as if stuck to it).
-    \item \textbf{Raised Robot:} A raised robot's motion does not contribute to pushing.
+    \item \textbf{Forwards and Reverse Steps:} Both robots move together in the direction of the step.
+    \item \textbf{Turn and Pivot Steps:} Both robots rotate together about the center or pivot edge of the moving robot (the opposing robot moves along with it as if stuck to it).
+    \item \textbf{Raised Robot:} If a robot ends up raised in a collision, it still pushes the other robot for the collision that caused it to become raised, but loses all subsequent remaining actions and stays raised until the end of the turn.
   \end{itemize}
-  \item Once the first player has resolved all of their remaining action cards, the second player resolves any remaining action cards they have left in the same manner, moving both robots together.
   \item If a robot is pushed into a wall, movement halts against the wall; no throw occurs (throws due to being pushed into a wall are completely removed). If its active weapon contacts the wall, it loses all spin counters and takes feedback equal to half its weapon strength, rounded down.
   \item \textbf{No Separation Required:} Robot separation after collisions is no longer required. The robots remain in their resulting adjacent positions where movement concludes.
 \end{enumerate}
@@ -1170,13 +1178,13 @@ Similarly if a weapon contacts multiple components at once, each component is da
   \midrule
   \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage \inlineIcon{\resourceW} to outermost component contacted $\rightarrow$ Base throw strength equals weapon damage \inlineIcon{\resourceW} minus absorption of hit component (minimum 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance in grid squares is lower of die roll or throw strength $\rightarrow$ Thrown robot orientation determined by d6 roll ($45^\circ$/$90^\circ$/$180^\circ$/None) $\rightarrow$ Throw damage equals throw strength. If robots remain in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match on grid $\rightarrow$ Move both robots together using remaining action cards of each robot, starting with most action cards left (tie: youngest player) $\rightarrow$ Pushed into wall halts at perimeter (no throw) $\rightarrow$ Conclude adjacent (no separation). \\
+  \textbf{Inert Contact} & Pushing match on grid $\rightarrow$ Moving robot pushes stationary robot along remaining steps of current Action Card $\rightarrow$ Pushed into wall halts at perimeter (no throw) $\rightarrow$ Conclude adjacent (no separation). \\
 \end{tabularx}
 \end{summarybox}
 
 \subsection{The Ground Game}
 
-Wedges and forks can both inflict the raised status on opponents when they hit. A raised robot does not contribute any motion to the pushing in inert contact. When a raised robot receives an active throw, the throw strength is increased by 2. \textbf{Raised just increases throw strength received; it does not trigger a throw where there is not already one} (for example, in inert pushing or when weapon damage does not exceed absorption). The throw strength of a raised robot's own attacks is reduced by 2.
+Wedges and forks can both inflict the raised status on opponents when they hit. If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn (it still pushes the other robot for the collision that caused it to become raised). When a raised robot receives an active throw, the throw strength is increased by 2. \textbf{Raised just increases throw strength received; it does not trigger a throw where there is not already one} (for example, in inert pushing or when weapon damage does not exceed absorption). The throw strength of a raised robot's own attacks is reduced by 2.
 
 When both robots would be raised in the same contact, randomly choose one by rolling a dice: that one is raised and the other isn't.
 
@@ -1295,7 +1303,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons, drive \inlineIcon{\resourceM}, and component abilities (such as wedges and forks) without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Inflicted by wedges or forks during contact. A raised robot does not contribute any motion to pushing in inert contact, loses the double absorption of its wedges, reduces the throw strength of its attacks by 2, and receives an additional throw strength of 2 after active contact.
+  \item[Raised:] Inflicted by wedges or forks during contact. If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn (it still pushes the other robot for the collision that caused it to become raised). It loses the double absorption of its wedges, reduces the throw strength of its attacks by 2, and receives an additional throw strength of 2 after active contact.
 \end{description}
 
 \begin{figure}[H]

@@ -25,7 +25,7 @@ from .automata import (
     get_automaton_action,
     roll_d6,
 )
-from .collision import detect_collision
+from .collision import check_robots_in_contact, detect_collision, get_octant
 from .combat import (
     parse_weapon_spin_and_damage,
     refresh_robot_drive_and_power,
@@ -33,17 +33,22 @@ from .combat import (
     resolve_weapon_wall_contact,
     start_of_turn_spin_up,
 )
-from .field import AUTOMATON_START_POSE, PLAYER_START_POSE
+from .field import AUTOMATON_START_POSE, PLAYER_START_POSE, get_chassis_grid_cells
 from .movement import (
     CURVE_CONFIGS,
     DRIVE_UNIT_MM,
     MINIATURE_RADIUS,
     WHEELBASE_MM,
+    apply_joint_step,
+    apply_movement_step,
     compute_movement_steps,
     generate_action_plan_trajectory,
+    generate_push_trajectory,
     generate_trajectory,
     get_action_card,
+    get_action_card_steps,
     normalize_action_code,
+    snap_pose_to_grid,
     synthesize_cards_from_drive,
     validate_action_plan,
 )
@@ -498,99 +503,234 @@ def execute_turn(
         match.last_collision = None
         match.action_step_results = []
     else:
-        # Step-by-step simultaneous card resolution (Action 1 -> Action 2 -> Action 3)
+        # Alternating Action Card Resolution (6 phases: Card 1 -> Card 2 -> Card 3)
+        # Starting with the robot with higher total active drive (ties broken by youngest player / Player 1).
+        p_total_drive = p_bot.left_drive_max + p_bot.right_drive_max
+        a_total_drive = a_bot.left_drive_max + a_bot.right_drive_max
+        player_first = (p_total_drive >= a_total_drive)
+
+        first_bot = p_bot if player_first else a_bot
+        second_bot = a_bot if player_first else p_bot
+        first_cards = p_cards if player_first else a_cards
+        second_cards = a_cards if player_first else p_cards
+        first_choice = p_choice if player_first else a_choice
+        second_choice = a_choice if player_first else p_choice
+
+        match.log.append(CombatLogEntry(
+            round=r_num,
+            phase="movement",
+            message=f"⚡ Turn Order: {first_bot.name} (Active Drive {p_total_drive if player_first else a_total_drive}) moves first ahead of {second_bot.name} (Active Drive {a_total_drive if player_first else p_total_drive})!",
+        ))
+
         action_step_results: List[Dict[str, Any]] = []
         full_p_traj: List[TrajectoryPoint] = [TrajectoryPoint(p_start.x, p_start.y, p_start.theta, t=0.0)]
         full_a_traj: List[TrajectoryPoint] = [TrajectoryPoint(a_start.x, a_start.y, a_start.theta, t=0.0)]
-        collision_halted = False
-        collision_event: Optional[CollisionEvent] = None
+        turn_collision: Optional[CollisionEvent] = None
 
-        for act_idx in range(3):
-            p_card = p_cards[act_idx]
-            a_card = a_cards[act_idx]
+        for phase_idx in range(6):
+            act_card_idx = phase_idx // 2
+            is_first = (phase_idx % 2 == 0)
+            moving_bot = first_bot if is_first else second_bot
+            stationary_bot = second_bot if is_first else first_bot
+            moving_card = first_cards[act_card_idx] if is_first else second_cards[act_card_idx]
+            moving_choice = first_choice if is_first else second_choice
+            stationary_choice = second_choice if is_first else first_choice
 
-            if collision_halted:
+            t_phase_start = phase_idx / 6.0
+            t_phase_span = 1.0 / 6.0
+
+            # 1. Elimination / Knockout Check
+            if moving_bot.is_knocked_out or moving_bot.is_eliminated:
                 action_step_results.append({
-                    "action_index": act_idx,
-                    "player_card": p_card,
-                    "automaton_card": a_card,
+                    "phase_index": phase_idx,
+                    "action_index": act_card_idx,
+                    "robot_id": moving_bot.id,
+                    "robot_name": moving_bot.name,
+                    "card": moving_card,
+                    "player_card": p_cards[act_card_idx],
+                    "automaton_card": a_cards[act_card_idx],
+                    "collision": False,
                     "cancelled": True,
-                    "reason": "Halted due to previous collision",
+                    "reason": "Eliminated / Knocked Out",
                 })
+                full_p_traj.append(TrajectoryPoint(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta, t=t_phase_start + t_phase_span))
+                full_a_traj.append(TrajectoryPoint(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta, t=t_phase_start + t_phase_span))
                 continue
 
-            # Generate trajectory slice for this action card
-            p_sub_traj, _ = generate_action_plan_trajectory(
-                p_bot.pose, [p_card], num_substeps=10, clamp_to_walls=True, chassis_template=p_bot.chassis_template
-            )
-            a_sub_traj, _ = generate_action_plan_trajectory(
-                a_bot.pose, [a_card], num_substeps=10, clamp_to_walls=True, chassis_template=a_bot.chassis_template
-            )
-
-            # Check collision between the two sub-trajectories
-            col = detect_collision(p_bot, p_sub_traj, a_bot, a_sub_traj)
-
-            t_start = act_idx / 3.0
-            t_span = 1.0 / 3.0
-
-            if col:
-                collision_halted = True
-                collision_event = col
-                col_idx = col.step_index if col.step_index > 0 else max(1, int(col.time_t * len(p_sub_traj)))
-                p_col_idx = min(col_idx, len(p_sub_traj) - 1)
-                a_col_idx = min(col_idx, len(a_sub_traj) - 1)
-
-                for k in range(1, p_col_idx + 1):
-                    pt = p_sub_traj[k]
-                    full_p_traj.append(TrajectoryPoint(pt.x, pt.y, pt.theta, t=t_start + pt.t * t_span))
-                for k in range(1, a_col_idx + 1):
-                    pt = a_sub_traj[k]
-                    full_a_traj.append(TrajectoryPoint(pt.x, pt.y, pt.theta, t=t_start + pt.t * t_span))
-
-                p_bot.pose = Pose(p_sub_traj[p_col_idx].x, p_sub_traj[p_col_idx].y, p_sub_traj[p_col_idx].theta)
-                a_bot.pose = Pose(a_sub_traj[a_col_idx].x, a_sub_traj[a_col_idx].y, a_sub_traj[a_col_idx].theta)
-
+            # 2. Raised Robot Check:
+            # Rule: "If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn."
+            if moving_bot.is_raised:
                 match.log.append(CombatLogEntry(
                     round=r_num,
-                    phase="collision",
-                    message=f"💥 COLLISION during Action {act_idx + 1} ({p_card} vs {a_card})! Movement halts at point of contact.",
+                    phase="movement",
+                    message=f"🔱 {moving_bot.name} is RAISED: Action Card {act_card_idx + 1} ({moving_card}) is cancelled! (Stays raised until end of turn)",
                 ))
-
-                # Resolve combat
-                c_logs = resolve_collision_combat(col, p_bot, a_bot, r_num, steps=match.damage_steps, r1_choice=p_choice, r2_choice=a_choice)
-                match.log.extend(c_logs)
-
                 action_step_results.append({
-                    "action_index": act_idx,
-                    "player_card": p_card,
-                    "automaton_card": a_card,
-                    "collision": True,
-                    "halted": True,
-                })
-            else:
-                for k in range(1, len(p_sub_traj)):
-                    pt = p_sub_traj[k]
-                    full_p_traj.append(TrajectoryPoint(pt.x, pt.y, pt.theta, t=t_start + pt.t * t_span))
-                for k in range(1, len(a_sub_traj)):
-                    pt = a_sub_traj[k]
-                    full_a_traj.append(TrajectoryPoint(pt.x, pt.y, pt.theta, t=t_start + pt.t * t_span))
-
-                p_bot.pose = Pose(p_sub_traj[-1].x, p_sub_traj[-1].y, p_sub_traj[-1].theta)
-                a_bot.pose = Pose(a_sub_traj[-1].x, a_sub_traj[-1].y, a_sub_traj[-1].theta)
-
-                # Check arena wall contact for active weapons during this step
-                w_logs_p = resolve_weapon_wall_contact(p_bot, throw_strength=0, round_num=r_num, phase="movement", steps=match.damage_steps)
-                w_logs_a = resolve_weapon_wall_contact(a_bot, throw_strength=0, round_num=r_num, phase="movement", steps=match.damage_steps)
-                match.log.extend(w_logs_p)
-                match.log.extend(w_logs_a)
-
-                action_step_results.append({
-                    "action_index": act_idx,
-                    "player_card": p_card,
-                    "automaton_card": a_card,
+                    "phase_index": phase_idx,
+                    "action_index": act_card_idx,
+                    "robot_id": moving_bot.id,
+                    "robot_name": moving_bot.name,
+                    "card": moving_card,
+                    "player_card": p_cards[act_card_idx],
+                    "automaton_card": a_cards[act_card_idx],
                     "collision": False,
-                    "halted": False,
+                    "cancelled": True,
+                    "reason": "Robot is raised",
                 })
+                full_p_traj.append(TrajectoryPoint(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta, t=t_phase_start + t_phase_span))
+                full_a_traj.append(TrajectoryPoint(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta, t=t_phase_start + t_phase_span))
+                continue
+
+            # 3. Step-by-step movement resolution with grid collision check
+            steps = get_action_card_steps(moving_card, chassis_template=moving_bot.chassis_template)
+            if not steps:
+                # Wait / Stop card
+                action_step_results.append({
+                    "phase_index": phase_idx,
+                    "action_index": act_card_idx,
+                    "robot_id": moving_bot.id,
+                    "robot_name": moving_bot.name,
+                    "card": moving_card,
+                    "player_card": p_cards[act_card_idx],
+                    "automaton_card": a_cards[act_card_idx],
+                    "collision": False,
+                    "cancelled": False,
+                })
+                full_p_traj.append(TrajectoryPoint(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta, t=t_phase_start + t_phase_span))
+                full_a_traj.append(TrajectoryPoint(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta, t=t_phase_start + t_phase_span))
+                continue
+
+            phase_m_pts: List[Pose] = []
+            phase_s_pts: List[Pose] = []
+            phase_collision = False
+
+            for s_idx, step in enumerate(steps):
+                prev_m = moving_bot.pose.clone()
+                prev_s = stationary_bot.pose.clone()
+
+                cand_m = apply_movement_step(prev_m, step, clamp_to_walls=True, chassis_template=moving_bot.chassis_template)
+                cand_m = snap_pose_to_grid(cand_m, moving_bot.chassis_template)
+
+                # Check if moving bot enters any tile currently occupied by the stationary robot
+                stat_cells = get_chassis_grid_cells(stationary_bot.chassis_template, stationary_bot.pose)
+                cand_cells = get_chassis_grid_cells(moving_bot.chassis_template, cand_m)
+                shared_cells = cand_cells & stat_cells
+
+                # Check contact in the overlapping state
+                moving_bot.pose = cand_m
+                in_contact = bool(shared_cells) or check_robots_in_contact(moving_bot, stationary_bot)
+
+                if in_contact:
+                    phase_collision = True
+                    # Place robots in overlapping state to detect collision components & contact type
+                    col = detect_collision(
+                        moving_bot, [TrajectoryPoint(cand_m.x, cand_m.y, cand_m.theta, 0.0)],
+                        stationary_bot, [TrajectoryPoint(stationary_bot.pose.x, stationary_bot.pose.y, stationary_bot.pose.theta, 0.0)],
+                    )
+                    if col is None:
+                        sc = list(shared_cells)[0] if shared_cells else (int(cand_m.x / 40.0), int(cand_m.y / 40.0))
+                        c_pt = ((sc[0] + 0.5) * 40.0, (sc[1] + 0.5) * 40.0)
+                        oct_m = get_octant(cand_m.x, cand_m.y, c_pt[0], c_pt[1], cand_m.theta)
+                        oct_s = get_octant(stationary_bot.pose.x, stationary_bot.pose.y, c_pt[0], c_pt[1], stationary_bot.pose.theta)
+                        col = CollisionEvent(
+                            time_t=t_phase_start + (s_idx / float(len(steps))) * t_phase_span,
+                            step_index=s_idx,
+                            contact_point=c_pt,
+                            robot1_octant=oct_m,
+                            robot2_octant=oct_s,
+                            robot1_components=[list(moving_bot.components.keys())[0]] if moving_bot.components else [],
+                            robot2_components=[list(stationary_bot.components.keys())[0]] if stationary_bot.components else [],
+                            contact_type="INERT",
+                            description=f"Inert pushing contact: {moving_bot.name} ({oct_m}) vs {stationary_bot.name} ({oct_s})",
+                        )
+
+                    col.time_t = t_phase_start + ((s_idx + 0.5) / float(len(steps))) * t_phase_span
+                    turn_collision = col
+
+                    match.log.append(CombatLogEntry(
+                        round=r_num,
+                        phase="collision",
+                        message=f"💥 COLLISION during {moving_bot.name}'s Action {act_card_idx + 1} ({moving_card}) with {stationary_bot.name}! {col.description}",
+                    ))
+
+                    # Restore pre-step poses for push resolution
+                    moving_bot.pose = prev_m.clone()
+                    stationary_bot.pose = prev_s.clone()
+
+                    rem_steps = steps[s_idx:]
+                    push_trajs: Dict[str, List[TrajectoryPoint]] = {moving_bot.id: [], stationary_bot.id: []}
+
+                    c_logs = resolve_collision_combat(
+                        col, moving_bot, stationary_bot, r_num,
+                        steps=match.damage_steps,
+                        r1_choice=moving_choice, r2_choice=stationary_choice,
+                        moving_robot_id=moving_bot.id,
+                        moving_rem_steps=rem_steps,
+                        push_trajectories=push_trajs,
+                    )
+                    match.log.extend(c_logs)
+
+                    # Add push/throw trajectory points to phase trajectory
+                    m_pts = push_trajs.get(moving_bot.id, [])
+                    s_pts = push_trajs.get(stationary_bot.id, [])
+                    if m_pts and s_pts:
+                        for mp, sp in zip(m_pts, s_pts):
+                            phase_m_pts.append(Pose(mp.x, mp.y, mp.theta))
+                            phase_s_pts.append(Pose(sp.x, sp.y, sp.theta))
+                    else:
+                        # If active throw displaced the robots, interpolate to end poses
+                        phase_m_pts.append(moving_bot.pose.clone())
+                        phase_s_pts.append(stationary_bot.pose.clone())
+
+                    # Collision finishes remaining motion for this action card
+                    break
+                else:
+                    # No collision: advance moving robot and record substeps
+                    moving_bot.pose = cand_m
+                    for sub in range(1, 5):
+                        alpha = sub / 4.0
+                        ix_m = prev_m.x + (cand_m.x - prev_m.x) * alpha
+                        iy_m = prev_m.y + (cand_m.y - prev_m.y) * alpha
+                        d_th = (cand_m.theta - prev_m.theta + 180.0) % 360.0 - 180.0
+                        ith = (prev_m.theta + d_th * alpha) % 360.0
+                        phase_m_pts.append(Pose(ix_m, iy_m, ith))
+                        phase_s_pts.append(prev_s.clone())
+
+                    # Check arena wall contact for active weapons during this step
+                    w_logs = resolve_weapon_wall_contact(
+                        moving_bot, throw_strength=0, round_num=r_num,
+                        phase="movement", steps=match.damage_steps,
+                    )
+                    match.log.extend(w_logs)
+
+            action_step_results.append({
+                "phase_index": phase_idx,
+                "action_index": act_card_idx,
+                "robot_id": moving_bot.id,
+                "robot_name": moving_bot.name,
+                "card": moving_card,
+                "player_card": p_cards[act_card_idx],
+                "automaton_card": a_cards[act_card_idx],
+                "collision": phase_collision,
+                "halted": phase_collision,
+            })
+
+            # Append phase trajectories with timestamps
+            K = len(phase_m_pts)
+            if K == 0:
+                full_p_traj.append(TrajectoryPoint(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta, t=t_phase_start + t_phase_span))
+                full_a_traj.append(TrajectoryPoint(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta, t=t_phase_start + t_phase_span))
+            else:
+                for k_idx in range(K):
+                    pt_m = phase_m_pts[k_idx]
+                    pt_s = phase_s_pts[k_idx]
+                    t_val = t_phase_start + ((k_idx + 1) / float(K)) * t_phase_span
+                    if moving_bot.id == p_bot.id:
+                        full_p_traj.append(TrajectoryPoint(pt_m.x, pt_m.y, pt_m.theta, t=t_val))
+                        full_a_traj.append(TrajectoryPoint(pt_s.x, pt_s.y, pt_s.theta, t=t_val))
+                    else:
+                        full_a_traj.append(TrajectoryPoint(pt_m.x, pt_m.y, pt_m.theta, t=t_val))
+                        full_p_traj.append(TrajectoryPoint(pt_s.x, pt_s.y, pt_s.theta, t=t_val))
 
         # Pad trajectories to t=1.0 if ended early
         if full_p_traj[-1].t < 1.0:
@@ -598,12 +738,16 @@ def execute_turn(
         if full_a_traj[-1].t < 1.0:
             full_a_traj.append(TrajectoryPoint(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta, t=1.0))
 
+        # Guarantee final poses strictly snapped to 40mm grid
+        p_bot.pose = snap_pose_to_grid(p_bot.pose, p_bot.chassis_template)
+        a_bot.pose = snap_pose_to_grid(a_bot.pose, a_bot.chassis_template)
+
         match.player_trajectory = full_p_traj
         match.automaton_trajectory = full_a_traj
-        match.last_collision = collision_event
+        match.last_collision = turn_collision
         match.action_step_results = action_step_results
 
-        if not collision_event:
+        if not turn_collision:
             match.log.append(CombatLogEntry(
                 round=r_num, phase="movement", message="Both robots completed all 3 Action Cards without contact."
             ))
@@ -611,6 +755,10 @@ def execute_turn(
     col = match.last_collision
 
     # 4. Cleanup Phase
+    # Reset raised status at end of turn
+    p_bot.is_raised = False
+    a_bot.is_raised = False
+
     # Self-right check: if round ended without contact and robot is inverted, invert it
     # Rule: Self-righting requires the component to be active (and non-destroyed)
     if not col:

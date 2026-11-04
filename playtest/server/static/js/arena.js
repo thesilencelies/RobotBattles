@@ -367,6 +367,30 @@ export class ArenaRenderer {
     }
   }
 
+  _interpolatePose(traj, t) {
+    if (!traj || traj.length === 0) return { x: 0, y: 0, theta: 0 };
+    if (t <= (traj[0].t || 0.0)) return traj[0];
+    if (t >= (traj[traj.length - 1].t || 1.0)) return traj[traj.length - 1];
+
+    for (let i = 0; i < traj.length - 1; i++) {
+      const p1 = traj[i];
+      const p2 = traj[i + 1];
+      const t1 = p1.t !== undefined ? p1.t : i / (traj.length - 1);
+      const t2 = p2.t !== undefined ? p2.t : (i + 1) / (traj.length - 1);
+
+      if (t >= t1 && t <= t2) {
+        const span = t2 - t1;
+        const alpha = span > 1e-6 ? (t - t1) / span : 1.0;
+        const x = p1.x + (p2.x - p1.x) * alpha;
+        const y = p1.y + (p2.y - p1.y) * alpha;
+        let dTh = ((p2.theta - p1.theta + 180.0) % 360.0) - 180.0;
+        const theta = (p1.theta + dTh * alpha + 360.0) % 360.0;
+        return { x, y, theta };
+      }
+    }
+    return traj[traj.length - 1];
+  }
+
   animateTurn(matchState, onComplete) {
     const pTraj = matchState.player_trajectory || [];
     const aTraj = matchState.automaton_trajectory || [];
@@ -382,8 +406,7 @@ export class ArenaRenderer {
     }
 
     this.animating = true;
-    const totalFrames = Math.min(pTraj.length, aTraj.length);
-    let frameIdx = 0;
+    const totalFrames = Math.max(pTraj.length, aTraj.length);
     const pBot = JSON.parse(JSON.stringify(matchState.player_robot));
     const aBot = JSON.parse(JSON.stringify(matchState.automaton_robot));
 
@@ -393,19 +416,35 @@ export class ArenaRenderer {
     this._renderTrajectories(pTraj, aTraj);
     this.layerEffects.innerHTML = "";
 
-    const step = () => {
-      if (frameIdx < totalFrames) {
-        pBot.pose = pTraj[frameIdx];
-        aBot.pose = aTraj[frameIdx];
+    // Deliberate pacing: ~3.2 seconds minimum, or ~65ms per trajectory substep
+    const turnDuration = Math.max(3200, totalFrames * 65);
+    const startTime = performance.now();
+    let collisionEffectRendered = false;
 
-        // Dynamically update discrete footprints as robots move across grid
-        this._renderFootprints(pBot, aBot);
+    const step = (now) => {
+      const elapsed = now - startTime;
+      const frac = Math.min(1.0, elapsed / turnDuration);
 
-        this.layerRobots.innerHTML = "";
-        this._renderMiniature(pBot, "player");
-        this._renderMiniature(aBot, "automaton");
+      pBot.pose = this._interpolatePose(pTraj, frac);
+      aBot.pose = this._interpolatePose(aTraj, frac);
 
-        frameIdx++;
+      // Dynamically update discrete footprints as robots move across grid
+      this._renderFootprints(pBot, aBot);
+
+      this.layerRobots.innerHTML = "";
+      this._renderMiniature(pBot, "player");
+      this._renderMiniature(aBot, "automaton");
+
+      // Trigger collision burst at collision timestamp
+      if (matchState.last_collision && !collisionEffectRendered) {
+        const colT = matchState.last_collision.time_t !== undefined ? matchState.last_collision.time_t : 0.5;
+        if (frac >= colT) {
+          collisionEffectRendered = true;
+          this._renderCollisionEffect(matchState.last_collision);
+        }
+      }
+
+      if (frac < 1.0) {
         this.animFrame = requestAnimationFrame(step);
       } else {
         this.animating = false;

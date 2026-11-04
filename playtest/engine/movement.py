@@ -432,16 +432,16 @@ def get_action_card_steps(code: str, chassis_template: str = "Square") -> List[D
         steps.append({"type": "turn", "pinned_side": "left", "rotation_deg": -45.0, "reverse": False, "card": "90 L"})
 
     elif norm == "-45 L":
-        steps.append({"type": "turn", "pinned_side": "right", "rotation_deg": 45.0, "reverse": True, "card": "-45 L"})
+        steps.append({"type": "turn", "pinned_side": "right", "rotation_deg": -45.0, "reverse": True, "card": "-45 L"})
     elif norm == "-90 L":
-        steps.append({"type": "turn", "pinned_side": "right", "rotation_deg": 45.0, "reverse": True, "card": "-90 L"})
-        steps.append({"type": "turn", "pinned_side": "right", "rotation_deg": 45.0, "reverse": True, "card": "-90 L"})
+        steps.append({"type": "turn", "pinned_side": "right", "rotation_deg": -45.0, "reverse": True, "card": "-90 L"})
+        steps.append({"type": "turn", "pinned_side": "right", "rotation_deg": -45.0, "reverse": True, "card": "-90 L"})
 
     elif norm == "-45 R":
-        steps.append({"type": "turn", "pinned_side": "left", "rotation_deg": -45.0, "reverse": True, "card": "-45 R"})
+        steps.append({"type": "turn", "pinned_side": "left", "rotation_deg": 45.0, "reverse": True, "card": "-45 R"})
     elif norm == "-90 R":
-        steps.append({"type": "turn", "pinned_side": "left", "rotation_deg": -45.0, "reverse": True, "card": "-90 R"})
-        steps.append({"type": "turn", "pinned_side": "left", "rotation_deg": -45.0, "reverse": True, "card": "-90 R"})
+        steps.append({"type": "turn", "pinned_side": "left", "rotation_deg": 45.0, "reverse": True, "card": "-90 R"})
+        steps.append({"type": "turn", "pinned_side": "left", "rotation_deg": 45.0, "reverse": True, "card": "-90 R"})
 
     elif norm == "90 PR":
         steps.append({"type": "pivot", "rotation_deg": 45.0, "card": "90 PR"})
@@ -812,6 +812,24 @@ def get_turn_grid_delta(
     return (dx, dy)
 
 
+def snap_pose_to_grid(pose: Pose, chassis_template: str = "Square") -> Pose:
+    """
+    Snaps a robot Pose strictly to the discrete 40mm arena grid and 45-degree heading increments:
+    - Heading theta is snapped to the nearest 45 degree multiple (0, 45, 90, 135, 180, 225, 270, 315).
+    - Square chassis (2x2) is centered on a grid vertex (multiple of 40.0).
+    - Wide (5x1) and Triangle chassis are centered on a tile center ((floor(coord / 40.0) + 0.5) * 40.0).
+    """
+    snapped_th = float(int(round((pose.theta % 360.0) / 45.0)) * 45) % 360.0
+    tname = (chassis_template or "Square").capitalize()
+    if tname == "Square":
+        snapped_x = round(pose.x / 40.0) * 40.0
+        snapped_y = round(pose.y / 40.0) * 40.0
+    else:
+        snapped_x = (math.floor(pose.x / 40.0) + 0.5) * 40.0
+        snapped_y = (math.floor(pose.y / 40.0) + 0.5) * 40.0
+    return Pose(snapped_x, snapped_y, snapped_th)
+
+
 def apply_movement_step(
     pose: Pose,
     step: Dict[str, Any],
@@ -826,6 +844,7 @@ def apply_movement_step(
     - pivot: rotates 45 degrees in place around geometric center.
     - turn: pivots 45 degrees around outer wheel/edge, snapping to discrete grid.
     - wait: no change.
+    All outputs strictly snap to discrete 40mm grid vertices and 45-degree heading increments.
     """
     stype = step["type"]
     new_pose = pose.clone()
@@ -858,7 +877,7 @@ def apply_movement_step(
         new_pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_pose.x))
         new_pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_pose.y))
 
-    return new_pose
+    return snap_pose_to_grid(new_pose, chassis_template)
 
 
 def apply_joint_step(
@@ -869,12 +888,14 @@ def apply_joint_step(
     grid_unit_mm: float = DRIVE_UNIT_MM,
     clamp_to_walls: bool = False,
     active_chassis: str = "Square",
+    passive_chassis: str = "Square",
 ) -> Tuple[Pose, Pose]:
     """
     Executes a movement step on active_pose, moving passive_pose along like it is stuck to it.
     - Forwards / Reverse: both robots translate by the same grid delta.
     - Pivot: both robots rotate about active robot's center by rotation_deg.
     - Turn: both robots rotate about active robot's pinned edge/wheel by rotation_deg.
+    Both outputs are strictly snapped to discrete 40mm grid vertices and 45-degree heading increments.
     """
     stype = step["type"]
     new_active = active_pose.clone()
@@ -931,7 +952,55 @@ def apply_joint_step(
         new_passive.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_passive.x))
         new_passive.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_passive.y))
 
+    new_active = snap_pose_to_grid(new_active, active_chassis)
+    new_passive = snap_pose_to_grid(new_passive, passive_chassis)
     return (new_active, new_passive)
+
+
+def generate_push_trajectory(
+    start_moving_pose: Pose,
+    start_stationary_pose: Pose,
+    remaining_steps: List[Dict[str, Any]],
+    num_substeps: int = 4,
+    moving_chassis: str = "Square",
+    stationary_chassis: str = "Square",
+) -> Tuple[List[Pose], List[Pose], Pose, Pose]:
+    """
+    Computes intermediate trajectory points for both the moving pusher and the stationary pushed robot
+    for the remaining steps of the moving robot's action card.
+    Returns (moving_trajectory, pushed_trajectory, final_moving_pose, final_pushed_pose).
+    """
+    curr_m = start_moving_pose.clone()
+    curr_s = start_stationary_pose.clone()
+    m_points: List[Pose] = [curr_m.clone()]
+    s_points: List[Pose] = [curr_s.clone()]
+
+    for step in remaining_steps:
+        prev_m = curr_m.clone()
+        prev_s = curr_s.clone()
+        next_m, next_s = apply_joint_step(
+            curr_m, curr_s, step, clamp_to_walls=True,
+            active_chassis=moving_chassis, passive_chassis=stationary_chassis
+        )
+        curr_m = snap_pose_to_grid(next_m, moving_chassis)
+        curr_s = snap_pose_to_grid(next_s, stationary_chassis)
+
+        sub = max(1, num_substeps)
+        for s in range(1, sub + 1):
+            alpha = s / float(sub)
+            ix_m = prev_m.x + (curr_m.x - prev_m.x) * alpha
+            iy_m = prev_m.y + (curr_m.y - prev_m.y) * alpha
+            d_th_m = (curr_m.theta - prev_m.theta + 180.0) % 360.0 - 180.0
+            ith_m = (prev_m.theta + d_th_m * alpha) % 360.0
+            m_points.append(Pose(ix_m, iy_m, ith_m))
+
+            ix_s = prev_s.x + (curr_s.x - prev_s.x) * alpha
+            iy_s = prev_s.y + (curr_s.y - prev_s.y) * alpha
+            d_th_s = (curr_s.theta - prev_s.theta + 180.0) % 360.0 - 180.0
+            ith_s = (prev_s.theta + d_th_s * alpha) % 360.0
+            s_points.append(Pose(ix_s, iy_s, ith_s))
+
+    return (m_points, s_points, curr_m, curr_s)
 
 
 def generate_action_plan_trajectory(

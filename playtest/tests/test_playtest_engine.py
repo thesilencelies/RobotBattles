@@ -2264,8 +2264,8 @@ class TestPlaytestEngine(unittest.TestCase):
         # Straight forward 3 units = 75mm west -> from 150 to 75, hitting WALL_LEFT (100)
         execute_turn(match, MoveChoice(3, 3), fixed_automaton_roll=1)
 
-        # Verify robot stopped at the wall (clamped to WALL_LEFT + MINIATURE_RADIUS = 135)
-        self.assertAlmostEqual(p_bot.pose.x, 135.0, places=1)
+        # Verify robot stopped at the wall (clamped to perimeter and snapped to discrete 40mm grid = 120)
+        self.assertAlmostEqual(p_bot.pose.x, 120.0, places=1)
 
         # Verify weapon contacted wall: lost all spin counters and suffered feedback
         wall_logs = [e.message for e in match.log if "contacted the wall" in e.message]
@@ -2467,6 +2467,8 @@ class TestPlaytestEngine(unittest.TestCase):
             self.assertTrue(any("Ground Game Clash" in e.message for e in logs))
             self.assertTrue(any(f"{p_bot.name} to be RAISED ({a_bot.name} stays grounded)" in e.message for e in logs))
 
+        p_bot.is_raised = False
+        a_bot.is_raised = False
         with patch("random.randint", return_value=5):
             logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
             self.assertTrue(any("Ground Game Clash" in e.message for e in logs))
@@ -3270,16 +3272,14 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(p_sq_turn2.y, 360.0)  # shifted -1 grid unit North
         self.assertEqual(p_sq_turn2.theta, 90.0)
 
-        # 3. Triangle Turn step: shifts 1 grid unit forward along turn arc
+        # 3. Triangle Turn step: shifts forward along turn arc, snapped to tile center
         p_tri_turn = apply_movement_step(p_start, step_turn_cw, chassis_template="Triangle")
-        self.assertEqual(p_tri_turn.x, 400.0)
-        self.assertEqual(p_tri_turn.y, 360.0)  # shifted -1 grid unit North
+        self.assertEqual(p_tri_turn.x, 420.0)
         self.assertEqual(p_tri_turn.theta, 45.0)
 
-        # 4. Wide Turn step: shifts 1 grid unit forward along turn arc
+        # 4. Wide Turn step: shifts forward along turn arc, snapped to tile center
         p_wide_turn = apply_movement_step(p_start, step_turn_cw, chassis_template="Wide")
-        self.assertEqual(p_wide_turn.x, 400.0)
-        self.assertEqual(p_wide_turn.y, 360.0)
+        self.assertEqual(p_wide_turn.x, 420.0)
         self.assertEqual(p_wide_turn.theta, 45.0)
 
     def test_chassis_diagonal_collision_detection(self):
@@ -3324,10 +3324,9 @@ class TestPlaytestEngine(unittest.TestCase):
         step_piv = {"type": "pivot", "rotation_deg": 45.0}
         new_act_piv, new_pas_piv = apply_joint_step(p_active, p_passive, step_piv)
         self.assertAlmostEqual(new_act_piv.theta, 45.0)
-        # Relative distance between centers is preserved
-        orig_dist = ((p_passive.x - p_active.x)**2 + (p_passive.y - p_active.y)**2)**0.5
+        # On discrete grid, 45° rotation snaps to diagonal grid vertices
         new_dist = ((new_pas_piv.x - new_act_piv.x)**2 + (new_pas_piv.y - new_act_piv.y)**2)**0.5
-        self.assertAlmostEqual(orig_dist, new_dist)
+        self.assertAlmostEqual(new_dist, 40.0 * (2**0.5), places=3)
         # Passive robot theta also rotates by +45°
         self.assertAlmostEqual(new_pas_piv.theta, 225.0)
 
@@ -3347,6 +3346,90 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(THROW_ROTATION_MAP[4], 90.0)   # 90° CW
         self.assertEqual(THROW_ROTATION_MAP[5], 180.0)  # 180°
         self.assertEqual(THROW_ROTATION_MAP[6], 0.0)    # No rotation
+
+
+    def test_reversing_turn_rotation_directions(self):
+        """
+        Tests that reversing turn action cards rotate in the proper direction:
+        - Reversing Left (-45 L / -90 L) rotates counter-clockwise (Left: delta theta < 0).
+        - Reversing Right (-45 R / -90 R) rotates clockwise (Right: delta theta > 0).
+        """
+        from playtest.engine.movement import get_action_card_steps
+
+        # -45 L: Counter-Clockwise (CCW / Left: rotation_deg = -45.0)
+        steps_45_l = get_action_card_steps("-45 L")
+        self.assertEqual(len(steps_45_l), 1)
+        self.assertEqual(steps_45_l[0]["rotation_deg"], -45.0)
+
+        # -90 L: Counter-Clockwise (CCW / Left: rotation_deg = -45.0 per step)
+        steps_90_l = get_action_card_steps("-90 L")
+        self.assertEqual(len(steps_90_l), 2)
+        self.assertEqual(steps_90_l[0]["rotation_deg"], -45.0)
+        self.assertEqual(steps_90_l[1]["rotation_deg"], -45.0)
+
+        # -45 R: Clockwise (CW / Right: rotation_deg = 45.0)
+        steps_45_r = get_action_card_steps("-45 R")
+        self.assertEqual(len(steps_45_r), 1)
+        self.assertEqual(steps_45_r[0]["rotation_deg"], 45.0)
+
+        # -90 R: Clockwise (CW / Right: rotation_deg = 45.0 per step)
+        steps_90_r = get_action_card_steps("-90 R")
+        self.assertEqual(len(steps_90_r), 2)
+        self.assertEqual(steps_90_r[0]["rotation_deg"], 45.0)
+        self.assertEqual(steps_90_r[1]["rotation_deg"], 45.0)
+
+    def test_strict_45_degree_snapping_for_all_poses(self):
+        """Tests that snap_pose_to_grid enforces strictly multiples of 45° angles."""
+        from playtest.engine.movement import snap_pose_to_grid
+        from playtest.engine.types import Pose
+
+        for deg in [12.3, 44.9, 45.1, 88.0, 137.0, 221.0, 314.0, 359.0]:
+            p = snap_pose_to_grid(Pose(400.0, 400.0, deg), "Square")
+            self.assertEqual(p.theta % 45.0, 0.0)
+            self.assertIn(p.theta, [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0])
+
+    def test_alternating_action_card_order(self):
+        """
+        Rule: Action cards are resolved alternating between the robots,
+        starting with the robot with higher total active drive (ties: player 1 / youngest player).
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+
+        # Player has 6 active drive, Automaton has 4 -> Player moves first
+        match.player_robot.left_drive_max = 3
+        match.player_robot.right_drive_max = 3
+        match.automaton_robot.left_drive_max = 2
+        match.automaton_robot.right_drive_max = 2
+
+        execute_turn(match, MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"]), fixed_automaton_roll=1)
+
+        turn_order_logs = [e.message for e in match.log if "Turn Order" in e.message]
+        self.assertTrue(len(turn_order_logs) > 0)
+        self.assertIn("moves first ahead of", turn_order_logs[0])
+        self.assertIn("Player Bot", turn_order_logs[0])
+
+    def test_raised_robot_cancels_remaining_actions_and_persists_until_end_of_turn(self):
+        """
+        Rule: If a robot ends up raised in a collision, it loses all remaining actions
+        and stays raised until the end of the turn.
+        """
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Pre-set automaton as raised to test action cancellation
+        a_bot.is_raised = True
+
+        execute_turn(match, MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"]), fixed_automaton_roll=1)
+
+        # Automaton's actions should have been cancelled due to being raised
+        cancel_logs = [e.message for e in match.log if "is RAISED: Action Card" in e.message]
+        self.assertTrue(len(cancel_logs) > 0, "Raised robot should log cancelled action cards")
+
+        # After the turn ends (cleanup), raised status should be reset
+        self.assertFalse(a_bot.is_raised, "is_raised must be cleared during end of turn cleanup")
 
 
 if __name__ == "__main__":
