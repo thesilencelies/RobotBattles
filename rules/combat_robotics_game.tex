@@ -251,7 +251,7 @@ Components may have keywords that define specific mechanical rules and interacti
   \keywordbadge{kw_self_right}{Self-right} & Inverts upright at turn end without contact if active. \\
   \keywordbadge{kw_reset}{Reset} & This weapon is inactive the turn after it is used. (this does not cause the robot to be considered knocked out if it is also a self righter) \\
   \keywordbadge{kw_overhead}{Overhead} & This weapon hits a random component along the contact line instead of the outermost. Does not cause a throw. \\
-  \keywordbadge{kw_trigger}{Trigger} & If an opposing weapon makes contact this weapon does not attack. \\
+  \keywordbadge{kw_trigger}{Trigger} & If an opposing weapon makes contact, this weapon only attacks if the contact has not been removed by a throw. \\
   \bottomrule
 \end{tabularx}
 \end{center}
@@ -423,7 +423,7 @@ Each round follows a sequence of 3 steps:
   \midrule
   \textbf{1. Planning} & Players secretly choose 3 movement Action Cards in an order of their choice and allocate power to components. \\
   \textbf{2. Movement} & Choices are revealed; robots resolve their chosen Action Cards alternating between robots, starting with the robot with higher total active drive (tie-break: youngest player). \\
-  \textbf{3. Collision} & A collision happens when a moving robot attempts to move through a tile occupied by the other robot. Resolved immediately in the overlapping state. \\
+  \textbf{3. Collision} & A collision happens when a moving robot attempts to move through a tile occupied by the other robot, or if a weapon template overlaps the opposing robot after the movement. Resolved immediately in the overlapping state. \\
   \bottomrule
 \end{tabularx}}
 
@@ -664,9 +664,9 @@ To eliminate movement ambiguity, the chosen Action Cards are resolved \textbf{al
 
 \noindent
 \textbf{Collisions During Resolution:}\\
-A collision happens when a robot tries to move through a tile the other robot is in. They are placed in the overlapping state to work out what is involved in the collision.
+A collision happens when a robot tries to move through a tile the other robot is in, or if a weapon template overlaps the opposing robot after the movement. They are placed in the overlapping state to work out what is involved in the collision.
 If it is an \textbf{Active Collision}, weapon damage, feedback, and throws are resolved from there.
-If it is an \textbf{Inert Collision}, the robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that motion.
+If it is an \textbf{Inert Collision}, the robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that motion (pushing does not rotate the pushed robot). Robots cannot end a turn on top of each other: if there is not a throw on contact, the static robot is pushed back until it is not overlapping. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead.
 
 \vspace{0.3em}
 \noindent
@@ -924,7 +924,7 @@ Card 1 pivots $90^\circ$ CW on the spot. Card 2 drives forward 1 square into the
 
 \subsection{Determining the Contact Point}
 
-During alternating action card resolution across the arena grid, a collision happens when a moving robot tries to move through a tile the other robot is in. The robots are placed in the overlapping state to work out what is involved in the collision. Where the robots touch shows the contact point. Align the contact direction into each robot's chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
+During alternating action card resolution across the arena grid, a collision happens when a moving robot tries to move through a tile the other robot is in, or if a weapon template overlaps the opposing robot after the movement. The robots are placed in the overlapping state to work out what is involved in the collision. Where the robots touch shows the contact point. Align the contact direction into each robot's chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
 
 If a collision results in a robot being thrown, the thrown robot's remaining action cards for the round do not happen. If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn (it still pushes the other robot for the collision that caused it to become raised).
 
@@ -1046,14 +1046,15 @@ The first remaining component on the robot along the line corresponding to the c
 
 Inert contact occurs when non-weapon chassis surfaces make contact (or weapons collide without active strike areas):
 \begin{enumerate}[leftmargin=*, noitemsep, topsep=1pt]
-  \item A collision happens when the moving robot tries to move through a tile the stationary robot is in.
-  \item The robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that action card:
+  \item A collision happens when the moving robot tries to move through a tile the stationary robot is in, or if a weapon template overlaps the opposing robot after the movement.
+  \item The robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that action card (\textbf{pushing does not rotate the pushed robot}):
   \begin{itemize}[noitemsep, topsep=1pt]
     \item \textbf{Forwards and Reverse Steps:} Both robots move together in the direction of the step.
-    \item \textbf{Turn and Pivot Steps:} Both robots rotate together about the center or pivot edge of the moving robot (the opposing robot moves along with it as if stuck to it).
+    \item \textbf{Turn and Pivot Steps:} The stationary robot is displaced along with the moving robot's motion without rotating (its orientation remains fixed).
     \item \textbf{Raised Robot:} If a robot ends up raised in a collision, it still pushes the other robot for the collision that caused it to become raised, but loses all subsequent remaining actions and stays raised until the end of the turn.
   \end{itemize}
-  \item If a robot is pushed into a wall, movement halts against the wall; no throw occurs (throws due to being pushed into a wall are completely removed). If its active weapon contacts the wall, it loses all spin counters and takes feedback equal to half its weapon strength, rounded down.
+  \item \textbf{Non-Overlapping Positions:} Robots cannot end a turn on top of each other. If there is not a throw on contact, the static robot is pushed back until it is not overlapping.
+  \item \textbf{Pushed into a Wall:} If a robot would be pushed into a wall, it stops against the wall and the pushing robot is deflected back one space instead; no throw occurs (throws due to being pushed into a wall are completely removed). If an active weapon touches a wall, all spin counters are removed, and touching a wall inflicts zero feedback damage.
   \item \textbf{No Separation Required:} Robot separation after collisions is no longer required. The robots remain in their resulting adjacent positions where movement concludes.
 \end{enumerate}
 
@@ -1146,7 +1147,7 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
 
 When weapons collide with an opponent:
 \begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
-  \item All weapons involved in the contact are assumed to hit, and they deal weapon damage \inlineIcon{\resourceW} according to their damage level to the single outermost component contacted (damage does not penetrate inwards), unless a weapon has \textbf{Overhead} (which hits a random component along the contact line instead of the outermost and causes no throw) or \textbf{Trigger} (which does not attack if an opposing weapon makes contact).
+  \item All weapons involved in the contact are assumed to hit, and they deal weapon damage \inlineIcon{\resourceW} according to their damage level to the single outermost component contacted (damage does not penetrate inwards), unless a weapon has \textbf{Overhead} (which hits a random component along the contact line instead of the outermost and causes no throw) or \textbf{Trigger} (which only attacks if the contact has not been removed by a throw).
   \item Then both robots are thrown away from the contact. The base throw strength received is equal to the weapon damage \inlineIcon{\resourceW} minus the absorption of the hit component (minimum 0). Any additions to throw strength are added after that.
   \item Thrown distance is the roll of a six-sided die or the throw strength, whichever is lower (measured in grid squares away from contact).
   \item \textbf{Random Rotation After a Throw:} Thrown robot orientation is determined by rolling a six-sided die (d6):
@@ -1178,7 +1179,7 @@ Similarly if a weapon contacts multiple components at once, each component is da
   \midrule
   \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage \inlineIcon{\resourceW} to outermost component contacted $\rightarrow$ Base throw strength equals weapon damage \inlineIcon{\resourceW} minus absorption of hit component (minimum 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance in grid squares is lower of die roll or throw strength $\rightarrow$ Thrown robot orientation determined by d6 roll ($45^\circ$/$90^\circ$/$180^\circ$/None) $\rightarrow$ Throw damage equals throw strength. If robots remain in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match on grid $\rightarrow$ Moving robot pushes stationary robot along remaining steps of current Action Card $\rightarrow$ Pushed into wall halts at perimeter (no throw) $\rightarrow$ Conclude adjacent (no separation). \\
+  \textbf{Inert Contact} & Pushing match on grid (pushing does not rotate) $\rightarrow$ Moving robot pushes stationary robot along remaining steps of current Action Card $\rightarrow$ Static robot pushed back until not overlapping $\rightarrow$ Pushed into wall halts at perimeter while pushing robot is deflected back one space (no throw) $\rightarrow$ Conclude adjacent (no separation). \\
 \end{tabularx}
 \end{summarybox}
 
@@ -1203,7 +1204,7 @@ Robot orientation after a throw is decided by rolling a d6 on the random rotatio
 If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted} (lower rolled distances represent high-arching vertical throws rather than horizontal displacement).
 After the throw, the thrown robot takes throw damage at a randomly chosen component equal to the throw strength.
 If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately knocked out}.
-If its weapon hits a wall it takes feedback to the weapon equal to half its weapon strength \inlineIcon{\resourceW}, rounded down, and then any spin counters it has are removed.
+If its weapon touches a wall, any spin counters it has are removed, and touching a wall inflicts zero feedback damage.
 The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on (try again if it bounces off altogether).
 
 \begin{figure}[H]
@@ -1392,7 +1393,7 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Damage Conditions:} A component is \textbf{Destroyed} if it takes damage equal to or greater than its durability, and \textbf{Damaged} if it takes damage equal to or greater than half its durability. Absorption reduces base throw strength received during attacks.
   \item \textbf{Throw Distance \& Damage:} Thrown distance in grid squares is the lower of a die roll (d6) or the throw strength. Thrown robot orientation is determined by the d6 random rotation table ($45^\circ$, $90^\circ$, $180^\circ$, or none). Throw damage is always equal to the throw strength.
   \item \textbf{No Separation:} Separation back 1 unit is no longer required; robots conclude in their adjacent positions where movement ends.
-  \item \textbf{Wall Collisions:} Driving or being pushed into a wall stops the robot without a throw. Throws due to being pushed into a wall are completely removed. Any contacting active weapon takes feedback equal to half its weapon strength, rounded down, and loses all spin counters.
+  \item \textbf{Wall Collisions:} Driving or being pushed into a wall stops the robot without a throw. Throws due to being pushed into a wall are completely removed. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead. Touching a wall deals zero feedback damage to weapons or robots; any spin counters are removed.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounding up).
 \end{itemize}
 \end{summarybox}
@@ -1401,8 +1402,9 @@ to each component that supplies it, shared equally if there are multiple compone
 \begin{itemize}[leftmargin=*, itemsep=2pt, topsep=1pt, parsep=0pt]
   \item \textbf{Ground Game \& Wedges while Raised:} A raised robot loses the double absorption of its wedges and cannot inflict the raised status. When both robots would be raised in the same contact, randomly roll a die to determine which one is raised (that one is raised and the other is not).
   \item \textbf{Overhead Weapons:} An Overhead weapon targets a random component along the contact ray rather than the single outermost component. If the target robot has an active upright \textit{Titanium Top Plate}, it is hit instead, even if not on the ray. Overhead weapons cause no throw on the target, but the attacking weapon still receives recoil feedback normally.
-  \item \textbf{Trigger Weapons:} A weapon with \textit{Trigger} does not attack if the opposing robot's active weapon hits anywhere, unless the robots remain in contact after that contact resolves. If both combatants have Trigger weapons, both will attack. A Trigger weapon that does not attack does not suffer recoil feedback.
+  \item \textbf{Trigger Weapons:} A weapon with \textit{Trigger} only attacks if the contact has not been removed by a throw. If both combatants have Trigger weapons, both will attack. A Trigger weapon that does not attack does not suffer recoil feedback.
   \item \textbf{Crushing Claw:} Following a successful hit with the Crushing Claw, on the next turn the target moves along with this robot during the movement phase as if in inertial contact and as if raised (contributing zero motion). On the subsequent turn, the claw is inactive due to its \textit{Reset} keyword.
+  \item \textbf{Hammer Saw:} The Hammer Saw has the ability text ``does not get hit by weapons''. When determining the component hit by an opposing weapon attack, the Hammer Saw is bypassed and cannot be targeted or damaged by weapons.
 \end{itemize}
 
 \clearpage

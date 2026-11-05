@@ -1284,11 +1284,10 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("ACTIVE WEAPON HIT" in msg for msg in log_messages))
         # Proceeded to inertial contact
         self.assertTrue(any("proceeding with inertial contact" in msg for msg in log_messages))
-        # Post-collision separation removed: robots do not separate a full unit
+        # Post-collision 1-unit separation removed: static robot is pushed back until not overlapping
         self.assertFalse(any("moved back a full unit to separate" in msg for msg in log_messages))
-        self.assertTrue(check_robots_in_contact(p_bot, a_bot))
         self.assertEqual(p_bot.pose.y, 420.0)
-        self.assertEqual(a_bot.pose.y, 370.0)
+        self.assertEqual(a_bot.pose.y, 320.0)  # Pushed back until not overlapping
 
     def test_inertial_separation_wall_clamped(self):
         """Rule: Post-collision separation removed; pushing match does not push back a full unit."""
@@ -2370,11 +2369,11 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertEqual(spinner.weapon_spin_counters[w_id], 0)
         self.assertEqual(w_comp.spin_counters, 0)
 
-        # 2. Suffered feedback = (weapon_strength + wall_throw_str) // 2
+        # 2. No feedback damage from wall (Rule: 'Remove feedback when we touch a wall')
         wall_fb_logs = [e.message for e in logs if "contacted the wall" in e.message]
         self.assertTrue(len(wall_fb_logs) > 0, "Should log weapon contacting the wall")
         self.assertTrue(any("Lost all spin counters" in msg for msg in wall_fb_logs))
-        self.assertTrue(any("suffered" in msg for msg in wall_fb_logs))
+        self.assertTrue(any("no feedback damage from wall" in msg for msg in wall_fb_logs))
 
     def test_weapon_wall_contact_when_driving_into_wall(self):
         """
@@ -3079,10 +3078,10 @@ class TestPlaytestEngine(unittest.TestCase):
         # Position robot facing left wall so weapon crosses wall
         bot.pose = Pose(x=WALL_LEFT + 10.0, y=400.0, theta=270.0)
 
-        # Attack strength = 3, throw_strength = 2 -> sum = 5 -> feedback = (5 + 1) // 2 = 3
+        # Rule: 'Remove feedback when we touch a wall' -> 0 feedback damage, spin counters reset to 0
         logs = resolve_weapon_wall_contact(bot, throw_strength=2, round_num=1)
-        self.assertTrue(any("suffered 3 feedback ((weapon strength 3 + throw strength 2) / 2, rounded up)" in e.message for e in logs))
-        self.assertEqual(w.current_durability, 3)
+        self.assertTrue(any("no feedback damage from wall" in e.message for e in logs))
+        self.assertEqual(w.current_durability, 6)
         self.assertEqual(bot.weapon_spin_counters["w1"], 0)
 
     def test_post_throw_separation_by_one_unit(self):
@@ -3493,21 +3492,26 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertAlmostEqual(new_pas_fwd.y, 320.0)
         self.assertEqual(new_pas_fwd.theta, 180.0)
 
-        # 2. Pivot step: rotates passive bot around active bot's center
+        # 2. Pivot step: rotates passive bot around active bot's center (pushing does not rotate passive theta)
         step_piv = {"type": "pivot", "rotation_deg": 45.0}
         new_act_piv, new_pas_piv = apply_joint_step(p_active, p_passive, step_piv)
         self.assertAlmostEqual(new_act_piv.theta, 45.0)
         # On discrete grid, 45° rotation snaps to diagonal grid vertices
         new_dist = ((new_pas_piv.x - new_act_piv.x)**2 + (new_pas_piv.y - new_act_piv.y)**2)**0.5
         self.assertAlmostEqual(new_dist, 40.0 * (2**0.5), places=3)
-        # Passive robot theta also rotates by +45°
-        self.assertAlmostEqual(new_pas_piv.theta, 225.0)
+        # Rule: 'Pushing does not rotate any more' -> passive theta remains 180.0 by default
+        self.assertEqual(new_pas_piv.theta, 180.0)
+        # When rotate_passive=True is explicitly requested, passive theta rotates
+        _, new_pas_piv_rot = apply_joint_step(p_active, p_passive, step_piv, rotate_passive=True)
+        self.assertAlmostEqual(new_pas_piv_rot.theta, 225.0)
 
         # 3. Turn step: rotates passive bot around active bot's pinned wheel/edge
         step_turn = {"type": "turn", "pinned_side": "right", "rotation_deg": 45.0}
         new_act_turn, new_pas_turn = apply_joint_step(p_active, p_passive, step_turn)
         self.assertAlmostEqual(new_act_turn.theta, 45.0)
-        self.assertAlmostEqual(new_pas_turn.theta, 225.0)
+        self.assertEqual(new_pas_turn.theta, 180.0)
+        _, new_pas_turn_rot = apply_joint_step(p_active, p_passive, step_turn, rotate_passive=True)
+        self.assertAlmostEqual(new_pas_turn_rot.theta, 225.0)
 
     def test_throw_rotation_d6_table(self):
         """Tests that THROW_ROTATION_MAP matches the d6 rotation table in Section 5.3."""
@@ -3603,6 +3607,201 @@ class TestPlaytestEngine(unittest.TestCase):
 
         # After the turn ends (cleanup), raised status should be reset
         self.assertFalse(a_bot.is_raised, "is_raised must be cleared during end of turn cleanup")
+
+    def test_rule_trigger_attacks_if_contact_not_removed_by_throw(self):
+        """Rule: Trigger should attack if the contact has not been removed by a throw."""
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        p_bot.pose = Pose(x=400.0, y=410.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+
+        # Attacker weapon deals 0 throw (e.g. overhead or absorption absorbs it)
+        w_atk = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        w_atk.outputs = "5W"
+        w_atk.text = "Deals no damage."
+        w_atk.is_active = True
+        w_atk.is_overhead = True  # Overhead causes 0 throw!
+
+        # Defender has Trigger weapon
+        w_trig = [c for c in a_bot.components.values() if c.card_type == "weapon"][0]
+        w_trig.keywords = "Trigger"
+        w_trig.is_trigger = True
+        w_trig.is_active = True
+        w_trig.outputs = "6W"
+        a_bot.weapon_spin_counters[w_trig.id] = 1
+        w_trig.spin_counters = 1
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_atk.id],
+            robot2_components=[w_trig.id],
+            contact_type="ACTIVE",
+            description="Active clash: overhead vs trigger",
+            r1_remaining_dist=0.0,
+            r2_remaining_dist=0.0,
+            push_vector=(0.0, 0.0),
+            r1_active_hit=True,
+            r2_active_hit=True,
+            r1_active_weapons=[w_atk.id],
+            r2_active_weapons=[w_trig.id],
+            r1_weapon_targets={w_atk.id: [w_trig.id]},
+            r2_weapon_targets={w_trig.id: [list(p_bot.components.keys())[0]]},
+        )
+
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        log_msgs = [e.message for e in logs]
+
+        # Trigger weapon should be initially suppressed, then attack because contact was not removed by throw
+        self.assertTrue(any("does not attack because Player Bot's active weapon made contact" in m for m in log_msgs))
+        self.assertTrue(any("Contact was not removed by a throw! Trigger weapon" in m for m in log_msgs))
+
+    def test_rule_collision_when_weapon_template_overlaps(self):
+        """Rule: A collision also happens if a weapon template overlaps the opposing robot after movement."""
+        from playtest.engine.collision import check_weapon_template_overlap, get_chassis_grid_cells
+        csv_text = read_saved_robot("Crusher.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Crusher Bot")
+        crusher = match.player_robot
+        flipper = match.automaton_robot
+
+        # Place robots such that chassis cells do NOT intersect, but Crusher's forward claw overlaps flipper
+        crusher.pose = Pose(x=400.0, y=430.0, theta=0.0)  # Facing North
+        flipper.pose = Pose(x=400.0, y=370.0, theta=180.0) # Facing South
+
+        c_cells = get_chassis_grid_cells(crusher.chassis_template, crusher.pose)
+        f_cells = get_chassis_grid_cells(flipper.chassis_template, flipper.pose)
+        self.assertEqual(len(c_cells & f_cells), 0, "Chassis cells do not intersect")
+
+        # Weapon template overlaps
+        self.assertTrue(check_weapon_template_overlap(crusher, flipper), "Weapon template should overlap opposing robot")
+
+    def test_rule_pushing_does_not_rotate_static_robot(self):
+        """Rule: Pushing does not rotate the static robot (its orientation remains fixed)."""
+        from playtest.engine.movement import apply_joint_step
+        active_pose = Pose(x=400.0, y=400.0, theta=0.0)
+        passive_pose = Pose(x=400.0, y=360.0, theta=90.0)
+
+        # Pivot step
+        step_piv = {"type": "pivot", "rotation_deg": 45.0}
+        new_act, new_pas = apply_joint_step(active_pose, passive_pose, step_piv, rotate_passive=False)
+        self.assertEqual(new_act.theta, 45.0)
+        self.assertEqual(new_pas.theta, 90.0)  # Pushed robot did NOT rotate
+
+        # Turn step
+        step_turn = {"type": "turn", "rotation_deg": 45.0, "pinned_side": "right"}
+        new_act2, new_pas2 = apply_joint_step(active_pose, passive_pose, step_turn, rotate_passive=False)
+        self.assertEqual(new_act2.theta, 45.0)
+        self.assertEqual(new_pas2.theta, 90.0)  # Pushed robot did NOT rotate
+
+    def test_rule_pushing_into_wall_deflects_pushing_robot_back_one_space(self):
+        """Rule: If a robot would be pushed into a wall, the pushed robot stops at the wall and pushing robot is deflected back one space."""
+        from playtest.engine.combat import resolve_inert_contact
+        from playtest.engine.field import WALL_LEFT
+        from playtest.engine.movement import MINIATURE_RADIUS, DRIVE_UNIT_MM
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Pusher")
+        pusher = match.player_robot
+        static_bot = match.automaton_robot
+
+        # Static bot is at grid cell (120.0, 400.0) against the left wall
+        # Pusher is directly East of static bot at (160.0, 400.0), driving West towards the wall
+        static_bot.pose = Pose(x=120.0, y=400.0, theta=90.0)
+        pusher.pose = Pose(x=160.0, y=400.0, theta=270.0)
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(140.0, 400.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[list(pusher.components.keys())[0]],
+            robot2_components=[list(static_bot.components.keys())[0]],
+            contact_type="INERT",
+            description="Pusher pushes into wall",
+        )
+
+        # Remaining step: 1 step forwards (direction=1 facing theta=270 West)
+        rem_steps = [{"type": "forwards", "direction": 1}]
+        logs = resolve_inert_contact(
+            col, pusher, static_bot, round_num=1,
+            moving_robot_id=pusher.id, moving_rem_steps=rem_steps
+        )
+        log_msgs = [e.message for e in logs]
+
+        # Static robot should stop at wall (120.0) and pushing robot should be deflected back 1 space (from 160.0 to 200.0)
+        self.assertTrue(any("stops at the wall and Pusher is deflected back one space" in m for m in log_msgs))
+        self.assertAlmostEqual(static_bot.pose.x, 120.0, delta=2.0)
+        self.assertAlmostEqual(pusher.pose.x, 200.0, delta=2.0)
+
+    def test_rule_wall_contact_deals_zero_feedback(self):
+        """Rule: Remove feedback when we touch a wall."""
+        from playtest.engine.combat import resolve_weapon_wall_contact
+        from playtest.engine.field import WALL_LEFT
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Wall Tester")
+        bot = match.player_robot
+
+        w_comp = next(c for c in bot.components.values() if c.card_type == "weapon")
+        w_id = w_comp.id
+        bot.weapon_spin_counters[w_id] = 4
+        w_comp.spin_counters = 4
+        orig_durability = w_comp.current_durability
+
+        # Place robot facing left wall so weapon contacts wall
+        bot.pose = Pose(x=WALL_LEFT + 10.0, y=400.0, theta=270.0)
+
+        logs = resolve_weapon_wall_contact(bot, throw_strength=5, round_num=1)
+        log_msgs = [e.message for e in logs]
+
+        # Loses all spin counters, but takes 0 feedback damage
+        self.assertEqual(bot.weapon_spin_counters[w_id], 0)
+        self.assertEqual(w_comp.spin_counters, 0)
+        self.assertEqual(w_comp.current_durability, orig_durability)
+        self.assertTrue(any("no feedback damage from wall" in m for m in log_msgs))
+
+    def test_rule_hammer_saw_does_not_get_hit_by_weapons(self):
+        """Rule: Hammer Saw has text 'does not get hit by weapons', bypassing incoming weapon damage to components behind it."""
+        from playtest.engine.collision import find_components_along_contact_line
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Target")
+        bot = match.player_robot
+
+        # Create Hammer Saw component centered in front on A3 mat (MAT_CENTER_X = 210)
+        hs = ComponentHealth(
+            id="hs1", name="Hammer Saw", card_type="weapon", template="overhead_arm",
+            max_durability=5, current_durability=5, absorption=0, requirements="",
+            outputs="4W", keywords="Overhead", text="does not get hit by weapons",
+            x=210, y=20, rotation=0, box=(190, 20, 230, 60), is_active=True,
+        )
+        # Create chassis/armor component behind Hammer Saw
+        chassis_comp = ComponentHealth(
+            id="ch1", name="Inner Chassis", card_type="chassis", template="",
+            max_durability=10, current_durability=10, absorption=2, requirements="",
+            outputs="", keywords="", text="",
+            x=210, y=100, rotation=0, box=(190, 80, 230, 140), is_active=True,
+        )
+        bot.components = {"hs1": hs, "ch1": chassis_comp}
+
+        # Non-weapon contact (e.g. wedge/inert): can hit Hammer Saw
+        hit_inert = find_components_along_contact_line(
+            bot, contact_pt=(400.0, 370.0), robot_x=400.0, robot_y=400.0, robot_theta=0.0,
+            octant="Front", is_weapon_contact=False
+        )
+        self.assertIn("hs1", hit_inert)
+
+        # Weapon contact: Hammer Saw CANNOT be hit by weapons, damage bypasses to Inner Chassis!
+        hit_weapon = find_components_along_contact_line(
+            bot, contact_pt=(400.0, 370.0), robot_x=400.0, robot_y=400.0, robot_theta=0.0,
+            octant="Front", is_weapon_contact=True
+        )
+        self.assertNotIn("hs1", hit_weapon)
+        self.assertIn("ch1", hit_weapon)
 
 
 if __name__ == "__main__":

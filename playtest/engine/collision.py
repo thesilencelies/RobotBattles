@@ -322,6 +322,7 @@ def find_components_along_contact_line(
     octant: str,
     skip_without_wedge_fork_drive: bool = False,
     active_cid: Optional[str] = None,
+    is_weapon_contact: bool = False,
 ) -> List[str]:
     """
     Maps world contact point onto the A3 chassis sheet to determine which
@@ -332,13 +333,20 @@ def find_components_along_contact_line(
     Rule: 'Similarly if a weapon contacts multiple components at once, each component is damaged...'
     Rule: 'unless inverted this component's attacks skip past components without wedge, fork or drive'
     Rule: 'UHM wraparound armor should be hit instead of any other component on its side of the robot when that side is hit.'
+    Rule: 'does not get hit by weapons' (e.g. Hammer Saw) - cannot be targeted by incoming weapon attacks.
     """
     if active_cid and active_cid in robot.components and not robot.components[active_cid].is_destroyed:
-        return [active_cid]
+        if not (is_weapon_contact and "does not get hit by weapons" in (robot.components[active_cid].text or "").lower()):
+            return [active_cid]
 
     active_comps = [c for c in robot.components.values() if not c.is_destroyed]
     if not active_comps:
         return []
+
+    if is_weapon_contact:
+        non_exempt = [c for c in active_comps if "does not get hit by weapons" not in (c.text or "").lower()]
+        if non_exempt:
+            active_comps = non_exempt
 
     lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], robot_x, robot_y, robot_theta)
     mx, my = local_miniature_to_mat_point(lx, ly, robot.chassis_template)
@@ -460,11 +468,13 @@ def find_contacted_components_on_mat(
     robot_theta: float,
     octant: str,
     active_cid: Optional[str] = None,
+    is_weapon_contact: bool = False,
 ) -> List[str]:
     """Backward-compatible wrapper for mapping world contact point to contacted component."""
     return find_components_along_contact_line(
         robot, contact_pt, robot_x, robot_y, robot_theta, octant,
-        skip_without_wedge_fork_drive=False, active_cid=active_cid
+        skip_without_wedge_fork_drive=False, active_cid=active_cid,
+        is_weapon_contact=is_weapon_contact,
     )
 
 
@@ -535,7 +545,8 @@ def detect_collision(
                         oct_r2 = get_octant(p2.x, p2.y, wpn_contact_pt[0], wpn_contact_pt[1], p2.theta)
                         targets = find_components_along_contact_line(
                             r2, wpn_contact_pt, p2.x, p2.y, p2.theta, oct_r2,
-                            skip_without_wedge_fork_drive=skip_rule
+                            skip_without_wedge_fork_drive=skip_rule,
+                            is_weapon_contact=True,
                         )
                         for t in targets:
                             w_targets.append(t)
@@ -563,7 +574,8 @@ def detect_collision(
                         oct_r1 = get_octant(p1.x, p1.y, wpn_contact_pt[0], wpn_contact_pt[1], p1.theta)
                         targets = find_components_along_contact_line(
                             r1, wpn_contact_pt, p1.x, p1.y, p1.theta, oct_r1,
-                            skip_without_wedge_fork_drive=skip_rule
+                            skip_without_wedge_fork_drive=skip_rule,
+                            is_weapon_contact=True,
                         )
                         for t in targets:
                             w_targets.append(t)
@@ -652,6 +664,28 @@ def check_robots_in_contact(r1: RobotState, r2: RobotState) -> bool:
         for polyB in parts2["all_body_polygons"]:
             if polygons_intersect(polyA, polyB):
                 return True
+    return False
+
+
+def check_weapon_template_overlap(r1: RobotState, r2: RobotState) -> bool:
+    """
+    Checks if any weapon template of r1 overlaps r2 (its chassis or weapon templates),
+    or if any weapon template of r2 overlaps r1, in their current poses.
+    Rule: 'a collision also happens if a weapon template overlaps the opposing robot after the movement.'
+    """
+    parts1 = get_robot_miniature_parts(r1, r1.pose.x, r1.pose.y, r1.pose.theta)
+    parts2 = get_robot_miniature_parts(r2, r2.pose.x, r2.pose.y, r2.pose.theta)
+
+    for wp1 in parts1["weapon_parts"]:
+        for polyB in parts2["all_body_polygons"]:
+            if polygons_intersect(wp1["polygon"], polyB):
+                return True
+
+    for wp2 in parts2["weapon_parts"]:
+        for polyA in parts1["all_body_polygons"]:
+            if polygons_intersect(wp2["polygon"], polyA):
+                return True
+
     return False
 
 

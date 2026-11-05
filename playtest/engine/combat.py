@@ -17,6 +17,8 @@ from .field import (
     WALL_LEFT,
     WALL_RIGHT,
     WALL_TOP,
+    get_chassis_grid_cells,
+    get_chassis_polygon,
     is_hazard_wall_contact,
     is_in_hazard,
 )
@@ -26,6 +28,7 @@ from .collision import (
     get_component_side,
     get_weapon_wall_contacts,
     is_uhmw_wraparound_armor,
+    polygons_intersect,
 )
 from .movement import (
     DRIVE_UNIT_MM,
@@ -34,6 +37,7 @@ from .movement import (
     apply_joint_step,
     compute_movement_steps,
     generate_push_trajectory,
+    get_heading_grid_delta,
     snap_pose_to_grid,
 )
 from .types import (
@@ -351,9 +355,10 @@ def resolve_weapon_wall_contact(
 ) -> List[CombatLogEntry]:
     """
     Checks if any weapon on the robot contacts an arena wall at its current pose.
+    Rule: 'Remove feedback when we touch a wall'
     When a weapon contacts a wall:
     - It loses all spin counters.
-    - Suffers feedback = (weapon attack strength + throw strength + 1) // 2 (half the sum, rounded up).
+    - Suffers no feedback damage from the wall.
     """
     logs: List[CombatLogEntry] = []
     contacting_cids = get_weapon_wall_contacts(robot, robot.pose)
@@ -361,13 +366,6 @@ def resolve_weapon_wall_contact(
         if cid in robot.components:
             w_comp = robot.components[cid]
             spin = robot.weapon_spin_counters.get(cid, 0)
-            w_atk = get_weapon_attack_strength(w_comp, spin)
-            if throw_strength > 0:
-                feedback = (w_atk + throw_strength + 1) // 2
-                formula_desc = f"((weapon strength {w_atk} + throw strength {throw_strength}) / 2, rounded up)"
-            else:
-                feedback = w_atk // 2
-                formula_desc = f"(half weapon strength {w_atk}, rounded down)"
 
             # Reset spin counters
             robot.weapon_spin_counters[cid] = 0
@@ -377,16 +375,9 @@ def resolve_weapon_wall_contact(
                 round=round_num, phase=phase,
                 message=(
                     f"💥 {robot.name}'s weapon {w_comp.name} contacted the wall! "
-                    f"Lost all spin counters (was {spin}) and suffered {feedback} feedback "
-                    f"{formula_desc}."
+                    f"Lost all spin counters (was {spin}) (no feedback damage from wall)."
                 ),
             ))
-            if feedback > 0:
-                fb_logs = resolve_feedback_propagation(
-                    robot, cid, feedback, phase="wall_feedback", steps=steps
-                )
-                for fl in fb_logs:
-                    logs.append(CombatLogEntry(round=round_num, phase=phase, message=f"  [Wall Feedback] {fl}"))
     return logs
 
 
@@ -918,6 +909,118 @@ def check_wall_penetration(pose: Pose) -> Tuple[bool, Tuple[float, float], float
     return False, (0.0, 0.0), 0.0
 
 
+def check_robots_overlapping(r1: RobotState, r2: RobotState) -> bool:
+    """
+    Checks if two robots are overlapping on top of each other (sharing grid cells
+    or chassis polygons intersecting).
+    Note: Contact between adjacent robots touching at their outer boundaries without
+    chassis intersection is NOT overlapping.
+    """
+    cells1 = get_chassis_grid_cells(r1.chassis_template, r1.pose)
+    cells2 = get_chassis_grid_cells(r2.chassis_template, r2.pose)
+    if bool(cells1 & cells2):
+        return True
+
+    poly1 = get_chassis_polygon(r1.chassis_template, r1.pose.x, r1.pose.y, r1.pose.theta)
+    poly2 = get_chassis_polygon(r2.chassis_template, r2.pose.x, r2.pose.y, r2.pose.theta)
+    return polygons_intersect(poly1, poly2)
+
+
+def ensure_robots_not_overlapping(
+    moving_bot: RobotState,
+    stationary_bot: RobotState,
+    round_num: int,
+    logs: List[CombatLogEntry],
+) -> None:
+    """
+    Guarantees robots cannot end a turn on top of each other.
+    Rule: 'Robots should not be able to end a turn on top of each other:
+    if there is not a throw on contact then the static robot is pushed back
+    until it is not overlapping. (Pushing does not rotate any more)'
+    Rule: 'We also need to cover the case where a robot would be pushed into a wall:
+    in that case instead the pushing robot is deflected back one space'
+    """
+    for _ in range(10):
+        if not check_robots_overlapping(moving_bot, stationary_bot):
+            break
+
+        # Calculate push direction from moving_bot towards stationary_bot
+        dx = stationary_bot.pose.x - moving_bot.pose.x
+        dy = stationary_bot.pose.y - moving_bot.pose.y
+        dist = math.hypot(dx, dy)
+        if dist > 1e-4:
+            p_dir_x = dx / dist
+            p_dir_y = dy / dist
+        else:
+            dx_g, dy_g = get_heading_grid_delta(moving_bot.pose.theta)
+            p_dir_x = float(dx_g)
+            p_dir_y = float(dy_g)
+            mag = math.hypot(p_dir_x, p_dir_y)
+            if mag > 1e-4:
+                p_dir_x /= mag
+                p_dir_y /= mag
+            else:
+                p_dir_x, p_dir_y = 0.0, -1.0
+
+        p_step_x = round(p_dir_x) * DRIVE_UNIT_MM
+        p_step_y = round(p_dir_y) * DRIVE_UNIT_MM
+        if p_step_x == 0 and p_step_y == 0:
+            p_step_y = -DRIVE_UNIT_MM
+
+        cand_s = Pose(
+            stationary_bot.pose.x + p_step_x,
+            stationary_bot.pose.y + p_step_y,
+            stationary_bot.pose.theta,  # Pushing does not rotate the static robot
+        )
+        cand_s = snap_pose_to_grid(cand_s, stationary_bot.chassis_template)
+
+        hit_s, _, _ = check_wall_penetration(cand_s)
+        out_of_bounds_s = (
+            cand_s.x < (WALL_LEFT + MINIATURE_RADIUS - 0.5) or
+            cand_s.x > (WALL_RIGHT - MINIATURE_RADIUS + 0.5) or
+            cand_s.y < (WALL_TOP + MINIATURE_RADIUS - 0.5) or
+            cand_s.y > (WALL_BOTTOM - MINIATURE_RADIUS + 0.5)
+        )
+
+        if hit_s or out_of_bounds_s:
+            # Static robot would be pushed into wall:
+            # Pushed robot stops at the wall, pushing robot is deflected back one space
+            stationary_bot.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, stationary_bot.pose.x))
+            stationary_bot.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, stationary_bot.pose.y))
+            stationary_bot.pose = snap_pose_to_grid(stationary_bot.pose, stationary_bot.chassis_template)
+
+            deflect_m = Pose(
+                moving_bot.pose.x - p_step_x,
+                moving_bot.pose.y - p_step_y,
+                moving_bot.pose.theta,
+            )
+            deflect_m.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, deflect_m.x))
+            deflect_m.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, deflect_m.y))
+            moving_bot.pose = snap_pose_to_grid(deflect_m, moving_bot.chassis_template)
+
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=(
+                    f"🧱 {stationary_bot.name} would be pushed into the wall! "
+                    f"{stationary_bot.name} stops at the wall and {moving_bot.name} is deflected back one space to ({moving_bot.pose.x:.1f}, {moving_bot.pose.y:.1f})."
+                ),
+            ))
+            w_logs_s = resolve_weapon_wall_contact(stationary_bot, throw_strength=0, round_num=round_num, phase="collision")
+            logs.extend(w_logs_s)
+            w_logs_m = resolve_weapon_wall_contact(moving_bot, throw_strength=0, round_num=round_num, phase="collision")
+            logs.extend(w_logs_m)
+            break
+        else:
+            stationary_bot.pose = cand_s
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=(
+                    f"↔️ Non-overlapping push: {stationary_bot.name} is pushed back to ({stationary_bot.pose.x:.1f}, {stationary_bot.pose.y:.1f}) "
+                    f"(theta unchanged: {stationary_bot.pose.theta}°)."
+                ),
+            ))
+
+
 def resolve_inert_contact(
     col: CollisionEvent,
     r1: RobotState,
@@ -936,9 +1039,10 @@ def resolve_inert_contact(
     Executes inert contact (pushing) resolution adhering to discrete grid rules:
     - Alternating movement: The moving robot pushes the non-moving robot in the direction
       the moving robot is moving until the moving robot finishes that action card.
-    - If a robot ends up raised in a collision, it loses all remaining actions and stays raised
-      until the end of the turn. It still pushes the other robot for the collision that caused it to become raised.
-    - If a robot is pushed into a wall, it stops at the wall without throw.
+    - Pushing no longer rotates the static robot (its orientation remains fixed).
+    - If a robot would be pushed into a wall, it stops against the wall and the pushing robot
+      is deflected back one space instead.
+    - Robots cannot end a turn on top of each other: if not thrown, static robot is pushed back until non-overlapping.
     """
     logs: List[CombatLogEntry] = []
     logs.append(CombatLogEntry(
@@ -970,6 +1074,7 @@ def resolve_inert_contact(
                 moving_bot.pose, stationary_bot.pose, step, clamp_to_walls=True,
                 active_chassis=moving_bot.chassis_template,
                 passive_chassis=stationary_bot.chassis_template,
+                rotate_passive=False,
             )
             cand_m = snap_pose_to_grid(cand_m, moving_bot.chassis_template)
             cand_s = snap_pose_to_grid(cand_s, stationary_bot.chassis_template)
@@ -978,20 +1083,68 @@ def resolve_inert_contact(
             hit_s, _, _ = check_wall_penetration(cand_s)
 
             if hit_m or hit_s:
-                wall_bot = stationary_bot if hit_s else moving_bot
-                if is_hazard_wall_contact(wall_bot.pose.x, wall_bot.pose.y):
-                    wall_bot.is_knocked_out = True
-                    wall_bot.is_eliminated = True
+                if hit_s:
+                    # Static robot would be pushed into wall:
+                    # Static robot stops at wall, pushing robot is deflected back one space
+                    if is_hazard_wall_contact(cand_s.x, cand_s.y):
+                        stationary_bot.is_knocked_out = True
+                        stationary_bot.is_eliminated = True
+                        logs.append(CombatLogEntry(
+                            round=round_num, phase="collision",
+                            message=f"☠️ {stationary_bot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
+                        ))
+                    stationary_bot.pose = cand_s
+                    w_logs_s = resolve_weapon_wall_contact(stationary_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
+                    logs.extend(w_logs_s)
+
+                    # Deflect pushing robot back one space (DRIVE_UNIT_MM = 40mm)
+                    dx = stationary_bot.pose.x - moving_bot.pose.x
+                    dy = stationary_bot.pose.y - moving_bot.pose.y
+                    dist = math.hypot(dx, dy)
+                    if dist > 1e-4:
+                        ux, uy = dx / dist, dy / dist
+                    else:
+                        dx_g, dy_g = get_heading_grid_delta(moving_bot.pose.theta)
+                        ux, uy = float(dx_g), float(dy_g)
+                        mag = math.hypot(ux, uy)
+                        if mag > 1e-4:
+                            ux, uy = ux / mag, uy / mag
+                        else:
+                            ux, uy = 0.0, -1.0
+
+                    p_step_x = round(ux) * DRIVE_UNIT_MM
+                    p_step_y = round(uy) * DRIVE_UNIT_MM
+                    deflect_m = Pose(
+                        moving_bot.pose.x - p_step_x,
+                        moving_bot.pose.y - p_step_y,
+                        moving_bot.pose.theta,
+                    )
+                    deflect_m.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, deflect_m.x))
+                    deflect_m.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, deflect_m.y))
+                    moving_bot.pose = snap_pose_to_grid(deflect_m, moving_bot.chassis_template)
+
+                    w_logs_m = resolve_weapon_wall_contact(moving_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
+                    logs.extend(w_logs_m)
+
                     logs.append(CombatLogEntry(
                         round=round_num, phase="collision",
-                        message=f"☠️ {wall_bot.name} was pushed into a marked HAZARD WALL! KNOCKED OUT!",
+                        message=f"🧱 {stationary_bot.name} was pushed into the wall! {stationary_bot.name} stops at the wall and {moving_bot.name} is deflected back one space to ({moving_bot.pose.x:.1f}, {moving_bot.pose.y:.1f}).",
                     ))
-                w_logs = resolve_weapon_wall_contact(wall_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
-                logs.extend(w_logs)
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"🧱 {wall_bot.name} was pushed into the wall by {moving_bot.name} and stopped at the wall (no throw).",
-                ))
+                else:
+                    moving_bot.pose = cand_m
+                    if is_hazard_wall_contact(moving_bot.pose.x, moving_bot.pose.y):
+                        moving_bot.is_knocked_out = True
+                        moving_bot.is_eliminated = True
+                        logs.append(CombatLogEntry(
+                            round=round_num, phase="collision",
+                            message=f"☠️ {moving_bot.name} hit a marked HAZARD WALL! KNOCKED OUT!",
+                        ))
+                    w_logs = resolve_weapon_wall_contact(moving_bot, throw_strength=0, round_num=round_num, phase="collision", steps=steps)
+                    logs.extend(w_logs)
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message=f"🧱 {moving_bot.name} hit the wall and stopped at the wall (no throw).",
+                    ))
                 break
             else:
                 if push_trajectories is not None:
@@ -1014,6 +1167,8 @@ def resolve_inert_contact(
 
                 moving_bot.pose = cand_m
                 stationary_bot.pose = cand_s
+
+        ensure_robots_not_overlapping(moving_bot, stationary_bot, round_num, logs)
 
     else:
         # Legacy fallback when moving_robot_id is not specified
@@ -1197,11 +1352,15 @@ def _resolve_single_weapon_attack(
             ray_candidates = [
                 cid for cid in defender_ray_cids
                 if cid in defender.components and not defender.components[cid].is_destroyed
+                and "does not get hit by weapons" not in (defender.components[cid].text or "").lower()
             ]
             if not ray_candidates:
-                ray_candidates = [cid for cid in defender_ray_cids if cid in defender.components]
+                ray_candidates = [
+                    c.id for c in defender.components.values()
+                    if not c.is_destroyed and "does not get hit by weapons" not in (c.text or "").lower()
+                ]
             if not ray_candidates:
-                ray_candidates = [c.id for c in defender.components.values() if not c.is_destroyed]
+                ray_candidates = [cid for cid in defender_ray_cids if cid in defender.components]
             if not ray_candidates:
                 ray_candidates = list(defender.components.keys())
 
@@ -1214,10 +1373,23 @@ def _resolve_single_weapon_attack(
     else:
         # Outermost contacted component(s)
         # Rule: "Similarly if a weapon contacts multiple components at once, each component is damaged, and the throw strength received is the maximum that would be transferred."
+        # Rule: "does not get hit by weapons" (Hammer Saw) cannot be hit by weapons
         if defender_ray_cids:
-            target_cids = [cid for cid in defender_ray_cids if cid in defender.components]
+            target_cids = [
+                cid for cid in defender_ray_cids
+                if cid in defender.components and "does not get hit by weapons" not in (defender.components[cid].text or "").lower()
+            ]
         if not target_cids:
-            target_cids = [list(defender.components.keys())[0]] if defender.components else []
+            fallback_comps = [
+                c.id for c in defender.components.values()
+                if not c.is_destroyed and "does not get hit by weapons" not in (c.text or "").lower()
+            ]
+            if fallback_comps:
+                target_cids = [fallback_comps[0]]
+            elif defender_ray_cids:
+                target_cids = [cid for cid in defender_ray_cids if cid in defender.components]
+            else:
+                target_cids = [list(defender.components.keys())[0]] if defender.components else []
 
         # Rule: UHM wraparound armor should be hit instead of any other component on its side of the robot when that side is hit.
         uhmw_intercepted: List[str] = []
@@ -1227,7 +1399,8 @@ def _resolve_single_weapon_attack(
                 t_side = get_component_side(t_comp)
                 matching_armor = next(
                     (c for c in defender.components.values()
-                     if is_uhmw_wraparound_armor(c) and not c.is_destroyed and get_component_side(c) == t_side),
+                     if is_uhmw_wraparound_armor(c) and not c.is_destroyed and get_component_side(c) == t_side
+                     and "does not get hit by weapons" not in (c.text or "").lower()),
                     None
                 )
                 if matching_armor:
@@ -1712,9 +1885,14 @@ def resolve_collision_combat(
         _execute_throw(r1, throw_str_1, col.contact_point, round_num, logs, steps)
         _execute_throw(r2, throw_str_2, col.contact_point, round_num, logs, steps)
 
-        # Check deferred Trigger weapons if still in contact
+        # Check deferred Trigger weapons:
+        # Rule: "Trigger should attack if the contact has not been removed by a throw."
+        thr2_def = 0
+        thr1_def = 0
+        contact_removed_by_throw = (throw_str_1 > 0 or throw_str_2 > 0) and not check_robots_in_contact(r1, r2)
+
         if r1_suppressed_trigger and not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
-            if check_robots_in_contact(r1, r2):
+            if not contact_removed_by_throw:
                 r1_trig_results: List[Tuple[str, int, int]] = []
                 for wid in r1_suppressed_trigger:
                     w_comp = r1.components.get(wid)
@@ -1722,7 +1900,7 @@ def resolve_collision_combat(
                         continue
                     logs.append(CombatLogEntry(
                         round=round_num, phase="collision",
-                        message=f"⚡ Robots are still in contact! Suppressed Trigger weapon {w_comp.name} now attacks {r2.name}!",
+                        message=f"⚡ Contact was not removed by a throw! Trigger weapon {w_comp.name} attacks {r2.name}!",
                     ))
                     targets = col.r1_weapon_targets.get(wid) if col.r1_weapon_targets else None
                     if targets is None:
@@ -1748,7 +1926,7 @@ def resolve_collision_combat(
                     _execute_throw(r2, thr2_def, col.contact_point, round_num, logs, steps)
 
         if r2_suppressed_trigger and not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
-            if check_robots_in_contact(r1, r2):
+            if not contact_removed_by_throw:
                 r2_trig_results: List[Tuple[str, int, int]] = []
                 for wid in r2_suppressed_trigger:
                     w_comp = r2.components.get(wid)
@@ -1756,7 +1934,7 @@ def resolve_collision_combat(
                         continue
                     logs.append(CombatLogEntry(
                         round=round_num, phase="collision",
-                        message=f"⚡ Robots are still in contact! Suppressed Trigger weapon {w_comp.name} now attacks {r1.name}!",
+                        message=f"⚡ Contact was not removed by a throw! Trigger weapon {w_comp.name} attacks {r1.name}!",
                     ))
                     targets = col.r2_weapon_targets.get(wid) if col.r2_weapon_targets else None
                     if targets is None:
@@ -1781,19 +1959,26 @@ def resolve_collision_combat(
                 if thr1_def > 0:
                     _execute_throw(r1, thr1_def, col.contact_point, round_num, logs, steps)
 
-        # Rule: if after active contact the robots are still in contact,
-        # then proceed with inertial contact.
+        # Rule: Robots should not be able to end a turn on top of each other:
+        # if there is not a throw on contact then the static robot is pushed back until it is not overlapping.
+        had_throw_on_contact = (throw_str_1 > 0 or throw_str_2 > 0 or thr2_def > 0 or thr1_def > 0)
         if not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
             if check_robots_in_contact(r1, r2):
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message="⚡ Robots are still in contact after active clash — proceeding with inertial contact!",
-                ))
-                inert_logs = resolve_inert_contact(
-                    col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice,
-                    moving_robot_id=moving_robot_id, moving_rem_steps=moving_rem_steps, push_trajectories=push_trajectories,
-                )
-                logs.extend(inert_logs)
+                if not had_throw_on_contact:
+                    logs.append(CombatLogEntry(
+                        round=round_num, phase="collision",
+                        message="⚡ Robots are still in contact after active clash (no throw) — proceeding with inertial contact!",
+                    ))
+                    inert_logs = resolve_inert_contact(
+                        col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice,
+                        moving_robot_id=moving_robot_id, moving_rem_steps=moving_rem_steps, push_trajectories=push_trajectories,
+                    )
+                    logs.extend(inert_logs)
+
+            # Ensure robots do not end on top of each other
+            m_bot = r2 if moving_robot_id == r2.id else r1
+            s_bot = r1 if moving_robot_id == r2.id else r2
+            ensure_robots_not_overlapping(m_bot, s_bot, round_num, logs)
 
     else:
         # Standard inert pushing contact

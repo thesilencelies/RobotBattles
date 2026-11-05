@@ -629,7 +629,7 @@
     },
     "45": {
       "name": "Scarab Drum",
-      "description": "",
+      "description": "Invertible: this component works inverted",
       "gm_notes": "weight:5\ncost:$3\ntemplate:Bar\nreq:SSSSS\nout:WWW\ndurability:12\nabsorption:3\nIncreases Throw strength by 2",
       "tags": {
         "1": "Card",
@@ -659,8 +659,8 @@
     },
     "47": {
       "name": "Hammer Saw",
-      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks",
-      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSPP\nout:WW2XW\ndurability:8\nabsorption:1",
+      "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
+      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSPP\nout:WW2XW\ndurability:8\nabsorption:1\ndoes not get hit by weapons",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -688,7 +688,7 @@
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_square.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_square.png",
       "type": "0",
-      "thickness": "0.5",
+      "thickness": "0.2",
       "stackable": "true"
     },
     "2": {
@@ -705,7 +705,7 @@
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_triangle.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_triangle.png",
       "type": "0",
-      "thickness": "0.5",
+      "thickness": "0.2",
       "stackable": "true"
     },
     "3": {
@@ -722,7 +722,7 @@
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_wide.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_wide.png",
       "type": "0",
-      "thickness": "0.5",
+      "thickness": "0.2",
       "stackable": "true"
     },
     "4": {
@@ -739,7 +739,7 @@
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_circle.png",
       "type": "2",
-      "thickness": "0.5",
+      "thickness": "0.1",
       "stackable": "true"
     },
     "5": {
@@ -756,7 +756,7 @@
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_large_circle.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_large_circle.png",
       "type": "2",
-      "thickness": "0.5",
+      "thickness": "0.1",
       "stackable": "true"
     },
     "6": {
@@ -773,7 +773,7 @@
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_line.png",
       "type": "0",
-      "thickness": "0.5",
+      "thickness": "0.1",
       "stackable": "true"
     },
     "7": {
@@ -790,7 +790,7 @@
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_bar.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_bar.png",
       "type": "0",
-      "thickness": "0.5",
+      "thickness": "0.1",
       "stackable": "true"
     },
     "8": {
@@ -807,7 +807,7 @@
       "face": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
       "back": "https://raw.githubusercontent.com/thesilencelies/RobotBattles/refs/heads/main/pictures/icons/template_prongs.png",
       "type": "0",
-      "thickness": "0.5",
+      "thickness": "0.1",
       "stackable": "true"
     }
   },

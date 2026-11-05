@@ -25,8 +25,9 @@ from .automata import (
     get_automaton_action,
     roll_d6,
 )
-from .collision import check_robots_in_contact, detect_collision, get_octant
+from .collision import check_robots_in_contact, check_weapon_template_overlap, detect_collision, get_octant
 from .combat import (
+    ensure_robots_not_overlapping,
     parse_weapon_spin_and_damage,
     refresh_robot_drive_and_power,
     resolve_collision_combat,
@@ -711,7 +712,11 @@ def execute_turn(
 
                 # Check contact in the overlapping state
                 moving_bot.pose = cand_m
-                in_contact = bool(shared_cells) or check_robots_in_contact(moving_bot, stationary_bot)
+                in_contact = (
+                    bool(shared_cells)
+                    or check_robots_in_contact(moving_bot, stationary_bot)
+                    or check_weapon_template_overlap(moving_bot, stationary_bot)
+                )
 
                 if in_contact:
                     phase_collision = True
@@ -834,6 +839,7 @@ def execute_turn(
         # Guarantee final poses strictly snapped to 40mm grid
         p_bot.pose = snap_pose_to_grid(p_bot.pose, p_bot.chassis_template)
         a_bot.pose = snap_pose_to_grid(a_bot.pose, a_bot.chassis_template)
+        ensure_robots_not_overlapping(p_bot, a_bot, r_num, match.log)
 
         match.player_trajectory = full_p_traj
         match.automaton_trajectory = full_a_traj

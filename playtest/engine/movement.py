@@ -889,12 +889,13 @@ def apply_joint_step(
     clamp_to_walls: bool = False,
     active_chassis: str = "Square",
     passive_chassis: str = "Square",
+    rotate_passive: bool = False,
 ) -> Tuple[Pose, Pose]:
     """
     Executes a movement step on active_pose, moving passive_pose along like it is stuck to it.
     - Forwards / Reverse: both robots translate by the same grid delta.
-    - Pivot: both robots rotate about active robot's center by rotation_deg.
-    - Turn: both robots rotate about active robot's pinned edge/wheel by rotation_deg.
+    - Pivot: both robots rotate about active robot's center by rotation_deg (passive robot does not rotate its orientation if rotate_passive is False).
+    - Turn: both robots rotate about active robot's pinned edge/wheel by rotation_deg (passive robot does not rotate its orientation if rotate_passive is False).
     Both outputs are strictly snapped to discrete 40mm grid vertices and 45-degree heading increments.
     """
     stype = step["type"]
@@ -924,7 +925,10 @@ def apply_joint_step(
         rel_y = passive_pose.y - active_pose.y
         new_passive.x = active_pose.x + (rel_x * cos_r - rel_y * sin_r)
         new_passive.y = active_pose.y + (rel_x * sin_r + rel_y * cos_r)
-        new_passive.theta = (passive_pose.theta + rot_deg) % 360.0
+        if rotate_passive:
+            new_passive.theta = (passive_pose.theta + rot_deg) % 360.0
+        else:
+            new_passive.theta = passive_pose.theta
 
     elif stype == "turn":
         rot_deg = step["rotation_deg"]
@@ -944,7 +948,10 @@ def apply_joint_step(
         rel_y = passive_pose.y - active_pose.y
         new_passive.x = new_active.x + (rel_x * cos_r - rel_y * sin_r)
         new_passive.y = new_active.y + (rel_x * sin_r + rel_y * cos_r)
-        new_passive.theta = (passive_pose.theta + rot_deg) % 360.0
+        if rotate_passive:
+            new_passive.theta = (passive_pose.theta + rot_deg) % 360.0
+        else:
+            new_passive.theta = passive_pose.theta
 
     if clamp_to_walls:
         new_active.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_active.x))
@@ -980,7 +987,8 @@ def generate_push_trajectory(
         prev_s = curr_s.clone()
         next_m, next_s = apply_joint_step(
             curr_m, curr_s, step, clamp_to_walls=True,
-            active_chassis=moving_chassis, passive_chassis=stationary_chassis
+            active_chassis=moving_chassis, passive_chassis=stationary_chassis,
+            rotate_passive=False,
         )
         curr_m = snap_pose_to_grid(next_m, moving_chassis)
         curr_s = snap_pose_to_grid(next_s, stationary_chassis)
