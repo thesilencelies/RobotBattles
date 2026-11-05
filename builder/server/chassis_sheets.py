@@ -104,7 +104,7 @@ def generate_chassis_svg(chassis: Dict[str, Any]) -> str:
 
   <!-- Chassis Boundary Shape -->
   <polygon points="{pts_str}" fill="rgba(2, 132, 199, 0.03)" stroke="#0284c7" stroke-width="2.0" stroke-dasharray="6,4" stroke-linejoin="round" class="chassis-boundary-shape"/>
-  <text x="{316.0 if tpl_name == 'Square' else (376.0 if tpl_name == 'Triangle' else (404.0 if tpl_name == 'Wide' else p0[0] + 3))}" y="{28.5 if tpl_name == 'Square' else (139.5 if tpl_name == 'Triangle' else (69.5 if tpl_name == 'Wide' else p0[1] + 6))}" fill="#0284c7" font-family="sans-serif" font-size="3.8" font-weight="bold" text-anchor="{'end' if tpl_name in ('Square', 'Triangle', 'Wide') else 'start'}">Chassis Boundary ({tpl_name})</text>
+  <text x="{316.0 if tpl_name == 'Square' else (386.0 if tpl_name == 'Triangle' else (404.0 if tpl_name == 'Wide' else p0[0] + 3))}" y="{28.5 if tpl_name == 'Square' else (64.5 if tpl_name == 'Triangle' else (69.5 if tpl_name == 'Wide' else p0[1] + 6))}" fill="#0284c7" font-family="sans-serif" font-size="3.8" font-weight="bold" text-anchor="{'end' if tpl_name in ('Square', 'Triangle', 'Wide') else 'start'}">Chassis Boundary ({tpl_name})</text>
 
   <!-- Forward / Facing Indicator -->
   <g class="facing-indicator" transform="translate({A3_WIDTH_MM/2}, 20)">
@@ -268,7 +268,7 @@ def generate_chassis_tikz(chassis: Dict[str, Any]) -> str:
         label_pos = "at (316.0, 26.0) "
         label_anchor = "anchor=north east"
     elif tpl_name == "Triangle":
-        label_pos = "at (376.0, 137.0) "
+        label_pos = "at (386.0, 62.0) "
         label_anchor = "anchor=north east"
     elif tpl_name == "Wide":
         label_pos = "at (404.0, 67.0) "

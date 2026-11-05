@@ -142,15 +142,15 @@ CHASSIS_TEMPLATES = {
         "name": "Triangle",
         "description": "Wedge chassis with forward triangular front and rectangular base",
         "type": "polygon",
-        # Wedge profile: width 340mm, height 256mm: rear y=280, shoulders y=135, apex at (210, 24)
+        # Wedge profile: width 360mm, height 281mm: rear y=295, shoulders y=60, apex at (210, 14)
         "points": [
-            [210.0, 24.0],   # Front apex tip
-            [380.0, 135.0],  # Right front shoulder
-            [380.0, 280.0],  # Right rear corner
-            [40.0, 280.0],   # Left rear corner
-            [40.0, 135.0],   # Left front shoulder
+            [210.0, 14.0],   # Front apex tip
+            [390.0, 60.0],   # Right front shoulder
+            [390.0, 295.0],  # Right rear corner
+            [30.0, 295.0],   # Left rear corner
+            [30.0, 60.0],    # Left front shoulder
         ],
-        "bounds": {"x": 40.0, "y": 24.0, "width": 340.0, "height": 256.0},
+        "bounds": {"x": 30.0, "y": 14.0, "width": 360.0, "height": 281.0},
         "facing": "north",
     },
     "Wide": {

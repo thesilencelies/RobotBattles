@@ -225,7 +225,8 @@ def resolve_inward_damage_progression(
             for nid in robot.connections.get(src_id, []):
                 if nid not in visited and nid in robot.components and not robot.components[nid].is_destroyed:
                     ncomp = robot.components[nid]
-                    dist = math.hypot(ncomp.x - MAT_CENTER_X, ncomp.y - MAT_CENTER_Y)
+                    origin_y = 225.0 if (robot.chassis_template or "").capitalize() == "Triangle" else MAT_CENTER_Y
+                    dist = math.hypot(ncomp.x - MAT_CENTER_X, ncomp.y - origin_y)
                     candidates.append((nid, dist))
 
             if not candidates:

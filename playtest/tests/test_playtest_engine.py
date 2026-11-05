@@ -1,5 +1,4 @@
-"""Unit tests for the playtest rules engine."""
-
+import math
 import random
 import sys
 import unittest
@@ -239,7 +238,7 @@ class TestPlaytestEngine(unittest.TestCase):
             flip_strength=5, pose=Pose(400, 200, 90), components={}, connections={},
             supply_graph={}, reverse_supply={}, left_drive_max=3, right_drive_max=3
         )
-        drive_evade = compute_automaton_drive(automaton_east, player, "Evade", evade_direction="left")
+        drive_evade = compute_automaton_drive(automaton_east, player, "Evade", evade_direction="right")
         # Moving straight forward along the perpendicular heading (East)
         self.assertEqual(drive_evade.left, 3)
         self.assertEqual(drive_evade.right, 3)
@@ -258,6 +257,94 @@ class TestPlaytestEngine(unittest.TestCase):
         drive_evade_wall = compute_automaton_drive(automaton_near_left, player_south, "Evade")
         self.assertEqual(drive_evade_wall.left, 3)
         self.assertEqual(drive_evade_wall.right, 3)
+
+    def test_evade_turns_to_face_normal_and_moves_away(self):
+        """
+        Rule: 'Evade - move forwards and perpendicular to the line between the robots.'
+        User constraint: 'evade should turn to face the normal and move away.'
+        """
+        from playtest.engine.automata import simulate_action_plan_final_pose
+
+        player = RobotState(
+            id="p", name="Player", chassis_name="", chassis_template="Square",
+            flip_strength=5, pose=Pose(400.0, 500.0, 0.0), components={}, connections={},
+            supply_graph={}, reverse_supply={}
+        )
+
+        # Test automaton at (400, 300) facing North (0 deg) -> Player is directly South (180 deg)
+        # Normals are East (90 deg) and West (270 deg)
+        automaton_north = RobotState(
+            id="a", name="Auto", chassis_name="", chassis_template="Square",
+            flip_strength=5, pose=Pose(400.0, 300.0, 0.0), components={}, connections={},
+            supply_graph={}, reverse_supply={}, left_drive_max=3, right_drive_max=3
+        )
+
+        # Evade right -> normal is 90 deg (East)
+        choice_r = compute_automaton_drive(automaton_north, player, "Evade", evade_direction="right")
+        self.assertTrue("R" in choice_r.cards[0] or "PR" in choice_r.cards[0], f"Expected right turn, got {choice_r.cards[0]}")
+        # Has forward cards to move away
+        self.assertTrue(any("F" in c for c in choice_r.cards), f"Evade must have forward cards: {choice_r.cards}")
+        final_pose_r = simulate_action_plan_final_pose(automaton_north.pose, choice_r.cards, "Square")
+        # Faces the normal (perpendicular to player)
+        self.assertAlmostEqual(final_pose_r.theta, 90.0, delta=22.5)
+        # Moves away along normal: x increased towards East
+        self.assertGreater(final_pose_r.x, automaton_north.pose.x)
+
+        # Evade left -> normal is 270 deg (West)
+        choice_l = compute_automaton_drive(automaton_north, player, "Evade", evade_direction="left")
+        self.assertTrue(any("F" in c for c in choice_l.cards), f"Evade must have forward cards: {choice_l.cards}")
+        final_pose_l = simulate_action_plan_final_pose(automaton_north.pose, choice_l.cards, "Square")
+        self.assertAlmostEqual(final_pose_l.theta, 270.0, delta=22.5)
+        self.assertLess(final_pose_l.x, automaton_north.pose.x)
+
+    def test_ai_choices_never_end_facing_directly_away(self):
+        """
+        User constraint: 'None of the ai choices should end facing directly away from where the player starts.'
+        Tests all 8 headings, 4 actions (Rush, Face, Retreat, Evade) across multiple relative positions.
+        """
+        from playtest.engine.automata import simulate_action_plan_final_pose
+
+        player_start = Pose(400.0, 400.0, 0.0)
+        player = RobotState(
+            id="p", name="Player", chassis_name="", chassis_template="Square",
+            flip_strength=5, pose=player_start, components={}, connections={},
+            supply_graph={}, reverse_supply={}
+        )
+
+        test_offsets = [
+            (0.0, -120.0),   # Automaton is North of player
+            (0.0, 120.0),    # Automaton is South of player
+            (-120.0, 0.0),   # Automaton is West of player
+            (120.0, 0.0),    # Automaton is East of player
+            (120.0, 120.0),  # Automaton is South-East of player
+        ]
+
+        for ox, oy in test_offsets:
+            for init_heading in [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]:
+                for action in ["Rush", "Face", "Retreat", "Evade"]:
+                    auto_pose = Pose(player_start.x + ox, player_start.y + oy, init_heading)
+                    automaton = RobotState(
+                        id="a", name="Auto", chassis_name="", chassis_template="Square",
+                        flip_strength=5, pose=auto_pose, components={}, connections={},
+                        supply_graph={}, reverse_supply={}, left_drive_max=3, right_drive_max=3
+                    )
+                    choice = compute_automaton_drive(automaton, player, action)
+                    final_pose = simulate_action_plan_final_pose(auto_pose, choice.cards, "Square")
+
+                    # Vector from final pose to player start
+                    dx = player_start.x - final_pose.x
+                    dy = player_start.y - final_pose.y
+                    if math.hypot(dx, dy) > 1e-2:
+                        to_player = math.degrees(math.atan2(dx, -dy))
+                        away_angle = (to_player + 180.0) % 360.0
+                        diff = abs((final_pose.theta - away_angle + 180.0) % 360.0 - 180.0)
+                        self.assertGreater(
+                            diff, 20.0,
+                            f"Action {action} from pos ({auto_pose.x},{auto_pose.y}) hdg {init_heading} "
+                            f"ended at ({final_pose.x},{final_pose.y}) hdg {final_pose.theta}, "
+                            f"which is directly facing away from player start ({player_start.x},{player_start.y})! "
+                            f"diff={diff}, cards={choice.cards}"
+                        )
 
     def test_full_match_initialization_and_turn(self):
         csv_text = read_saved_robot("Vyper_Spinner.csv")
@@ -341,6 +428,60 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertAlmostEqual(geom["center"][0], lx)
         self.assertAlmostEqual(geom["center"][1], ly)
         self.assertEqual(geom["radius"], 22.0)
+
+    def test_triangle_chassis_mat_and_miniature_alignment(self):
+        """
+        User constraint: 'Placement on the triangle chassis does not line up properly with the mat'
+        Verifies:
+        1. On Triangle chassis, drive axle / center of back tile is anchored at (210, 225) on A3 mat.
+        2. Apex of Triangle miniature (-58mm) maps cleanly to apex tip of mat (~12.5mm, near tip y=14mm).
+        3. Local miniature to mat point and card_to_miniature_offset invert accurately.
+        """
+        from playtest.engine.field import card_to_miniature_offset, MAT_CENTER_X
+        from playtest.engine.collision import local_miniature_to_mat_point
+
+        # Origin on mat for Triangle: (0, 0) on miniature maps to (210, 225) on mat
+        mx_origin, my_origin = local_miniature_to_mat_point(0.0, 0.0, "Triangle")
+        self.assertAlmostEqual(mx_origin, 210.0, places=1)
+        self.assertAlmostEqual(my_origin, 225.0, places=1)
+
+        # Apex tip on miniature: (0.0, -58.0) maps near apex tip on mat (y ~ 12.5mm)
+        mx_apex, my_apex = local_miniature_to_mat_point(0.0, -58.0, "Triangle")
+        self.assertAlmostEqual(mx_apex, 210.0, places=1)
+        self.assertAlmostEqual(my_apex, 12.55, delta=1.0)
+        self.assertGreater(my_apex, 0.0)  # Cleanly inside mat boundaries!
+
+        # Apex weapon placed at x=188, y=20 (width 44, height 64 -> center cx=210, cy=52)
+        lx, ly = card_to_miniature_offset(188.0, 20.0, 44.0, 64.0, "Triangle")
+        self.assertAlmostEqual(lx, 0.0, places=2)
+        # cy=52 relative to origin 225: (52 - 225) * 0.273 = -47.23 mm
+        self.assertAlmostEqual(ly, -47.23, delta=0.5)
+
+        # Re-convert back to mat
+        mx, my = local_miniature_to_mat_point(lx, ly, "Triangle")
+        self.assertAlmostEqual(mx, 210.0, delta=0.1)
+        self.assertAlmostEqual(my, 52.0, delta=0.1)
+
+    def test_triangle_chassis_boundary_contains_all_components(self):
+        """Verifies that all components in Billet HammerSaw and Chonk sit within updated Triangle bounds."""
+        from builder.server.data import parse_robot_csv, CHASSIS_TEMPLATES, read_saved_robot
+        from playtest.engine.field import point_in_polygon
+
+        poly = [(p[0], p[1]) for p in CHASSIS_TEMPLATES["Triangle"]["points"]]
+
+        for r_name in ["Billet_HammerSaw.csv", "Chonk.csv"]:
+            csv_text = read_saved_robot(r_name)
+            robot_data = parse_robot_csv(csv_text)
+            for c in robot_data["placed_cards"]:
+                rot = c.get("rotation", 0)
+                cw = 64.0 if rot in (90, 270) else 44.0
+                ch = 44.0 if rot in (90, 270) else 64.0
+                card_cx = c["x"] + cw / 2.0
+                card_cy = c["y"] + ch / 2.0
+                self.assertTrue(
+                    point_in_polygon(card_cx, card_cy, poly),
+                    f"{r_name} component {c['card']} center ({card_cx}, {card_cy}) should sit inside Triangle chassis boundary"
+                )
 
     def test_start_of_turn_spin_up(self):
         csv_text = read_saved_robot("Beater_wide.csv")
@@ -2704,6 +2845,38 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(claw.is_resetting)
         self.assertFalse(claw.is_active)
 
+        # Verify to_dict() serialization succeeds and TrajectoryPoint timestamps exist (Crusher bug regression test)
+        match_dict = match.to_dict()
+        self.assertIn("player_trajectory", match_dict)
+        self.assertIn("automaton_trajectory", match_dict)
+        self.assertGreater(len(match_dict["player_trajectory"]), 0)
+        self.assertTrue(all("t" in pt for pt in match_dict["player_trajectory"]))
+        self.assertTrue(all("t" in pt for pt in match_dict["automaton_trajectory"]))
+
+    def test_crushing_claw_automaton_grabs_player(self):
+        """Verify automaton grabbing player with Crushing Claw resolves joint movement and to_dict without error."""
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Sparrow_crusher", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        # Automaton grabs player
+        p_bot.grabbed_by = a_bot.id
+        p_bot.pose = Pose(x=400.0, y=400.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=440.0, theta=0.0)
+
+        # Execute turn 2: automaton moves while holding player
+        match = execute_turn(match, MoveChoice(cards=["1F", "1F", "Wait"]), fixed_automaton_roll=4)
+        self.assertIsNone(p_bot.grabbed_by)
+        self.assertIsNone(a_bot.grabbed_by)
+        self.assertTrue(any("is grabbed by" in e.message for e in match.log))
+
+        match_dict = match.to_dict()
+        self.assertIn("player_trajectory", match_dict)
+        self.assertIn("automaton_trajectory", match_dict)
+        self.assertGreater(len(match_dict["player_trajectory"]), 0)
+        self.assertTrue(all("t" in pt for pt in match_dict["player_trajectory"]))
+        self.assertTrue(all("t" in pt for pt in match_dict["automaton_trajectory"]))
 
     def test_multi_weapon_contact_independent_targets_max_throw_full_feedback(self):
         """

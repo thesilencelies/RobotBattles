@@ -462,46 +462,139 @@ def execute_turn(
     # 2. Movement Phase
     # Crushing Claw Grab Effect:
     was_grabbed = (p_bot.grabbed_by == a_bot.id or a_bot.grabbed_by == p_bot.id)
-    if p_bot.grabbed_by == a_bot.id:
-        p_choice = MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"])
-        a_traj = generate_trajectory(a_bot.pose, a_choice)
-        dx = p_bot.pose.x - a_start.x
-        dy = p_bot.pose.y - a_start.y
-        p_traj = [Pose(pt.x + dx, pt.y + dy, p_bot.pose.theta) for pt in a_traj]
+    if was_grabbed:
+        p_is_active = (a_bot.grabbed_by == p_bot.id)
+        active_bot = p_bot if p_is_active else a_bot
+        passive_bot = a_bot if p_is_active else p_bot
+        active_cards = p_cards if p_is_active else a_cards
+
+        # Reset passive bot choices to stationary
+        if p_is_active:
+            a_choice = MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"])
+            a_cards = ["Wait", "Wait", "Wait"]
+            p_claw = next((c for c in p_bot.components.values() if "crushing claw" in c.name.lower()), None)
+            if p_claw:
+                p_claw.was_used_this_turn = True
+        else:
+            p_choice = MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"])
+            p_cards = ["Wait", "Wait", "Wait"]
+            a_claw = next((c for c in a_bot.components.values() if "crushing claw" in c.name.lower()), None)
+            if a_claw:
+                a_claw.was_used_this_turn = True
+
+        match.log.append(CombatLogEntry(
+            round=r_num, phase="movement",
+            message=f"🗜️ {passive_bot.name} is grabbed by {active_bot.name}'s Crushing Claw: moves with {active_bot.name} and contributes 0 motion!",
+        ))
+
+        # Joint step-by-step trajectory generation
+        act_pose = active_bot.pose.clone()
+        pas_pose = passive_bot.pose.clone()
+        full_act_traj: List[TrajectoryPoint] = [TrajectoryPoint(act_pose.x, act_pose.y, act_pose.theta, t=0.0)]
+        full_pas_traj: List[TrajectoryPoint] = [TrajectoryPoint(pas_pose.x, pas_pose.y, pas_pose.theta, t=0.0)]
+        action_step_results: List[Dict[str, Any]] = []
+
+        for phase_idx in range(6):
+            act_card_idx = phase_idx // 2
+            is_active_phase = (phase_idx % 2 == 0) if p_is_active else (phase_idx % 2 != 0)
+            t_phase_start = phase_idx / 6.0
+            t_phase_span = 1.0 / 6.0
+
+            if not is_active_phase:
+                # Passive bot's phase: stationary Wait
+                action_step_results.append({
+                    "phase_index": phase_idx,
+                    "action_index": act_card_idx,
+                    "robot_id": passive_bot.id,
+                    "robot_name": passive_bot.name,
+                    "card": "Wait",
+                    "player_card": p_cards[act_card_idx],
+                    "automaton_card": a_cards[act_card_idx],
+                    "collision": False,
+                    "cancelled": True,
+                    "reason": "Grabbed by Crushing Claw",
+                })
+                full_act_traj.append(TrajectoryPoint(act_pose.x, act_pose.y, act_pose.theta, t=t_phase_start + t_phase_span))
+                full_pas_traj.append(TrajectoryPoint(pas_pose.x, pas_pose.y, pas_pose.theta, t=t_phase_start + t_phase_span))
+                continue
+
+            card = active_cards[act_card_idx] if act_card_idx < len(active_cards) else "Wait"
+            steps = get_action_card_steps(card, chassis_template=active_bot.chassis_template)
+
+            if not steps:
+                action_step_results.append({
+                    "phase_index": phase_idx,
+                    "action_index": act_card_idx,
+                    "robot_id": active_bot.id,
+                    "robot_name": active_bot.name,
+                    "card": card,
+                    "player_card": p_cards[act_card_idx],
+                    "automaton_card": a_cards[act_card_idx],
+                    "collision": False,
+                    "cancelled": False,
+                })
+                full_act_traj.append(TrajectoryPoint(act_pose.x, act_pose.y, act_pose.theta, t=t_phase_start + t_phase_span))
+                full_pas_traj.append(TrajectoryPoint(pas_pose.x, pas_pose.y, pas_pose.theta, t=t_phase_start + t_phase_span))
+                continue
+
+            total_substeps = len(steps) * 4
+            curr_substep = 0
+
+            for step in steps:
+                prev_a = act_pose.clone()
+                prev_p = pas_pose.clone()
+                next_a, next_p = apply_joint_step(
+                    act_pose, pas_pose, step, clamp_to_walls=True,
+                    active_chassis=active_bot.chassis_template,
+                    passive_chassis=passive_bot.chassis_template,
+                )
+                act_pose = snap_pose_to_grid(next_a, active_bot.chassis_template)
+                pas_pose = snap_pose_to_grid(next_p, passive_bot.chassis_template)
+
+                for s in range(1, 5):
+                    curr_substep += 1
+                    alpha = s / 4.0
+                    frac = curr_substep / float(total_substeps)
+                    t_pt = t_phase_start + frac * t_phase_span
+
+                    ix_a = prev_a.x + (act_pose.x - prev_a.x) * alpha
+                    iy_a = prev_a.y + (act_pose.y - prev_a.y) * alpha
+                    dth_a = (act_pose.theta - prev_a.theta + 180.0) % 360.0 - 180.0
+                    ith_a = (prev_a.theta + dth_a * alpha) % 360.0
+                    full_act_traj.append(TrajectoryPoint(ix_a, iy_a, ith_a, t=t_pt))
+
+                    ix_p = prev_p.x + (pas_pose.x - prev_p.x) * alpha
+                    iy_p = prev_p.y + (pas_pose.y - prev_p.y) * alpha
+                    dth_p = (pas_pose.theta - prev_p.theta + 180.0) % 360.0 - 180.0
+                    ith_p = (prev_p.theta + dth_p * alpha) % 360.0
+                    full_pas_traj.append(TrajectoryPoint(ix_p, iy_p, ith_p, t=t_pt))
+
+            action_step_results.append({
+                "phase_index": phase_idx,
+                "action_index": act_card_idx,
+                "robot_id": active_bot.id,
+                "robot_name": active_bot.name,
+                "card": card,
+                "player_card": p_cards[act_card_idx],
+                "automaton_card": a_cards[act_card_idx],
+                "collision": False,
+                "cancelled": False,
+            })
+
+        active_bot.pose = act_pose
+        passive_bot.pose = pas_pose
         p_bot.grabbed_by = None
-        a_claw = next((c for c in a_bot.components.values() if "crushing claw" in c.name.lower()), None)
-        if a_claw:
-            a_claw.was_used_this_turn = True
-        match.log.append(CombatLogEntry(
-            round=r_num, phase="movement",
-            message=f"🗜️ {p_bot.name} is grabbed by {a_bot.name}'s Crushing Claw: moves with {a_bot.name} and contributes 0 motion!",
-        ))
-        p_bot.pose = Pose(p_traj[-1].x, p_traj[-1].y, p_traj[-1].theta)
-        a_bot.pose = Pose(a_traj[-1].x, a_traj[-1].y, a_traj[-1].theta)
-        match.player_trajectory = p_traj
-        match.automaton_trajectory = a_traj
-        match.last_collision = None
-        match.action_step_results = []
-    elif a_bot.grabbed_by == p_bot.id:
-        a_choice = MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"])
-        p_traj = generate_trajectory(p_bot.pose, p_choice)
-        dx = a_bot.pose.x - p_start.x
-        dy = a_bot.pose.y - p_start.y
-        a_traj = [Pose(pt.x + dx, pt.y + dy, a_bot.pose.theta) for pt in p_traj]
         a_bot.grabbed_by = None
-        p_claw = next((c for c in p_bot.components.values() if "crushing claw" in c.name.lower()), None)
-        if p_claw:
-            p_claw.was_used_this_turn = True
-        match.log.append(CombatLogEntry(
-            round=r_num, phase="movement",
-            message=f"🗜️ {a_bot.name} is grabbed by {p_bot.name}'s Crushing Claw: moves with {p_bot.name} and contributes 0 motion!",
-        ))
-        p_bot.pose = Pose(p_traj[-1].x, p_traj[-1].y, p_traj[-1].theta)
-        a_bot.pose = Pose(a_traj[-1].x, a_traj[-1].y, a_traj[-1].theta)
-        match.player_trajectory = p_traj
-        match.automaton_trajectory = a_traj
+
+        if p_is_active:
+            match.player_trajectory = full_act_traj
+            match.automaton_trajectory = full_pas_traj
+        else:
+            match.player_trajectory = full_pas_traj
+            match.automaton_trajectory = full_act_traj
+
         match.last_collision = None
-        match.action_step_results = []
+        match.action_step_results = action_step_results
     else:
         # Alternating Action Card Resolution (6 phases: Card 1 -> Card 2 -> Card 3)
         # Starting with the robot with higher total active drive (ties broken by youngest player / Player 1).

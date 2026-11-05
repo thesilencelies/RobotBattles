@@ -136,10 +136,12 @@ def world_to_local_point(
     return (lx, ly)
 
 
-def local_miniature_to_mat_point(lx: float, ly: float) -> Tuple[float, float]:
+def local_miniature_to_mat_point(lx: float, ly: float, chassis_template: str = "Square") -> Tuple[float, float]:
     """Converts local miniature coordinates to A3 chassis mat coordinates in mm."""
+    tname = (chassis_template or "Square").capitalize()
+    origin_y = 225.0 if tname == "Triangle" else MAT_CENTER_Y
     mx = MAT_CENTER_X + lx / MAT_TO_MINI_SCALE
-    my = MAT_CENTER_Y + ly / MAT_TO_MINI_SCALE
+    my = origin_y + ly / MAT_TO_MINI_SCALE
     return (mx, my)
 
 
@@ -178,7 +180,7 @@ def get_robot_miniature_parts(
 
         cw = 64.0 if comp.rotation in (90, 270) else 44.0
         ch = 44.0 if comp.rotation in (90, 270) else 64.0
-        offset = card_to_miniature_offset(comp.x, comp.y, cw, ch)
+        offset = card_to_miniature_offset(comp.x, comp.y, cw, ch, robot.chassis_template)
         geom = get_weapon_template_geometry(comp.template, offset)
 
         w_poly_local = [rotate_point_around(p, offset, comp.rotation) for p in geom["polygon"]]
@@ -287,16 +289,18 @@ def ray_polygon_distance(
     return min_t
 
 
-def get_component_side(comp: ComponentHealth) -> str:
+def get_component_side(comp: ComponentHealth, chassis_template: str = "Square") -> str:
     """
     Determines which side of the robot the component is on:
     'front', 'back', 'left', or 'right'.
-    Uses the center of the component relative to the chassis center (MAT_CENTER_X, MAT_CENTER_Y).
+    Uses the center of the component relative to the chassis center/origin on the mat.
     """
     card_cx = (comp.box[0] + comp.box[2]) / 2.0
     card_cy = (comp.box[1] + comp.box[3]) / 2.0
+    tname = (chassis_template or "Square").capitalize()
+    origin_y = 225.0 if tname == "Triangle" else MAT_CENTER_Y
     dx = card_cx - MAT_CENTER_X
-    dy = card_cy - MAT_CENTER_Y
+    dy = card_cy - origin_y
     if abs(dy) >= abs(dx):
         return "back" if dy > 0 else "front"
     else:
@@ -337,7 +341,7 @@ def find_components_along_contact_line(
         return []
 
     lx, ly = world_to_local_point(contact_pt[0], contact_pt[1], robot_x, robot_y, robot_theta)
-    mx, my = local_miniature_to_mat_point(lx, ly)
+    mx, my = local_miniature_to_mat_point(lx, ly, robot.chassis_template)
 
     # Rule: UHM wraparound armor should be hit instead of any other component on its side of the robot when that side is hit.
     if abs(ly) >= abs(lx):
@@ -348,7 +352,7 @@ def find_components_along_contact_line(
     uhmw_armors = [
         c for c in active_comps
         if is_uhmw_wraparound_armor(c) and (
-            get_component_side(c) == contact_side or get_component_side(c) in (octant or "").lower()
+            get_component_side(c, robot.chassis_template) == contact_side or get_component_side(c, robot.chassis_template) in (octant or "").lower()
         )
     ]
     if uhmw_armors:
@@ -381,7 +385,7 @@ def find_components_along_contact_line(
     for w_comp in active_weapons:
         cw = 64.0 if w_comp.rotation in (90, 270) else 44.0
         ch = 44.0 if w_comp.rotation in (90, 270) else 64.0
-        offset = card_to_miniature_offset(w_comp.x, w_comp.y, cw, ch)
+        offset = card_to_miniature_offset(w_comp.x, w_comp.y, cw, ch, robot.chassis_template)
         geom = get_weapon_template_geometry(w_comp.template, offset)
         w_poly_local = [rotate_point_around(p, offset, w_comp.rotation) for p in geom["polygon"]]
 
@@ -401,8 +405,10 @@ def find_components_along_contact_line(
             return hit_wpn_cids
 
     # Ray pointing inward toward chassis center on A3 mat
+    tname = (robot.chassis_template or "Square").capitalize()
+    origin_y = 225.0 if tname == "Triangle" else MAT_CENTER_Y
     dx = MAT_CENTER_X - mx
-    dy = MAT_CENTER_Y - my
+    dy = origin_y - my
     dist = math.hypot(dx, dy)
     ux, uy = (dx / dist, dy / dist) if dist > 1e-4 else (0.0, -1.0)
 
@@ -713,7 +719,9 @@ def check_robot_forks_in_line(
 
         # Longitudinal span: extending forward from rear edge of the fork card
         # Heading 0 is North = -Y (forward)
-        ly_rear = (max_y - MAT_CENTER_Y) * MAT_TO_MINI_SCALE + 2.0
+        fork_tname = (fork_robot.chassis_template or "Square").capitalize()
+        fork_origin_y = 225.0 if fork_tname == "Triangle" else MAT_CENTER_Y
+        ly_rear = (max_y - fork_origin_y) * MAT_TO_MINI_SCALE + 2.0
         ly_front = ly_rear - 150.0  # extends forward across the contact zone
 
         corridor_local = [

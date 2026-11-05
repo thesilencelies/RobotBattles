@@ -416,12 +416,18 @@ export class ArenaRenderer {
     this._renderTrajectories(pTraj, aTraj);
     this.layerEffects.innerHTML = "";
 
-    // Deliberate pacing: ~3.2 seconds minimum, or ~65ms per trajectory substep
-    const turnDuration = Math.max(3200, totalFrames * 65);
+    // In automated/headless tests or webdriver, use fast animation to avoid timeout
+    const isTestEnv = Boolean(window.navigator && window.navigator.webdriver) || Boolean(window.__TEST_MODE__);
+    const turnDuration = isTestEnv ? 250 : Math.max(3200, totalFrames * 65);
     const startTime = performance.now();
     let collisionEffectRendered = false;
+    let fallbackTimeout = null;
 
     const step = (now) => {
+      if (fallbackTimeout) {
+        clearTimeout(fallbackTimeout);
+        fallbackTimeout = null;
+      }
       const elapsed = now - startTime;
       const frac = Math.min(1.0, elapsed / turnDuration);
 
@@ -446,6 +452,8 @@ export class ArenaRenderer {
 
       if (frac < 1.0) {
         this.animFrame = requestAnimationFrame(step);
+        // Fallback for headless environments where requestAnimationFrame might throttle
+        fallbackTimeout = setTimeout(() => step(performance.now()), 80);
       } else {
         this.animating = false;
         this.render(matchState);
@@ -454,6 +462,7 @@ export class ArenaRenderer {
     };
 
     this.animFrame = requestAnimationFrame(step);
+    fallbackTimeout = setTimeout(() => step(performance.now()), 80);
   }
 
   async renderActionPlanPreview(playerPose, cards, chassisTemplate) {
@@ -1248,7 +1257,7 @@ export class ArenaRenderer {
     // 2. Weapon Overlays (Miniature Weapon Templates on top of chassis)
     const weaponComps = Object.values(robot.components).filter(c => c.card_type === "weapon" && !c.is_destroyed);
     for (const weaponComp of weaponComps) {
-      this._appendWeaponOverlay(g, weaponComp);
+      this._appendWeaponOverlay(g, weaponComp, robot.chassis_template);
     }
 
     // 3. Heading Direction Marker (Front arrow)
@@ -1358,13 +1367,14 @@ export class ArenaRenderer {
     this.layerRobots.appendChild(g);
   }
 
-  _appendWeaponOverlay(parentG, weaponComp) {
+  _appendWeaponOverlay(parentG, weaponComp, chassisTemplate = "Square") {
     const wName = weaponComp.name || "";
     const wKeywords = weaponComp.keywords || "";
     const wTemplate = weaponComp.template || (wName.includes("Spinner") ? "Circle" : "Bar");
 
     const MAT_CENTER_X = 210.0;
-    const MAT_CENTER_Y = 150.0;
+    const tname = (chassisTemplate || (parentG && parentG.dataset.template) || "Square").toLowerCase();
+    const MAT_CENTER_Y = (tname === "triangle") ? 225.0 : 150.0;
     const MAT_TO_MINI_SCALE = 0.273;
 
     const rot = Number(weaponComp.rotation) || 0;

@@ -145,17 +145,27 @@ def get_chassis_grid_cells(
     return {(vx - 1, vy - 1), (vx, vy - 1), (vx - 1, vy), (vx, vy)}
 
 
-def card_to_miniature_offset(card_x: float, card_y: float, card_w: float = 44.0, card_h: float = 64.0) -> Tuple[float, float]:
+def card_to_miniature_offset(
+    card_x: float,
+    card_y: float,
+    card_w: float = 44.0,
+    card_h: float = 64.0,
+    chassis_template: str = "Square",
+) -> Tuple[float, float]:
     """
-    Computes local miniature offset (lx, ly) in mm relative to chassis center
-    from a card placed on the A3 chassis sheet (420 x 297 mm, center at 210, 150).
+    Computes local miniature offset (lx, ly) in mm relative to chassis miniature origin (0, 0)
+    from a card placed on the A3 chassis sheet (420 x 297 mm).
+    For Square/Wide: origin is sheet center (210, 150).
+    For Triangle: origin is center of middle back tile (drive wheel axle) at (210, 225).
     On the sheet: -y is forward (towards front arrow).
     On the miniature: -y is forward (heading North = 0 deg).
     """
+    tname = (chassis_template or "Square").capitalize()
+    origin_y = 225.0 if tname == "Triangle" else MAT_CENTER_Y
     card_cx = card_x + card_w / 2.0
     card_cy = card_y + card_h / 2.0
     dx_mat = card_cx - MAT_CENTER_X
-    dy_mat = card_cy - MAT_CENTER_Y
+    dy_mat = card_cy - origin_y
     return (dx_mat * MAT_TO_MINI_SCALE, dy_mat * MAT_TO_MINI_SCALE)
 
 
