@@ -504,7 +504,7 @@ Robots are always considered to have at least \textbf{1 drive on each side}, reg
 
 \subsection{Movement}
 
-Instead of movement templates, battle maneuvering is resolved on a discrete square grid. Robot facings and turns are strictly snapped to \textbf{45-degree increments} ($0^\circ$, $45^\circ$, $90^\circ$, $135^\circ$, $180^\circ$, $225^\circ$, $270^\circ$, $315^\circ$).
+Battle maneuvering is resolved on a discrete square grid. Robot facings and turns are strictly snapped to \textbf{45-degree increments} ($0^\circ$, $45^\circ$, $90^\circ$, $135^\circ$, $180^\circ$, $225^\circ$, $270^\circ$, $315^\circ$).
 
 \subsubsection{Chassis Grid Footprints}
 Each robot occupies multiple squares on the grid simultaneously. When aligned orthogonally ($0^\circ$, $90^\circ$, $180^\circ$, $270^\circ$), each chassis occupies a fixed set of grid squares:
@@ -666,7 +666,7 @@ To eliminate movement ambiguity, the chosen Action Cards are resolved \textbf{al
 \textbf{Collisions During Resolution:}\\
 A collision happens when a robot tries to move through a tile the other robot is in, or if a weapon template overlaps the opposing robot after the movement. They are placed in the overlapping state to work out what is involved in the collision.
 If it is an \textbf{Active Collision}, weapon damage, feedback, and throws are resolved from there.
-If it is an \textbf{Inert Collision}, the robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that motion (pushing does not rotate the pushed robot). Robots cannot end a turn on top of each other: if there is not a throw on contact, the static robot is pushed back until it is not overlapping. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead.
+If it is an \textbf{Inert Collision}, the robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that motion, keeping its orientation unchanged. Robots cannot end a turn on top of each other: if there is not a throw on contact, the static robot is pushed back until it is not overlapping. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead.
 
 \vspace{0.3em}
 \noindent
@@ -681,7 +681,7 @@ If a collision results in a robot being thrown, the thrown robot is displaced aw
 \clearpage
 
 \subsubsection{The Action Cards}
-Each Action Card represents a discrete maneuver on the arena grid without requiring negative arithmetic:
+Each Action Card represents a discrete maneuver on the arena grid:
 
 \begin{figure}[H]
   \centering
@@ -1047,15 +1047,14 @@ The first remaining component on the robot along the line corresponding to the c
 Inert contact occurs when non-weapon chassis surfaces make contact (or weapons collide without active strike areas):
 \begin{enumerate}[leftmargin=*, noitemsep, topsep=1pt]
   \item A collision happens when the moving robot tries to move through a tile the stationary robot is in, or if a weapon template overlaps the opposing robot after the movement.
-  \item The robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that action card (\textbf{pushing does not rotate the pushed robot}):
+  \item The robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that action card, maintaining its current orientation:
   \begin{itemize}[noitemsep, topsep=1pt]
     \item \textbf{Forwards and Reverse Steps:} Both robots move together in the direction of the step.
-    \item \textbf{Turn and Pivot Steps:} The stationary robot is displaced along with the moving robot's motion without rotating (its orientation remains fixed).
+    \item \textbf{Turn and Pivot Steps:} The stationary robot is displaced along with the moving robot's motion while maintaining its orientation.
     \item \textbf{Raised Robot:} If a robot ends up raised in a collision, it still pushes the other robot for the collision that caused it to become raised, but loses all subsequent remaining actions and stays raised until the end of the turn.
   \end{itemize}
-  \item \textbf{Non-Overlapping Positions:} Robots cannot end a turn on top of each other. If there is not a throw on contact, the static robot is pushed back until it is not overlapping.
-  \item \textbf{Pushed into a Wall:} If a robot would be pushed into a wall, it stops against the wall and the pushing robot is deflected back one space instead; no throw occurs (throws due to being pushed into a wall are completely removed). If an active weapon touches a wall, all spin counters are removed, and touching a wall inflicts zero feedback damage.
-  \item \textbf{No Separation Required:} Robot separation after collisions is no longer required. The robots remain in their resulting adjacent positions where movement concludes.
+  \item \textbf{Non-Overlapping Positions:} Robots cannot end a turn on top of each other. If there is not a throw on contact, the static robot is pushed back until it is not overlapping, and the robots remain in their resulting adjacent positions where movement concludes.
+  \item \textbf{Pushed into a Wall:} If a robot would be pushed into a wall, it stops against the wall and the pushing robot is deflected back one space instead. If an active weapon touches a wall, all spin counters are removed.
 \end{enumerate}
 
 \begin{figure}[H]
@@ -1099,9 +1098,9 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
     \draw[-{Stealth[length=2.5mm]}, line width=1.8pt, draw=arenaRed] \gridPt{2.0}{2.5} -- \gridPt{5.8}{2.5};
     \gridNode[fill=arenaRed, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{4.2}{0.5}{[2] Pusher Advances Both 1 Sq}
 
-    % PANEL 3: Step 3 (Joint Rotation: Opponent Stuck Along for the Turn)
+    % PANEL 3: Step 3 (Turn Step Displacement)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0.0) rectangle (7.9, 4.5);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 4.35) {Step 3: Joint Rotation ($45^\circ$ Together)};
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 4.35) {Step 3: Turn Step Displacement};
 
     \setGrid{0.6}{0.3}{0.75}
     \gridDraw{0}{0}{9}{5}
@@ -1114,20 +1113,21 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
     \gridSquare[ghost]{2.0}{2.5}{90}
     \gridTriangle[ghost]{4.5}{2.5}{270}
 
-    % Rotated bots 45 deg together around pivot point (2.0, 1.5)
+    % Rotated Bot A 45 deg around pivot point (2.0, 1.5)
     \begin{scope}[rotate around={-45:\gridPt{2.0}{1.5}}]
       \gridSquare[blue]{2.0}{2.5}{90}
-      \gridTriangle[red]{4.5}{2.5}{270}
     \end{scope}
+    % Displaced Bot B maintains orientation (facing 270)
+    \gridTriangle[red]{5.2}{1.8}{270}
 
     % Curved rotation arrow
     \draw[-{Stealth[length=2.5mm]}, line width=1.6pt, draw=arenaRed] \gridPt{4.0}{3.5} arc (75:30:1.6);
     \gridNode[fill=white, draw=arenaRed, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{5.3}{3.2}{Turn $45^\circ$}
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{5.3}{0.5}{[3] Stuck Together in Turn}
+    \gridNode[fill=arenaRed, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{5.3}{0.5}{[3] Displaced Without Rotation}
 
-    % PANEL 4: Step 4 (Conclude Movement: No Separation)
+    % PANEL 4: Step 4 (Conclude Movement)
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (8.3, 0.0) rectangle (16.2, 4.5);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 4.35) {Step 4: Adjacent End (No Separation)};
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (8.45, 4.35) {Step 4: Movement Concludes Adjacent};
 
     \setGrid{8.9}{0.3}{0.75}
     \gridDraw{0}{0}{9}{5}
@@ -1136,7 +1136,7 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
     \gridSquare[blue]{3.0}{2.5}{90}
     \gridTriangle[red]{5.5}{2.5}{270}
     \gridNode[fill=primaryDark, text=white, font=\scriptsize\bfseries, rounded corners=2pt, inner sep=2.5pt]{4.2}{4.2}{Robots Remain Adjacent}
-    \gridNode[fill=accentBlue, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{4.2}{0.5}{[4] Movement Concludes (No Back-Off)}
+    \gridNode[fill=accentBlue, text=white, font=\fontsize{6.5}{7.5}\selectfont\bfseries, rounded corners=1.5pt, inner sep=2pt]{4.2}{0.5}{[4] Movement Concludes Adjacent}
   \end{tikzpicture}%
   }
   \caption{Step-by-Step Resolution of Inert Contact and Joint Grid Movement}
@@ -1179,7 +1179,7 @@ Similarly if a weapon contacts multiple components at once, each component is da
   \midrule
   \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage \inlineIcon{\resourceW} to outermost component contacted $\rightarrow$ Base throw strength equals weapon damage \inlineIcon{\resourceW} minus absorption of hit component (minimum 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance in grid squares is lower of die roll or throw strength $\rightarrow$ Thrown robot orientation determined by d6 roll ($45^\circ$/$90^\circ$/$180^\circ$/None) $\rightarrow$ Throw damage equals throw strength. If robots remain in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
-  \textbf{Inert Contact} & Pushing match on grid (pushing does not rotate) $\rightarrow$ Moving robot pushes stationary robot along remaining steps of current Action Card $\rightarrow$ Static robot pushed back until not overlapping $\rightarrow$ Pushed into wall halts at perimeter while pushing robot is deflected back one space (no throw) $\rightarrow$ Conclude adjacent (no separation). \\
+  \textbf{Inert Contact} & Moving robot pushes stationary robot along remaining steps of current Action Card while the stationary robot maintains its orientation $\rightarrow$ Static robot pushed back until not overlapping $\rightarrow$ Pushed into wall halts at perimeter while pushing robot is deflected back one space $\rightarrow$ Robots conclude movement adjacent on the grid. \\
 \end{tabularx}
 \end{summarybox}
 
@@ -1199,12 +1199,12 @@ When both robots would be raised in the same contact, randomly choose one by rol
 
 \subsection{Throws \& Inversion}
 
-A robot that is thrown is moved a distance in grid squares equal to the lower of a die roll (d6) or the throw strength away from the contact point along the center-to-center line. \textbf{If a robot is thrown, its remaining action cards for the round do not happen.} Throws due to being pushed into a wall are completely removed.
+A robot that is thrown is moved a distance in grid squares equal to the lower of a die roll (d6) or the throw strength away from the contact point along the center-to-center line. \textbf{If a robot is thrown, its remaining action cards for the round do not happen.}
 Robot orientation after a throw is decided by rolling a d6 on the random rotation table ($45^\circ$, $90^\circ$, $180^\circ$, or no rotation).
 If the throw strength minus the thrown distance is greater than the flip value of the chassis, the robot is \textbf{inverted} (lower rolled distances represent high-arching vertical throws rather than horizontal displacement).
 After the throw, the thrown robot takes throw damage at a randomly chosen component equal to the throw strength.
 If the robot is pushed or thrown into a marked \textbf{Hazard Wall}, it is \textbf{immediately knocked out}.
-If its weapon touches a wall, any spin counters it has are removed, and touching a wall inflicts zero feedback damage.
+If an active weapon touches a wall, any spin counters it has are removed.
 The component is chosen randomly by dropping a die onto the robot and seeing which component it lands on (try again if it bounces off altogether).
 
 \begin{figure}[H]
@@ -1392,8 +1392,8 @@ to each component that supplies it, shared equally if there are multiple compone
   \item \textbf{Direct Weapon Damage \inlineIcon{\resourceW}:} Weapon damage \inlineIcon{\resourceW} applies only to the single outermost component hit; excess damage does not penetrate inwards (throw shock covers internals).
   \item \textbf{Damage Conditions:} A component is \textbf{Destroyed} if it takes damage equal to or greater than its durability, and \textbf{Damaged} if it takes damage equal to or greater than half its durability. Absorption reduces base throw strength received during attacks.
   \item \textbf{Throw Distance \& Damage:} Thrown distance in grid squares is the lower of a die roll (d6) or the throw strength. Thrown robot orientation is determined by the d6 random rotation table ($45^\circ$, $90^\circ$, $180^\circ$, or none). Throw damage is always equal to the throw strength.
-  \item \textbf{No Separation:} Separation back 1 unit is no longer required; robots conclude in their adjacent positions where movement ends.
-  \item \textbf{Wall Collisions:} Driving or being pushed into a wall stops the robot without a throw. Throws due to being pushed into a wall are completely removed. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead. Touching a wall deals zero feedback damage to weapons or robots; any spin counters are removed.
+  \item \textbf{Ending Positions:} Robots conclude in their adjacent positions where movement ends.
+  \item \textbf{Wall Collisions:} Driving into a wall stops the robot. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead. If an active weapon touches a wall, all spin counters are removed.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounding up).
 \end{itemize}
 \end{summarybox}
