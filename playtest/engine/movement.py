@@ -5,7 +5,13 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List, Tuple
 
-from .field import WALL_BOTTOM, WALL_LEFT, WALL_RIGHT, WALL_TOP
+from .field import (
+    WALL_BOTTOM,
+    WALL_LEFT,
+    WALL_RIGHT,
+    WALL_TOP,
+    push_robot_inside_arena_if_past_wall,
+)
 from .types import MoveChoice, Pose, TrajectoryPoint
 
 # Distance in mm per 1 drive unit on the straight template
@@ -876,8 +882,13 @@ def apply_movement_step(
     if clamp_to_walls:
         new_pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_pose.x))
         new_pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_pose.y))
+        new_pose = snap_pose_to_grid(new_pose, chassis_template)
+        if stype in ("pivot", "turn"):
+            new_pose = push_robot_inside_arena_if_past_wall(new_pose, chassis_template)
+    else:
+        new_pose = snap_pose_to_grid(new_pose, chassis_template)
 
-    return snap_pose_to_grid(new_pose, chassis_template)
+    return new_pose
 
 
 def apply_joint_step(
@@ -958,9 +969,14 @@ def apply_joint_step(
         new_active.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_active.y))
         new_passive.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, new_passive.x))
         new_passive.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, new_passive.y))
-
-    new_active = snap_pose_to_grid(new_active, active_chassis)
-    new_passive = snap_pose_to_grid(new_passive, passive_chassis)
+        new_active = snap_pose_to_grid(new_active, active_chassis)
+        new_passive = snap_pose_to_grid(new_passive, passive_chassis)
+        if stype in ("pivot", "turn"):
+            new_active = push_robot_inside_arena_if_past_wall(new_active, active_chassis)
+            new_passive = push_robot_inside_arena_if_past_wall(new_passive, passive_chassis)
+    else:
+        new_active = snap_pose_to_grid(new_active, active_chassis)
+        new_passive = snap_pose_to_grid(new_passive, passive_chassis)
     return (new_active, new_passive)
 
 

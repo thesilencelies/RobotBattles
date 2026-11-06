@@ -22,6 +22,7 @@ from .field import (
     get_chassis_polygon,
     is_hazard_wall_contact,
     is_in_hazard,
+    push_robot_inside_arena_if_past_wall,
 )
 from .collision import (
     check_robot_forks_in_line,
@@ -143,9 +144,12 @@ def apply_damage_to_component(
     """
     Applies incoming integer damage according to the canonical rules:
     - All damage numbers are integers; when sharing or dividing, round down.
-    - Equal to or greater than durability (ignoring absorption) -> Destroyed, absorbs durability, excess continues.
-    - Exceeds 1/2 durability after absorption -> Damaged (or destroyed if already damaged).
-    - Otherwise -> absorbs absorption, excess continues.
+    - Component Damaged: takes damage equal to or greater than its durability.
+    - Component Destroyed: takes damage equal to or greater than twice its durability.
+    - Repeated Damage: if a damaged component takes damage equal to or greater than its durability again, destroyed.
+    - Absorption on Destruction: absorbs damage equal to its durability instead of its absorption.
+    - Absorption: if undamaged, absorbs damage up to absorption value.
+    - Fragile keyword: if weapon damage, effective durability is 1 (destroyed immediately).
     Returns (status, absorbed_amount, excess_amount).
     """
     incoming = int(incoming)
@@ -153,7 +157,9 @@ def apply_damage_to_component(
     if comp.is_fragile and is_weapon_damage:
         eff_dur = 1
 
-    if incoming >= eff_dur:
+    destroy_threshold = 1 if (comp.is_fragile and is_weapon_damage) else 2 * eff_dur
+
+    if incoming >= destroy_threshold:
         comp.is_destroyed = True
         comp.current_durability = 0
         comp.is_active = False
@@ -161,10 +167,9 @@ def apply_damage_to_component(
         excess = max(0, incoming - absorbed)
         return "DESTROYED", absorbed, excess
 
-    half_dur = eff_dur / 2.0
     net_after_abs = max(0, incoming - comp.absorption)
 
-    if incoming >= half_dur:
+    if incoming >= eff_dur:
         if comp.is_damaged:
             comp.is_destroyed = True
             comp.current_durability = 0
@@ -182,6 +187,7 @@ def apply_damage_to_component(
         absorbed = min(incoming, comp.absorption)
         excess = net_after_abs
         return "UNDAMAGED", absorbed, excess
+
 
 
 def resolve_inward_damage_progression(
@@ -1020,6 +1026,23 @@ def ensure_robots_not_overlapping(
         if p_step_x == 0 and p_step_y == 0:
             p_step_y = -DRIVE_UNIT_MM
 
+        if moving_bot.is_raised:
+            # While a robot is raised, any time it would push another robot instead it is moved back from the contact.
+            deflect_m = Pose(
+                moving_bot.pose.x - p_step_x,
+                moving_bot.pose.y - p_step_y,
+                moving_bot.pose.theta,
+            )
+            deflect_m = push_robot_inside_arena_if_past_wall(snap_pose_to_grid(deflect_m, moving_bot.chassis_template), moving_bot.chassis_template)
+            moving_bot.pose = deflect_m
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=(
+                    f"🔱 {moving_bot.name} is RAISED: instead of pushing {stationary_bot.name}, it is moved back from the contact to ({moving_bot.pose.x:.1f}, {moving_bot.pose.y:.1f})."
+                ),
+            ))
+            break
+
         cand_s = Pose(
             stationary_bot.pose.x + p_step_x,
             stationary_bot.pose.y + p_step_y,
@@ -1040,7 +1063,7 @@ def ensure_robots_not_overlapping(
             # Pushed robot stops at the wall, pushing robot is deflected back one space
             stationary_bot.pose.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, stationary_bot.pose.x))
             stationary_bot.pose.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, stationary_bot.pose.y))
-            stationary_bot.pose = snap_pose_to_grid(stationary_bot.pose, stationary_bot.chassis_template)
+            stationary_bot.pose = push_robot_inside_arena_if_past_wall(snap_pose_to_grid(stationary_bot.pose, stationary_bot.chassis_template), stationary_bot.chassis_template)
 
             deflect_m = Pose(
                 moving_bot.pose.x - p_step_x,
@@ -1049,7 +1072,7 @@ def ensure_robots_not_overlapping(
             )
             deflect_m.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, deflect_m.x))
             deflect_m.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, deflect_m.y))
-            moving_bot.pose = snap_pose_to_grid(deflect_m, moving_bot.chassis_template)
+            moving_bot.pose = push_robot_inside_arena_if_past_wall(snap_pose_to_grid(deflect_m, moving_bot.chassis_template), moving_bot.chassis_template)
 
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
@@ -1064,7 +1087,7 @@ def ensure_robots_not_overlapping(
             logs.extend(w_logs_m)
             break
         else:
-            stationary_bot.pose = cand_s
+            stationary_bot.pose = push_robot_inside_arena_if_past_wall(cand_s, stationary_bot.chassis_template)
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
                 message=(
@@ -1118,6 +1141,44 @@ def resolve_inert_contact(
             round=round_num, phase="collision",
             message=f"🔄 Inertial Push: {moving_bot.name} pushes {stationary_bot.name} along remaining {len(moving_rem)} steps of current action card.",
         ))
+
+        if moving_bot.is_raised:
+            # While a robot is raised, any time it would push another robot instead it is moved back from the contact.
+            dx = stationary_bot.pose.x - moving_bot.pose.x
+            dy = stationary_bot.pose.y - moving_bot.pose.y
+            dist = math.hypot(dx, dy)
+            if dist > 1e-4:
+                ux, uy = dx / dist, dy / dist
+            else:
+                dx_g, dy_g = get_heading_grid_delta(moving_bot.pose.theta)
+                ux, uy = float(dx_g), float(dy_g)
+                mag = math.hypot(ux, uy)
+                if mag > 1e-4:
+                    ux, uy = ux / mag, uy / mag
+                else:
+                    ux, uy = 0.0, -1.0
+
+            p_step_x = round(ux) * DRIVE_UNIT_MM
+            p_step_y = round(uy) * DRIVE_UNIT_MM
+            deflect_m = Pose(
+                moving_bot.pose.x - p_step_x,
+                moving_bot.pose.y - p_step_y,
+                moving_bot.pose.theta,
+            )
+            deflect_m.x = max(WALL_LEFT + MINIATURE_RADIUS, min(WALL_RIGHT - MINIATURE_RADIUS, deflect_m.x))
+            deflect_m.y = max(WALL_TOP + MINIATURE_RADIUS, min(WALL_BOTTOM - MINIATURE_RADIUS, deflect_m.y))
+            moving_bot.pose = push_robot_inside_arena_if_past_wall(snap_pose_to_grid(deflect_m, moving_bot.chassis_template), moving_bot.chassis_template)
+
+            logs.append(CombatLogEntry(
+                round=round_num, phase="collision",
+                message=(
+                    f"🔱 {moving_bot.name} is RAISED: instead of pushing {stationary_bot.name}, "
+                    f"it is moved back from the contact to ({moving_bot.pose.x:.1f}, {moving_bot.pose.y:.1f})."
+                ),
+            ))
+            if push_trajectories is not None and moving_bot.id in push_trajectories:
+                push_trajectories[moving_bot.id].append(TrajectoryPoint(moving_bot.pose.x, moving_bot.pose.y, moving_bot.pose.theta, 0.0))
+            return logs
 
         for step in moving_rem:
             prev_m = moving_bot.pose.clone()
@@ -1611,21 +1672,24 @@ def _execute_throw(
         or target_y >= (WALL_BOTTOM - 20)
     )
 
-    robot.pose.x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, target_x))
-    robot.pose.y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, target_y))
+    wall_contact_x = max(WALL_LEFT + 20, min(WALL_RIGHT - 20, target_x))
+    wall_contact_y = max(WALL_TOP + 20, min(WALL_BOTTOM - 20, target_y))
+    robot.pose.x = wall_contact_x
+    robot.pose.y = wall_contact_y
 
     # Robot orientation after active contact: decided by throwing a dice and looking up the d6 rotation table
     orientation_roll = random.randint(1, 6)
     spin_rot = THROW_ROTATION_MAP[orientation_roll]
     robot.pose.theta = (robot.pose.theta + spin_rot) % 360.0
     robot.pose = snap_pose_to_grid(robot.pose, robot.chassis_template)
+    robot.pose = push_robot_inside_arena_if_past_wall(robot.pose, robot.chassis_template)
 
     # Throw damage rule: always equal to throw strength
     throw_dmg = throw_str
 
     if hit_wall:
         # Check marked Hazard Wall knockout
-        if is_hazard_wall_contact(robot.pose.x, robot.pose.y):
+        if is_hazard_wall_contact(wall_contact_x, wall_contact_y):
             robot.is_knocked_out = True
             robot.is_eliminated = True
             logs.append(CombatLogEntry(
@@ -1776,28 +1840,28 @@ def resolve_collision_combat(
             r2.is_raised = False
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🎲 Ground Game Clash: Both robots contested ground game! Dice roll ({die_roll}) selects {r1.name} to be RAISED ({r2.name} stays grounded). ({r1.name} loses all remaining actions, stays raised until end of turn)",
+                message=f"🎲 Ground Game Clash: Both robots contested ground game! Dice roll ({die_roll}) selects {r1.name} to be RAISED ({r2.name} stays grounded). ({r1.name} is RAISED for this action: any time it would push another robot instead it is moved back from contact)",
             ))
         else:
             r2.is_raised = True
             r1.is_raised = False
             logs.append(CombatLogEntry(
                 round=round_num, phase="collision",
-                message=f"🎲 Ground Game Clash: Both robots contested ground game! Dice roll ({die_roll}) selects {r2.name} to be RAISED ({r1.name} stays grounded). ({r2.name} loses all remaining actions, stays raised until end of turn)",
+                message=f"🎲 Ground Game Clash: Both robots contested ground game! Dice roll ({die_roll}) selects {r2.name} to be RAISED ({r1.name} stays grounded). ({r2.name} is RAISED for this action: any time it would push another robot instead it is moved back from contact)",
             ))
     elif r1_would_raise_r2:
         r2.is_raised = True
         cause = "Forks lift" if r1_forks_lift else "Wedge lifts"
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r1.name}'s {cause} {r2.name}! ({r2.name} is RAISED: loses all remaining actions for the round, stays raised until end of turn)",
+            message=f"🔱 {r1.name}'s {cause} {r2.name}! ({r2.name} is RAISED for this action: any time it would push another robot instead it is moved back from contact)",
         ))
     elif r2_would_raise_r1:
         r1.is_raised = True
         cause = "Forks lift" if r2_forks_lift else "Wedge lifts"
         logs.append(CombatLogEntry(
             round=round_num, phase="collision",
-            message=f"🔱 {r2.name}'s {cause} {r1.name}! ({r1.name} is RAISED: loses all remaining actions for the round, stays raised until end of turn)",
+            message=f"🔱 {r2.name}'s {cause} {r1.name}! ({r1.name} is RAISED for this action: any time it would push another robot instead it is moved back from contact)",
         ))
 
     if col.contact_type == "ACTIVE":

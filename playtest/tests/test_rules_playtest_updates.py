@@ -203,9 +203,9 @@ def test_rule2_find_components_along_contact_line_intercepts():
 
 
 def test_rule2_weapon_attack_intercepted_by_uhmw():
-    back_comp = make_comp("b1", "Battery", "component", 210.0, 240.0, durability=6, absorption=0)
-    front_comp = make_comp("f1", "Front Plate", "armor", 210.0, 50.0, durability=10, absorption=2)
-    uhmw = make_comp("uhmw", "UHMW Wraparound Armor", "armor", 210.0, 250.0, durability=10, absorption=2, text="Attacks that hit this components side hit this instead.")
+    back_comp = make_comp("b1", "Battery", "component", 210.0, 240.0, durability=3, absorption=0)
+    front_comp = make_comp("f1", "Front Plate", "armor", 210.0, 50.0, durability=5, absorption=2)
+    uhmw = make_comp("uhmw", "UHMW Wraparound Armor", "armor", 210.0, 250.0, durability=5, absorption=2, text="Attacks that hit this components side hit this instead.")
 
     defender = make_bot("def", "Defender", Pose(400.0, 400.0, 0.0), {"b1": back_comp, "f1": front_comp, "uhmw": uhmw})
 
@@ -226,15 +226,15 @@ def test_rule2_weapon_attack_intercepted_by_uhmw():
     # 1. Attack targeting back_comp is intercepted by UHMW armor
     logs = []
     _resolve_single_weapon_attack(attacker, defender, weapon, dummy_col, ["b1"], round_num=1, logs=logs)
-    assert uhmw.current_durability < 10
+    assert uhmw.current_durability < 5
     assert uhmw.is_damaged
-    assert back_comp.current_durability == 6, "Battery should take no damage because UHMW intercepted"
+    assert back_comp.current_durability == 3, "Battery should take no damage because UHMW intercepted"
 
     # 2. Attack targeting front_comp is NOT intercepted by back UHMW armor
     weapon.was_used_this_turn = False
     logs = []
     _resolve_single_weapon_attack(attacker, defender, weapon, dummy_col, ["f1"], round_num=2, logs=logs)
-    assert front_comp.current_durability < 10
+    assert front_comp.current_durability < 5
     assert front_comp.is_damaged
 
     # 3. If UHMW armor is destroyed, it no longer intercepts
@@ -242,7 +242,7 @@ def test_rule2_weapon_attack_intercepted_by_uhmw():
     weapon.was_used_this_turn = False
     logs = []
     _resolve_single_weapon_attack(attacker, defender, weapon, dummy_col, ["b1"], round_num=3, logs=logs)
-    assert back_comp.current_durability < 6, "Battery should now take damage since UHMW is destroyed"
+    assert back_comp.current_durability < 3, "Battery should now take damage since UHMW is destroyed"
 
 
 # =========================================================================

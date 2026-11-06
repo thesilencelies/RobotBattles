@@ -647,35 +647,7 @@ def execute_turn(
                     "cancelled": True,
                     "reason": "Eliminated / Knocked Out",
                 })
-                full_p_traj.append(TrajectoryPoint(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta, t=t_phase_start + t_phase_span))
-                full_a_traj.append(TrajectoryPoint(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta, t=t_phase_start + t_phase_span))
-                continue
-
-            # 2. Raised Robot Check:
-            # Rule: "If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn."
-            if moving_bot.is_raised:
-                match.log.append(CombatLogEntry(
-                    round=r_num,
-                    phase="movement",
-                    message=f"🔱 {moving_bot.name} is RAISED: Action Card {act_card_idx + 1} ({moving_card}) is cancelled! (Stays raised until end of turn)",
-                ))
-                action_step_results.append({
-                    "phase_index": phase_idx,
-                    "action_index": act_card_idx,
-                    "robot_id": moving_bot.id,
-                    "robot_name": moving_bot.name,
-                    "card": moving_card,
-                    "player_card": p_cards[act_card_idx],
-                    "automaton_card": a_cards[act_card_idx],
-                    "collision": False,
-                    "cancelled": True,
-                    "reason": "Robot is raised",
-                })
-                full_p_traj.append(TrajectoryPoint(p_bot.pose.x, p_bot.pose.y, p_bot.pose.theta, t=t_phase_start + t_phase_span))
-                full_a_traj.append(TrajectoryPoint(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta, t=t_phase_start + t_phase_span))
-                continue
-
-            # 3. Step-by-step movement resolution with grid collision check
+            # 2. Step-by-step movement resolution with grid collision check
             steps = get_action_card_steps(moving_card, chassis_template=moving_bot.chassis_template)
             if not steps:
                 # Wait / Stop card
@@ -863,6 +835,10 @@ def execute_turn(
                     else:
                         full_a_traj.append(TrajectoryPoint(pt_m.x, pt_m.y, pt_m.theta, t=t_val))
                         full_p_traj.append(TrajectoryPoint(pt_s.x, pt_s.y, pt_s.theta, t=t_val))
+
+            # A robot is only raised for the action it makes contact:
+            p_bot.is_raised = False
+            a_bot.is_raised = False
 
         # Pad trajectories to t=1.0 if ended early
         if full_p_traj[-1].t < 1.0:

@@ -192,7 +192,7 @@ The anatomy of each card consists of the following key attributes:
   \item[Price (\textcolor{costgreen}{\textbf{\$X}}):] You cannot have more total price in your pool than your budget.
   \item[Weight (\inlineIcon{\weighticonplain}):] Your robot's total weight must be within the weight budget.
   \item[Requirements (\inlineChevron\inlineIcon{\resourceE}):] A component is only active if its requirements are supplied by connected components. (Power, spin, pressure are the resources that need supply.)
-  \item[Durability (\inlineIcon{\durabilityicon}):] How much damage a component can take before destruction.
+  \item[Durability (\inlineIcon{\durabilityicon}):] How much damage a component takes to become damaged (destroyed at twice durability).
   \item[Absorption (\inlineIcon{\absorptionicon}):] How much damage a component absorbs to reduce throw strength received during an attack (also absorbs feedback damage).
   \item[Outputs (\inlineIcon{\resourceS}\inlineChevron):] What resources the component supplies. Also includes drive \inlineIcon{\resourceM}.
   \item[Ability Text:] Any special rules or passive traits for the component.
@@ -664,13 +664,13 @@ To eliminate movement ambiguity, the chosen Action Cards are resolved \textbf{al
 
 \noindent
 \textbf{Movement \& Collisions During Resolution:}\\
-Movement is done one tile step or $45^\circ$ turn at a time. If the weapon template overlaps an opposing robot then there is active contact at that point, and the rest of the movement for that action does not occur. Weapon damage, feedback, and throws are resolved from there.
+Movement is done one tile step or $45^\circ$ turn at a time. When a robot would occupy any tile past a wall (say due to rotating) it is pushed into the arena until all of it is inside the arena. If the weapon template overlaps an opposing robot then there is active contact at that point, and the rest of the movement for that action does not occur. Weapon damage, feedback, and throws are resolved from there.
 If a moving robot tries to move through a tile the other robot is in without weapon template overlap, it is an \textbf{Inert Collision}: the robot that is not moving at that moment is pushed in the direction the moving robot is moving until the moving robot finishes that motion, keeping its orientation unchanged. Robots cannot end a turn on top of each other: if there is not a throw on contact, the static robot is pushed back until it is not overlapping. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead.
 
 \vspace{0.3em}
 \noindent
 \textbf{Raised Robots:}\\
-If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn. It still pushes the other robot for the collision that caused it to become raised.
+A robot is only raised for the action it makes contact. While a robot is raised, any time it would push another robot instead it is moved back from the contact.
 
 \vspace{0.3em}
 \noindent
@@ -925,7 +925,7 @@ Card 1 pivots $90^\circ$ CW on the spot. Card 2 drives forward 1 square into the
 
 During alternating action card resolution across the arena grid, movement is done one tile step or $45^\circ$ turn at a time. If the weapon template overlaps an opposing robot then there is active contact at that point, and the rest of the movement for that action does not occur. An inert collision happens when a moving robot tries to move through a tile the other robot is in without weapon template overlap. The robots are placed in the overlapping state to work out what is involved in the collision. Where the robots touch shows the contact point. Align the contact direction into each robot's chassis and follow along that line into the robot's card layout to determine which component is contacted. Where ambiguous, both components make contact.
 
-If a collision results in a robot being thrown, the thrown robot's remaining action cards for the round do not happen. If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn (it still pushes the other robot for the collision that caused it to become raised).
+If a collision results in a robot being thrown, the thrown robot's remaining action cards for the round do not happen. A robot is only raised for the action it makes contact; while a robot is raised, any time it would push another robot instead it is moved back from the contact.
 
 If the parts of either robot that is touching is the weapon's active area (the marked strike zone on the chassis), then the contact is an \textbf{Active Contact}. Otherwise, it is an \textbf{Inert Contact}.
 
@@ -1050,10 +1050,10 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
   \begin{itemize}[noitemsep, topsep=1pt]
     \item \textbf{Forwards and Reverse Steps:} Both robots move together in the direction of the step.
     \item \textbf{Turn and Pivot Steps:} The stationary robot is displaced along with the moving robot's motion while maintaining its orientation.
-    \item \textbf{Raised Robot:} If a robot ends up raised in a collision, it still pushes the other robot for the collision that caused it to become raised, but loses all subsequent remaining actions and stays raised until the end of the turn.
+    \item \textbf{Raised Robot:} A robot is only raised for the action it makes contact. While a robot is raised, any time it would push another robot instead it is moved back from the contact.
   \end{itemize}
   \item \textbf{Non-Overlapping Positions:} Robots cannot end a turn on top of each other. If there is not a throw on contact, the static robot is pushed back until it is not overlapping, and the robots remain in their resulting adjacent positions where movement concludes.
-  \item \textbf{Pushed into a Wall:} If a robot would be pushed into a wall, it stops against the wall and the pushing robot is deflected back one space instead. If an active weapon touches a wall, all spin counters are removed.
+  \item \textbf{Pushed into a Wall:} If a robot would be pushed into a wall, it stops against the wall and the pushing robot is deflected back one space instead. When a robot would occupy any tile past a wall (say due to rotating), it is pushed into the arena until all of it is inside the arena. If an active weapon touches a wall, all spin counters are removed.
 \end{enumerate}
 
 \begin{figure}[H]
@@ -1184,7 +1184,7 @@ Similarly if a weapon contacts multiple components at once, each component is da
 
 \subsection{The Ground Game}
 
-Wedges and forks can both inflict the raised status on opponents when they hit. If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn (it still pushes the other robot for the collision that caused it to become raised). When a raised robot receives an active throw, the throw strength is increased by 2. \textbf{Raised just increases throw strength received; it does not trigger a throw where there is not already one} (for example, in inert pushing or when weapon damage does not exceed absorption). The throw strength of a raised robot's own attacks is reduced by 2.
+Wedges and forks can both inflict the raised status on opponents when they hit. A robot is only raised for the action it makes contact; while a robot is raised, any time it would push another robot instead it is moved back from the contact. When a raised robot receives an active throw, the throw strength is increased by 2. \textbf{Raised just increases throw strength received; it does not trigger a throw where there is not already one} (for example, in inert pushing or when weapon damage does not exceed absorption). The throw strength of a raised robot's own attacks is reduced by 2.
 
 When both robots would be raised in the same contact, randomly choose one by rolling a dice: that one is raised and the other isn't.
 
@@ -1288,9 +1288,9 @@ The component is chosen randomly by dropping a die onto the robot and seeing whi
 Weapon damage \inlineIcon{\resourceW} applies only to the single outermost component contacted (internal components are damaged via throw shock):
 
 \begin{itemize}
-  \item \textbf{Component Destroyed:} A component is destroyed if the damage level that hits it is equal to or greater than its durability.
-  \item \textbf{Component Damaged:} A component is damaged if the damage level that hits it is equal to or greater than half its durability.
-  \item \textbf{Repeated Damage:} If a damaged component would be damaged again, it is instead destroyed.
+  \item \textbf{Component Damaged:} A component is damaged if the damage level that hits it is equal to or greater than its durability.
+  \item \textbf{Component Destroyed:} A component is destroyed if the damage level that hits it is equal to or greater than twice its durability.
+  \item \textbf{Repeated Damage:} If a damaged component takes damage equal to or greater than its durability again, it is destroyed.
   \item \textbf{Absorption on Destruction:} If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
 \end{itemize}
 
@@ -1303,7 +1303,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons, drive \inlineIcon{\resourceM}, and component abilities (such as wedges and forks) without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Inflicted by wedges or forks during contact. If a robot ends up raised in a collision, it loses all remaining actions and stays raised until the end of the turn (it still pushes the other robot for the collision that caused it to become raised). It loses the double absorption of its wedges, reduces the throw strength of its attacks by 2, and receives an additional throw strength of 2 after active contact.
+  \item[Raised:] Inflicted by wedges or forks during contact. A robot is only raised for the action it makes contact. While a robot is raised, any time it would push another robot instead it is moved back from the contact. It loses the double absorption of its wedges, reduces the throw strength of its attacks by 2, and receives an additional throw strength of 2 after active contact.
 \end{description}
 
 \begin{figure}[H]
@@ -1389,17 +1389,17 @@ to each component that supplies it, shared equally if there are multiple compone
 \small
 \begin{itemize}[leftmargin=*, itemsep=1.5pt, topsep=1pt, parsep=0pt]
   \item \textbf{Direct Weapon Damage \inlineIcon{\resourceW}:} Weapon damage \inlineIcon{\resourceW} applies only to the single outermost component hit; excess damage does not penetrate inwards (throw shock covers internals).
-  \item \textbf{Damage Conditions:} A component is \textbf{Destroyed} if it takes damage equal to or greater than its durability, and \textbf{Damaged} if it takes damage equal to or greater than half its durability. Absorption reduces base throw strength received during attacks.
+  \item \textbf{Damage Conditions:} A component is \textbf{Damaged} if it takes damage equal to or greater than its durability, and \textbf{Destroyed} if it takes damage equal to or greater than twice its durability. Absorption on destruction is equal to its durability. Absorption reduces base throw strength received during attacks.
   \item \textbf{Throw Distance \& Damage:} Thrown distance in grid squares is the lower of a die roll (d6) or the throw strength. Thrown robot orientation is determined by the d6 random rotation table ($45^\circ$, $90^\circ$, $180^\circ$, or none). Throw damage is always equal to the throw strength.
   \item \textbf{Ending Positions:} Robots conclude in their adjacent positions where movement ends.
-  \item \textbf{Wall Collisions:} Driving into a wall stops the robot. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead. If an active weapon touches a wall, all spin counters are removed.
+  \item \textbf{Wall Collisions:} Driving into a wall stops the robot. When a robot would occupy any tile past a wall (say due to rotating) it is pushed into the arena until all of it is inside the arena. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead. If an active weapon touches a wall, all spin counters are removed.
   \item \textbf{Feedback Backward Propagation:} Reverse flow from component back into power/pressure suppliers, distributed equally (rounding up).
 \end{itemize}
 \end{summarybox}
 
 \subsection{Rules Clarifications}
 \begin{itemize}[leftmargin=*, itemsep=2pt, topsep=1pt, parsep=0pt]
-  \item \textbf{Ground Game \& Wedges while Raised:} A raised robot loses the double absorption of its wedges and cannot inflict the raised status. When both robots would be raised in the same contact, randomly roll a die to determine which one is raised (that one is raised and the other is not).
+  \item \textbf{Ground Game \& Wedges while Raised:} A robot is only raised for the action it makes contact. While raised, any time it would push another robot instead it is moved back from the contact. A raised robot loses the double absorption of its wedges and cannot inflict the raised status. When both robots would be raised in the same contact, randomly roll a die to determine which one is raised (that one is raised and the other is not).
   \item \textbf{Overhead Weapons:} An Overhead weapon targets a random component along the contact ray rather than the single outermost component. If the target robot has an active upright \textit{Titanium Top Plate}, it is hit instead, even if not on the ray. Overhead weapons cause no throw on the target, but the attacking weapon still receives recoil feedback normally.
   \item \textbf{Trigger Weapons:} A weapon with \textit{Trigger} only attacks if the contact has not been removed by a throw. If both combatants have Trigger weapons, both will attack. A Trigger weapon that does not attack does not suffer recoil feedback.
   \item \textbf{Crushing Claw:} Following a successful hit with the Crushing Claw, on the next turn the target moves along with this robot during the movement phase as if in inertial contact and as if raised (contributing zero motion). On the subsequent turn, the claw is inactive due to its \textit{Reset} keyword.

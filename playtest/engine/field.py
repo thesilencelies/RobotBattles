@@ -145,6 +145,52 @@ def get_chassis_grid_cells(
     return {(vx - 1, vy - 1), (vx, vy - 1), (vx - 1, vy), (vx, vy)}
 
 
+def push_robot_inside_arena_if_past_wall(
+    pose: Any,
+    chassis_template: str = "Square",
+    grid_unit: float = 40.0,
+    wall_left: float = WALL_LEFT,
+    wall_right: float = WALL_RIGHT,
+    wall_top: float = WALL_TOP,
+    wall_bottom: float = WALL_BOTTOM,
+) -> Any:
+    """
+    Rule: 'when a robot would occupy any tile past a wall (say due to rotating)
+    it is pushed into the arena until all of it is inside the arena.'
+    Pushes the pose inward along the discrete grid until all occupied tiles
+    fall strictly within the perimeter walls [wall_left, wall_right] and [wall_top, wall_bottom].
+    """
+    res = pose.clone()
+    for _ in range(16):
+        cells = get_chassis_grid_cells(chassis_template, res, grid_unit=grid_unit)
+        if not cells:
+            break
+        min_x = min(cx * grid_unit for cx, cy in cells)
+        max_x = max((cx + 1) * grid_unit for cx, cy in cells)
+        min_y = min(cy * grid_unit for cx, cy in cells)
+        max_y = max((cy + 1) * grid_unit for cx, cy in cells)
+
+        pushed = False
+        if min_x < wall_left - 1e-4:
+            res.x += grid_unit
+            pushed = True
+        elif max_x > wall_right + 1e-4:
+            res.x -= grid_unit
+            pushed = True
+
+        if min_y < wall_top - 1e-4:
+            res.y += grid_unit
+            pushed = True
+        elif max_y > wall_bottom + 1e-4:
+            res.y -= grid_unit
+            pushed = True
+
+        if not pushed:
+            break
+    return res
+
+
+
 def card_to_miniature_offset(
     card_x: float,
     card_y: float,

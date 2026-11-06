@@ -309,7 +309,7 @@ def get_component_side(comp: ComponentHealth, chassis_template: str = "Square") 
 
 def is_uhmw_wraparound_armor(comp: ComponentHealth) -> bool:
     nm = (comp.name or "").lower()
-    txt = (comp.text or "").lower()
+    txt = (comp.text or "").lower().replace("'", "")
     return ("wraparound" in nm and "uhm" in nm) or ("attacks that hit this components side hit this instead" in txt)
 
 

@@ -371,34 +371,43 @@ class TestPlaytestEngine(unittest.TestCase):
 
     def test_damage_and_feedback(self):
         comp = ComponentHealth(
-            id="1", name="Titanium Wedge", card_type="component", max_durability=9,
-            current_durability=9, absorption=1, requirements="", outputs="", keywords="wedge",
+            id="1", name="Titanium Wedge", card_type="component", max_durability=5,
+            current_durability=5, absorption=1, requirements="", outputs="", keywords="wedge",
             text="", x=100, y=20, rotation=0, box=(100, 20, 144, 84), is_wedge=True
         )
+        # Incoming damage >= 2 * durability (10 >= 10) -> DESTROYED
+        # Absorbs durability (5), excess = 5
         status, abs_dmg, excess = apply_damage_to_component(comp, 10.0, is_weapon_damage=True)
         self.assertEqual(status, "DESTROYED")
-        self.assertEqual(abs_dmg, 9.0)
-        self.assertEqual(excess, 1.0)
+        self.assertEqual(abs_dmg, 5.0)
+        self.assertEqual(excess, 5.0)
 
-        # Boundary test: incoming damage >= half durability (ignoring absorption) -> DAMAGED
+        # Boundary test: incoming damage >= durability -> DAMAGED, >= 2 * durability -> DESTROYED
         tire = ComponentHealth(
-            id="2", name="High Grip Tires", card_type="component", max_durability=6,
-            current_durability=6, absorption=1, requirements="", outputs="", keywords="",
+            id="2", name="High Grip Tires", card_type="component", max_durability=3,
+            current_durability=3, absorption=1, requirements="", outputs="", keywords="",
             text="", x=0, y=0, rotation=0, box=(0, 0, 44, 64)
         )
-        # Incoming 2: 2 < 6/2 (3.0) -> UNDAMAGED
+        # Incoming 2: 2 < 3 -> UNDAMAGED, absorbs min(2, absorption)=1, excess = 1
         st2, abs2, ex2 = apply_damage_to_component(tire, 2.0, is_weapon_damage=True)
         self.assertEqual(st2, "UNDAMAGED")
         self.assertEqual(abs2, 1.0)
         self.assertEqual(ex2, 1.0)
         self.assertFalse(tire.is_damaged)
 
-        # Incoming 3: 3 >= 6/2 (3.0) -> DAMAGED (ignores absorption)
+        # Incoming 3: 3 >= 3 and 3 < 6 -> DAMAGED, absorbs absorption=1, excess = 2
         st3, abs3, ex3 = apply_damage_to_component(tire, 3.0, is_weapon_damage=True)
         self.assertEqual(st3, "DAMAGED")
         self.assertEqual(abs3, 1.0)
         self.assertEqual(ex3, 2.0)
         self.assertTrue(tire.is_damaged)
+
+        # Repeated damage on damaged component (incoming >= dur) -> DESTROYED, absorbs dur (3)
+        st4, abs4, ex4 = apply_damage_to_component(tire, 4.0, is_weapon_damage=True)
+        self.assertEqual(st4, "DESTROYED")
+        self.assertEqual(abs4, 3.0)
+        self.assertEqual(ex4, 1.0)
+        self.assertTrue(tire.is_destroyed)
 
     def test_match_completion_20_rounds(self):
         csv_text = read_saved_robot("Vyper_Spinner.csv")
@@ -1483,7 +1492,11 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.weapon_spin_counters[w_comp.id] = 1
         w_comp.spin_counters = 1
 
-        wedge_cids = [cid for cid, c in a_bot.components.items() if c.is_wedge]
+        for cid in ["3", "4"]:
+            if cid in a_bot.components:
+                a_bot.components[cid].is_destroyed = True
+
+        wedge_cids = [cid for cid, c in a_bot.components.items() if c.is_wedge and not c.is_destroyed]
         non_wedge_cids = [cid for cid, c in a_bot.components.items() if not c.is_wedge and ("wheel" in c.name.lower() or "tire" in c.name.lower())]
         self.assertTrue(len(wedge_cids) > 0)
         self.assertTrue(len(non_wedge_cids) > 0)
@@ -1637,8 +1650,11 @@ class TestPlaytestEngine(unittest.TestCase):
         w_comp.is_active = True
         p_bot.weapon_spin_counters[w_comp.id] = 1
 
+        for c in a_bot.components.values():
+            c.max_durability = 10
+            c.current_durability = 10
+            c.absorption = 0
         non_wedge = [cid for cid, c in a_bot.components.items() if not c.is_wedge and ("wheel" in c.name.lower() or "tire" in c.name.lower())][0]
-        a_bot.components[non_wedge].absorption = 0
 
         col = CollisionEvent(
             time_t=0.5,
@@ -2182,10 +2198,11 @@ class TestPlaytestEngine(unittest.TestCase):
         # Rule: Raised increases throw strength received by +2 (when base throw > 0)
         p_bot.is_raised = False
         a_bot.is_raised = True
-        a_bot.components[target_cid].is_damaged = False
-        a_bot.components[target_cid].is_destroyed = False
-        a_bot.components[target_cid].current_durability = a_bot.components[target_cid].max_durability
-        a_bot.components[target_cid].absorption = 0
+        for c in a_bot.components.values():
+            c.is_damaged = False
+            c.is_destroyed = False
+            c.current_durability = c.max_durability
+            c.absorption = 0
         wpn.is_active = True
         p_bot.weapon_spin_counters[wpn.id] = 3
         wpn.was_used_this_turn = False
@@ -2193,7 +2210,11 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("+2 throw strength after active contact (throw strength is now 8)" in entry.message for entry in logs_recv))
 
         # Rule: Raised does NOT trigger a throw when base throw strength is 0
-        a_bot.components[target_cid].absorption = 10  # 10 >= 6 attack
+        for c in a_bot.components.values():
+            c.is_damaged = False
+            c.is_destroyed = False
+            c.current_durability = c.max_durability
+            c.absorption = 10  # 10 >= 6 attack
         wpn.is_active = True
         p_bot.weapon_spin_counters[wpn.id] = 3
         wpn.was_used_this_turn = False
@@ -2888,12 +2909,12 @@ class TestPlaytestEngine(unittest.TestCase):
 
         # Give Player Bot two active weapons
         w1 = ComponentHealth(
-            id="w1", name="NightWing Disc", card_type="weapon", max_durability=8, current_durability=8,
+            id="w1", name="NightWing Disc", card_type="weapon", max_durability=4, current_durability=4,
             absorption=0, requirements="", outputs="5W", keywords="", text="",
             x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
         )
         w2 = ComponentHealth(
-            id="w2", name="Single Tooth Disc", card_type="weapon", max_durability=8, current_durability=8,
+            id="w2", name="Single Tooth Disc", card_type="weapon", max_durability=4, current_durability=4,
             absorption=0, requirements="", outputs="3W", keywords="", text="",
             x=150, y=20, rotation=0, box=(150, 20, 190, 60), is_active=True,
         )
@@ -2904,17 +2925,16 @@ class TestPlaytestEngine(unittest.TestCase):
 
         # Automaton target components
         target1 = ComponentHealth(
-            id="t1", name="Front Armor", card_type="component", max_durability=10, current_durability=10,
+            id="t1", name="Front Armor", card_type="component", max_durability=5, current_durability=5,
             absorption=1, requirements="", outputs="", keywords="", text="",
             x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
         )
         target2 = ComponentHealth(
-            id="t2", name="Front Wheel", card_type="component", max_durability=6, current_durability=6,
+            id="t2", name="Front Wheel", card_type="component", max_durability=3, current_durability=3,
             absorption=0, requirements="", outputs="D", keywords="", text="",
             x=150, y=20, rotation=0, box=(150, 20, 190, 60), is_active=True,
         )
-        a_bot.components["t1"] = target1
-        a_bot.components["t2"] = target2
+        a_bot.components = {"t1": target1, "t2": target2}
 
         col = CollisionEvent(
             time_t=0.5,
@@ -2933,20 +2953,21 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_weapon_targets={},
         )
 
-        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        with patch("playtest.engine.combat.simulate_dropping_card", return_value=None):
+            logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
 
-        # 1. Target 1 took 5 dmg (from w1): 10 - (5 - 1) = 6 dur remaining
-        self.assertEqual(target1.current_durability, 6)
-        # 2. Target 2 took 3 dmg (from w2): 6 - 3 = 3 dur remaining
-        self.assertEqual(target2.current_durability, 3)
+        # 1. Target 1 took 5 dmg (from w1): 5 - (5 - 1) = 1 dur remaining
+        self.assertEqual(target1.current_durability, 1)
+        # 2. Target 2 took 3 dmg (from w2): 3 - 3 = 0 -> clamped to 1 dur remaining (damaged)
+        self.assertEqual(target2.current_durability, 1)
 
         # 3. Throw: w1 throw = 5 - 1 = 4; w2 throw = 3 - 0 = 3; max throw transferred is 4
         self.assertTrue(any(f"{a_bot.name} is THROWN" in e.message and "Strength 4" in e.message for e in logs))
 
         # 4. Feedback: total attack = 5 + 3 = 8; recoil feedback = 8 // 2 = 4
-        # Each weapon receives full feedback: w1 dur 8 -> 4, w2 dur 8 -> 4
-        self.assertEqual(w1.current_durability, 4)
-        self.assertEqual(w2.current_durability, 4)
+        # Each weapon receives full feedback: w1 dur 4 -> 1, w2 dur 4 -> 1
+        self.assertEqual(w1.current_durability, 1)
+        self.assertEqual(w2.current_durability, 1)
 
     def test_multi_component_contact_each_damaged_max_throw(self):
         """
@@ -2959,7 +2980,7 @@ class TestPlaytestEngine(unittest.TestCase):
         a_bot = match.automaton_robot
 
         w1 = ComponentHealth(
-            id="w1", name="Heavy Spinner", card_type="weapon", max_durability=10, current_durability=10,
+            id="w1", name="Heavy Spinner", card_type="weapon", max_durability=5, current_durability=5,
             absorption=0, requirements="", outputs="6W", keywords="", text="",
             x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
         )
@@ -2967,17 +2988,16 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.weapon_spin_counters["w1"] = 1
 
         target1 = ComponentHealth(
-            id="t1", name="Front Armor Plate", card_type="component", max_durability=10, current_durability=10,
+            id="t1", name="Front Armor Plate", card_type="component", max_durability=5, current_durability=5,
             absorption=1, requirements="", outputs="", keywords="", text="",
             x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
         )
         target2 = ComponentHealth(
-            id="t2", name="Heavy Bumper", card_type="component", max_durability=10, current_durability=10,
+            id="t2", name="Heavy Bumper", card_type="component", max_durability=5, current_durability=5,
             absorption=4, requirements="", outputs="", keywords="", text="",
             x=140, y=20, rotation=0, box=(140, 20, 180, 60), is_active=True,
         )
-        a_bot.components["t1"] = target1
-        a_bot.components["t2"] = target2
+        a_bot.components = {"t1": target1, "t2": target2}
 
         # Weapon contacts both components at once
         col = CollisionEvent(
@@ -3001,10 +3021,10 @@ class TestPlaytestEngine(unittest.TestCase):
             logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
 
         # Both components take damage 6
-        # t1: 6 dmg - 1 abs = 5 net dmg -> 10 - 5 = 5 dur
-        self.assertEqual(target1.current_durability, 5)
-        # t2: 6 dmg - 4 abs = 2 net dmg -> 10 - 2 = 8 dur
-        self.assertEqual(target2.current_durability, 8)
+        # t1: 6 dmg - 1 abs = 5 net dmg -> 5 - 5 = 0 -> clamped to 1 dur (damaged)
+        self.assertEqual(target1.current_durability, 1)
+        # t2: 6 dmg - 4 abs = 2 net dmg -> 5 - 2 = 3 dur
+        self.assertEqual(target2.current_durability, 3)
 
         # Max throw transferred: max(6 - 1, 6 - 4) = max(5, 2) = 5
         self.assertTrue(any(f"{a_bot.name} is THROWN" in e.message and "Strength 5" in e.message for e in logs))
@@ -3178,9 +3198,9 @@ class TestPlaytestEngine(unittest.TestCase):
         )
         p_bot.components["w_prongs"] = prongs_wpn
 
-        # Defender target component with durability 10 (half is 5)
+        # Defender target component with durability 5 (damaged at 5+, destroyed at 10+)
         target = ComponentHealth(
-            id="c_target", name="Heavy Armor", card_type="armor", max_durability=10, current_durability=10,
+            id="c_target", name="Heavy Armor", card_type="armor", max_durability=5, current_durability=5,
             absorption=0, requirements="", outputs="", keywords="", text="",
             x=100, y=20, rotation=0, box=(100, 20, 140, 60), is_active=True,
         )
@@ -3227,12 +3247,12 @@ class TestPlaytestEngine(unittest.TestCase):
         p_bot.components["w_prongs"] = prongs_wpn
 
         t1 = ComponentHealth(
-            id="c_left", name="Left Armor", card_type="armor", max_durability=10, current_durability=10,
+            id="c_left", name="Left Armor", card_type="armor", max_durability=5, current_durability=5,
             absorption=0, requirements="", outputs="", keywords="", text="",
             x=80, y=20, rotation=0, box=(80, 20, 100, 60), is_active=True,
         )
         t2 = ComponentHealth(
-            id="c_right", name="Right Armor", card_type="armor", max_durability=10, current_durability=10,
+            id="c_right", name="Right Armor", card_type="armor", max_durability=5, current_durability=5,
             absorption=0, requirements="", outputs="", keywords="", text="",
             x=120, y=20, rotation=0, box=(120, 20, 140, 60), is_active=True,
         )
@@ -3584,27 +3604,28 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertIn("moves first ahead of", turn_order_logs[0])
         self.assertIn("Player Bot", turn_order_logs[0])
 
-    def test_raised_robot_cancels_remaining_actions_and_persists_until_end_of_turn(self):
+    def test_raised_robot_retains_actions_and_only_raised_for_action_it_makes_contact(self):
         """
-        Rule: If a robot ends up raised in a collision, it loses all remaining actions
-        and stays raised until the end of the turn.
+        Rule: While a robot is raised, any time it would push another robot instead it is moved back
+        from the contact. (Remove the old rule where it lost all remaining actions).
+        A robot is only raised for the action it makes contact.
         """
         csv_text = read_saved_robot("Vyper_Spinner.csv")
         match = create_match(csv_text, "Vyper_flipper", "Player Bot")
         p_bot = match.player_robot
         a_bot = match.automaton_robot
 
-        # Pre-set automaton as raised to test action cancellation
+        # Pre-set automaton as raised to test action retention
         a_bot.is_raised = True
 
         execute_turn(match, MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"]), fixed_automaton_roll=1)
 
-        # Automaton's actions should have been cancelled due to being raised
+        # Automaton's actions should NOT have been cancelled due to being raised
         cancel_logs = [e.message for e in match.log if "is RAISED: Action Card" in e.message]
-        self.assertTrue(len(cancel_logs) > 0, "Raised robot should log cancelled action cards")
+        self.assertEqual(len(cancel_logs), 0, "Raised robot should NOT have action cards cancelled")
 
-        # After the turn ends (cleanup), raised status should be reset
-        self.assertFalse(a_bot.is_raised, "is_raised must be cleared during end of turn cleanup")
+        # After the action ends, raised status is cleared
+        self.assertFalse(a_bot.is_raised, "is_raised must be cleared after action")
 
     def test_rule_trigger_attacks_if_contact_not_removed_by_throw(self):
         """Rule: Trigger should attack if the contact has not been removed by a throw."""
