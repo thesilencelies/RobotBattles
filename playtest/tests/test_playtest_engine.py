@@ -1181,15 +1181,12 @@ class TestPlaytestEngine(unittest.TestCase):
         self.assertTrue(any("ACTIVE WEAPON HIT" in msg for msg in log_messages))
         # 2. Absorption prevented throw
         self.assertFalse(any(f"{a_bot.name} is THROWN" in msg for msg in log_messages))
-        # 3. Because robots remain in contact, inertial contact proceeded
-        self.assertTrue(any("proceeding with inertial contact" in msg for msg in log_messages))
-        # 4. Pushing match occurred
-        self.assertTrue(any("PUSHING MATCH" in msg for msg in log_messages))
-        # 5. Random rotation after inertial contact was removed
-        self.assertFalse(any("rotated a random amount" in msg for msg in log_messages))
+        # 3. Rule: active contact halts rest of movement and does not proceed to inertial pushing
+        self.assertFalse(any("proceeding with inertial contact" in msg for msg in log_messages))
+        self.assertTrue(any("Active clash concludes without throw" in msg for msg in log_messages))
         self.assertEqual(p_bot.pose.theta, orig_p_theta)
         self.assertEqual(a_bot.pose.theta, orig_a_theta)
-        # 6. Post-collision separation removed: robots do not separate
+        # 4. Post-collision separation removed: robots do not separate
         self.assertFalse(any("Inertial separation" in msg for msg in log_messages))
         self.assertFalse(any("moved back a full unit" in msg for msg in log_messages))
 
@@ -1282,8 +1279,9 @@ class TestPlaytestEngine(unittest.TestCase):
 
         # Active clash occurred
         self.assertTrue(any("ACTIVE WEAPON HIT" in msg for msg in log_messages))
-        # Proceeded to inertial contact
-        self.assertTrue(any("proceeding with inertial contact" in msg for msg in log_messages))
+        # Rule: active contact concludes adjacent and does NOT proceed to inertial pushing
+        self.assertFalse(any("proceeding with inertial contact" in msg for msg in log_messages))
+        self.assertTrue(any("Active clash concludes without throw" in msg for msg in log_messages))
         # Post-collision 1-unit separation removed: static robot is pushed back until not overlapping
         self.assertFalse(any("moved back a full unit to separate" in msg for msg in log_messages))
         self.assertEqual(p_bot.pose.y, 420.0)

@@ -2012,26 +2012,20 @@ def resolve_collision_combat(
                 if thr1_def > 0:
                     _execute_throw(r1, thr1_def, col.contact_point, round_num, logs, steps)
 
-        # Rule: Robots should not be able to end a turn on top of each other:
-        # if there is not a throw on contact then the static robot is pushed back until it is not overlapping.
+        # Rule: If there is not a throw on contact then the static robot is pushed back until it is not overlapping,
+        # and the robots remain in their resulting adjacent positions where movement concludes.
+        # Rule: "If the weapon template overlaps an opposing robot then there is active contact at that point,
+        # and the rest of the movement for that action does not occur."
         had_throw_on_contact = (throw_str_1 > 0 or throw_str_2 > 0 or thr2_def > 0 or thr1_def > 0)
         if not (r1.is_knocked_out or r1.is_eliminated) and not (r2.is_knocked_out or r2.is_eliminated):
-            if check_robots_in_contact(r1, r2):
-                if not had_throw_on_contact:
-                    logs.append(CombatLogEntry(
-                        round=round_num, phase="collision",
-                        message="⚡ Robots are still in contact after active clash (no throw) — proceeding with inertial contact!",
-                    ))
-                    inert_logs = resolve_inert_contact(
-                        col, r1, r2, round_num, steps=steps, r1_choice=r1_choice, r2_choice=r2_choice,
-                        moving_robot_id=moving_robot_id, moving_rem_steps=moving_rem_steps, push_trajectories=push_trajectories,
-                    )
-                    logs.extend(inert_logs)
-
-            # Ensure robots do not end on top of each other
-            m_bot = r2 if moving_robot_id == r2.id else r1
-            s_bot = r1 if moving_robot_id == r2.id else r2
-            ensure_robots_not_overlapping(m_bot, s_bot, round_num, logs)
+            if not had_throw_on_contact:
+                logs.append(CombatLogEntry(
+                    round=round_num, phase="collision",
+                    message="⚡ Active clash concludes without throw — robots conclude adjacent in resulting positions.",
+                ))
+                m_bot = r2 if moving_robot_id == r2.id else r1
+                s_bot = r1 if moving_robot_id == r2.id else r2
+                ensure_robots_not_overlapping(m_bot, s_bot, round_num, logs)
 
     else:
         # Standard inert pushing contact

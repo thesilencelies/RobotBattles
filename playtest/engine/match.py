@@ -751,37 +751,71 @@ def execute_turn(
                         message=f"💥 COLLISION during {moving_bot.name}'s Action {act_card_idx + 1} ({moving_card}) with {stationary_bot.name}! {col.description}",
                     ))
 
-                    # Restore pre-step poses for push resolution
-                    moving_bot.pose = prev_m.clone()
-                    stationary_bot.pose = prev_s.clone()
+                    if col.contact_type == "ACTIVE":
+                        # Rule: "If the weapon template overlaps an opposing robot then there is active contact at that point,
+                        # and the rest of the movement for that action does not occur."
+                        moving_bot.pose = cand_m
+                        stationary_bot.pose = prev_s.clone()
 
-                    rem_steps = steps[s_idx:]
-                    push_trajs: Dict[str, List[TrajectoryPoint]] = {moving_bot.id: [], stationary_bot.id: []}
+                        # Append substeps moving from prev_m to cand_m
+                        for sub in range(1, 5):
+                            alpha = sub / 4.0
+                            ix_m = prev_m.x + (cand_m.x - prev_m.x) * alpha
+                            iy_m = prev_m.y + (cand_m.y - prev_m.y) * alpha
+                            d_th = (cand_m.theta - prev_m.theta + 180.0) % 360.0 - 180.0
+                            ith = (prev_m.theta + d_th * alpha) % 360.0
+                            phase_m_pts.append(Pose(ix_m, iy_m, ith))
+                            phase_s_pts.append(prev_s.clone())
 
-                    c_logs = resolve_collision_combat(
-                        col, moving_bot, stationary_bot, r_num,
-                        steps=match.damage_steps,
-                        r1_choice=moving_choice, r2_choice=stationary_choice,
-                        moving_robot_id=moving_bot.id,
-                        moving_rem_steps=rem_steps,
-                        push_trajectories=push_trajs,
-                    )
-                    match.log.extend(c_logs)
+                        push_trajs: Dict[str, List[TrajectoryPoint]] = {moving_bot.id: [], stationary_bot.id: []}
+                        c_logs = resolve_collision_combat(
+                            col, moving_bot, stationary_bot, r_num,
+                            steps=match.damage_steps,
+                            r1_choice=moving_choice, r2_choice=stationary_choice,
+                            moving_robot_id=moving_bot.id,
+                            moving_rem_steps=None,
+                            push_trajectories=push_trajs,
+                        )
+                        match.log.extend(c_logs)
 
-                    # Add push/throw trajectory points to phase trajectory
-                    m_pts = push_trajs.get(moving_bot.id, [])
-                    s_pts = push_trajs.get(stationary_bot.id, [])
-                    if m_pts and s_pts:
-                        for mp, sp in zip(m_pts, s_pts):
-                            phase_m_pts.append(Pose(mp.x, mp.y, mp.theta))
-                            phase_s_pts.append(Pose(sp.x, sp.y, sp.theta))
-                    else:
-                        # If active throw displaced the robots, interpolate to end poses
+                        # Record final positions after throw or adjacent pushback
                         phase_m_pts.append(moving_bot.pose.clone())
                         phase_s_pts.append(stationary_bot.pose.clone())
 
-                    # Collision finishes remaining motion for this action card
-                    break
+                        # Active contact at that point halts remaining movement for this action card
+                        break
+
+                    else:
+                        # Inert contact: moving robot pushes stationary robot along remaining steps of current action card
+                        moving_bot.pose = prev_m.clone()
+                        stationary_bot.pose = prev_s.clone()
+
+                        rem_steps = steps[s_idx:]
+                        push_trajs: Dict[str, List[TrajectoryPoint]] = {moving_bot.id: [], stationary_bot.id: []}
+
+                        c_logs = resolve_collision_combat(
+                            col, moving_bot, stationary_bot, r_num,
+                            steps=match.damage_steps,
+                            r1_choice=moving_choice, r2_choice=stationary_choice,
+                            moving_robot_id=moving_bot.id,
+                            moving_rem_steps=rem_steps,
+                            push_trajectories=push_trajs,
+                        )
+                        match.log.extend(c_logs)
+
+                        # Add push trajectory points to phase trajectory
+                        m_pts = push_trajs.get(moving_bot.id, [])
+                        s_pts = push_trajs.get(stationary_bot.id, [])
+                        if m_pts and s_pts:
+                            for mp, sp in zip(m_pts, s_pts):
+                                phase_m_pts.append(Pose(mp.x, mp.y, mp.theta))
+                                phase_s_pts.append(Pose(sp.x, sp.y, sp.theta))
+                        else:
+                            phase_m_pts.append(moving_bot.pose.clone())
+                            phase_s_pts.append(stationary_bot.pose.clone())
+
+                        # Inert push finishes the motion for this action card
+                        break
                 else:
                     # No collision: advance moving robot and record substeps
                     moving_bot.pose = cand_m

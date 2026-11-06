@@ -645,7 +645,7 @@
     "46": {
       "name": "Crushing Claw",
       "description": "",
-      "gm_notes": "weight:3\ncost:$3\ntemplate:Line\nreq:PPPPPP\nout:WWWWW\ndurability:10\nabsorption:1\nNext turn target moves with this robot instead",
+      "gm_notes": "weight:3\ncost:$3\ntemplate:Line\nreq:PPPPPP\nout:WWWWWW\ndurability:10\nabsorption:1\nNext turn target moves with this robot instead",
       "tags": {
         "1": "Card",
         "2": "Weapon",
@@ -660,7 +660,7 @@
     "47": {
       "name": "Hammer Saw",
       "description": "Spin up (X): at the start of each turn add X spin counters and remove them all if the weapon attacks\nSelf-right: if a turn ends without contact and this robot is inverted, invert it",
-      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSPP\nout:WW2XW\ndurability:8\nabsorption:1\ndoes not get hit by weapons",
+      "gm_notes": "weight:3\ncost:$4\ntemplate:Line\nreq:SSSPP\nout:WWW2XW\ndurability:8\nabsorption:1\ndoes not get hit by weapons",
       "tags": {
         "1": "Card",
         "2": "Weapon",

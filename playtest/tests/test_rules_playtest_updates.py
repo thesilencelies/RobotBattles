@@ -309,3 +309,94 @@ def test_rule3_wall_push_halts_at_wall_without_throw(wall, def_pos, expected_nor
 
     # 2. No throw damage dealt from wall contact
     assert defender.components["body"].current_durability == 6
+
+
+# =========================================================================
+# Rule: Movement is done one tile step or 45 degree turn at a time.
+# If the weapon template overlaps an opposing robot then there is active
+# contact at that point, and the rest of the movement for that action does not occur.
+# =========================================================================
+
+def test_rule_step_by_step_linear_active_weapon_overlap_halts_action():
+    from playtest.engine.match import create_match, execute_turn
+    from builder.server.data import read_saved_robot
+
+    csv_text = read_saved_robot("Sparrow_crusher.csv")
+    match = create_match(csv_text, "Vyper_flipper", "Crusher Bot")
+    p_bot = match.player_robot
+    a_bot = match.automaton_robot
+
+    # Crusher starts at y=520 facing North (0.0). Opponent is at y=440 facing South (180.0).
+    # Step 0 (1st forward step, 40mm): moves to y=480 (no overlap with opponent's body at 440).
+    # Step 1 (2nd forward step, 40mm): moves to y=440 (Crusher weapon template overlaps opponent).
+    # Step 2 (3rd forward step, 40mm): should NOT occur!
+    p_bot.pose = Pose(x=400.0, y=520.0, theta=0.0)
+    a_bot.pose = Pose(x=400.0, y=440.0, theta=180.0)
+
+    # Disable Flipper's attack so it's a one-way strike without thrown clear displacement
+    for c in a_bot.components.values():
+        if c.card_type == "weapon":
+            c.is_active = False
+
+    choice = MoveChoice(left=0, right=0, cards=["3 F", "Wait", "Wait"])
+    # Give high active drive so player moves first
+    p_bot.left_drive_max = 5
+    p_bot.right_drive_max = 5
+    a_bot.left_drive_max = 1
+    a_bot.right_drive_max = 1
+
+    match = execute_turn(match, choice, fixed_automaton_roll=1)
+
+    # 1. Action 1 collided
+    act1_res = match.action_step_results[0]
+    assert act1_res["robot_id"] == p_bot.id
+    assert act1_res["card"] == "3 F"
+    assert act1_res["collision"] is True
+    assert act1_res["halted"] is True
+
+    # 2. Collision log confirms active contact occurred
+    assert any("ACTIVE WEAPON HIT" in log.message for log in match.log)
+
+    # 3. Rest of movement for 3 F did not occur:
+    # If all 3 steps had occurred, player would be at y=400 or further.
+    # Because active contact occurred at step 1 (y=440), Crusher did NOT execute step 2 (y=400).
+    assert p_bot.pose.y >= 440.0, f"Expected y >= 440.0, got {p_bot.pose.y}"
+
+
+def test_rule_step_by_step_turning_active_weapon_overlap_halts_action():
+    from playtest.engine.match import create_match, execute_turn
+    from builder.server.data import read_saved_robot
+
+    csv_text = read_saved_robot("Sparrow_crusher.csv")
+    match = create_match(csv_text, "Vyper_flipper", "Crusher Bot")
+    p_bot = match.player_robot
+    a_bot = match.automaton_robot
+
+    # Position Crusher facing North (0.0). Opponent is to the right at (440.0, 400.0).
+    # Turn 90 R consists of two 45-degree turn steps.
+    # Step 0 (45 degrees CW): Crusher turns to theta=45.0 and swings its forward weapon into opponent.
+    # Step 1 (second 45 degrees to 90.0): should NOT occur!
+    p_bot.pose = Pose(x=400.0, y=400.0, theta=0.0)
+    a_bot.pose = Pose(x=440.0, y=360.0, theta=180.0)
+
+    # Disable opponent weapon by destroying it so refresh does not re-enable it
+    for c in a_bot.components.values():
+        if c.card_type == "weapon":
+            c.is_destroyed = True
+        c.absorption = 30
+
+    choice = MoveChoice(left=0, right=0, cards=["90 R", "Wait", "Wait"])
+    p_bot.left_drive_max = 5
+    p_bot.right_drive_max = 5
+    a_bot.left_drive_max = 1
+    a_bot.right_drive_max = 1
+
+    match = execute_turn(match, choice, fixed_automaton_roll=1)
+
+    act1_res = match.action_step_results[0]
+    assert act1_res["robot_id"] == p_bot.id
+    assert act1_res["collision"] is True
+
+    # Active contact at 45° step halted the second 45° step, so orientation did not reach 90°
+    assert p_bot.pose.theta == 45.0, f"Expected theta == 45.0, got {p_bot.pose.theta}"
+
