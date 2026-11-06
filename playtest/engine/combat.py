@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import collections
+import copy
 import math
 import random
 import re
@@ -565,6 +566,7 @@ def refresh_robot_drive_and_power(
     current_move: Optional[MoveChoice] = None,
     chosen_components: Optional[Collection[str]] = None,
     is_automaton: bool = False,
+    check_shortfall: bool = True,
 ) -> None:
     """
     Recomputes active components and left/right drive max counts based on current health,
@@ -660,8 +662,17 @@ def refresh_robot_drive_and_power(
 
                 if chosen_components is not None:
                     desc = _get_downstream_cids(cid, robot)
-                    is_chosen = (cid in chosen_components) or any(d in chosen_components for d in desc)
-                    cat_pri = 0 if is_chosen else 10
+                    if isinstance(chosen_components, (list, tuple)):
+                        matched_indices = []
+                        if cid in chosen_components:
+                            matched_indices.append(chosen_components.index(cid))
+                        for d in desc:
+                            if d in chosen_components:
+                                matched_indices.append(chosen_components.index(d))
+                        cat_pri = min(matched_indices) if matched_indices else 100
+                    else:
+                        is_chosen = (cid in chosen_components) or any(d in chosen_components for d in desc)
+                        cat_pri = 0 if is_chosen else 100
                 else:
                     is_self_right = "self_right" in endpoints
                     is_weapon = "weapon" in endpoints
@@ -804,6 +815,48 @@ def refresh_robot_drive_and_power(
 
     robot.left_drive_max = left_drive
     robot.right_drive_max = right_drive
+    robot.chosen_components = list(chosen_components) if chosen_components is not None else None
+    if check_shortfall:
+        has_shortfall, _ = detect_supply_shortfall(robot)
+        robot.has_supply_shortfall = has_shortfall
+
+
+def detect_supply_shortfall(robot: RobotState) -> Tuple[bool, List[str]]:
+    """
+    Checks if there is a supply shortfall where not all connected, non-destroyed
+    components with requirements can be supplied simultaneously.
+    Returns (has_shortfall, starved_or_competing_component_ids).
+    """
+    consumers = [
+        cid for cid, c in robot.components.items()
+        if not c.is_destroyed and c.requirements.strip()
+    ]
+    if not consumers:
+        return False, []
+
+    # Run baseline supply propagation without any user priority choices
+    baseline_robot = copy.deepcopy(robot)
+    refresh_robot_drive_and_power(baseline_robot, chosen_components=None, check_shortfall=False)
+
+    # Inactive consumers in baseline allocation
+    inactive = [
+        cid for cid in consumers
+        if not baseline_robot.components[cid].is_active and not baseline_robot.components[cid].is_resetting
+    ]
+    if not inactive:
+        return False, []
+
+    # Check if any inactive component CAN be powered if prioritized alone
+    competing = []
+    for cid in inactive:
+        test_robot = copy.deepcopy(robot)
+        refresh_robot_drive_and_power(test_robot, chosen_components=[cid], check_shortfall=False)
+        if test_robot.components[cid].is_active or test_robot.components[cid].reset_supplied:
+            competing.append(cid)
+
+    if competing:
+        return True, competing
+    return False, []
 
 
 def start_of_turn_spin_up(robot: RobotState) -> List[str]:

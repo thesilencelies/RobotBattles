@@ -232,6 +232,8 @@ class RobotState:
     total_cost: int = 0
     grabbed_by: Optional[str] = None
     current_choice: Optional[MoveChoice] = None
+    has_supply_shortfall: bool = False
+    chosen_components: Optional[List[str]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -256,6 +258,8 @@ class RobotState:
             "total_cost": self.total_cost,
             "grabbed_by": self.grabbed_by,
             "current_choice": self.current_choice.to_dict() if self.current_choice else None,
+            "has_supply_shortfall": self.has_supply_shortfall,
+            "chosen_components": list(self.chosen_components) if self.chosen_components is not None else None,
         }
 
 

@@ -109,6 +109,19 @@ export class PlaytestApi {
     return this.executeTurn(optsOrLeft, right, fixedRoll, chosenComponents);
   }
 
+  static async updateSupply(chosenComponents) {
+    const res = await fetch("/api/battle/supply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chosen_components: chosenComponents }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to update supply allocation");
+    }
+    return res.json();
+  }
+
   static async resetBattle() {
     const res = await fetch("/api/battle/reset", { method: "POST" });
     if (!res.ok) throw new Error("Failed to reset battle");

@@ -21,6 +21,7 @@ class PlaytestApp {
     this.actionCardsList = [];
     this.actionCardsMap = new Map();
     this.activeFilter = "all";
+    this.chosenSupplyComponents = new Set();
   }
 
   async init() {
@@ -88,6 +89,8 @@ class PlaytestApp {
     this.categoryFilterButtons = document.querySelectorAll(".btn-filter-cat");
     this.presetButtons = document.querySelectorAll(".btn-preset");
     this.btnExecuteTurn = document.getElementById("btn-execute-turn");
+    this.supplyShortfallDock = document.getElementById("supply-shortfall-dock");
+    this.shortfallComponentsList = document.getElementById("shortfall-components-list");
 
     // Views
     this.playerRobotContainer = document.getElementById("player-robot-container");
@@ -284,6 +287,7 @@ class PlaytestApp {
       const csv = this.builderController ? this.builderController.getRobotCSV() : "";
       const maxRounds = this.playcountSelect ? (parseInt(this.playcountSelect.value, 10) || 20) : 20;
       try {
+        this.chosenSupplyComponents.clear();
         const data = await PlaytestApi.startNewMatch({
           player_csv: csv,
           automaton: autoName,
@@ -299,6 +303,7 @@ class PlaytestApp {
 
     this.btnResetMatch.addEventListener("click", async () => {
       if (confirm("Reset current match?")) {
+        this.chosenSupplyComponents.clear();
         await PlaytestApi.resetMatch();
         await this._loadBattleState();
       }
@@ -342,6 +347,7 @@ class PlaytestApp {
 
   async _deployFromBuilder(csvText, robotName) {
     try {
+      this.chosenSupplyComponents.clear();
       const autoName = this.autoSelect ? this.autoSelect.value : "Vyper_flipper";
       const maxRounds = this.playcountSelect ? (parseInt(this.playcountSelect.value, 10) || 20) : 20;
       const data = await PlaytestApi.startNewMatch({
@@ -399,11 +405,15 @@ class PlaytestApp {
     }
 
     try {
-      const data = await PlaytestApi.submitTurn({
+      const turnPayload = {
         cards: this.selectedCards,
         left: totalL,
         right: totalR,
-      });
+      };
+      if (this.chosenSupplyComponents && this.chosenSupplyComponents.size > 0) {
+        turnPayload.chosen_components = Array.from(this.chosenSupplyComponents);
+      }
+      const data = await PlaytestApi.submitTurn(turnPayload);
       this.currentMatch = data.match;
 
       const allDamageSteps = this.currentMatch.damage_steps || [];
@@ -524,12 +534,106 @@ class PlaytestApp {
 
     // Render Views
     this.arenaRenderer.render(m);
-    RobotViewRenderer.renderRobotState(this.playerRobotContainer, pBot, false);
+    RobotViewRenderer.renderRobotState(
+      this.playerRobotContainer,
+      pBot,
+      false,
+      null,
+      null,
+      null,
+      (cid) => this._toggleSupplyComponent(cid),
+      this.chosenSupplyComponents
+    );
     RobotViewRenderer.renderRobotState(this.automatonRobotContainer, aBot, true, m.automaton_roll, m.automaton_action, pBot);
     CombatLogRenderer.renderLog(this.logContainer, m.log);
 
+    // Render Supply Shortfall Dock if player bot has supply shortfall
+    this._renderShortfallDock(pBot);
+
     // Update Turn Planning Dock (drive meters, slots, card drawer, preview)
     this._updateTurnPlanningControls();
+  }
+
+  _renderShortfallDock(pBot) {
+    if (!this.supplyShortfallDock || !this.shortfallComponentsList) return;
+
+    if (!pBot || !pBot.has_supply_shortfall) {
+      this.supplyShortfallDock.style.display = "none";
+      return;
+    }
+
+    this.supplyShortfallDock.style.display = "flex";
+
+    // Prune destroyed components from chosenSupplyComponents
+    for (const cid of Array.from(this.chosenSupplyComponents)) {
+      if (!pBot.components[cid] || pBot.components[cid].is_destroyed) {
+        this.chosenSupplyComponents.delete(cid);
+      }
+    }
+
+    // If empty, initialize from pBot.chosen_components or currently active consumers
+    if (this.chosenSupplyComponents.size === 0) {
+      if (pBot.chosen_components && pBot.chosen_components.length > 0) {
+        for (const cid of pBot.chosen_components) {
+          if (pBot.components[cid] && !pBot.components[cid].is_destroyed) {
+            this.chosenSupplyComponents.add(String(cid));
+          }
+        }
+      } else {
+        for (const [cid, c] of Object.entries(pBot.components || {})) {
+          if (!c.is_destroyed && c.requirements && c.requirements.trim() && (c.is_active || c.reset_supplied)) {
+            this.chosenSupplyComponents.add(String(cid));
+          }
+        }
+      }
+    }
+
+    // Eligible candidates with requirements
+    const candidates = Object.values(pBot.components || {}).filter(
+      c => !c.is_destroyed && c.requirements && c.requirements.trim()
+    );
+
+    this.shortfallComponentsList.innerHTML = candidates.map(c => {
+      const isChosen = this.chosenSupplyComponents.has(String(c.id));
+      const isActive = c.is_active || c.reset_supplied;
+      const statusBadge = isActive
+        ? `<span class="pill-status-badge ok">⚡ Supplied</span>`
+        : `<span class="pill-status-badge off">⚪ Unsupplied</span>`;
+
+      return `
+        <div class="shortfall-pill ${isChosen ? 'selected' : ''} ${isActive ? 'active-power' : 'inactive-power'}" data-cid="${c.id}">
+          <span class="pill-box">${isChosen ? '✓' : ''}</span>
+          <span class="pill-name">${c.name}</span>
+          <span class="pill-req">${c.requirements}</span>
+          ${statusBadge}
+        </div>
+      `;
+    }).join("");
+
+    this.shortfallComponentsList.querySelectorAll(".shortfall-pill").forEach(pill => {
+      pill.addEventListener("click", async () => {
+        const cid = pill.dataset.cid;
+        await this._toggleSupplyComponent(cid);
+      });
+    });
+  }
+
+  async _toggleSupplyComponent(cid) {
+    cid = String(cid);
+    if (this.chosenSupplyComponents.has(cid)) {
+      this.chosenSupplyComponents.delete(cid);
+    } else {
+      this.chosenSupplyComponents.add(cid);
+    }
+
+    const chosenList = Array.from(this.chosenSupplyComponents);
+    try {
+      const data = await PlaytestApi.updateSupply(chosenList);
+      this.currentMatch = data.match;
+      this._updateMatchUi();
+    } catch (err) {
+      console.error("Failed to update supply allocation:", err);
+    }
   }
 
   _updateTurnPlanningControls() {

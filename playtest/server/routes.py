@@ -21,6 +21,7 @@ from builder.server.data import (
     serialize_robot_csv,
     write_saved_robot,
 )
+from playtest.engine.combat import refresh_robot_drive_and_power
 from playtest.engine.match import create_match, execute_turn, get_template_metadata
 from playtest.engine.movement import generate_action_plan_trajectory, list_all_action_cards
 from playtest.engine.types import MatchState, MoveChoice, Pose
@@ -100,6 +101,7 @@ class Router:
         self.routes_get["/api/automata"] = self._api_automata
         self.routes_post["/api/battle/new"] = self._api_battle_new
         self.routes_post["/api/battle/turn"] = self._api_battle_turn
+        self.routes_post["/api/battle/supply"] = self._api_battle_supply
         self.routes_post["/api/battle/reset"] = self._api_battle_reset
         self.routes_get["/api/battle/export"] = self._api_battle_export
         self.routes_get["/api/action_cards"] = self._api_action_cards
@@ -206,6 +208,25 @@ class Router:
             MoveChoice(left=left, right=right, cards=cards or []),
             fixed_automaton_roll=fixed_roll,
             player_supplied_components=chosen_components,
+        )
+        return Response.json({"match": self.current_match.to_dict()})
+
+    def _api_battle_supply(self, query: Mapping[str, str], body: bytes) -> Response:
+        if self.current_match is None:
+            raise HttpError(400, "No active match. Start a new match first.")
+
+        try:
+            data = json.loads(body.decode("utf-8")) if body else {}
+            chosen_components = data.get("chosen_components", data.get("supplied_components"))
+            if chosen_components is not None and not isinstance(chosen_components, list):
+                chosen_components = None
+        except Exception:
+            raise HttpError(400, "Invalid JSON payload")
+
+        refresh_robot_drive_and_power(
+            self.current_match.player_robot,
+            self.current_match.player_choice,
+            chosen_components=chosen_components,
         )
         return Response.json({"match": self.current_match.to_dict()})
 

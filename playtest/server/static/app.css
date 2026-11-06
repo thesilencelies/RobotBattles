@@ -2055,4 +2055,201 @@ html, body {
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
 }
 
+/* Supply Shortfall Dock */
+.supply-shortfall-dock {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: shortfall-fade-in 0.25s ease-out;
+}
+
+@keyframes shortfall-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shortfall-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.shortfall-badge {
+  background: #d97706;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 6px rgba(217, 119, 6, 0.4);
+}
+
+.shortfall-hint {
+  font-size: 0.78rem;
+  color: #fde68a;
+  flex: 1;
+}
+
+.shortfall-components-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.shortfall-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  font-size: 0.78rem;
+  color: var(--text-main);
+}
+
+.shortfall-pill:hover {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.shortfall-pill.selected {
+  border-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.14);
+  box-shadow: 0 0 6px rgba(0, 229, 255, 0.25);
+}
+
+.shortfall-pill.active-power {
+  border-left: 3px solid #10b981;
+}
+
+.shortfall-pill.inactive-power {
+  border-left: 3px solid #64748b;
+  opacity: 0.75;
+}
+
+.shortfall-pill .pill-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.shortfall-pill.selected .pill-box {
+  border-color: #00e5ff;
+  background: #00e5ff;
+  color: #000;
+}
+
+.shortfall-pill .pill-name {
+  font-weight: 600;
+}
+
+.shortfall-pill .pill-req {
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.shortfall-pill .pill-status-badge {
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.shortfall-pill .pill-status-badge.ok {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.shortfall-pill .pill-status-badge.off {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+}
+
+/* Supply Shortfall Alert for Robot State Tab */
+.supply-shortfall-alert {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shortfall-alert-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.shortfall-alert-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+.shortfall-alert-desc {
+  font-size: 0.78rem;
+  color: #fde68a;
+  margin-top: 2px;
+}
+
+.btn-supply-toggle {
+  margin-top: 6px;
+  width: 100%;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn-supply-toggle:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.btn-supply-toggle.chosen {
+  border-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.18);
+  color: #00e5ff;
+  box-shadow: 0 0 6px rgba(0, 229, 255, 0.25);
+}
+
+
 

@@ -29,7 +29,7 @@ export class RobotViewRenderer {
   // Cache of zoom/pan state per container (player vs automaton)
   static viewStates = new Map();
 
-  static renderRobotState(container, robot, isAutomaton = false, lastRoll = null, lastAction = null, opponentRobot = null) {
+  static renderRobotState(container, robot, isAutomaton = false, lastRoll = null, lastAction = null, opponentRobot = null, onSupplyToggle = null, chosenSupplyComponents = null) {
     if (!container || !robot) return;
 
     const comps = Object.values(robot.components || {});
@@ -87,8 +87,21 @@ export class RobotViewRenderer {
       ? `<button class="btn btn-secondary btn-sm btn-replay-train" id="btn-replay-${containerId}" title="Replay damage & feedback train step-by-step">🔁 Replay Damage Train</button>`
       : "";
 
+    const shortfallAlertHtml = (!isAutomaton && robot.has_supply_shortfall)
+      ? `
+        <div class="supply-shortfall-alert">
+          <div class="shortfall-alert-icon">⚠️</div>
+          <div class="shortfall-alert-content">
+            <div class="shortfall-alert-title">SUPPLY SHORTFALL DETECTED</div>
+            <div class="shortfall-alert-desc">Available power is insufficient to supply all connected components. Select which components receive power below or in the Arena Turn Planning dock.</div>
+          </div>
+        </div>
+      `
+      : "";
+
     container.innerHTML = `
       <div class="robot-state-card robot-view-card" data-container-id="${containerId}">
+        ${shortfallAlertHtml}
         <!-- Header -->
         <div class="state-header-row">
           <div>
@@ -236,13 +249,18 @@ export class RobotViewRenderer {
         <!-- All Components Health List -->
         <h3 class="section-heading">📦 Components Breakdown (${comps.length})</h3>
         <div class="components-health-grid">
-          ${comps.map(c => this._renderComponentCard(c, state.selectedCardId === c.id)).join("")}
+          ${comps.map(c => this._renderComponentCard(
+            c,
+            state.selectedCardId === c.id,
+            !isAutomaton && robot.has_supply_shortfall,
+            chosenSupplyComponents ? chosenSupplyComponents.has(String(c.id)) : (c.is_active || c.reset_supplied)
+          )).join("")}
         </div>
       </div>
     `;
 
     // Attach interactivity
-    this._attachInteractivity(container, robot, containerId);
+    this._attachInteractivity(container, robot, containerId, onSupplyToggle);
   }
 
   static _renderChassisOutline(templateName) {
@@ -495,7 +513,7 @@ export class RobotViewRenderer {
     `;
   }
 
-  static _renderComponentCard(comp, isSelected) {
+  static _renderComponentCard(comp, isSelected, hasShortfall = false, isChosen = false) {
     const isDestroyed = comp.is_destroyed;
     const isDamaged = comp.is_damaged && !isDestroyed;
     const isInactive = !comp.is_active && !isDestroyed;
@@ -525,6 +543,15 @@ export class RobotViewRenderer {
     const isDrive = comp.outputs && (comp.outputs.includes("D") || comp.outputs.includes("M"));
     const typeIcon = isDrive ? "🛞" : comp.card_type === "weapon" ? "⚔️" : comp.card_type === "chassis" ? "🛡️" : "📦";
 
+    let toggleBtnHtml = "";
+    if (hasShortfall && !isDestroyed && comp.requirements && comp.requirements.trim()) {
+      toggleBtnHtml = `
+        <button class="btn-supply-toggle ${isChosen ? 'chosen' : ''}" data-cid="${comp.id}" type="button">
+          ${isChosen ? '⚡ Chosen for Supply' : '⚪ Unsupplied (Click to Choose)'}
+        </button>
+      `;
+    }
+
     return `
       <div class="${cardCls}" data-cid="${comp.id}" style="cursor: pointer;">
         <div class="comp-head">
@@ -545,11 +572,12 @@ export class RobotViewRenderer {
           ${comp.keywords ? `<span class="spec-tag kw">${comp.keywords}</span>` : ""}
         </div>
         ${comp.text ? `<div class="comp-text">${comp.text}</div>` : ""}
+        ${toggleBtnHtml}
       </div>
     `;
   }
 
-  static _attachInteractivity(container, robot, containerId) {
+  static _attachInteractivity(container, robot, containerId, onSupplyToggle = null) {
     const state = this.viewStates.get(containerId);
     const svg = container.querySelector(`#svg-${containerId}`);
     const inspector = container.querySelector(`#inspector-${containerId}`);
@@ -584,6 +612,17 @@ export class RobotViewRenderer {
     container.querySelectorAll(".comp-health-card").forEach(card => {
       card.addEventListener("click", () => {
         selectCard(card.dataset.cid);
+      });
+    });
+
+    // 1b. Supply Shortfall Toggle button click
+    container.querySelectorAll(".btn-supply-toggle").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const cid = btn.dataset.cid;
+        if (onSupplyToggle) {
+          onSupplyToggle(cid);
+        }
       });
     });
 
