@@ -393,12 +393,12 @@ def execute_turn(
     a_start = Pose(a_bot.pose.x, a_bot.pose.y, a_bot.pose.theta)
 
     # 1. Action Cards selection & planning
-    # Determine Player's 3 Action Cards
+    # Determine Player's 2 Action Cards
     if player_choice.cards and len(player_choice.cards) > 0:
         raw_cards = [normalize_action_code(c) for c in player_choice.cards]
-        while len(raw_cards) < 3:
+        while len(raw_cards) < 2:
             raw_cards.append("Wait")
-        raw_cards = raw_cards[:3]
+        raw_cards = raw_cards[:2]
 
         eff_l = max(1, p_bot.left_drive_max)
         eff_r = max(1, p_bot.right_drive_max)
@@ -471,14 +471,14 @@ def execute_turn(
 
         # Reset passive bot choices to stationary
         if p_is_active:
-            a_choice = MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"])
-            a_cards = ["Wait", "Wait", "Wait"]
+            a_choice = MoveChoice(0, 0, cards=["Wait", "Wait"])
+            a_cards = ["Wait", "Wait"]
             p_claw = next((c for c in p_bot.components.values() if "crushing claw" in c.name.lower()), None)
             if p_claw:
                 p_claw.was_used_this_turn = True
         else:
-            p_choice = MoveChoice(0, 0, cards=["Wait", "Wait", "Wait"])
-            p_cards = ["Wait", "Wait", "Wait"]
+            p_choice = MoveChoice(0, 0, cards=["Wait", "Wait"])
+            p_cards = ["Wait", "Wait"]
             a_claw = next((c for c in a_bot.components.values() if "crushing claw" in c.name.lower()), None)
             if a_claw:
                 a_claw.was_used_this_turn = True
@@ -495,11 +495,11 @@ def execute_turn(
         full_pas_traj: List[TrajectoryPoint] = [TrajectoryPoint(pas_pose.x, pas_pose.y, pas_pose.theta, t=0.0)]
         action_step_results: List[Dict[str, Any]] = []
 
-        for phase_idx in range(6):
+        for phase_idx in range(4):
             act_card_idx = phase_idx // 2
             is_active_phase = (phase_idx % 2 == 0) if p_is_active else (phase_idx % 2 != 0)
-            t_phase_start = phase_idx / 6.0
-            t_phase_span = 1.0 / 6.0
+            t_phase_start = phase_idx / 4.0
+            t_phase_span = 1.0 / 4.0
 
             if not is_active_phase:
                 # Passive bot's phase: stationary Wait
@@ -597,7 +597,7 @@ def execute_turn(
         match.last_collision = None
         match.action_step_results = action_step_results
     else:
-        # Alternating Action Card Resolution (6 phases: Card 1 -> Card 2 -> Card 3)
+        # Alternating Action Card Resolution (4 phases: Card 1 -> Card 2)
         # Starting with the robot with higher total active drive (ties broken by youngest player / Player 1).
         p_total_drive = p_bot.left_drive_max + p_bot.right_drive_max
         a_total_drive = a_bot.left_drive_max + a_bot.right_drive_max
@@ -621,7 +621,7 @@ def execute_turn(
         full_a_traj: List[TrajectoryPoint] = [TrajectoryPoint(a_start.x, a_start.y, a_start.theta, t=0.0)]
         turn_collision: Optional[CollisionEvent] = None
 
-        for phase_idx in range(6):
+        for phase_idx in range(4):
             act_card_idx = phase_idx // 2
             is_first = (phase_idx % 2 == 0)
             moving_bot = first_bot if is_first else second_bot
@@ -630,8 +630,8 @@ def execute_turn(
             moving_choice = first_choice if is_first else second_choice
             stationary_choice = second_choice if is_first else first_choice
 
-            t_phase_start = phase_idx / 6.0
-            t_phase_span = 1.0 / 6.0
+            t_phase_start = phase_idx / 4.0
+            t_phase_span = 1.0 / 4.0
 
             # 1. Elimination / Knockout Check
             if moving_bot.is_knocked_out or moving_bot.is_eliminated:
@@ -858,7 +858,7 @@ def execute_turn(
 
         if not turn_collision:
             match.log.append(CombatLogEntry(
-                round=r_num, phase="movement", message="Both robots completed all 3 Action Cards without contact."
+                round=r_num, phase="movement", message="Both robots completed all 2 Action Cards without contact."
             ))
 
     col = match.last_collision

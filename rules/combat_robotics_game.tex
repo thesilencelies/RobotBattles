@@ -421,7 +421,7 @@ Each round follows a sequence of 3 steps:
   \toprule
   \textbf{Step} & \textbf{Summary} \\
   \midrule
-  \textbf{1. Planning} & Players secretly choose 3 movement Action Cards in an order of their choice and allocate power to components. \\
+  \textbf{1. Planning} & Players secretly choose 2 movement Action Cards in an order of their choice and allocate power to components. \\
   \textbf{2. Movement} & Choices are revealed; Action Cards are resolved alternating between robots, one tile step or $45^\circ$ turn at a time, starting with higher total active drive (tie-break: youngest player). \\
   \textbf{3. Collision} & If the weapon template overlaps an opposing robot, active contact occurs at that point and the rest of the movement for that action does not occur. An inert collision occurs when trying to move through an occupied tile without weapon overlap. \\
   \bottomrule
@@ -431,10 +431,10 @@ Each round follows a sequence of 3 steps:
 \subsection{Planning}
 In the planning step, each player chooses how their robot is going to move this round using \textbf{Action Cards}.
 
-Each player secretly selects \textbf{3 action cards} from their action card pool and places them facedown in an order of their choosing (Card~1, Card~2, and Card~3).
+Each player secretly selects \textbf{2 action cards} from their action card pool and places them facedown in an order of their choosing (Card~1 and Card~2).
 
 Each action card displays a movement diagram in the center, a descriptor in the top-left, its \textbf{left drive cost} in the bottom-left, and its \textbf{right drive cost} in the bottom-right.
-The sum drive cost across the 3 selected action cards must be less than or equal to the robot's remaining active drive \inlineIcon{\resourceM} on each respective side:
+The sum drive cost across the 2 selected action cards must be less than or equal to the robot's remaining active drive \inlineIcon{\resourceM} on each respective side:
 \begin{center}
   {\small\bfseries
   $\sum \text{Left Drive Costs} \le \text{Active Left Drive } \inlineIcon{\resourceM} \quad\text{and}\quad
@@ -451,7 +451,7 @@ Robots are always considered to have at least \textbf{1 drive on each side}, reg
   \adjustbox{max width=\linewidth}{%
   \begin{tikzpicture}[x=1cm, y=1cm]
     \draw[fill=white, draw=boxBorder, line width=0.8pt, rounded corners=3pt] (0, 0) rectangle (16.2, 4.75);
-    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 4.60) {Action Card Anatomy \& Secret 3-Card Planning};
+    \node[fill=primaryDark, text=white, font=\footnotesize\bfseries, rounded corners=2pt, anchor=north west] at (0.15, 4.60) {Action Card Anatomy \& Secret 2-Card Planning};
 
     % Left side: Card Anatomy
     \node[anchor=north west, inner sep=0pt] at (0.45, 4.15) {%
@@ -471,32 +471,26 @@ Robots are always considered to have at least \textbf{1 drive on each side}, reg
     % Divider
     \draw[draw=boxBorder!60, dashed, line width=0.6pt] (8.7, 0.3) -- (8.7, 4.3);
 
-    % Right side: 3-Card Planning Layout
-    \node[anchor=north west, font=\scriptsize\bfseries, text=primaryDark] at (9.0, 4.25) {Example 3-Card Secret Plan:};
+    % Right side: 2-Card Planning Layout
+    \node[anchor=north west, font=\scriptsize\bfseries, text=primaryDark] at (9.6, 4.25) {Example 2-Card Secret Plan:};
 
-    \node[anchor=north west, inner sep=0pt] at (9.0, 3.90) {%
+    \node[anchor=north west, inner sep=0pt] at (9.8, 3.90) {%
       \includegraphics[height=2.85cm]{../CardImages/Action_45_R.png}%
     };
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (9.92, 0.85) {Card 1 (\texttt{45 R})};
-    \node[font=\fontsize{5.5}{6.5}\selectfont, text=textDark!80] at (9.92, 0.60) {Cost: L:1, R:0};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (10.72, 0.85) {Card 1 (\texttt{45 R})};
+    \node[font=\fontsize{5.5}{6.5}\selectfont, text=textDark!80] at (10.72, 0.60) {Cost: L:1, R:0};
 
-    \node[anchor=north west, inner sep=0pt] at (11.35, 3.90) {%
+    \node[anchor=north west, inner sep=0pt] at (12.8, 3.90) {%
       \includegraphics[height=2.85cm]{../CardImages/Action_1F.png}%
     };
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (12.27, 0.85) {Card 2 (\texttt{1F})};
-    \node[font=\fontsize{5.5}{6.5}\selectfont, text=textDark!80] at (12.27, 0.60) {Cost: L:1, R:1};
+    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (13.72, 0.85) {Card 2 (\texttt{1F})};
+    \node[font=\fontsize{5.5}{6.5}\selectfont, text=textDark!80] at (13.72, 0.60) {Cost: L:1, R:1};
 
-    \node[anchor=north west, inner sep=0pt] at (13.70, 3.90) {%
-      \includegraphics[height=2.85cm]{../CardImages/Action_45_R.png}%
-    };
-    \node[font=\fontsize{6}{7}\selectfont\bfseries, text=textDark] at (14.62, 0.85) {Card 3 (\texttt{45 R})};
-    \node[font=\fontsize{5.5}{6.5}\selectfont, text=textDark!80] at (14.62, 0.60) {Cost: L:1, R:0};
-
-    \node[anchor=south, font=\fontsize{6}{7}\selectfont\bfseries, text=primaryDark] at (12.5, 0.15) {Total Cost: Left = 3, Right = 1 (Curved Flank)};
+    \node[anchor=south, font=\fontsize{6}{7}\selectfont\bfseries, text=primaryDark] at (12.25, 0.15) {Total Cost: Left = 2, Right = 1 (Curved Flank)};
 
   \end{tikzpicture}%
   }
-  \caption{Action Card Anatomy and Secret 3-Card Planning Layout}
+  \caption{Action Card Anatomy and Secret 2-Card Planning Layout}
   \label{fig:action_card_anatomy}
 \end{figure}
 
@@ -650,7 +644,7 @@ When robots rotate $45^\circ$ (via Turn Steps, Pivot Steps, or post-impact throw
 \end{figure}
 
 \subsubsection{Alternating Action Card Resolution}
-During the Planning phase, both players secretly choose 3 Action Cards and arrange them facedown in their chosen execution order: Card~1, Card~2, and Card~3. Choices are revealed.
+During the Planning phase, both players secretly choose 2 Action Cards and arrange them facedown in their chosen execution order: Card~1 and Card~2. Choices are revealed.
 
 To eliminate movement ambiguity, the chosen Action Cards are resolved \textbf{alternating between the robots}, starting with the robot with the higher total active drive (ties broken by the youngest player):
 \begin{enumerate}[label=\arabic*., leftmargin=*, noitemsep, topsep=2pt]
@@ -658,8 +652,6 @@ To eliminate movement ambiguity, the chosen Action Cards are resolved \textbf{al
   \item \textbf{Second Robot Card 1:} The second robot executes its first Action Card.
   \item \textbf{First Robot Card 2:} The first robot executes its second Action Card.
   \item \textbf{Second Robot Card 2:} The second robot executes its second Action Card.
-  \item \textbf{First Robot Card 3:} The first robot executes its third Action Card.
-  \item \textbf{Second Robot Card 3:} The second robot executes its third Action Card.
 \end{enumerate}
 
 \noindent
@@ -805,16 +797,16 @@ Each Action Card represents a discrete maneuver on the arena grid:
 
 \subsubsection{Action Sequence Examples}
 
-\noindent\textbf{1. Straight Dash (\texttt{1F} $\rightarrow$ \texttt{2 F} $\rightarrow$ \texttt{Wait}):}\\
-Card 1 advances 1 square, Card 2 advances 2 squares, Card 3 remains still. Total forward distance: 3 squares. Drive costs: Left $1+2+0 = 3$, Right $1+2+0 = 3$.
+\noindent\textbf{1. Straight Dash (\texttt{1F} $\rightarrow$ \texttt{2 F}):}\\
+Card 1 advances 1 square, Card 2 advances 2 squares. Total forward distance: 3 squares. Drive costs: Left $1+2 = 3$, Right $1+2 = 3$.
 
 \vspace{0.3em}
-\noindent\textbf{2. Curved Flank (\texttt{45 R} $\rightarrow$ \texttt{1F} $\rightarrow$ \texttt{45 R}):}\\
-Card 1 turns $45^\circ$ CW around the pinned right wheel. Card 2 advances 1 square along the new diagonal heading. Card 3 turns another $45^\circ$ CW around the right wheel. The robot completes a smooth $90^\circ$ right arc. Drive costs: Left $1+1+1 = 3$, Right $0+1+0 = 1$.
+\noindent\textbf{2. Curved Flank (\texttt{45 R} $\rightarrow$ \texttt{1F}):}\\
+Card 1 turns $45^\circ$ CW around the pinned right wheel. Card 2 advances 1 square along the new diagonal heading. Drive costs: Left $1+1 = 2$, Right $0+1 = 1$.
 
 \vspace{0.3em}
-\noindent\textbf{3. Tactical Reposition (\texttt{90 PR} $\rightarrow$ \texttt{1F} $\rightarrow$ \texttt{Wait}):}\\
-Card 1 pivots $90^\circ$ CW on the spot. Card 2 drives forward 1 square into the flank. Card 3 holds position. Drive costs: Left $1+1+0 = 2$, Right $1+1+0 = 2$.
+\noindent\textbf{3. Tactical Reposition (\texttt{90 PR} $\rightarrow$ \texttt{1F}):}\\
+Card 1 pivots $90^\circ$ CW on the spot. Card 2 drives forward 1 square into the flank. Drive costs: Left $1+1 = 2$, Right $1+1 = 2$.
 
 \begin{figure}[H]
   \centering
@@ -868,43 +860,34 @@ Card 1 pivots $90^\circ$ CW on the spot. Card 2 drives forward 1 square into the
     \gridNode[fill=white, draw=amberNote!90!black, font=\fontsize{6}{7}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{4.5}{2.2}{Pivot $45^\circ$}
 
     % ROW 2: ACTION CARD SEQUENCE
-    \node[font=\scriptsize\bfseries, text=primaryDark, anchor=west] at (0.4, 3.60) {D. Action Card Sequence Example (\texttt{45 R} $\rightarrow$ \texttt{1F} $\rightarrow$ \texttt{45 R}: Costs L:3, R:1)};
+    \node[font=\scriptsize\bfseries, text=primaryDark, anchor=west] at (0.4, 3.60) {D. Action Card Sequence Example (\texttt{45 R} $\rightarrow$ \texttt{1F}: Costs L:2, R:1)};
     \setGrid{0.5}{0.40}{0.52}
     \gridDraw{0}{0}{28}{5}
 
     % Step indicators on grid across the 28-cell width
-    % Start: Facing North at gx=3, gy=2
-    \gridSquareFootprint{3}{2}
-    \gridSquare[blue]{3}{2}{0}
-    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{3}{0.5}{Start}
+    % Start: Facing North at gx=4, gy=2
+    \gridSquareFootprint{4}{2}
+    \gridSquare[blue]{4}{2}{0}
+    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{4}{0.5}{Start}
 
     % Arrow 1
-    \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=arenaRed] \gridPt{5.2}{2.5} -- \gridPt{8.0}{2.5};
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{6.6}{3.3}{1. Card 1: \texttt{45 R}}
+    \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=arenaRed] \gridPt{6.5}{2.5} -- \gridPt{11.5}{2.5};
+    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{9.0}{3.3}{1. Card 1: \texttt{45 R}}
 
-    % Step 1: Turn 45 CW -> heading NE at gx=10, gy=2
-    \gridSquareFootprint{10}{2}
-    \gridSquare[ghost]{10}{2}{0}
-    \gridSquare[blue]{10}{2}{45}
-    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{10}{0.5}{Heading NE}
+    % Step 1: Turn 45 CW -> heading NE at gx=14, gy=2
+    \gridSquareFootprint{14}{2}
+    \gridSquare[ghost]{14}{2}{0}
+    \gridSquare[blue]{14}{2}{45}
+    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{14}{0.5}{Heading NE}
 
     % Arrow 2
-    \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=accentBlue] \gridPt{12.2}{2.5} -- \gridPt{15.0}{2.5};
-    \gridNode[fill=accentBlue, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{13.6}{3.3}{2. Card 2: \texttt{1F}}
+    \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=accentBlue] \gridPt{16.5}{2.5} -- \gridPt{21.5}{2.5};
+    \gridNode[fill=accentBlue, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{19.0}{3.3}{2. Card 2: \texttt{1F}}
 
-    % Step 2: Fwd 1 NE -> at gx=17, gy=3 heading NE
-    \gridSquareFootprint{17}{3}
-    \gridSquare[blue]{17}{3}{45}
-    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=textDark]{17}{0.5}{Adv. 1 Diagonal}
-
-    % Arrow 3
-    \draw[-{Stealth[length=2.2mm]}, line width=1.5pt, draw=arenaRed] \gridPt{19.2}{2.5} -- \gridPt{22.0}{2.5};
-    \gridNode[fill=arenaRed, text=white, font=\fontsize{5.5}{6.5}\selectfont\bfseries, rounded corners=1pt, inner sep=1.5pt]{20.6}{3.3}{3. Card 3: \texttt{45 R}}
-
-    % Step 3: Turn 45 CW -> heading East at gx=24, gy=3
+    % Step 2: Fwd 1 NE -> at gx=24, gy=3 heading NE
     \gridSquareFootprint{24}{3}
-    \gridSquare[blue]{24}{3}{90}
-    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=green!60!black]{24}{0.5}{Finish: $90^\circ$ East}
+    \gridSquare[blue]{24}{3}{45}
+    \gridNode[font=\fontsize{5.5}{6.5}\selectfont\bfseries, text=green!60!black]{24}{0.5}{Finish: Adv. 1 Diagonal}
 
   \end{tikzpicture}%
   }
@@ -1495,8 +1478,8 @@ The possible actions are as follows:
   \item \textbf{Retreat:} They face towards their opponent and move backwards 1 step.
   \item \textbf{Evade:} Move forwards and perpendicular to the line between the robots. If both directions are clear, choose at random.
 \end{itemize}
-From this you can determine the 3 action cards that they will choose (for each they consider the current position of their opponent within their available drive capacity). 
-Roll this after deciding your own 3 action cards.
+From this you can determine the 2 action cards that they will choose (for each they consider the current position of their opponent within their available drive capacity). 
+Roll this after deciding your own 2 action cards.
 
 \vspace{0.3em}
 \noindent\textbf{Automaton Power Allocation:}\\

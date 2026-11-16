@@ -236,9 +236,9 @@ def simulate_action_plan_final_pose(
     cards: List[str],
     chassis_template: str = "Square",
 ) -> Pose:
-    """Simulates the final pose resulting from executing a 3-card Action Plan."""
+    """Simulates the final pose resulting from executing a 2-card Action Plan."""
     curr = start_pose.clone()
-    for card in cards[:3]:
+    for card in cards[:2]:
         steps = get_action_card_steps(card, chassis_template=chassis_template)
         for step in steps:
             curr = apply_movement_step(curr, step, clamp_to_walls=True, chassis_template=chassis_template)
@@ -247,9 +247,9 @@ def simulate_action_plan_final_pose(
 
 
 def _enforce_drive_budget(cards: List[str], max_l: int, max_r: int) -> List[str]:
-    """Ensures a 3-card plan does not exceed the available drive budget."""
-    clean = list(cards[:3])
-    while len(clean) < 3:
+    """Ensures a 2-card plan does not exceed the available drive budget."""
+    clean = list(cards[:2])
+    while len(clean) < 2:
         clean.append("Wait")
 
     cur_l = sum((get_action_card(c) or {}).get("left", 0) for c in clean)
@@ -296,7 +296,7 @@ def compute_automaton_action_plan(
     evade_direction: Optional[str] = None,
 ) -> MoveChoice:
     """
-    Selects 3 movement Action Cards to execute the chosen automaton action
+    Selects 2 movement Action Cards to execute the chosen automaton action
     (Rush, Face, Retreat, Evade) considering the opponent's current position.
     - Evade: Turns to face the clear normal (perpendicular to player) and moves away along it.
     - Face: Rotates on the spot to face the opponent.
@@ -357,89 +357,89 @@ def compute_automaton_action_plan(
         # Turn to face chosen_normal and move away
         if abs(turn_diff) <= 22.5:
             # Already facing normal: move forwards away along normal
-            cards = ["1F", "1F", "1F"] if max_l >= 3 and max_r >= 3 else (["2 F", "Wait", "Wait"] if max_l >= 2 and max_r >= 2 else ["1F", "Wait", "Wait"])
+            cards = ["2 F", "1F"] if max_l >= 3 and max_r >= 3 else (["1F", "1F"] if max_l >= 2 and max_r >= 2 else ["1F", "Wait"])
         elif 22.5 < turn_diff <= 67.5:
-            cards = ["45 R", "1F", "1F"]
+            cards = ["45 R", "1F"]
         elif -67.5 <= turn_diff < -22.5:
-            cards = ["45 L", "1F", "1F"]
+            cards = ["45 L", "1F"]
         elif 67.5 < turn_diff <= 112.5:
             turn_card = "90 PR" if (max_l >= 1 and max_r >= 1) else "90 R"
-            cards = [turn_card, "1F", "1F"]
+            cards = [turn_card, "1F"]
         elif -112.5 <= turn_diff < -67.5:
             turn_card = "90 PL" if (max_l >= 1 and max_r >= 1) else "90 L"
-            cards = [turn_card, "1F", "1F"]
+            cards = [turn_card, "1F"]
         else:
             # Turn > 112.5 deg to face normal
             turn_card = "90 PR" if turn_diff > 0 else "90 PL"
             second_turn = "45 R" if turn_diff > 0 else "45 L"
-            cards = [turn_card, second_turn, "1F"]
+            cards = [turn_card, second_turn]
 
     elif action == "Face":
         # Face: Rotate on the spot to face their opponent
         if abs(rel_bearing_deg) <= 22.5:
-            cards = ["Wait", "Wait", "Wait"]
+            cards = ["Wait", "Wait"]
         elif 22.5 < rel_bearing_deg <= 67.5:
-            cards = ["45 R", "Wait", "Wait"]
+            cards = ["45 R", "Wait"]
         elif -67.5 <= rel_bearing_deg < -22.5:
-            cards = ["45 L", "Wait", "Wait"]
+            cards = ["45 L", "Wait"]
         elif 67.5 < rel_bearing_deg <= 112.5:
             turn_card = "90 PR" if (max_l >= 1 and max_r >= 1) else "90 R"
-            cards = [turn_card, "Wait", "Wait"]
+            cards = [turn_card, "Wait"]
         elif -112.5 <= rel_bearing_deg < -67.5:
             turn_card = "90 PL" if (max_l >= 1 and max_r >= 1) else "90 L"
-            cards = [turn_card, "Wait", "Wait"]
+            cards = [turn_card, "Wait"]
         elif 112.5 < rel_bearing_deg <= 157.5:
             turn_card = "90 PR" if (max_l >= 1 and max_r >= 1) else "90 R"
-            cards = [turn_card, "45 R", "Wait"]
+            cards = [turn_card, "45 R"]
         elif -157.5 <= rel_bearing_deg < -112.5:
             turn_card = "90 PL" if (max_l >= 1 and max_r >= 1) else "90 L"
-            cards = [turn_card, "45 L", "Wait"]
+            cards = [turn_card, "45 L"]
         else:
             # Currently facing away: rotate 180 degrees to face opponent
             turn_card = "90 PR" if (max_l >= 1 and max_r >= 1) else "90 R"
-            cards = [turn_card, turn_card, "Wait"]
+            cards = [turn_card, turn_card]
 
     elif action == "Retreat":
         # Retreat: Move away from opponent while facing them
         if abs(rel_bearing_deg) <= 22.5:
             # Facing opponent: reverse away from them
-            cards = ["1 B", "Wait", "Wait"]
+            cards = ["1 B", "Wait"]
         elif 22.5 < rel_bearing_deg <= 67.5:
-            cards = ["45 R", "1 B", "Wait"]
+            cards = ["45 R", "1 B"]
         elif -67.5 <= rel_bearing_deg < -22.5:
-            cards = ["45 L", "1 B", "Wait"]
+            cards = ["45 L", "1 B"]
         elif 67.5 < rel_bearing_deg <= 112.5:
             turn_card = "90 PR" if (max_l >= 1 and max_r >= 1) else "90 R"
-            cards = [turn_card, "1 B", "Wait"]
+            cards = [turn_card, "1 B"]
         elif -112.5 <= rel_bearing_deg < -67.5:
             turn_card = "90 PL" if (max_l >= 1 and max_r >= 1) else "90 L"
-            cards = [turn_card, "1 B", "Wait"]
+            cards = [turn_card, "1 B"]
         else:
             # Large angle: turn towards opponent, then reverse
             turn_card = "90 PR" if rel_bearing_deg > 0 else "90 PL"
-            cards = [turn_card, turn_card, "1 B"]
+            cards = [turn_card, "1 B"]
 
     elif action == "Rush":
         # Rush: Drive at the opponent at full speed (turning towards opponent as required)
         if abs(rel_bearing_deg) <= 22.5:
-            cards = ["2 F", "1F", "Wait"] if max_l >= 3 and max_r >= 3 else (["2 F", "Wait", "Wait"] if max_l >= 2 and max_r >= 2 else ["1F", "Wait", "Wait"])
+            cards = ["2 F", "1F"] if max_l >= 3 and max_r >= 3 else (["2 F", "Wait"] if max_l >= 2 and max_r >= 2 else ["1F", "Wait"])
         elif 22.5 < rel_bearing_deg <= 67.5:
-            cards = ["45 R", "1F", "1F"]
+            cards = ["45 R", "1F"]
         elif -67.5 <= rel_bearing_deg < -22.5:
-            cards = ["45 L", "1F", "1F"]
+            cards = ["45 L", "1F"]
         elif 67.5 < rel_bearing_deg <= 112.5:
             turn_card = "90 PR" if (max_l >= 1 and max_r >= 1) else "90 R"
-            cards = [turn_card, "1F", "1F"]
+            cards = [turn_card, "1F"]
         elif -112.5 <= rel_bearing_deg < -67.5:
             turn_card = "90 PL" if (max_l >= 1 and max_r >= 1) else "90 L"
-            cards = [turn_card, "1F", "1F"]
+            cards = [turn_card, "1F"]
         else:
             turn_card = "90 PR" if rel_bearing_deg > 0 else "90 PL"
             turn_card2 = "45 R" if rel_bearing_deg > 0 else "45 L"
-            cards = [turn_card, turn_card2, "1F"]
+            cards = [turn_card, turn_card2]
 
     else:
-        cards = ["Wait", "Wait", "Wait"]
+        cards = ["Wait", "Wait"]
 
     # Enforce active drive budget
     cards = _enforce_drive_budget(cards, max_l, max_r)

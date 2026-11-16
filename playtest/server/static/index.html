@@ -190,13 +190,13 @@
           </svg>
         </div>
 
-        <!-- Turn Planning Dock: 3 Action Cards Interface -->
+        <!-- Turn Planning Dock: 2 Action Cards Interface -->
         <div class="turn-planning-dock">
           <!-- Dock Header with Drive Budget Meters -->
           <div class="planning-header">
             <div class="planning-title-col">
-              <h3>🧭 Planning Phase: 3 Action Cards</h3>
-              <span class="planning-hint">Select 3 Action Cards for this round. Guaranteed base drive of 1 each side even if damaged.</span>
+              <h3>🧭 Planning Phase: 2 Action Cards</h3>
+              <span class="planning-hint">Select 2 Action Cards for this round. Guaranteed base drive of 1 each side even if damaged.</span>
             </div>
             <div class="drive-budget-container">
               <div class="budget-meter-pill" id="budget-pill-left">
@@ -229,7 +229,7 @@
             <div class="shortfall-components-list" id="shortfall-components-list"></div>
           </div>
 
-          <!-- 3 Selected Action Card Slots -->
+          <!-- 2 Selected Action Card Slots -->
           <div class="action-card-slots-row" id="action-card-slots">
             <div class="action-slot-card active" data-slot="0">
               <div class="slot-badge">ACTION 1</div>
@@ -256,25 +256,12 @@
               </div>
               <button class="btn-clear-slot" title="Clear slot (Set to Wait)">×</button>
             </div>
-
-            <div class="action-slot-card" data-slot="2">
-              <div class="slot-badge">ACTION 3</div>
-              <div class="slot-card-preview">
-                <img class="slot-card-img" src="/CardImages/Action_Wait.png" alt="Wait" onerror="this.style.display='none'">
-                <div class="slot-card-code">Wait</div>
-              </div>
-              <div class="slot-card-info">
-                <div class="slot-card-name">Wait / Stationary</div>
-                <div class="slot-card-cost">L: 0 • R: 0</div>
-              </div>
-              <button class="btn-clear-slot" title="Clear slot (Set to Wait)">×</button>
-            </div>
           </div>
 
           <!-- Tactical Presets -->
           <div class="presets-row">
             <span class="preset-label">Tactics:</span>
-            <button class="btn-preset" data-preset="rush">⬆️ Full Rush (3 F)</button>
+            <button class="btn-preset" data-preset="rush">⬆️ Full Rush (2 F / 3 F)</button>
             <button class="btn-preset" data-preset="advance-pivot">🛡️ Advance & Pivot</button>
             <button class="btn-preset" data-preset="turn-right">↪️ Turn Right (90 R)</button>
             <button class="btn-preset" data-preset="turn-left">↩️ Turn Left (90 L)</button>
@@ -303,7 +290,7 @@
           <!-- Execute Button -->
           <div class="execute-row">
             <button id="btn-execute-turn" class="btn btn-big btn-primary">
-              🚀 Lock in 3 Cards & Execute Turn
+              🚀 Lock in 2 Cards & Execute Turn
             </button>
           </div>
         </div>

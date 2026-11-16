@@ -15,8 +15,8 @@ class PlaytestApp {
     this.builderController = null;
     this.activeTab = "arena";
 
-    // 3 Action Cards planning state
-    this.selectedCards = ["Wait", "Wait", "Wait"];
+    // 2 Action Cards planning state
+    this.selectedCards = ["Wait", "Wait"];
     this.activeSlotIndex = 0;
     this.actionCardsList = [];
     this.actionCardsMap = new Map();
@@ -181,12 +181,12 @@ class PlaytestApp {
   _selectDrawerCard(cardCode) {
     this.selectedCards[this.activeSlotIndex] = cardCode;
     // Advance to next slot in sequence
-    this.activeSlotIndex = (this.activeSlotIndex + 1) % 3;
+    this.activeSlotIndex = (this.activeSlotIndex + 1) % 2;
     this._updateTurnPlanningControls();
   }
 
   _bindActionPlanningControls() {
-    // 3 Slot card selections & clear buttons
+    // 2 Slot card selections & clear buttons
     this.slotCards.forEach((slotEl) => {
       const slotIdx = parseInt(slotEl.dataset.slot, 10);
       slotEl.addEventListener("click", (e) => {
@@ -223,30 +223,30 @@ class PlaytestApp {
         switch (preset) {
           case "rush":
             if (maxFwd >= 3) {
-              this.selectedCards = ["3 F", "Wait", "Wait"];
+              this.selectedCards = ["3 F", "Wait"];
             } else if (maxFwd >= 2) {
-              this.selectedCards = ["2 F", "Wait", "Wait"];
+              this.selectedCards = ["2 F", "Wait"];
             } else if (maxFwd >= 1) {
-              this.selectedCards = ["1F", "Wait", "Wait"];
+              this.selectedCards = ["1F", "Wait"];
             } else {
-              this.selectedCards = ["Wait", "Wait", "Wait"];
+              this.selectedCards = ["Wait", "Wait"];
             }
             break;
           case "advance-pivot":
-            this.selectedCards = ["1F", "90 PR", "Wait"];
+            this.selectedCards = ["1F", "90 PR"];
             break;
           case "turn-right":
-            this.selectedCards = ["90 R", "Wait", "Wait"];
+            this.selectedCards = ["90 R", "Wait"];
             break;
           case "turn-left":
-            this.selectedCards = ["90 L", "Wait", "Wait"];
+            this.selectedCards = ["90 L", "Wait"];
             break;
           case "spin-180":
-            this.selectedCards = ["180 P", "Wait", "Wait"];
+            this.selectedCards = ["180 P", "Wait"];
             break;
           case "wait":
           case "clear":
-            this.selectedCards = ["Wait", "Wait", "Wait"];
+            this.selectedCards = ["Wait", "Wait"];
             break;
         }
         this.activeSlotIndex = 0;
@@ -393,7 +393,7 @@ class PlaytestApp {
     }
 
     this.btnExecuteTurn.disabled = true;
-    this.btnExecuteTurn.textContent = "⚙️ Executing 3 Action Cards...";
+    this.btnExecuteTurn.textContent = "⚙️ Executing 2 Action Cards...";
     this.arenaRenderer.clearPlanningPreview();
 
     let totalL = 0;
@@ -435,7 +435,7 @@ class PlaytestApp {
     } catch (err) {
       alert("Turn failed: " + err.message);
       this.btnExecuteTurn.disabled = false;
-      this.btnExecuteTurn.textContent = "🚀 Lock in 3 Cards & Execute Turn";
+      this.btnExecuteTurn.textContent = "🚀 Lock in 2 Cards & Execute Turn";
     }
   }
 
@@ -667,7 +667,7 @@ class PlaytestApp {
       this.budgetBarRight.classList.toggle("budget-over", totalR > maxR);
     }
 
-    // Update 3 Slot Displays
+    // Update 2 Slot Displays
     this.slotCards.forEach((slotEl, idx) => {
       const code = this.selectedCards[idx] || "Wait";
       const card = this.actionCardsMap.get(code) || {
@@ -722,7 +722,7 @@ class PlaytestApp {
         if (isOverBudget) {
           this.btnExecuteTurn.textContent = `⚠️ Over Drive Budget (L: ${totalL}/${maxL}, R: ${totalR}/${maxR})`;
         } else {
-          this.btnExecuteTurn.textContent = "🚀 Lock in 3 Cards & Execute Turn";
+          this.btnExecuteTurn.textContent = "🚀 Lock in 2 Cards & Execute Turn";
         }
       }
     }

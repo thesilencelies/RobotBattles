@@ -77,8 +77,8 @@ def decode_ws_frame(sock):
 class TestBrowserUI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server_port = 8016
-        cls.chrome_port = 9236
+        cls.server_port = 8018
+        cls.chrome_port = 9240
         cls.repo_dir = Path(__file__).resolve().parent.parent.parent
 
         cls.server_proc = subprocess.Popen(
@@ -95,7 +95,7 @@ class TestBrowserUI(unittest.TestCase):
                 "--no-sandbox",
                 "--disable-gpu",
                 f"--remote-debugging-port={cls.chrome_port}",
-                "--user-data-dir=/tmp/chrome_test_ui2",
+                f"--user-data-dir=/tmp/chrome_test_ui_{os.getpid()}",
                 "about:blank",
             ],
             stdout=subprocess.DEVNULL,
@@ -103,7 +103,7 @@ class TestBrowserUI(unittest.TestCase):
         )
 
         # Wait for Chrome DevTools
-        for _ in range(30):
+        for _ in range(50):
             time.sleep(0.2)
             try:
                 with urllib.request.urlopen(f"http://127.0.0.1:{cls.chrome_port}/json/version", timeout=1):
@@ -312,7 +312,7 @@ class TestBrowserUI(unittest.TestCase):
         slot1_code = self.js_eval("document.querySelector(\".action-slot-card[data-slot='1'] .slot-card-code\").textContent")
         self.assertEqual(slot1_code, "Wait")
 
-        # 5. Execute Turn with 3 Action Cards
+        # 5. Execute Turn with 2 Action Cards
         self.js_eval("document.getElementById('btn-execute-turn').click()")
         round_after = ""
         for _ in range(50):
@@ -501,12 +501,12 @@ class TestBrowserUI(unittest.TestCase):
         footprints_count = self.js_eval("document.querySelectorAll('#layer-footprints .bot-footprint').length")
         self.assertEqual(footprints_count, 2, "Both robots should have discrete snapped footprints")
 
-        # 2. Test 3-card Action Plan Preview (e.g. 1F, 90 R, Wait)
+        # 2. Test 2-card Action Plan Preview (e.g. 1F, 90 R)
         preview_res = {}
         for _ in range(30):
             preview_res = self.js_eval("""
             (async () => {
-              window.app.selectedCards = ["1F", "90 R", "Wait"];
+              window.app.selectedCards = ["1F", "90 R"];
               await window.app._updatePlanningPreview();
               const ghostFootprints = document.querySelectorAll("#layer-templates .action-preview-footprint");
               const ghostPath = document.querySelector("#layer-ghosts path");

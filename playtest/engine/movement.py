@@ -340,13 +340,13 @@ def validate_action_plan(
     cards: List[str], active_left: int, active_right: int
 ) -> Tuple[bool, str, int, int]:
     """
-    Validates a 3-card plan against active drive capacity.
+    Validates a 2-card plan against active drive capacity.
     Rule: sum(Left Costs) <= max(1, active_left) and sum(Right Costs) <= max(1, active_right).
     Guaranteed Base Drive: Robots always have at least 1 drive on each side.
     Returns (is_valid, error_message, total_left_cost, total_right_cost).
     """
-    if len(cards) != 3:
-        return (False, f"Exactly 3 action cards required, got {len(cards)}.", 0, 0)
+    if len(cards) != 2:
+        return (False, f"Exactly 2 action cards required, got {len(cards)}.", 0, 0)
 
     total_l = 0
     total_r = 0
@@ -466,57 +466,57 @@ def get_action_card_steps(code: str, chassis_template: str = "Square") -> List[D
 
 def synthesize_cards_from_drive(left: int, right: int) -> List[str]:
     """
-    Synthesizes a 3-card Action Plan from a (left, right) drive pair for backward compatibility.
+    Synthesizes a 2-card Action Plan from a (left, right) drive pair for backward compatibility.
     """
     l_val = int(left)
     r_val = int(right)
 
     if l_val == 0 and r_val == 0:
-        return ["Wait", "Wait", "Wait"]
+        return ["Wait", "Wait"]
 
     if l_val == r_val:
         if l_val > 0:
             k = min(3, l_val)
             card1 = "1F" if k == 1 else f"{k} F"
-            rem = l_val - k
+            rem = min(3, l_val - k)
             card2 = "1F" if rem == 1 else (f"{rem} F" if rem > 1 else "Wait")
-            return [card1, card2, "Wait"]
+            return [card1, card2]
         else:
             k = min(3, abs(l_val))
             card1 = f"{k} B"
-            rem = abs(l_val) - k
+            rem = min(3, abs(l_val) - k)
             card2 = f"{rem} B" if rem > 0 else "Wait"
-            return [card1, card2, "Wait"]
+            return [card1, card2]
 
     if l_val > 0 and r_val == 0:
         if l_val == 1:
-            return ["45 R", "Wait", "Wait"]
+            return ["45 R", "Wait"]
         elif l_val == 2:
-            return ["90 R", "Wait", "Wait"]
+            return ["90 R", "Wait"]
         else:
-            return ["90 R", "45 R", "Wait"]
+            return ["90 R", "45 R"]
 
     if l_val == 0 and r_val > 0:
         if r_val == 1:
-            return ["45 L", "Wait", "Wait"]
+            return ["45 L", "Wait"]
         elif r_val == 2:
-            return ["90 L", "Wait", "Wait"]
+            return ["90 L", "Wait"]
         else:
-            return ["90 L", "45 L", "Wait"]
+            return ["90 L", "45 L"]
 
     if l_val > 0 and r_val < 0:
-        return ["90 PR", "Wait", "Wait"] if min(l_val, abs(r_val)) == 1 else ["180 P", "Wait", "Wait"]
+        return ["90 PR", "Wait"] if min(l_val, abs(r_val)) == 1 else ["180 P", "Wait"]
 
     if l_val < 0 and r_val > 0:
-        return ["90 PL", "Wait", "Wait"] if min(abs(l_val), r_val) == 1 else ["180 P", "Wait", "Wait"]
+        return ["90 PL", "Wait"] if min(abs(l_val), r_val) == 1 else ["180 P", "Wait"]
 
     # Curve forward
     if l_val > r_val and r_val > 0:
-        return ["45 R", "1F", "Wait"]
+        return ["45 R", "1F"]
     if r_val > l_val and l_val > 0:
-        return ["45 L", "1F", "Wait"]
+        return ["45 L", "1F"]
 
-    return ["Wait", "Wait", "Wait"]
+    return ["Wait", "Wait"]
 
 
 def list_template_options(left_max: int, right_max: int) -> List[Dict[str, Any]]:
@@ -1035,13 +1035,13 @@ def generate_action_plan_trajectory(
     chassis_template: str = "Square",
 ) -> Tuple[List[TrajectoryPoint], List[Dict[str, Any]]]:
     """
-    Computes discrete trajectories and per-action step breakdowns for 3 Action Cards.
+    Computes discrete trajectories and per-action step breakdowns for 2 Action Cards.
     Returns (all_trajectory_points, action_details).
     """
     clean_cards = [normalize_action_code(c) for c in cards]
-    while len(clean_cards) < 3:
+    while len(clean_cards) < 2:
         clean_cards.append("Wait")
-    clean_cards = clean_cards[:3]
+    clean_cards = clean_cards[:2]
 
     curr = start_pose.clone()
     all_points: List[TrajectoryPoint] = [
@@ -1049,7 +1049,7 @@ def generate_action_plan_trajectory(
     ]
     action_details: List[Dict[str, Any]] = []
 
-    total_actions = 3
+    total_actions = 2
     for act_idx, code in enumerate(clean_cards):
         act_start = curr.clone()
         steps = get_action_card_steps(code, chassis_template=chassis_template)

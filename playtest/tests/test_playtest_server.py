@@ -173,18 +173,18 @@ class TestPlaytestServer(unittest.TestCase):
         }).encode("utf-8")
         self.router.dispatch("POST", "/api/battle/new", {}, new_payload)
 
-        # Submit turn with 3 action cards
+        # Submit turn with 2 action cards
         turn_payload = json.dumps({
-            "cards": ["1F", "45 R", "Wait"],
+            "cards": ["1F", "45 R"],
             "left": 2,
             "right": 1,
         }).encode("utf-8")
         res = self.router.dispatch("POST", "/api/battle/turn", {}, turn_payload)
         self.assertEqual(res.status, 200)
         match_data = json.loads(res.body.decode("utf-8"))["match"]
-        self.assertEqual(match_data["player_action_cards"], ["1F", "45 R", "Wait"])
+        self.assertEqual(match_data["player_action_cards"], ["1F", "45 R"])
         self.assertIn("automaton_action_cards", match_data)
-        self.assertEqual(len(match_data["automaton_action_cards"]), 3)
+        self.assertEqual(len(match_data["automaton_action_cards"]), 2)
         self.assertIn("action_step_results", match_data)
 
 
