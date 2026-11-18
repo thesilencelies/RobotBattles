@@ -1430,7 +1430,7 @@ def _resolve_single_weapon_attack(
     Adheres to:
     - Multi-component contact: each contacted component is damaged, and throw strength received is the maximum transferred.
     - Overhead: targets Titanium Top Plate or random component along contact line, causes no throw.
-    - Double absorption on Wedge (unless inverted or raised).
+    - Double absorption on Wedge (unless inverted).
     - Destroyed component absorbs durability instead of absorption.
     """
     # Rule: weapons that have reset cannot attack while they are inactive due to reset, nor if already used
@@ -1553,32 +1553,35 @@ def _resolve_single_weapon_attack(
                     message=msg,
                 ))
 
-        # Base throw strength = attack damage minus absorption of hit component (minimum 0)
+        # Base throw strength calculation:
+        # Rule: Any additions/bonuses to throw strength are added, and then absorption of the hit component reduces throw strength (minimum 0).
         # Rule: If a component is destroyed, it absorbs damage equal to its durability instead of its absorption.
-        # Rule: Wedge has double absorption against weapon contact (does not work while inverted or raised).
+        # Rule: Wedge has double absorption against weapon contact (does not work while inverted). Wedges are not cancelled while raised.
         is_wedge = False
         if t_comp.is_destroyed:
             eff_abs = t_comp.max_durability
         else:
-            is_wedge = t_comp.is_wedge and (not defender.is_inverted or t_comp.is_invertible) and not defender.is_raised
+            is_wedge = t_comp.is_wedge and (not defender.is_inverted or t_comp.is_invertible)
             if t_comp.is_wedge and (defender.is_inverted and not t_comp.is_invertible):
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
                     message=f"🛡️ {defender.name}'s {t_comp.name} was hit, but does not function while INVERTED!",
                 ))
-            elif t_comp.is_wedge and defender.is_raised:
-                logs.append(CombatLogEntry(
-                    round=round_num, phase="collision",
-                    message=f"🛡️ {defender.name}'s {t_comp.name} was hit, but does not double absorption while RAISED!",
-                ))
             eff_abs = t_comp.absorption * 2 if is_wedge else t_comp.absorption
 
-        comp_throw = max(0, atk_str - eff_abs)
-        if eff_abs > 0 and atk_str > 0:
+        raw_throw = atk_str
+        m_throw = re.search(r"increase[s]?\s+throw\s+strength\s+by\s+(\d+)", weapon.text, re.IGNORECASE)
+        if m_throw:
+            raw_throw += int(m_throw.group(1))
+        elif "double the throw strength" in weapon.text.lower():
+            raw_throw *= 2
+
+        comp_throw = max(0, raw_throw - eff_abs)
+        if eff_abs > 0 and raw_throw > 0:
             if is_wedge:
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"🛡️ {defender.name}'s Wedge was hit — double absorption ({eff_abs} vs attack {atk_str}) reduces base throw strength to {comp_throw}!",
+                    message=f"🛡️ {defender.name}'s Wedge was hit — double absorption ({eff_abs} vs throw {raw_throw}) reduces throw strength to {comp_throw}!",
                 ))
                 if comp_throw == 0:
                     logs.append(CombatLogEntry(
@@ -1588,14 +1591,8 @@ def _resolve_single_weapon_attack(
             else:
                 logs.append(CombatLogEntry(
                     round=round_num, phase="collision",
-                    message=f"  [Absorption] {t_comp.name} absorbs {eff_abs} to reduce base throw strength (was {atk_str}, now {comp_throw}).",
+                    message=f"  [Absorption] {t_comp.name} absorbs {eff_abs} to reduce throw strength (was {raw_throw}, now {comp_throw}).",
                 ))
-
-        m_throw = re.search(r"increase[s]?\s+throw\s+strength\s+by\s+(\d+)", weapon.text, re.IGNORECASE)
-        if m_throw:
-            comp_throw += int(m_throw.group(1))
-        elif "double the throw strength" in weapon.text.lower():
-            comp_throw *= 2
 
         comp_throw_strs.append(comp_throw)
 
@@ -1775,7 +1772,7 @@ def resolve_collision_combat(
     r2_forks_lift = r2_forks_in_line
 
     # Check Ground Game: Wedge keyword (applies to both active and inert contact)
-    # Rule: "If this component makes contact, the opponent becomes raised for this contact and this component has double absorption against weapon contact (does not work while inverted or raised)"
+    # Rule: "If this component makes contact, the opponent becomes raised for this contact and this component has double absorption against weapon contact (does not work while inverted)"
     r1_wedge_in_contact = any(
         cid in r1.components
         and r1.components[cid].is_wedge
@@ -1815,19 +1812,8 @@ def resolve_collision_combat(
             message=f"🛡️ {r2.name}'s Wedge made contact, but does not function while INVERTED!",
         ))
 
-    if r1_wedge_in_contact and r1.is_raised:
-        logs.append(CombatLogEntry(
-            round=round_num, phase="collision",
-            message=f"🛡️ {r1.name}'s Wedge made contact, but does not function while RAISED!",
-        ))
-    if r2_wedge_in_contact and r2.is_raised:
-        logs.append(CombatLogEntry(
-            round=round_num, phase="collision",
-            message=f"🛡️ {r2.name}'s Wedge made contact, but does not function while RAISED!",
-        ))
-
-    r1_wedge_lift = r1_wedge_in_contact and not r1.is_raised
-    r2_wedge_lift = r2_wedge_in_contact and not r2.is_raised
+    r1_wedge_lift = r1_wedge_in_contact
+    r2_wedge_lift = r2_wedge_in_contact
 
     r1_would_raise_r2 = r1_forks_lift or r1_wedge_lift
     r2_would_raise_r1 = r2_forks_lift or r2_wedge_lift

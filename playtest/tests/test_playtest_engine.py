@@ -639,9 +639,10 @@ class TestPlaytestEngine(unittest.TestCase):
             r2_active_hit=True,
         )
         logs = resolve_collision_combat(col, p_bot, a_bot, 1)
-        # Wedge was hit: Wedge loses double absorption while RAISED, and raised robot receives +2 throw strength!
-        self.assertTrue(any("does not double absorption while RAISED" in entry.message for entry in logs))
-        self.assertTrue(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
+        # Wedge was hit: Wedge retains double absorption while RAISED (8 abs vs 6 throw -> 0 throw strength -> not thrown!)
+        self.assertFalse(any("does not double absorption while RAISED" in entry.message for entry in logs))
+        self.assertTrue(any("double absorption (8 vs throw 6) reduces throw strength to 0!" in entry.message for entry in logs))
+        self.assertFalse(any(f"{p_bot.name} is THROWN" in entry.message for entry in logs))
 
     def test_wedge_does_not_work_when_inverted(self):
         """Tests that wedges do not prevent throws while inverted unless the component is invertible."""
@@ -3821,6 +3822,119 @@ class TestPlaytestEngine(unittest.TestCase):
         )
         self.assertNotIn("hs1", hit_weapon)
         self.assertIn("ch1", hit_weapon)
+
+    def test_absorption_applied_after_throw_strength_bonus(self):
+        """
+        Rule: Absorption is applied after bonuses to throw strength.
+        Base attack 4, 'Increases throw strength by 2' -> total throw before absorption is 6.
+        Absorption 4 -> net throw strength 2 (takes throw damage 2).
+        Absorption 6 -> net throw strength 0 (no throw, no throw damage).
+        """
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent, Pose
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        p_bot.pose = Pose(x=400.0, y=410.0, theta=0.0)
+        a_bot.pose = Pose(x=400.0, y=380.0, theta=180.0)
+
+        w_comp = [c for c in p_bot.components.values() if c.card_type == "weapon"][0]
+        w_comp.outputs = "4W"
+        w_comp.keywords = "Spin up (2)"
+        w_comp.text = "Increases throw strength by 2"
+        w_comp.is_active = True
+        p_bot.weapon_spin_counters[w_comp.id] = 1
+
+        for c in a_bot.components.values():
+            c.max_durability = 10
+            c.current_durability = 10
+            c.absorption = 0
+        target_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge and ("wheel" in c.name.lower() or "tire" in c.name.lower())][0]
+
+        # Case 1: absorption = 4 -> 4 attack + 2 throw bonus = 6; 6 - 4 abs = 2 throw strength
+        a_bot.components[target_cid].absorption = 4
+        col1 = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[target_cid],
+            contact_type="ACTIVE",
+            description="Active strike into wheel with abs 4",
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+        logs1 = resolve_collision_combat(col1, p_bot, a_bot, round_num=1)
+        log_msgs1 = [l.message for l in logs1]
+        self.assertTrue(any("THROWN! (Strength 2" in m for m in log_msgs1))
+
+        # Case 2: absorption = 6 -> 4 attack + 2 throw bonus = 6; 6 - 6 abs = 0 throw strength (no throw)
+        w_comp.was_used_this_turn = False
+        p_bot.weapon_spin_counters[w_comp.id] = 1
+        a_bot.components[target_cid].current_durability = 10
+        a_bot.components[target_cid].is_damaged = False
+        a_bot.components[target_cid].is_destroyed = False
+        a_bot.components[target_cid].absorption = 6
+        col2 = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Front",
+            robot1_components=[w_comp.id],
+            robot2_components=[target_cid],
+            contact_type="ACTIVE",
+            description="Active strike into wheel with abs 6",
+            r1_active_hit=True,
+            r2_active_hit=False,
+        )
+        logs2 = resolve_collision_combat(col2, p_bot, a_bot, round_num=2)
+        log_msgs2 = [l.message for l in logs2]
+        self.assertFalse(any(f"{a_bot.name} is THROWN" in m for m in log_msgs2))
+        self.assertTrue(any("absorbs 6 to reduce throw strength (was 6, now 0)" in m for m in log_msgs2))
+
+    def test_raised_robot_wedge_inflicts_raised(self):
+        """
+        Rule: Wedges effects are no longer cancelled by being raised.
+        A robot that is currently raised makes contact with its wedge; opponent becomes raised.
+        """
+        from playtest.engine.combat import resolve_collision_combat
+        from playtest.engine.types import CollisionEvent, Pose
+        csv_text = read_saved_robot("Vyper_Spinner.csv")
+        match = create_match(csv_text, "Vyper_flipper", "Player Bot")
+        p_bot = match.player_robot
+        a_bot = match.automaton_robot
+
+        p_bot.is_raised = True
+        a_bot.is_raised = False
+
+        wedge = ComponentHealth(
+            id="p_wedge", name="Titanium Wedge", card_type="component",
+            max_durability=6, current_durability=6, absorption=2, requirements="",
+            outputs="", keywords="wedge", text="",
+            x=100, y=20, rotation=0, box=(100, 20, 144, 84), is_wedge=True,
+        )
+        p_bot.components["p_wedge"] = wedge
+
+        target_cid = [cid for cid, c in a_bot.components.items() if not c.is_wedge][0]
+
+        col = CollisionEvent(
+            time_t=0.5,
+            contact_point=(400.0, 395.0),
+            robot1_octant="Front",
+            robot2_octant="Rear",
+            robot1_components=["p_wedge"],
+            robot2_components=[target_cid],
+            contact_type="INERT",
+            description="Raised wedge pushes rear of automaton",
+            r1_active_hit=False,
+            r2_active_hit=False,
+        )
+        logs = resolve_collision_combat(col, p_bot, a_bot, round_num=1)
+        self.assertTrue(a_bot.is_raised)
+        self.assertTrue(any("Wedge lifts Vyper flipper" in l.message for l in logs))
 
 
 if __name__ == "__main__":

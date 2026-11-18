@@ -246,7 +246,7 @@ Components may have keywords that define specific mechanical rules and interacti
   \keywordbadge{kw_fragile}{Fragile} & If this component takes weapon damage \inlineIcon{\resourceW} it is destroyed as if it had a durability of 1 \\
   \keywordbadge{kw_spin_up}{Spin up X} & Add a spin counter at turn start (max X); cleared on attack, hitting a wall or becoming inactive. \\
   \keywordbadge{kw_forks}{Forks} & If the opposing robot is in line with the forks during contact, they become raised for this contact (does not work while inverted)  \\
-  \keywordbadge{kw_wedge}{Wedge} & If this component makes contact, the opponent becomes raised for this contact and this component has double absorption against weapon contact (does not work while inverted or raised) \\
+  \keywordbadge{kw_wedge}{Wedge} & If this component makes contact, the opponent becomes raised for this contact and this component has double absorption against weapon contact (does not work while inverted) \\
   \keywordbadge{kw_invertible}{Invertible} & Component functions normally while inverted. \\
   \keywordbadge{kw_self_right}{Self-right} & Inverts upright at turn end without contact if active. \\
   \keywordbadge{kw_reset}{Reset} & This weapon is inactive the turn after it is used. (this does not cause the robot to be considered knocked out if it is also a self righter) \\
@@ -1130,7 +1130,7 @@ Inert contact occurs when non-weapon chassis surfaces make contact (or weapons c
 When weapons collide with an opponent:
 \begin{itemize}[leftmargin=*, noitemsep, topsep=1pt]
   \item All weapons involved in the contact are assumed to hit, and they deal weapon damage \inlineIcon{\resourceW} according to their damage level to the single outermost component contacted (damage does not penetrate inwards), unless a weapon has \textbf{Overhead} (which hits a random component along the contact line instead of the outermost and causes no throw) or \textbf{Trigger} (which only attacks if the contact has not been removed by a throw).
-  \item Then both robots are thrown away from the contact. The base throw strength received is equal to the weapon damage \inlineIcon{\resourceW} minus the absorption of the hit component (minimum 0). Any additions to throw strength are added after that.
+  \item Then both robots are thrown away from the contact. The throw strength received is equal to the weapon damage \inlineIcon{\resourceW} plus any bonuses to throw strength, minus the absorption of the hit component (minimum 0).
   \item Thrown distance is the roll of a six-sided die or the throw strength, whichever is lower (measured in grid squares away from contact).
   \item \textbf{Random Rotation After a Throw:} Thrown robot orientation is determined by rolling a six-sided die (d6):
   \begin{center}
@@ -1159,7 +1159,7 @@ Similarly if a weapon contacts multiple components at once, each component is da
 \begin{tabularx}{\textwidth}{l X}
   \textbf{Contact Type} & \textbf{Resolution Mechanism} \\
   \midrule
-  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage \inlineIcon{\resourceW} to outermost component contacted $\rightarrow$ Base throw strength equals weapon damage \inlineIcon{\resourceW} minus absorption of hit component (minimum 0) plus additions $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance in grid squares is lower of die roll or throw strength $\rightarrow$ Thrown robot orientation determined by d6 roll ($45^\circ$/$90^\circ$/$180^\circ$/None) $\rightarrow$ Throw damage equals throw strength. If robots remain in contact, proceed with inertial contact. \\
+  \textbf{Active Contact} & Weapon strikes component $\rightarrow$ Deals weapon damage \inlineIcon{\resourceW} to outermost component contacted $\rightarrow$ Throw strength equals weapon damage \inlineIcon{\resourceW} plus bonuses to throw strength minus absorption of hit component (minimum 0) $\rightarrow$ Weapons take feedback equal to half combined attack strength $\rightarrow$ Thrown distance in grid squares is lower of die roll or throw strength $\rightarrow$ Thrown robot orientation determined by d6 roll ($45^\circ$/$90^\circ$/$180^\circ$/None) $\rightarrow$ Throw damage equals throw strength. If robots remain in contact, proceed with inertial contact. \\
   \addlinespace[3pt]
   \textbf{Inert Contact} & Moving robot pushes stationary robot along remaining steps of current Action Card while the stationary robot maintains its orientation $\rightarrow$ Static robot pushed back until not overlapping $\rightarrow$ Pushed into wall halts at perimeter while pushing robot is deflected back one space $\rightarrow$ Robots conclude movement adjacent on the grid. \\
 \end{tabularx}
@@ -1286,7 +1286,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \begin{description}[leftmargin=!, labelwidth=2.5cm, font=\bfseries\color{primaryDark}]
   \item[Inverted:] While a robot is inverted, weapons, drive \inlineIcon{\resourceM}, and component abilities (such as wedges and forks) without the \textit{invertible} keyword don't work. If an inverted robot would be inverted again, it becomes the right way up.
-  \item[Raised:] Inflicted by wedges or forks during contact. A robot is only raised for the action it makes contact. While a robot is raised, any time it would push another robot instead it is moved back from the contact. It loses the double absorption of its wedges, reduces the throw strength of its attacks by 2, and receives an additional throw strength of 2 after active contact.
+  \item[Raised:] Inflicted by wedges or forks during contact. A robot is only raised for the action it makes contact. While a robot is raised, any time it would push another robot instead it is moved back from the contact. It reduces the throw strength of its attacks by 2, and receives an additional throw strength of 2 after active contact.
 \end{description}
 
 \begin{figure}[H]
@@ -1372,7 +1372,7 @@ to each component that supplies it, shared equally if there are multiple compone
 \small
 \begin{itemize}[leftmargin=*, itemsep=1.5pt, topsep=1pt, parsep=0pt]
   \item \textbf{Direct Weapon Damage \inlineIcon{\resourceW}:} Weapon damage \inlineIcon{\resourceW} applies only to the single outermost component hit; excess damage does not penetrate inwards (throw shock covers internals).
-  \item \textbf{Damage Conditions:} A component is \textbf{Damaged} if it takes damage equal to or greater than its durability, and \textbf{Destroyed} if it takes damage equal to or greater than twice its durability. Absorption on destruction is equal to its durability. Absorption reduces base throw strength received during attacks.
+  \item \textbf{Damage Conditions:} A component is \textbf{Damaged} if it takes damage equal to or greater than its durability, and \textbf{Destroyed} if it takes damage equal to or greater than twice its durability. Absorption on destruction is equal to its durability. Absorption reduces throw strength received during attacks (applied after bonuses to throw strength).
   \item \textbf{Throw Distance \& Damage:} Thrown distance in grid squares is the lower of a die roll (d6) or the throw strength. Thrown robot orientation is determined by the d6 random rotation table ($45^\circ$, $90^\circ$, $180^\circ$, or none). Throw damage is always equal to the throw strength.
   \item \textbf{Ending Positions:} Robots conclude in their adjacent positions where movement ends.
   \item \textbf{Wall Collisions:} Driving into a wall stops the robot. When a robot would occupy any tile past a wall (say due to rotating) it is pushed into the arena until all of it is inside the arena. If a robot would be pushed into a wall, it stops at the wall and the pushing robot is deflected back one space instead. If an active weapon touches a wall, all spin counters are removed.
@@ -1382,7 +1382,7 @@ to each component that supplies it, shared equally if there are multiple compone
 
 \subsection{Rules Clarifications}
 \begin{itemize}[leftmargin=*, itemsep=2pt, topsep=1pt, parsep=0pt]
-  \item \textbf{Ground Game \& Wedges while Raised:} A robot is only raised for the action it makes contact. While raised, any time it would push another robot instead it is moved back from the contact. A raised robot loses the double absorption of its wedges and cannot inflict the raised status. When both robots would be raised in the same contact, randomly roll a die to determine which one is raised (that one is raised and the other is not).
+  \item \textbf{Ground Game while Raised:} A robot is only raised for the action it makes contact. While raised, any time it would push another robot instead it is moved back from the contact. Wedges remain active and are not cancelled while raised. When both robots would be raised in the same contact, randomly roll a die to determine which one is raised (that one is raised and the other is not).
   \item \textbf{Overhead Weapons:} An Overhead weapon targets a random component along the contact ray rather than the single outermost component. If the target robot has an active upright \textit{Titanium Top Plate}, it is hit instead, even if not on the ray. Overhead weapons cause no throw on the target, but the attacking weapon still receives recoil feedback normally.
   \item \textbf{Trigger Weapons:} A weapon with \textit{Trigger} only attacks if the contact has not been removed by a throw. If both combatants have Trigger weapons, both will attack. A Trigger weapon that does not attack does not suffer recoil feedback.
   \item \textbf{Crushing Claw:} Following a successful hit with the Crushing Claw, on the next turn the target moves along with this robot during the movement phase as if in inertial contact and as if raised (contributing zero motion). On the subsequent turn, the claw is inactive due to its \textit{Reset} keyword.
