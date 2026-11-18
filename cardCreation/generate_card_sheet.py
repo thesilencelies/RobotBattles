@@ -39,6 +39,7 @@ PREAMBLE = r"""\documentclass{{article}}
 \usepackage[export]{{adjustbox}}
 \usepackage{{geometry}}
 \input{{card_macros.tex}}
+\usetikzlibrary{{shadings}}
 \usetikzlibrary{{positioning}}
 \usetikzlibrary{{patterns}}
 \usetikzlibrary{{arrows.meta}}

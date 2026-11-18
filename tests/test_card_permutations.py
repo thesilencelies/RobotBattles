@@ -187,6 +187,50 @@ class TestCardPermutations(unittest.TestCase):
         self.assertNotIn(r"at (3.95, 4.40)", armor_tex)
         self.assertNotIn(r"at (2.80, 4.40)", armor_tex)
 
+    def test_card_background_gradients(self):
+        # 1. Weapon card has soft red gradient
+        weapon_card = {
+            "Name": "Horizontal Spinner",
+            "Template": "Circle",
+            "Outputs": "2XW",
+            "_source_csv": "weapons.csv",
+        }
+        weapon_tex = generate_card_tex(weapon_card)
+        self.assertIn(r"\providecolor{weapongradient}{RGB}{255, 204, 204}", weapon_tex)
+        self.assertIn(r"\shade[inner color=weapongradient, outer color=white] (2.80, 4.35) ellipse (2.45cm and 3.85cm);", weapon_tex)
+        self.assertNotIn(r"wheelgradient", weapon_tex.split(r"\begin{scope}")[1])
+
+        # 2. Wheel card has soft green gradient
+        wheel_card = {
+            "Name": "Snap Wheels",
+            "Outputs": "D",
+            "Picture": "components/wheels_and_drive/snap-wheels.jpg",
+            "_source_csv": "components.csv",
+        }
+        wheel_tex = generate_card_tex(wheel_card)
+        self.assertIn(r"\providecolor{wheelgradient}{RGB}{205, 238, 210}", wheel_tex)
+        self.assertIn(r"\shade[inner color=wheelgradient, outer color=white] (2.80, 4.35) ellipse (2.45cm and 3.85cm);", wheel_tex)
+        self.assertNotIn(r"weapongradient", wheel_tex.split(r"\begin{scope}")[1])
+
+        # 3. Non-weapon, non-wheel card has no gradient shading
+        battery_card = {
+            "Name": "Galaxy 120",
+            "Outputs": "EEEE",
+            "Picture": "components/batteries_and_power/galaxy-120mah-2s-lipoly-pack.jpeg",
+            "_source_csv": "components.csv",
+        }
+        battery_tex = generate_card_tex(battery_card)
+        self.assertNotIn(r"\shade", battery_tex)
+
+        motor_card = {
+            "Name": "Brushless Motor",
+            "Outputs": "S",
+            "Picture": "components/motors/repeat-robotics-mini-brushless-drive-gearmotor-mk4.jpg",
+            "_source_csv": "components.csv",
+        }
+        motor_tex = generate_card_tex(motor_card)
+        self.assertNotIn(r"\shade", motor_tex)
+
 
 if __name__ == "__main__":
     unittest.main()

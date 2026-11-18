@@ -439,6 +439,7 @@ def create_macros(extra_colors: dict = None):
 \RequirePackage{graphicx}
 \RequirePackage[export]{adjustbox}
 \RequirePackage{tikz}
+\usetikzlibrary{shadings}
 \RequirePackage[none]{hyphenat}
 \RequirePackage[sfdefault]{roboto}
 
@@ -447,6 +448,8 @@ def create_macros(extra_colors: dict = None):
 \definecolor{costgreen}{RGB}{0, 128, 20}
 \definecolor{durabilityred}{RGB}{185, 0, 0}
 \definecolor{textdark}{RGB}{20, 20, 20}
+\definecolor{weapongradient}{RGB}{255, 204, 204}
+\definecolor{wheelgradient}{RGB}{205, 238, 210}
 
 % Keyword colors
 """ + colors_block + r"""
@@ -508,6 +511,23 @@ def generate_card_tex(
 
     kw_markup, color_defs = format_keywords(keywords)
 
+    # Determine card category for background gradient
+    is_weapon = (
+        card.get("_source_csv") == "weapons.csv"
+        or bool(card.get("Template"))
+        or card.get("type") == "weapon"
+    )
+
+    outputs = (card.get("Outputs") or "").upper()
+    picture = (card.get("Picture") or "").lower()
+    name_lower = name.lower()
+    is_wheel = (not is_weapon) and (
+        any(ch in outputs for ch in ("D", "M"))
+        or "wheels_and_drive" in picture
+        or "wheels" in name_lower
+        or "tires" in name_lower
+    )
+
     lines = [
         r"\begin{tikzpicture}[x=1cm, y=1cm]",
         rf"  \node (cardbleed) [rectangle, minimum width={CARD_OUTER_W_CM:.2f}cm, minimum height={CARD_OUTER_H_CM:.2f}cm, fill=white] at ({CARD_OUTER_W_CM/2:.2f}, {CARD_OUTER_H_CM/2:.2f}) {{}};",
@@ -516,10 +536,22 @@ def generate_card_tex(
     ]
 
     # Provide colors if compiling standalone
+    lines.append(r"  \providecolor{weapongradient}{RGB}{255, 204, 204}")
+    lines.append(r"  \providecolor{wheelgradient}{RGB}{205, 238, 210}")
     for cname, (r, g, b) in color_defs:
         lines.append(rf"  \providecolor{{{cname}}}{{RGB}}{{{r}, {g}, {b}}}")
 
     lines.append(rf"  \begin{{scope}}[shift={{({BLEED_OFFSET_X:.3f}, {BLEED_OFFSET_Y:.3f})}}]")
+
+    # Gentle colored background gradient fading to white before borders
+    if is_weapon:
+        lines.append(
+            r"    \shade[inner color=weapongradient, outer color=white] (2.80, 4.35) ellipse (2.45cm and 3.85cm);"
+        )
+    elif is_wheel:
+        lines.append(
+            r"    \shade[inner color=wheelgradient, outer color=white] (2.80, 4.35) ellipse (2.45cm and 3.85cm);"
+        )
 
     # Cut guide border (faint cut line at 56mm x 87mm boundary)
     lines.append(
@@ -671,6 +703,7 @@ def process_csv(csv_path: Path) -> list[dict]:
         reader = csv.DictReader(f)
         for row in reader:
             if row.get("Name") and row["Name"].strip():
+                row["_source_csv"] = csv_path.name
                 cards.append(row)
     return cards
 
